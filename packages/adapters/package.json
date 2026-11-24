@@ -1,0 +1,23 @@
+{
+  "name": "@ledger/adapters",
+  "license": "Apache-2.0",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "main": "./dist/index.js",
+  "exports": {
+    ".": "./dist/index.js"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "typecheck": "tsc -p tsconfig.json --noEmit && tsc -p tsconfig.fixtures.json"
+  },
+  "dependencies": {
+    "@ledger/contracts": "workspace:*",
+    "@ledger/integrity": "workspace:*",
+    "ajv": "8.20.0",
+    "ajv-formats": "3.0.1",
+    "mqtt": "5.16.0"
+  },
+  "types": "./dist/index.d.ts"
+}

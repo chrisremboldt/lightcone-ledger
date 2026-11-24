@@ -1,0 +1,29 @@
+{
+  "recordType": "person.training",
+  "recordVersion": 1,
+  "records": [
+    {
+      "subjectId": "BETA-PILOT-11",
+      "trainingKind": "initial",
+      "courseTitle": "Structure inspection initial course",
+      "completedOn": "2026-01-26",
+      "evidenceReference": "BT-CERT-1101",
+      "providerName": "Beta inspection academy",
+      "instructorName": "Quinn Avery"
+    },
+    {
+      "subjectId": "BETA-PILOT-12",
+      "trainingKind": "knowledge_test",
+      "courseTitle": "Remote pilot knowledge test",
+      "completedOn": "2026-04-09",
+      "evidenceReference": "TEST-RP-77310"
+    },
+    {
+      "subjectId": "BETA-PILOT-12",
+      "trainingKind": "night_flying",
+      "courseTitle": "Night operations",
+      "completedOn": "2026-06-01",
+      "evidenceReference": "BT-CERT-1144"
+    }
+  ]
+}

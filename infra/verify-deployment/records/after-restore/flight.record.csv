@@ -1,0 +1,2 @@
+subjectId,secondarySubjectId,takeoffAt [local],landingAt [local],takeoffLocation,landingLocations,maxHeightFlownAboveGround [ft],missionName
+RIDGE-FLT-3,RIDGE-AC-1,2026-10-08 08:30,2026-10-08 09:02,North ridge pad,North ridge pad,340,North line resurvey

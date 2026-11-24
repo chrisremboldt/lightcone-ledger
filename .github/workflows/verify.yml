@@ -1,0 +1,98 @@
+name: Verify
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: verify-${{ github.ref }}-${{ github.event_name }}
+  cancel-in-progress: true
+jobs:
+  verify:
+    if: github.event_name != 'workflow_dispatch'
+    runs-on: ubuntu-24.04
+    # The unit tests alone take about twelve minutes on a two-core runner.
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
+      - uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444 # v5
+        with:
+          node-version: 24.21.0
+          package-manager-cache: false
+      - run: npm install --global pnpm@11.19.0
+      - run: pnpm install --frozen-lockfile
+      - uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: apps/emulators/vendor/airspace-link/*.yaml
+          key: airspace-link-${{ hashFiles('apps/emulators/vendor/airspace-link/provenance.json') }}
+      - run: pnpm vendor:airspace
+      - run: pnpm generate:client && git diff --exit-code -- docs/openapi.json packages/contracts/src/generated/api.ts
+      - run: pnpm verify
+  go-live-gate:
+    name: Go-live gate
+    if: github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-24.04
+    # The avoidance demonstration's browser test adds about seven minutes to the browser paths.
+    timeout-minutes: 50
+    steps:
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
+      - uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444 # v5
+        with:
+          node-version: 24.21.0
+          package-manager-cache: false
+      - run: npm install --global pnpm@11.19.0
+      - run: pnpm install --frozen-lockfile
+      - uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: apps/emulators/vendor/airspace-link/*.yaml
+          key: airspace-link-${{ hashFiles('apps/emulators/vendor/airspace-link/provenance.json') }}
+      - run: pnpm vendor:airspace
+      - run: cp .env.example .env
+      - run: docker compose -f infra/compose.yaml up -d --wait
+      - run: pnpm generate:client && git diff --exit-code -- docs/openapi.json packages/contracts/src/generated/api.ts
+      - name: Verify and build once
+        run: pnpm verify
+      # The broker starts with no accounts. Writing the seeded sources' accounts before the integration suite lets the
+      # adapter process test receive positions over the broker here, instead of skipping.
+      - name: Migrate and seed the stack's database, and give the broker its accounts
+        run: |
+          pnpm db:migrate
+          pnpm db:seed
+          pnpm broker:files:dev
+          docker compose -f infra/compose.yaml restart mqtt
+      - name: PostgreSQL invariants on ledger_test
+        run: pnpm test:integration
+      - run: pnpm exec playwright install --with-deps chromium
+      - name: Start the stack from the checked build with the seeded utility tenant
+        env:
+          VITE_LEDGER_ENV: local
+          # The optional avoidance demonstration for the fictional Alpha tenant, as commented in .env.example, so
+          # tests/browser/avoidance-demo.spec.ts runs here instead of skipping.
+          LEDGER_SIMULATION_AVOIDANCE_DEMO: >-
+            {"version":"simulation.avoidance-demo-config.1","tenants":[{"tenantId":"tenant-alpha","source":{"principalId":"principal-alpha-source","missionSourceId":"mission-planner","commandLinkSourceId":"command-link","monitoringSourceId":"operation-monitoring"}}]}
+        run: |
+          node --env-file=.env apps/api/dist/main.js > /tmp/ledger-api.log 2>&1 &
+          node --env-file=.env apps/workers/dist/main.js > /tmp/ledger-worker.log 2>&1 &
+          node --env-file=.env apps/emulators/dist/index.js > /tmp/ledger-emulator.log 2>&1 &
+          pnpm --filter @ledger/web dev --host 0.0.0.0 > /tmp/ledger-web.log 2>&1 &
+          for url in http://127.0.0.1:4000/readyz http://127.0.0.1:4002/healthz http://127.0.0.1:5173; do
+            curl --fail --silent --show-error --retry 30 --retry-delay 1 --retry-connrefused "$url"
+          done
+      - name: Browser paths
+        run: pnpm test:browser
+      # The simulated day runs on the database the browser tests used: its keys carry a fresh run id, and its 19
+      # self-checks read only this run's flights and orders. A failed self-check exits non-zero and fails the job.
+      - name: Simulated day and its self-checks
+        run: pnpm scenario
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        if: failure()
+        with:
+          name: go-live-gate-failure-logs
+          path: |
+            playwright-report/
+            test-results/
+            /tmp/ledger-*.log
+            .local/scenarios/
+          retention-days: 7

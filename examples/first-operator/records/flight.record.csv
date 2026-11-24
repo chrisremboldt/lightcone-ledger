@@ -1,0 +1,4 @@
+subjectId,secondarySubjectId,takeoffAt [local],landingAt [local],takeoffLocation,landingLocations,maxHeightFlownAboveGround [ft],flightPathReference,windAtTakeoff [kt],batteryAtLanding [%],visibilityAtTakeoff [mi]
+FLT-2026-1101,RIDGE-AC-1,2026-11-10 09:05,2026-11-10 09:47,North substation pad,North substation pad,45 m,logs/FLT-2026-1101.kml,12,41,10
+FLT-2026-1102,RIDGE-AC-2,2026-11-12 09:10,2026-11-12 10:02,Ridge road pullout,Ridge road pullout,236,logs/FLT-2026-1102.kml,24,18%,
+FLT-2026-1103,RIDGE-AC-3,2026-11-14 11:04,2026-11-14 11:31,Quarry gate,Quarry gate,290,logs/FLT-2026-1103.kml,8 kt,30,10

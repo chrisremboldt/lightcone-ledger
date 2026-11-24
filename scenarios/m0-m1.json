@@ -1,0 +1,23 @@
+{
+  "scenario": "m0-m1-living-thread",
+  "scenarioVersion": 1,
+  "seed": 71031,
+  "environment": "isolated-simulation",
+  "clock": { "start": "2026-10-01T14:00:00.000Z", "mode": "scripted-delivery" },
+  "world": { "organizations": 2, "flights": 10, "aircraftClasses": ["multirotor"] },
+  "cases": [
+    "duplicate-order",
+    "out-of-order-revision",
+    "split-fulfillment",
+    "consolidated-fulfillment",
+    "unmatched-evidence",
+    "late-conflicting-landing",
+    "correction",
+    "decision-cut",
+    "cancelled-order",
+    "vendor-denial",
+    "rescission-after-departure",
+    "second-tenant-unaffected"
+  ],
+  "limitations": ["Scripted delivery is not a realtime soak.", "No real vendor credentials or operating authority."]
+}

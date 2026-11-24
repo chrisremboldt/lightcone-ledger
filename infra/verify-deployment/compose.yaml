@@ -1,0 +1,40 @@
+# Laid over infra/compose.production.yaml by verify.mjs. Paths are relative to infra/, the first file's folder.
+# Every host port is on 127.0.0.1 in the 18000s, so the verification runs beside a local development stack.
+services:
+  ledger:
+    env_file: !override ['./verify-deployment/verify.env']
+    ports: !reset []
+    environment:
+      # The local authority's certificate, so the API trusts the identity provider behind the proxy.
+      NODE_EXTRA_CA_CERTS: /certs/authority.pem
+    # The kit's own pack folder in place of the checkout's packs/, mounted where the production file mounts it.
+    volumes:
+      - ../.local/verify-deployment/certs/authority.pem:/certs/authority.pem:ro
+      - ../.local/verify-deployment/packs:/packs:ro
+  setup:
+    env_file: !override ['./verify-deployment/verify.env', './verify-deployment/verify-owner.env']
+    environment:
+      NODE_EXTRA_CA_CERTS: /certs/authority.pem
+    volumes: ['../.local/verify-deployment/certs/authority.pem:/certs/authority.pem:ro']
+  objects:
+    ports: !override ['127.0.0.1:18333:8333']
+  proxy:
+    ports: !override ['127.0.0.1:18443:18443']
+    volumes: !override
+      - ./verify-deployment/Caddyfile:/etc/caddy/Caddyfile:ro
+      - ../.local/verify-deployment/certs:/certs:ro
+      - ledger-proxy-data:/data
+    networks:
+      default:
+        # The three names resolve to the proxy inside the compose network, as a deployment's names do on its server.
+        aliases: [ledger.localhost, ledger-api.localhost, id.localhost]
+  keycloak:
+    command: !override ['start', '--import-realm']
+    volumes: ['./verify-deployment/keycloak-realm.json:/opt/keycloak/data/import/ledger.json:ro']
+  broker:
+    ports: !override ['127.0.0.1:18883:1883']
+    volumes: !override
+      - ../.local/verify-deployment/broker:/mosquitto/config/accounts:ro
+      - ledger-broker:/mosquitto/data
+  adapter:
+    env_file: !override ['../.local/verify-deployment/adapter.env']

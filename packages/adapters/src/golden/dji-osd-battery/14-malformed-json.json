@@ -1,0 +1,20 @@
+{
+  "case": "malformed",
+  "message": {
+    "contentType": "application/json",
+    "transport": {
+      "topic": "thing/product/ALPHA-AIRCRAFT-01/osd"
+    },
+    "capturedAt": "2026-10-01T17:00:00.250Z",
+    "bodyText": "{\"tid\":\"tid-alpha-b14\",\"timestamp\":1790874000000,\"gateway\":\"ALPHA-DOCK-01\",\"data\":{\"battery\":{\"capacity_percent\":50,}}"
+  },
+  "expect": {
+    "observations": [],
+    "rejections": [
+      {
+        "reasonIncludes": "Invalid or ambiguous"
+      }
+    ],
+    "unmapped": []
+  }
+}

@@ -1,0 +1,93 @@
+# The worked example in docs/guides/write-a-rule-pack.md, built and loaded by the pack file tests.
+# Everything here is invented: the waiver, its holder and its numbers.
+pack:
+  id: alpha-dispatch.waiver-exw-0042
+  version: 1
+  title: Waiver EXW-0042 for Alpha Dispatch (invented)
+
+source:
+  file: source.txt
+  kind: waiver
+  reference: Certificate of Waiver EXW-0042 (invented)
+
+waiver:
+  certificateNumber: EXW-0042
+  effective:
+    from: 2026-10-01
+    through: 2028-09-30
+  # Every inspection flight Alpha Dispatch makes is held to these provisions, whatever its plan cites.
+  conditionsCover: every flight
+
+provisions:
+  - number: 1
+    title: Listed aircraft
+    quote: Only the aircraft registered as FICT-0301 may be operated under this waiver.
+    obligation: eligibility.listed-aircraft
+    parameters:
+      registrationNumbers: [FICT-0301]
+
+  - number: 2
+    title: Maximum height
+    quote: The aircraft is not operated higher than 250 feet above ground level.
+    obligation: condition.max-height
+    parameters:
+      maxFeetAboveGround: 250
+
+  - number: 3
+    title: Training
+    quote: >-
+      Each remote pilot completes the Bridge inspection operations course within the 12 calendar months before the
+      operation.
+    obligation: qualification.named-training-current
+    parameters:
+      courseTitle: Bridge inspection operations
+      months: 12
+
+  - number: 5
+    title: Certificate at hand
+    quote: A copy of this certificate is kept at the control station during operations.
+    obligation: authority.certificate-at-hand
+    # No record shows this, so the provision is a rule a person checks. waitingFor says what that person confirms;
+    # left out, the obligation type's own sentence is used.
+    waitingFor: Confirm that a copy of this certificate was at the control station throughout the operation.
+
+# Provision 4 fits no obligation type, so it is written as a rule by check kind. The holder sets the limit when it
+# adopts the pack.
+rules:
+  - id: provision-4
+    title: Planned ground speed within the holder's limit
+    reference: 'Certificate of Waiver EXW-0042 (invented), provision 4: Ground speed'
+    quote: The planned ground speed of the aircraft does not exceed the limit the holder sets
+    target:
+      subjectKind: flight
+    # Who the rule covers: each flight with records in the adoption's dates. With onFile below, a covered flight
+    # without a plan is reported as "No flight plan on file".
+    population:
+      of: in_adoption_dates
+    reads:
+      - name: quantity
+        type: operator.record
+        versions: [1]
+        about: target
+        required: true
+        onFile: flight plan
+        plans: true
+        select: latest
+        where:
+          - field: values.recordType
+            oneOf: [flight.plan]
+          - field: values.recordVersion
+            oneOf: [1]
+    check:
+      kind: value.within-limit
+      version: 2
+      params:
+        field: values.record.plannedMaxGroundSpeedMetersPerSecond
+        comparison: at_most
+        unit: m/s
+    adoptionParameters:
+      - name: limit
+        title: Ground speed limit (metres per second)
+        valueType: number
+        minimum: 1
+        maximum: 50

@@ -1,0 +1,21 @@
+{
+  "case": "ambiguous",
+  "message": {
+    "contentType": "application/json",
+    "transport": {
+      "method": "GET",
+      "path": "/v1/operations/0b7f2c1e-5d1a-4c55-9a51-6a0e5c3c2f10/laanc"
+    },
+    "capturedAt": "2026-10-20T08:30:00.500Z",
+    "bodyText": "{\"operation\":{\"authorizations\":[],\"authorizations\":[]}}"
+  },
+  "expect": {
+    "observations": [],
+    "rejections": [
+      {
+        "reasonIncludes": "Invalid or ambiguous JSON: JSON object contains a duplicate key"
+      }
+    ],
+    "unmapped": []
+  }
+}

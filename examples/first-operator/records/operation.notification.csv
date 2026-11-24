@@ -1,0 +1,4 @@
+subjectId,subjectKind,notifiedAt,recipient,means,confirmationReference
+FLT-2026-1101,flight,2026-11-09T09:00:00Z,Flight Service,online_form,NOTAM 11/004
+FLT-2026-1102,flight,2026-11-12T06:00:00Z,Flight Service,online_form,NOTAM 11/009
+FLT-2026-1201,flight,2026-11-30,Flight Service,online_form,NOTAM 11/031

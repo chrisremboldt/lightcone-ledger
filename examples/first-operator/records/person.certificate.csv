@@ -1,0 +1,4 @@
+subjectId,credentialKind,credentialNumber,recordedStatus,issuedOn
+RIDGE-P-01,remote_pilot_certificate,EX-4000001,held,2021-05-10
+RIDGE-P-02,remote_pilot_certificate,EX-4000002,held,2022-08-02
+RIDGE-P-03,remote_pilot_certificate,EX-4000003,held,2024-01-15

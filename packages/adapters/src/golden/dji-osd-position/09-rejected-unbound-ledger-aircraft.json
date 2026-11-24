@@ -1,0 +1,20 @@
+{
+  "case": "rejected",
+  "message": {
+    "contentType": "application/json",
+    "transport": { "topic": "thing/product/ALPHA-AIRCRAFT-01/osd" },
+    "capturedAt": "2026-10-01T17:00:00.250Z",
+    "body": {
+      "tid": "tid-alpha-0009",
+      "bid": "bid-alpha-0009",
+      "timestamp": 1790874000000,
+      "gateway": "ALPHA-DOCK-01",
+      "data": { "latitude": 41.88, "longitude": -87.63 }
+    }
+  },
+  "context": {
+    "subjects": { "scope": "ledger", "ids": { "aircraft": { "BRAVO-AIRCRAFT-02": "aircraft-bravo" } } },
+    "binding": { "deviceId": "ALPHA-AIRCRAFT-01", "gatewayId": "ALPHA-DOCK-01" }
+  },
+  "expect": { "observations": [], "rejections": [{ "reasonIncludes": "No Ledger aircraft" }], "unmapped": [] }
+}

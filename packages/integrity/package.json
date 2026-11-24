@@ -1,0 +1,16 @@
+{
+  "name": "@ledger/integrity",
+  "license": "Apache-2.0",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./dist/index.js",
+    "./canonical": "./dist/canonical.js"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "typecheck": "tsc -p tsconfig.json --noEmit"
+  },
+  "types": "./dist/index.d.ts"
+}

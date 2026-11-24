@@ -1,0 +1,121 @@
+:root {
+  color-scheme: dark;
+}
+.sms-pdf-reader {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-width: 0;
+  min-height: 0;
+  overflow: hidden;
+}
+.sms-pdf-toolbar {
+  display: flex;
+  flex: none;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 10px;
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--line);
+  background: var(--sheet);
+  color: var(--ink-2);
+  font-size: 12px;
+}
+.sms-pdf-page-controls,
+.sms-pdf-page-controls label,
+.sms-pdf-find {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+.sms-pdf-page-controls {
+  margin: 0;
+}
+.sms-pdf-toolbar input,
+.sms-pdf-toolbar select {
+  min-width: 0;
+  min-height: 32px;
+  padding: 5px 7px;
+  border: 1px solid var(--line-2);
+  border-radius: 4px;
+  background: var(--surface, var(--sheet));
+  color: var(--ink);
+  font: inherit;
+}
+.sms-pdf-toolbar input:focus-visible,
+.sms-pdf-toolbar select:focus-visible {
+  outline: 2px solid var(--magenta);
+  outline-offset: 1px;
+}
+.sms-pdf-page-controls input {
+  width: 56px;
+  font-family: var(--mono);
+}
+.sms-pdf-outline {
+  flex: 1 1 160px;
+  max-width: 280px;
+}
+.sms-pdf-outline select {
+  width: 100%;
+  text-overflow: ellipsis;
+}
+.sms-pdf-find {
+  flex: 1 1 220px;
+  max-width: 360px;
+}
+.sms-pdf-find input {
+  flex: 1;
+  width: 100%;
+}
+.sms-pdf-find-status {
+  min-width: 110px;
+  color: var(--muted);
+  font-size: 11px;
+}
+.sms-pdf-message {
+  flex: none;
+  margin: 0;
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--line);
+  color: var(--ink-2);
+  font-size: 12px;
+}
+.sms-pdf-stage {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+}
+.sms-pdf-scroll {
+  position: absolute;
+  inset: 0;
+  overflow: auto;
+  overscroll-behavior: contain;
+  background: var(--surface, #171b21);
+}
+.sms-pdf-scroll .pdfViewer {
+  --page-bg-color: #fff;
+  padding-top: 8px;
+}
+.sms-pdf-scroll .pdfViewer .page {
+  background-color: #fff;
+}
+@media (max-width: 500px) {
+  .sms-pdf-toolbar {
+    gap: 5px 8px;
+    padding: 6px 8px;
+  }
+  .sms-pdf-page-controls {
+    flex: 1;
+  }
+  .sms-pdf-outline {
+    flex: 1 1 100%;
+    max-width: none;
+  }
+  .sms-pdf-find {
+    flex: 1 1 100%;
+    max-width: none;
+  }
+  .sms-pdf-find-status:empty {
+    display: none;
+  }
+}

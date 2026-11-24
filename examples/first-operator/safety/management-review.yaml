@@ -1,0 +1,18 @@
+# The management review of the second half of the year, chaired by the accountable executive.
+id: ERS-MR-2026-2
+title: Management review, second half of 2026
+owner: Jordan Example
+type: management_review
+performedOn: 2026-07-20
+scope: Safety objectives, audit results, reports, hazards and occurrences since January.
+examined: The hazard register, the February audit and its actions, two safety reports and one lost link.
+findings:
+  - { id: F1, text: Pilot fatigue in the operations room is the highest risk on the register. }
+actions:
+  - {
+      id: A1,
+      what: Add a second pilot in the operations room after 8 pm.,
+      owner: Jordan Example,
+      due: 2026-12-31,
+      finding: F1,
+    }

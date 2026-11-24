@@ -1,0 +1,47 @@
+# Example Ridge Survey's risk matrix, as its safety manual has it: four bands, the highest one nobody may accept.
+# "acceptance" says who may accept a risk in the band: low, medium or high (the risk acceptance a person holds on
+# the People screen) or not_acceptable.
+id: ERS-RM-1
+owner: Avery Example
+name: Example Ridge risk matrix
+severities: # least to most severe
+  - { id: negligible, label: Negligible, description: No damage. A delay only. }
+  - { id: minor, label: Minor, description: Repairable damage to the aircraft; a flight cut short. }
+  - {
+      id: serious,
+      label: Serious,
+      description: Aircraft lost or badly damaged inside the corridor; a reportable occurrence.,
+    }
+  - {
+      id: major,
+      label: Major,
+      description: Injury needing treatment; aircraft lost outside the corridor; damage to the line.,
+    }
+  - { id: catastrophic, label: Catastrophic, description: Death or serious injury; collision with a crewed aircraft. }
+likelihoods: # least to most likely
+  - { id: not_expected, label: Not expected, description: Not expected in the life of the program. }
+  - { id: unlikely, label: Unlikely, description: Known in the industry; we would be surprised. }
+  - { id: now_and_then, label: Now and then, description: Could happen to us in the next few years. }
+  - { id: likely, label: Likely, description: About once a year. }
+  - { id: regular, label: Regular, description: Several times a year. }
+levels:
+  - { id: green, label: Green, meaning: Carry on and review the hazard yearly., acceptance: low }
+  - {
+      id: yellow,
+      label: Yellow,
+      meaning: Acceptable when as low as reasonably practicable; written sign-off.,
+      acceptance: medium,
+    }
+  - {
+      id: orange,
+      label: Orange,
+      meaning: Mitigate before the next exposed flight; accepted for 30 days at most.,
+      acceptance: high,
+    }
+  - { id: red, label: Red, meaning: Stop the affected operation., acceptance: not_acceptable }
+grid: # one row per likelihood; one band per severity, least to most severe
+  not_expected: [green, green, green, green, yellow]
+  unlikely: [green, green, yellow, yellow, orange]
+  now_and_then: [green, yellow, yellow, orange, orange]
+  likely: [green, yellow, orange, red, red]
+  regular: [yellow, orange, orange, red, red]

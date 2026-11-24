@@ -1,0 +1,45 @@
+{
+  "realm": "ledger",
+  "enabled": true,
+  "registrationAllowed": false,
+  "clients": [
+    {
+      "clientId": "ledger-web",
+      "name": "Ledger web app",
+      "protocol": "openid-connect",
+      "publicClient": true,
+      "standardFlowEnabled": true,
+      "directAccessGrantsEnabled": false,
+      "implicitFlowEnabled": false,
+      "serviceAccountsEnabled": false,
+      "redirectUris": ["https://ledger.localhost:18443/"],
+      "webOrigins": ["https://ledger.localhost:18443"],
+      "attributes": {
+        "pkce.code.challenge.method": "S256",
+        "post.logout.redirect.uris": "https://ledger.localhost:18443/"
+      }
+    }
+  ],
+  "users": [
+    {
+      "id": "5d0a6c1e-7f3b-4c2a-9e81-0a4f2b6c8d10",
+      "username": "avery",
+      "firstName": "Avery",
+      "lastName": "Example",
+      "email": "avery@example.org",
+      "emailVerified": true,
+      "enabled": true,
+      "credentials": [{ "type": "password", "value": "avery-local-password", "temporary": false }]
+    },
+    {
+      "id": "8b2e4f60-1c9d-4a7e-b3f2-6d5c0e9a1b20",
+      "username": "jordan",
+      "firstName": "Jordan",
+      "lastName": "Example",
+      "email": "jordan@example.org",
+      "emailVerified": true,
+      "enabled": true,
+      "credentials": [{ "type": "password", "value": "jordan-local-password", "temporary": false }]
+    }
+  ]
+}

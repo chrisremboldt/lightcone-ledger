@@ -1,0 +1,46 @@
+{
+  "case": "rejected",
+  "message": {
+    "contentType": "application/json",
+    "transport": {
+      "method": "POST",
+      "path": "/command-link"
+    },
+    "capturedAt": "2026-10-15T14:12:00.400Z",
+    "body": {
+      "sourceSessionId": "capture:alpha:one",
+      "sourceEventId": "loss-one",
+      "incidentId": "incident-one",
+      "aircraftId": "fictional-aircraft-one",
+      "occurredAt": "2026-10-15T14:12:00.000Z",
+      "status": "degraded",
+      "position": {
+        "longitude": -87.622,
+        "latitude": 41.884
+      }
+    }
+  },
+  "context": {
+    "subjects": {
+      "scope": "ledger",
+      "ids": {
+        "flight": {
+          "capture:alpha:one": "flight-alpha"
+        }
+      }
+    },
+    "binding": {
+      "sourceSessionId": "capture:alpha:one",
+      "aircraftId": "fictional-aircraft-one"
+    }
+  },
+  "expect": {
+    "observations": [],
+    "rejections": [
+      {
+        "reasonIncludes": "source contract"
+      }
+    ],
+    "unmapped": []
+  }
+}

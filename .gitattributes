@@ -1,0 +1,13 @@
+# Vendor snapshots retain their exact original bytes, including whitespace.
+apps/emulators/vendor/airspace-link/** -text -whitespace
+# Ordered migration checksums must be stable across checkout platforms.
+packages/persistence/migrations/*.sql text eol=lf
+# Document examples retain their exact PDF bytes.
+apps/api/fixtures/utility-documents/*.pdf binary
+# Retained interpreter bytes identify the named reconstruction version.
+packages/evidence/src/evidence-cut.mjs text eol=lf
+tools/verifier/evidence-cut.1.mjs text eol=lf
+
+# Preserve retained official source bytes, including original line endings and whitespace.
+packages/pack-part108-nprm/resources/govinfo-fr-2025-14992.htm -text -whitespace
+packages/pack-part107/resources/govinfo-cfr-2026-title14-vol2-part107.xml -text -whitespace

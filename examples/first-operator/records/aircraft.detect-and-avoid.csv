@@ -1,0 +1,3 @@
+subjectId,checkedAt,equipmentReference,equipmentState,checkedByName
+RIDGE-AC-1,2026-11-10T15:10:00Z,Fictional DAA receiver unit 1,serviceable,Jordan Example
+RIDGE-AC-2,2026-11-12T15:10:00Z,Fictional DAA receiver unit 2,inoperative,Casey Example

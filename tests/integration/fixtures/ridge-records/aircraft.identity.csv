@@ -1,0 +1,3 @@
+subjectId,aircraftMakeModel,serialNumber,registrationNumber,registrationExpiresOn,remoteIdentificationMethod
+RIDGE-AC-1,Example Survey Quad X8,SN-X8-1001,RIDGE-REG-1,2028-03-31,standard_broadcast
+RIDGE-AC-2,Example Mapper M2,SN-M2-2002,RIDGE-REG-2,2027-09-30,broadcast_module

@@ -1,0 +1,1 @@
+CREATE INDEX subject_stream_projection_dependents ON subject_stream_dependencies(tenant_id,stream_id,sequence,subject_id);

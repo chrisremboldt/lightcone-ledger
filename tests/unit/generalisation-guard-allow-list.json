@@ -1,0 +1,462 @@
+{
+  "entries": [
+    {
+      "file": "apps/api/src/index.ts",
+      "match": "/v1/flights/:id/command-link-baselines/:baselineId",
+      "issue": 25
+    },
+    {
+      "file": "apps/api/src/index.ts",
+      "match": "FlightCommandLinkBaselineParams",
+      "issue": 25
+    },
+    {
+      "file": "apps/api/src/index.ts",
+      "match": "FlightCommandLinkBaselineParamsSchema",
+      "issue": 25
+    },
+    {
+      "file": "apps/api/src/index.ts",
+      "match": "MonitoringWindowParams",
+      "issue": 27
+    },
+    {
+      "file": "apps/api/src/index.ts",
+      "match": "MonitoringWindowParamsSchema",
+      "issue": 27
+    },
+    {
+      "file": "apps/api/src/index.ts",
+      "match": "commandLinkSources",
+      "issue": 5
+    },
+    {
+      "file": "apps/api/src/index.ts",
+      "match": "getCommandLinkBaseline",
+      "issue": 25
+    },
+    {
+      "file": "apps/api/src/index.ts",
+      "match": "getMonitoringWindow",
+      "issue": 27
+    },
+    {
+      "file": "apps/api/src/investigation.ts",
+      "match": "commandLinkSources",
+      "issue": 5
+    },
+    {
+      "file": "packages/domain/src/assurance-history.ts",
+      "wholeFile": true,
+      "issue": 27,
+      "reason": "Assurance history read of the lost-link monitoring window"
+    },
+    {
+      "file": "packages/domain/src/authority.ts",
+      "match": "commandLinkSources",
+      "issue": 5
+    },
+    {
+      "file": "packages/domain/src/authority.ts",
+      "match": "command_link_sources",
+      "issue": 5
+    },
+    {
+      "file": "packages/domain/src/command-link-baseline.ts",
+      "wholeFile": true,
+      "issue": 25,
+      "reason": "Retained reads and verification of baselines accepted before the intake was retired"
+    },
+    {
+      "file": "packages/domain/src/command-link-reports.ts",
+      "wholeFile": true,
+      "issue": 7,
+      "reason": "Lost-link reports counted by hazards and route avoidance: retained dedicated rows and link.status observations"
+    },
+    {
+      "file": "packages/domain/src/command-link.ts",
+      "wholeFile": true,
+      "issue": 7,
+      "reason": "Retained verification of command-link reports accepted before the intake was retired, and the thread projection of link.status reports"
+    },
+    {
+      "file": "packages/domain/src/corrections.ts",
+      "match": "airspace.status",
+      "issue": 4
+    },
+    {
+      "file": "packages/domain/src/corrections.ts",
+      "match": "command-link.baseline",
+      "issue": 25
+    },
+    {
+      "file": "packages/domain/src/corrections.ts",
+      "match": "command-link.status",
+      "issue": 7
+    },
+    {
+      "file": "packages/domain/src/index.ts",
+      "match": "./command-link-baseline.js",
+      "issue": 25
+    },
+    {
+      "file": "packages/domain/src/index.ts",
+      "match": "./command-link.js",
+      "issue": 7
+    },
+    {
+      "file": "packages/domain/src/index.ts",
+      "match": "./monitoring-window.js",
+      "issue": 27
+    },
+    {
+      "file": "packages/domain/src/index.ts",
+      "match": "./rules/authorization-evidence-v1.js",
+      "issue": 10
+    },
+    {
+      "file": "packages/domain/src/index.ts",
+      "match": "Command-link",
+      "issue": 7
+    },
+    {
+      "file": "packages/domain/src/index.ts",
+      "match": "command_link_baseline_retired",
+      "issue": 7
+    },
+    {
+      "file": "packages/domain/src/index.ts",
+      "match": "VerifiedCommandLinkSource",
+      "issue": 7
+    },
+    {
+      "file": "packages/domain/src/index.ts",
+      "match": "acceptMonitoringWindowInput",
+      "issue": 27
+    },
+    {
+      "file": "packages/domain/src/index.ts",
+      "match": "airspace.status",
+      "issue": 4
+    },
+    {
+      "file": "packages/domain/src/index.ts",
+      "match": "command-link.baseline",
+      "issue": 25
+    },
+    {
+      "file": "packages/domain/src/index.ts",
+      "match": "command-link.status",
+      "issue": 7
+    },
+    {
+      "file": "packages/domain/src/index.ts",
+      "match": "command_link_scope_fixed",
+      "issue": 7
+    },
+    {
+      "file": "packages/domain/src/index.ts",
+      "match": "getCommandLinkBaseline",
+      "issue": 25
+    },
+    {
+      "file": "packages/domain/src/index.ts",
+      "match": "getMonitoringWindow",
+      "issue": 27
+    },
+    {
+      "file": "packages/domain/src/index.ts",
+      "match": "monitoring.window",
+      "issue": 27
+    },
+    {
+      "file": "packages/domain/src/index.ts",
+      "match": "projectCommandLinkBaselineEvent",
+      "issue": 25
+    },
+    {
+      "file": "packages/domain/src/index.ts",
+      "match": "projectMonitoringWindowEvent",
+      "issue": 27
+    },
+    {
+      "file": "packages/domain/src/index.ts",
+      "match": "validateAcceptedCommandLinkAuthority",
+      "issue": 7
+    },
+    {
+      "file": "packages/domain/src/index.ts",
+      "match": "validateAcceptedCommandLinkBaselineAuthority",
+      "issue": 25
+    },
+    {
+      "file": "packages/domain/src/index.ts",
+      "match": "verifyCommandLinkBaselineInputSource",
+      "issue": 25
+    },
+    {
+      "file": "packages/domain/src/index.ts",
+      "match": "verifyCommandLinkInputSource",
+      "issue": 7
+    },
+    {
+      "file": "packages/domain/src/index.ts",
+      "match": "verifyMonitoringWindowInputSource",
+      "issue": 27
+    },
+    {
+      "file": "packages/domain/src/mission-avoidance-definition.ts",
+      "wholeFile": true,
+      "issue": 21,
+      "reason": "Fixed avoidance definition"
+    },
+    {
+      "file": "packages/domain/src/mission-briefing.ts",
+      "match": "command_link_sources",
+      "issue": 5
+    },
+    {
+      "file": "packages/domain/src/mission-departure-policy.ts",
+      "match": "ledger.demo.route-avoidance-departure",
+      "issue": 23
+    },
+    {
+      "file": "packages/domain/src/mission-departure.ts",
+      "match": "commandLinkSources",
+      "issue": 5
+    },
+    {
+      "file": "packages/domain/src/mission-departure.ts",
+      "match": "command_link_sources",
+      "issue": 5
+    },
+    {
+      "file": "packages/domain/src/mission-release-integrity.ts",
+      "match": "commandLinkSources",
+      "issue": 5
+    },
+    {
+      "file": "packages/domain/src/mission-release-policy.ts",
+      "match": "ledger.demo.route-avoidance-release",
+      "issue": 23
+    },
+    {
+      "file": "packages/domain/src/mission-release.ts",
+      "match": "commandLinkSources",
+      "issue": 5
+    },
+    {
+      "file": "packages/domain/src/mission-release.ts",
+      "match": "command_link_sources",
+      "issue": 5
+    },
+    {
+      "file": "packages/domain/src/missions.ts",
+      "match": "command_link_sources",
+      "issue": 5
+    },
+    {
+      "file": "packages/domain/src/monitoring-window.ts",
+      "wholeFile": true,
+      "issue": 27,
+      "reason": "Lost-link monitoring window"
+    },
+    {
+      "file": "packages/domain/src/roster.ts",
+      "match": "airspace.status",
+      "issue": 4
+    },
+    {
+      "file": "packages/domain/src/simulation-avoidance-demo.ts",
+      "wholeFile": true,
+      "issue": 21,
+      "reason": "Avoidance demo wired to lost-link sources"
+    },
+    {
+      "file": "packages/evidence/src/decision-packets.ts",
+      "wholeFile": true,
+      "issue": 29,
+      "reason": "Lost-link-only decision packet format"
+    },
+    {
+      "file": "packages/evidence/src/index.ts",
+      "match": "airspace.status",
+      "issue": 28
+    },
+    {
+      "file": "packages/evidence/src/index.ts",
+      "match": "command-link.baseline",
+      "issue": 28
+    },
+    {
+      "file": "packages/evidence/src/index.ts",
+      "match": "command-link.status",
+      "issue": 28
+    },
+    {
+      "file": "packages/evidence/src/index.ts",
+      "match": "monitoring.window",
+      "issue": 28
+    },
+    {
+      "file": "packages/evidence/src/subject.ts",
+      "match": "airspace.status",
+      "issue": 28
+    },
+    {
+      "file": "packages/evidence/src/subject.ts",
+      "match": "command-link.baseline",
+      "issue": 28
+    },
+    {
+      "file": "packages/evidence/src/subject.ts",
+      "match": "command-link.status",
+      "issue": 28
+    },
+    {
+      "file": "packages/evidence/src/subject.ts",
+      "match": "monitoring.window",
+      "issue": 28
+    },
+    {
+      "file": "packages/persistence/src/index.ts",
+      "match": "commandLinkSources",
+      "issue": 5
+    },
+    {
+      "file": "packages/persistence/src/index.ts",
+      "match": "command_link_sources",
+      "issue": 5
+    },
+    {
+      "file": "packages/projections/src/index.ts",
+      "match": "Command-link",
+      "issue": 7
+    },
+    {
+      "file": "packages/projections/src/index.ts",
+      "match": "airspace.status",
+      "issue": 4
+    },
+    {
+      "file": "packages/projections/src/index.ts",
+      "match": "command-link.baseline",
+      "issue": 25
+    },
+    {
+      "file": "packages/projections/src/index.ts",
+      "match": "command-link.status",
+      "issue": 7
+    },
+    {
+      "file": "packages/projections/src/index.ts",
+      "match": "command_link_identity_changed",
+      "issue": 7
+    },
+    {
+      "file": "packages/projections/src/index.ts",
+      "match": "monitoring.window",
+      "issue": 27
+    },
+    {
+      "file": "packages/projections/src/index.ts",
+      "match": "projectCommandLinkBaselineEvent",
+      "issue": 25
+    },
+    {
+      "file": "packages/projections/src/index.ts",
+      "match": "projectMonitoringWindowEvent",
+      "issue": 27
+    },
+    {
+      "file": "packages/projections/src/index.ts",
+      "match": "validateAcceptedCommandLinkAuthority",
+      "issue": 7
+    },
+    {
+      "file": "packages/projections/src/telemetry.ts",
+      "match": "DJI",
+      "issue": 8
+    },
+    {
+      "file": "packages/persistence/migrations/0062_data_driven_rule_triggers.sql",
+      "match": "command_link_source_events",
+      "issue": 7
+    },
+    {
+      "file": "packages/persistence/migrations/0062_data_driven_rule_triggers.sql",
+      "match": "command-link.baseline",
+      "issue": 25
+    },
+    {
+      "file": "packages/persistence/migrations/0062_data_driven_rule_triggers.sql",
+      "match": "airspace.status",
+      "issue": 4
+    },
+    {
+      "file": "packages/persistence/migrations/0062_data_driven_rule_triggers.sql",
+      "match": "monitoring.window",
+      "issue": 27
+    },
+    {
+      "file": "packages/persistence/migrations/0066_observation_avoidance_register.sql",
+      "match": "airspace.status",
+      "issue": 4
+    },
+    {
+      "file": "packages/persistence/migrations/0066_observation_avoidance_register.sql",
+      "match": "command-link.baseline",
+      "issue": 25
+    },
+    {
+      "file": "packages/persistence/migrations/0066_observation_avoidance_register.sql",
+      "match": "command_link_source_events",
+      "issue": 7
+    },
+    {
+      "file": "packages/persistence/migrations/0066_observation_avoidance_register.sql",
+      "match": "monitoring.window",
+      "issue": 27
+    },
+    {
+      "file": "packages/persistence/migrations/0069_accepted_control_intervals.sql",
+      "match": "commandLinkSources",
+      "issue": 5
+    },
+    {
+      "file": "packages/persistence/migrations/0069_accepted_control_intervals.sql",
+      "match": "command_link_sources",
+      "issue": 5
+    },
+    {
+      "file": "packages/persistence/migrations/0071_retire_flight_hazards.sql",
+      "match": "command_link_sources",
+      "issue": 5
+    },
+    {
+      "file": "packages/persistence/migrations/0071_retire_flight_hazards.sql",
+      "match": "commandLinkSources",
+      "issue": 5
+    },
+    {
+      "file": "packages/persistence/migrations/0075_one_version_of_each_mission_record.sql",
+      "match": "command_link_sources",
+      "issue": 5
+    },
+    {
+      "file": "packages/persistence/migrations/0075_one_version_of_each_mission_record.sql",
+      "match": "commandLinkSources",
+      "issue": 5
+    },
+    {
+      "file": "packages/persistence/migrations/0076_route_review_records_applicability.sql",
+      "match": "command_link_sources",
+      "issue": 5
+    },
+    {
+      "file": "packages/persistence/migrations/0076_route_review_records_applicability.sql",
+      "match": "commandLinkSources",
+      "issue": 5
+    }
+  ]
+}

@@ -1,0 +1,3 @@
+subjectId,secondarySubjectId,secondarySubjectKind,assessedAt,weatherDetermination,airspaceDetermination,groundHazardsDetermination,participantsBriefing,linkEnergyLoadDetermination,visibility [mi],assessedByName
+RIDGE-FLT-1101,RIDGE-AC-1,aircraft,2026-11-10T15:30:00Z,"Clear, wind 6 kt","Class G, no restrictions","Track crossing at marker 9, no people",Crew of two briefed,"Link check passed, batteries 98 percent, payload secure",10,Quinn Example
+RIDGE-FLT-1102,RIDGE-AC-2,aircraft,2026-11-12T15:35:00Z,"Haze, wind 9 kt","Class G, no restrictions",Barn near marker 12,Crew of two briefed,"Link check passed, batteries 95 percent",2.5,Rowan Example

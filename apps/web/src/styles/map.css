@@ -1,0 +1,607 @@
+.telemetry-lens {
+  --map-bg: #0d0d0d;
+  --map-ground: #141414;
+  --map-line: #2e2e38;
+  --map-grid: #23232a;
+  --map-text: #f9fafb;
+  --map-muted: #8d8d8d;
+  --map-faint: #535353;
+  --map-point: #f9fafb;
+  --map-track: #0096e0;
+  --map-late: var(--amber-mid);
+  min-width: 0;
+}
+
+.telemetry-heading {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 10px 16px;
+  margin-bottom: 12px;
+}
+.telemetry-heading h3 {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin: 0 0 3px;
+  font-size: 16px;
+  font-weight: 700;
+}
+.telemetry-heading p {
+  margin: 0;
+  font-size: 12.5px;
+  color: var(--muted);
+}
+.telemetry-lens > .notice {
+  margin: 12px 0;
+}
+.telemetry-lens .notice p {
+  margin: 4px 0 0;
+}
+.telemetry-lens .notice .button {
+  display: flex;
+  margin-top: 6px;
+  padding-left: 0;
+}
+.telemetry-arrivals {
+  margin: 0 0 10px;
+  font-size: 12.5px;
+  color: var(--flight);
+}
+.telemetry-arrivals button {
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font-weight: 600;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.telemetry-card {
+  overflow: hidden;
+  border: 1px solid #0f1114;
+  border-radius: 10px;
+  background: var(--map-bg);
+  color: var(--map-text);
+}
+.telemetry-transport {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px 12px;
+  padding: 9px 14px;
+  border-bottom: 1px solid var(--map-line);
+  color: var(--map-muted);
+  font: 11px var(--mono);
+}
+.telemetry-transport > span:first-child {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--map-text);
+}
+.telemetry-transport .connection-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--map-track);
+  box-shadow: 0 0 0 3px rgba(43, 179, 160, 0.2);
+}
+.telemetry-transport .connection-dot--error {
+  background: var(--map-late);
+  box-shadow: 0 0 0 3px rgba(224, 155, 45, 0.2);
+}
+
+.telemetry-map {
+  margin: 0;
+  background: var(--map-ground);
+}
+.telemetry-map svg {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+.telemetry-graticule line {
+  stroke: var(--map-grid);
+  stroke-width: 1;
+}
+.telemetry-graticule text,
+.telemetry-north {
+  fill: var(--map-faint);
+  font: 9px var(--mono);
+}
+.telemetry-north {
+  fill: var(--map-muted);
+  font-weight: 600;
+}
+.telemetry-track {
+  fill: none;
+  stroke: var(--map-track);
+  stroke-width: 2;
+  stroke-linecap: round;
+  vector-effect: non-scaling-stroke;
+}
+.telemetry-point {
+  fill: var(--map-point);
+  cursor: pointer;
+}
+.telemetry-point.is-selected {
+  fill: var(--magenta);
+  stroke: #fff;
+  stroke-width: 1.5;
+}
+.telemetry-late-ring {
+  fill: none;
+  stroke: var(--map-late);
+  stroke-width: 1.5;
+}
+.telemetry-map figcaption {
+  padding: 6px 14px 8px;
+  color: var(--map-faint);
+  font: 10.5px var(--mono);
+}
+.telemetry-map .map-empty {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: flex-start;
+  min-height: 260px;
+  padding: 32px 24px;
+}
+.telemetry-map .map-empty strong {
+  font-size: 14px;
+  color: var(--map-text);
+}
+.telemetry-map .map-empty p {
+  max-width: 340px;
+  margin: 6px 0 0;
+  font-size: 12.5px;
+  color: var(--map-muted);
+}
+.telemetry-map .loading-status {
+  color: var(--map-muted);
+}
+.telemetry-map .spinner {
+  border-color: var(--map-line);
+  border-top-color: var(--map-text);
+}
+
+.telemetry-summary {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 18px;
+  padding: 10px 14px;
+  border-top: 1px solid var(--map-line);
+  font-size: 12px;
+  color: var(--map-muted);
+}
+.telemetry-summary strong {
+  margin-right: 5px;
+  font: 600 13px var(--mono);
+  color: var(--map-text);
+}
+.telemetry-summary .is-late strong {
+  color: var(--map-late);
+}
+.telemetry-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 16px;
+  padding: 0 14px 12px;
+  font-size: 11.5px;
+  color: var(--map-faint);
+}
+.telemetry-legend span {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.telemetry-legend i {
+  display: inline-block;
+}
+.telemetry-legend i.track {
+  width: 14px;
+  border-top: 2px solid var(--map-track);
+}
+.telemetry-legend i.late {
+  width: 9px;
+  height: 9px;
+  border: 1.5px solid var(--map-late);
+  border-radius: 50%;
+}
+.telemetry-legend i.selected {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--magenta);
+}
+.telemetry-outside {
+  margin: 0;
+  padding: 9px 14px;
+  border-top: 1px solid var(--map-line);
+  background: rgba(224, 155, 45, 0.08);
+  color: var(--map-late);
+  font-size: 12px;
+}
+
+.telemetry-window {
+  margin: 8px 0 0;
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.telemetry-detail {
+  margin-top: 14px;
+  padding: 14px 16px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--sheet);
+}
+.telemetry-detail h4 {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 700;
+}
+.telemetry-detail > h4 {
+  margin-bottom: 2px;
+}
+.telemetry-detail-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+.telemetry-detail .inspection-facts {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px 20px;
+  margin: 0;
+}
+.telemetry-detail .inspection-facts dt {
+  margin-bottom: 2px;
+  font-size: 11.5px;
+  color: var(--muted);
+}
+.telemetry-detail .inspection-facts dd {
+  margin: 0;
+  font: 12.5px/1.45 var(--mono);
+  color: var(--ink);
+  overflow-wrap: anywhere;
+}
+.telemetry-review-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 14px;
+}
+
+.telemetry-samples {
+  max-height: 256px;
+  margin-top: 14px;
+  overflow: auto;
+  overflow-anchor: none;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--sheet);
+  scrollbar-width: thin;
+  scrollbar-color: var(--line-2) transparent;
+}
+.telemetry-sample {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 84px 96px;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  height: 52px;
+  padding: 0 14px;
+  border: 0;
+  border-bottom: 1px solid var(--line);
+  background: transparent;
+  color: var(--ink);
+  font: 12.5px/18px var(--mono);
+  text-align: left;
+}
+.telemetry-sample:last-child {
+  border-bottom: 0;
+}
+.telemetry-sample:hover {
+  background: var(--paper);
+}
+.telemetry-sample.is-selected {
+  background: var(--magenta-soft);
+  box-shadow: inset 3px 0 var(--magenta);
+}
+.telemetry-sample:focus-visible {
+  outline-offset: -3px;
+}
+.telemetry-sample span {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.telemetry-sample span:first-child {
+  font-family: var(--sans);
+  font-weight: 600;
+}
+.telemetry-sample span:last-child {
+  text-align: right;
+}
+.telemetry-sample small {
+  display: block;
+  font: 11px/16px var(--sans);
+  color: var(--muted);
+}
+.telemetry-sample .sample-late,
+.telemetry-sample .sample-late small {
+  color: var(--amber);
+}
+
+.telemetry-source {
+  padding: 10px 0;
+}
+.telemetry-source + .telemetry-source {
+  border-top: 1px solid var(--line);
+}
+.telemetry-source-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+.telemetry-source-heading strong {
+  font-size: 13px;
+  overflow-wrap: anywhere;
+}
+.telemetry-source p {
+  margin: 3px 0 0;
+  font-size: 12px;
+  color: var(--ink-2);
+}
+
+.telemetry-limitations {
+  margin-top: 12px;
+}
+.telemetry-lens > .telemetry-limitations {
+  margin-top: 14px;
+}
+.telemetry-limitations > summary {
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--ink-2);
+}
+.telemetry-limitations ul {
+  margin: 8px 0 0;
+  padding-left: 18px;
+  font-size: 12px;
+  line-height: 1.55;
+  color: var(--ink-2);
+}
+.telemetry-limitations li + li {
+  margin-top: 4px;
+}
+.telemetry-limitations pre {
+  margin: 8px 0 0;
+  padding: 10px 12px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--paper);
+  color: var(--ink-2);
+  font: 11px/1.5 var(--mono);
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.fleet {
+  flex: none;
+  padding: 10px 16px 6px;
+  border-bottom: 1px solid var(--line);
+  background: var(--sheet);
+}
+.fleet-heading {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+}
+.fleet-heading h2 {
+  margin: 0;
+  font-size: 13px;
+}
+.fleet-heading p,
+.fleet-empty {
+  margin: 0;
+  color: var(--muted);
+  font-size: 12px;
+}
+.fleet-map {
+  display: block;
+  width: 100%;
+  height: 210px;
+}
+.fleet-route {
+  stroke: var(--line-2);
+  stroke-width: 1.25;
+  stroke-dasharray: 4 4;
+}
+.fleet-route.is-selected {
+  stroke: var(--magenta);
+}
+.fleet-yard rect {
+  fill: var(--ink);
+}
+.fleet-yard text,
+.fleet-site-label {
+  fill: var(--ink-2);
+  font-size: 11px;
+}
+.fleet-context-copy {
+  color: var(--ink-2);
+  font-size: 11px;
+  line-height: 14px;
+}
+.fleet-context-copy > div {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.fleet-yard text,
+.fleet-site-label {
+  stroke: var(--sheet);
+  stroke-width: 4px;
+  stroke-linejoin: round;
+  paint-order: stroke fill;
+}
+.fleet-labels {
+  pointer-events: none;
+}
+.fleet-context .fleet-aircraft,
+.fleet-context .fleet-age {
+  color: var(--muted);
+  font-size: 10px;
+}
+.fleet-context .fleet-age.is-stale {
+  color: var(--amber);
+}
+.fleet-context.is-unreported .fleet-aircraft {
+  color: var(--amber);
+}
+.fleet-context-card {
+  fill: var(--paper);
+  fill-opacity: 0.96;
+  stroke: var(--line-2);
+}
+.fleet-context-ring {
+  fill: none;
+  stroke: var(--ink-2);
+  stroke-width: 1.5;
+}
+.fleet-context-connector {
+  stroke: var(--muted);
+  stroke-width: 1;
+}
+.fleet-context.is-selected .fleet-context-card,
+.fleet-context.is-focused .fleet-context-card,
+.fleet-context.is-selected .fleet-context-ring,
+.fleet-context.is-focused .fleet-context-ring,
+.fleet-context.is-selected .fleet-context-connector,
+.fleet-context.is-focused .fleet-context-connector {
+  stroke: var(--magenta);
+}
+.fleet-context.is-selected .fleet-context-card,
+.fleet-context.is-focused .fleet-context-card {
+  stroke-width: 1.5;
+}
+.fleet-context.is-selected .fleet-context-title,
+.fleet-context.is-focused .fleet-context-title {
+  color: var(--ink);
+  font-weight: 600;
+}
+.fleet-place {
+  fill: var(--plan);
+}
+.fleet-flight {
+  cursor: pointer;
+}
+.fleet-flight:focus-visible {
+  outline: none;
+}
+.fleet-flight.is-selected .fleet-place {
+  fill: var(--magenta);
+}
+.fleet-position.is-fresh {
+  fill: var(--flight);
+}
+.fleet-position.is-stale {
+  fill: none;
+  stroke: var(--amber);
+  stroke-width: 1.5;
+}
+.fleet-outliers {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 12px;
+  margin: 0 0 4px;
+  color: var(--amber);
+  font-size: 11.5px;
+}
+.fleet-outliers button {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--ink-2);
+  font-size: inherit;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.fleet-context-strip {
+  display: none;
+}
+
+@media (max-width: 740px) {
+  .fleet-heading {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 6px;
+  }
+  .fleet-context-card,
+  .fleet-context-connector,
+  .fleet-context foreignObject {
+    display: none;
+  }
+  .fleet-context-strip {
+    display: grid;
+    gap: 6px;
+    margin-bottom: 10px;
+  }
+  .fleet-context-summary {
+    min-width: 0;
+    padding: 7px 10px;
+    border-left: 2px solid var(--line-2);
+    background: var(--paper);
+    font-size: 12px;
+    line-height: 1.5;
+  }
+  .fleet-context-summary.is-selected,
+  .fleet-context-summary.is-focused {
+    border-left-color: var(--magenta);
+  }
+  .fleet-context-summary p {
+    margin: 0;
+    overflow-wrap: anywhere;
+  }
+  .fleet-context-name {
+    font-size: 13px;
+    font-weight: 600;
+  }
+  .fleet-context-kind {
+    color: var(--muted);
+    font-size: 11px;
+    font-weight: 400;
+  }
+  .fleet-context-aircraft,
+  .fleet-context-status {
+    color: var(--ink-2);
+  }
+  .fleet-context-status.is-stale {
+    color: var(--amber);
+  }
+  .telemetry-detail .inspection-facts {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .telemetry-map .map-empty {
+    min-height: 200px;
+    padding: 24px 20px;
+  }
+  .telemetry-sample {
+    grid-template-columns: minmax(0, 1fr) 72px 84px;
+    gap: 6px;
+    padding: 0 10px;
+    font-size: 12px;
+  }
+}

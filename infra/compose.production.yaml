@@ -1,0 +1,169 @@
+# A production start of Ledger from the image: the API, which also serves the web app, and the workers. Run it from
+# the checkout's root with your settings in ledger.env and the database owner's connection in ledger-owner.env (see
+# docs/guides/deploy.md):
+#
+#   docker compose --env-file ledger.env --env-file ledger-owner.env -f infra/compose.production.yaml up -d
+#
+# Only the setup service is given ledger-owner.env: migrations and the setup commands, one at a time, as in
+#
+#   docker compose --env-file ledger.env --env-file ledger-owner.env -f infra/compose.production.yaml \
+#     run --rm setup packages/persistence/dist/migrate.js
+#
+# The ledger service is never given it, and refuses to start if its own env file holds it.
+#
+# The ledger service reads the organization's own pack files from packs/ at the checkout's root (mkdir -p packs before
+# the first start), and infra/backup.mjs takes the nightly backup (docs/guides/deploy.md, sections 4 and 9).
+#
+# Everything else starts only with its profile, so a deployment that has its own database, storage, proxy or identity
+# provider starts none of these:
+#   database  PostgreSQL 17 with PostGIS 3.5, for Ledger only
+#   storage   SeaweedFS, an S3-compatible store that honours conditional writes
+#   proxy     Caddy, terminating TLS with certificates it obtains itself; reads Caddyfile at the checkout's root
+#   keycloak  Keycloak with its own database, as the identity provider
+#   broker    Mosquitto, for sources that report over MQTT
+#   adapter   one adapter process for one source
+name: ledger-production
+services:
+  ledger:
+    image: ledger:local
+    build:
+      context: ..
+      dockerfile: infra/Dockerfile
+    env_file: ../ledger.env
+    # Plain HTTP on this host only: browsers and sources reach Ledger through the TLS proxy.
+    ports: ['127.0.0.1:4000:4000']
+    # The organization's own rule pack files (*.pack.json), from the git-ignored packs/ folder at the checkout's root,
+    # read by the API and the workers when they start. An empty folder adds none: Ledger offers its built-in packs.
+    environment:
+      LEDGER_PACKS_DIR: /packs
+    volumes: ['../packs:/packs:ro']
+    restart: unless-stopped
+    healthcheck:
+      test:
+        - CMD
+        - node
+        - -e
+        - "fetch('http://127.0.0.1:4000/readyz').then((r) => process.exit(r.ok ? 0 : 1), () => process.exit(1))"
+      interval: 5s
+      timeout: 5s
+      retries: 60
+    depends_on:
+      postgres: { condition: service_healthy, required: false }
+      objects: { condition: service_healthy, required: false }
+  # Migrations and the setup commands (create-organization.js, issue-credential.js, write-broker-files.js): the only
+  # processes given the owner's connection. `docker compose run --rm setup <script> [arguments]`.
+  setup:
+    profiles: [setup]
+    image: ledger:local
+    env_file: [../ledger.env, ../ledger-owner.env]
+    user: '1000:1000'
+    entrypoint: ['node']
+    depends_on:
+      postgres: { condition: service_healthy, required: false }
+  postgres:
+    profiles: [database]
+    image: imresamu/postgis:17-3.5-alpine@sha256:cd3e4f2acea6d27e5314c70ca478e6e4d2d97b1a4a594de0a7c71456472c65ef
+    environment:
+      POSTGRES_DB: ledger
+      POSTGRES_USER: ledger_owner
+      POSTGRES_PASSWORD: ${LEDGER_DATABASE_OWNER_PASSWORD:-}
+    volumes: ['ledger-postgres:/var/lib/postgresql/data']
+    healthcheck:
+      # Over TCP: on its first start the image answers on its socket before it has created the PostGIS extension.
+      test: ['CMD-SHELL', 'pg_isready -h 127.0.0.1 -U ledger_owner -d ledger']
+      interval: 2s
+      timeout: 2s
+      retries: 30
+    restart: unless-stopped
+  objects:
+    profiles: [storage]
+    image: chrislusf/seaweedfs:4.55@sha256:7ca46aeae2f223b37e5d91593c17ab37738eec6df6ab69b48a0487f7643342b9
+    command: ['server', '-dir=/data', '-s3', '-s3.port=8333']
+    # On this host only, for backups and the storage check run from the checkout.
+    ports: ['127.0.0.1:8333:8333']
+    environment:
+      AWS_ACCESS_KEY_ID: ${S3_ACCESS_KEY_ID:-}
+      AWS_SECRET_ACCESS_KEY: ${S3_SECRET_ACCESS_KEY:-}
+    volumes: ['ledger-objects:/data']
+    healthcheck:
+      test: ['CMD-SHELL', 'wget -q -O /dev/null http://127.0.0.1:9333/cluster/status']
+      interval: 2s
+      timeout: 2s
+      retries: 60
+    restart: unless-stopped
+  proxy:
+    profiles: [proxy]
+    image: caddy:2.10.2-alpine@sha256:4c6e91c6ed0e2fa03efd5b44747b625fec79bc9cd06ac5235a779726618e530d
+    ports: ['80:80', '443:443', '443:443/udp']
+    volumes:
+      - ../Caddyfile:/etc/caddy/Caddyfile:ro
+      - ledger-proxy-data:/data
+      - ledger-proxy-config:/config
+    restart: unless-stopped
+  keycloak:
+    profiles: [keycloak]
+    image: quay.io/keycloak/keycloak:26.4.0@sha256:5f3fb534cde6bf006d79f5912473e5d2c828c707cdfc52e16972803aca9d43dd
+    command: ['start']
+    environment:
+      KC_HOSTNAME: ${KEYCLOAK_URL:-}
+      KC_PROXY_HEADERS: xforwarded
+      KC_HTTP_ENABLED: 'true'
+      KC_HEALTH_ENABLED: 'true'
+      KC_DB: postgres
+      KC_DB_URL: jdbc:postgresql://keycloak-db:5432/keycloak
+      KC_DB_USERNAME: keycloak
+      KC_DB_PASSWORD: ${KEYCLOAK_DB_PASSWORD:-}
+      KC_BOOTSTRAP_ADMIN_USERNAME: bootstrap-admin
+      KC_BOOTSTRAP_ADMIN_PASSWORD: ${KEYCLOAK_BOOTSTRAP_PASSWORD:-}
+    depends_on:
+      keycloak-db: { condition: service_healthy }
+    healthcheck:
+      test:
+        [
+          'CMD-SHELL',
+          'exec 3<>/dev/tcp/127.0.0.1/9000 && printf "GET /health/ready HTTP/1.0\r\n\r\n" >&3 && grep -q UP <&3',
+        ]
+      interval: 5s
+      timeout: 5s
+      retries: 60
+    restart: unless-stopped
+  keycloak-db:
+    profiles: [keycloak]
+    # Keycloak's own PostgreSQL 17, apart from Ledger's; the same image as the database profile, so one image serves both.
+    image: imresamu/postgis:17-3.5-alpine@sha256:cd3e4f2acea6d27e5314c70ca478e6e4d2d97b1a4a594de0a7c71456472c65ef
+    environment:
+      POSTGRES_DB: keycloak
+      POSTGRES_USER: keycloak
+      POSTGRES_PASSWORD: ${KEYCLOAK_DB_PASSWORD:-}
+    volumes: ['keycloak-db:/var/lib/postgresql/data']
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -h 127.0.0.1 -U keycloak -d keycloak']
+      interval: 2s
+      timeout: 2s
+      retries: 30
+    restart: unless-stopped
+  broker:
+    profiles: [broker]
+    image: eclipse-mosquitto:2.0.22@sha256:199ea8ef2e35ec2b1b37e59cfd1dbae538ed4dfa4a2251a121a52215a6248a21
+    # The files pnpm broker:files wrote from the sources on record; publish each port it gave an organization.
+    command: ['mosquitto', '-c', '/mosquitto/config/accounts/mosquitto.conf']
+    ports: ['1883:1883']
+    volumes:
+      - ../broker:/mosquitto/config/accounts:ro
+      - ledger-broker:/mosquitto/data
+    restart: unless-stopped
+  # One adapter process for one source, started only with the adapter profile; its settings and secrets are in
+  # adapter.env (see docs/guides/deploy.md). For a second source, copy this service with its own env file.
+  adapter:
+    profiles: [adapter]
+    image: ledger:local
+    env_file: ../adapter.env
+    command: ['adapter']
+    restart: unless-stopped
+volumes:
+  ledger-postgres:
+  ledger-objects:
+  ledger-proxy-data:
+  ledger-proxy-config:
+  keycloak-db:
+  ledger-broker:

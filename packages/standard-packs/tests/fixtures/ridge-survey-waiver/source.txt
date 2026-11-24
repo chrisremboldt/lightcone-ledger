@@ -1,0 +1,42 @@
+INVENTED FOR LEDGER'S DOCUMENTATION AND TESTS. Not a real certificate. It names no real holder and grants nothing.
+
+CERTIFICATE OF WAIVER EXW-0417
+
+Issued to: Example Ridge Survey (fictional)
+Responsible person: Harper Example (fictional)
+Regulations waived: 14 CFR 107.31, Visual line of sight aircraft operation
+Effective: June 1, 2026 through May 31, 2028
+
+SPECIAL PROVISIONS
+
+1. Operations beyond visual line of sight are permitted only when the flight is conducted under this Certificate of Waiver EXW-0417 and in accordance with these provisions.
+
+2. The Responsible Person must maintain a current list of the remote pilots in command who operate under this waiver, by name and remote pilot certificate number. Only pilots RIDGE-P-01, RIDGE-P-02 and RIDGE-P-03 may act as remote pilot in command.
+
+3. Operations under this waiver are limited to the small unmanned aircraft registered as FICT-0401 and FICT-0402.
+
+4. The small unmanned aircraft must not be operated higher than 200 feet above ground level.
+
+5. All operations must remain within 2 statute miles of the control station.
+
+6. Each remote pilot in command must have completed the operator's Ridge BVLOS course within the preceding 12 calendar months. The training must be documented and the documentation made available to the Administrator on request.
+
+7. The small unmanned aircraft must be equipped with a serviceable detect-and-avoid system that alerts the remote pilot in command to crewed aircraft.
+
+8. The operator must have a lost link procedure, and the remote pilot in command must follow it if the command and control link is lost.
+
+9. A Notice to Airmen must be filed with Flight Service not less than 24 hours before each operation.
+
+10. Operations must not be conducted when the flight visibility is less than 3 statute miles.
+
+11. The remote pilot in command must not operate more than one small unmanned aircraft at a time.
+
+12. The operator must report any flyaway, loss of control, or lost link lasting more than 30 seconds to the Flight Standards District Office within 24 hours.
+
+13. The small unmanned aircraft must be maintained in accordance with the manufacturer's instructions, and all maintenance, firmware changes and malfunctions must be documented. The records must be made available to the Administrator on request.
+
+14. After any firmware or hardware change, a functional test flight within visual line of sight must be completed and logged before operations resume under this waiver.
+
+15. A copy of this Certificate of Waiver must be available at the control station during operations.
+
+16. Operations over human beings who are not directly participating in the operation are not permitted under this waiver.

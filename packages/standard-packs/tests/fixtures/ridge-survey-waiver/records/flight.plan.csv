@@ -1,0 +1,5 @@
+subjectId,secondarySubjectId,windowStartsAt,windowEndsAt,operationKind,plannedOriginDescription,plannedDestinationDescription,routeSummary,visualMode,operatingAuthorityReference,pilotInOperatingArea,plannedMaxHeightAboveGround [ft],plannedMaxDistanceFromControlStation [mi],plannedMaxGroundSpeed [kn]
+RIDGE-FLT-1101,RIDGE-AC-1,2026-11-10T16:00:00Z,2026-11-10T17:00:00Z,inspection,East ridge pad,East ridge pad,"Pipeline segment 4, markers 3 to 22",beyond_visual_line_of_sight,EXW-0417,yes,150,1.8,25
+RIDGE-FLT-1102,RIDGE-AC-2,2026-11-12T16:00:00Z,2026-11-12T17:30:00Z,inspection,Saddle road pullout,Saddle road pullout,"Pipeline segment 5, markers 1 to 30",beyond_visual_line_of_sight,EXW-0417,yes,250,2.4,25
+RIDGE-FLT-1103,RIDGE-AC-3,2026-11-14T18:00:00Z,2026-11-14T18:40:00Z,aerial_survey,Gravel pit gate,Gravel pit gate,"Stockpile survey, west gravel pit",visual_line_of_sight,,yes,300,0.3,20
+RIDGE-FLT-1201,RIDGE-AC-1,2026-12-01T16:00:00Z,2026-12-01T17:00:00Z,inspection,East ridge pad,East ridge pad,"Pipeline segment 4, markers 22 to 40",beyond_visual_line_of_sight,EXW-0417,yes,180,1.9,25

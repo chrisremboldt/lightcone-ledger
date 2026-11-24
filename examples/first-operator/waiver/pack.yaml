@@ -1,0 +1,172 @@
+# Example Ridge Survey's waiver, described for Ledger: an invented operator and an invented waiver.
+# source.txt is the waiver exactly as issued. Each provision below quotes its words from it unchanged and names what
+# it asks for; a provision no record shows is listed for a person to check. Build it with:
+#   pnpm pack:build examples/first-operator/waiver --out <your packs folder>
+# and read the printout back against the waiver before the pack is loaded.
+
+pack:
+  id: example-ridge.waiver-107w-ex-2026-00417
+  version: 1
+  title: Waiver 107W-EX-2026-00417, beyond visual line of sight (invented)
+
+source:
+  file: source.txt
+  kind: waiver
+  reference: Certificate of Waiver 107W-EX-2026-00417 (invented)
+
+# What the certificate itself states: its number, the dates it is effective, and which flights its conditions cover.
+# Example Ridge Survey flies most of its flights under Part 107 alone; those plans cite nothing, and the waiver's
+# conditions are not checked against them.
+waiver:
+  certificateNumber: 107W-EX-2026-00417
+  effective:
+    from: 2026-06-01
+    through: 2028-05-31
+  conditionsCover: flights whose plan cites the certificate
+
+provisions:
+  - number: 1
+    title: Relief from visual line of sight
+    quote: >-
+      Operations beyond visual line of sight are permitted only when the flight is conducted under this Certificate
+      of Waiver 107W-EX-2026-00417 and in accordance with these provisions.
+    obligation: authority.flight-cites-certificate
+    parameters:
+      certificateNumber: 107W-EX-2026-00417
+      effectiveFrom: 2026-06-01
+      effectiveThrough: 2028-05-31
+    relieves:
+      - packId: ledger.part107
+        ruleIds: [ledger.part107.107.31.a]
+
+  - number: 2
+    title: Listed pilots
+    quote: Only pilots RIDGE-P-01, RIDGE-P-02 and RIDGE-P-03 may act as remote pilot in command.
+    obligation: eligibility.listed-pilot
+    parameters:
+      personIds: [RIDGE-P-01, RIDGE-P-02, RIDGE-P-03]
+
+  - number: 3
+    title: Listed aircraft
+    quote: >-
+      Operations under this waiver are limited to the small unmanned aircraft registered as FA3EXAMPLE01 and
+      FA3EXAMPLE02.
+    obligation: eligibility.listed-aircraft
+    parameters:
+      registrationNumbers: [FA3EXAMPLE01, FA3EXAMPLE02]
+
+  - number: 4
+    title: Maximum height
+    quote: The small unmanned aircraft must not be operated higher than 200 feet above ground level.
+    obligation: condition.max-height
+    parameters:
+      maxFeetAboveGround: 200
+
+  - number: 5
+    title: Maximum distance
+    quote: All operations must remain within 2 statute miles of the control station.
+    obligation: condition.max-distance
+    parameters:
+      maxStatuteMiles: 2
+
+  - number: 6
+    title: BVLOS course currency
+    quote: >-
+      Each remote pilot in command must have completed the operator's BVLOS Operations Course within the preceding
+      12 calendar months.
+    obligation: qualification.named-training-current
+    parameters:
+      courseTitle: BVLOS Operations Course
+      months: 12
+
+  - number: 7
+    title: Detect and avoid
+    quote: The small unmanned aircraft must be equipped with a serviceable detect-and-avoid system
+    obligation: equipment.detect-and-avoid
+
+  - number: 8
+    title: Lost link procedure
+    quote: The operator must have a lost link procedure
+    obligation: procedure.on-file
+    parameters:
+      procedureKind: lost_link
+
+  - number: 9
+    title: Notice to Airmen
+    quote: A Notice to Airmen must be filed with Flight Service not less than 24 hours before each operation.
+    obligation: notification.before-operations
+    parameters:
+      party: Flight Service
+      leadHours: 24
+
+  - number: 10
+    title: Visibility
+    quote: Operations must not be conducted when the flight visibility is less than 3 statute miles.
+    obligation: weather.visibility-at-takeoff
+    parameters:
+      minStatuteMiles: 3
+
+  - number: 11
+    title: One aircraft at a time
+    quote: The remote pilot in command must not operate more than one small unmanned aircraft at a time.
+    obligation: operation.aircraft-per-pilot
+    parameters:
+      maxAircraft: 1
+
+  - number: 14
+    title: Functional test flight after a change
+    quote: >-
+      After any firmware or hardware change, a functional test flight within visual line of sight must be completed
+      and logged before operations resume under this waiver.
+    coverage: manual
+    waitingFor: Confirm that a functional test flight was logged after the latest firmware or hardware change.
+
+  - number: 15
+    title: Certificate at hand
+    quote: A copy of this Certificate of Waiver must be available at the control station during operations.
+    obligation: authority.certificate-at-hand
+
+  - number: 16
+    title: No operations over people
+    quote: >-
+      Operations over human beings who are not directly participating in the operation are not permitted under this
+      waiver.
+    coverage: manual
+    waitingFor: Confirm that the flight did not pass over people who were not taking part in the operation.
+
+  - number: 12
+    title: Flyaway, loss of control or lost link reported within 24 hours
+    quote: >-
+      The operator must report any flyaway, loss of control, or lost link lasting more than 30 seconds to the Flight
+      Standards District Office within 24 hours.
+    obligation: report.occurrence-within
+    parameters:
+      occurrences: [occurrence.emergency-deviation, occurrence.mechanical-irregularity]
+      party: the Flight Standards District Office
+      hours: 24
+
+  - number: 13
+    title: Maintenance records
+    quote: all maintenance, firmware changes and malfunctions must be documented
+    obligation: record.maintenance-complete
+
+  - number: 17
+    title: Wind at takeoff
+    quote: No flight may take off when the sustained wind at the launch site is above 10 meters per second.
+    obligation: weather.wind-at-takeoff
+    parameters:
+      maxMetersPerSecond: 10
+
+  - number: 18
+    title: Battery reserve at landing
+    quote: Each flight must land with not less than 25 percent battery remaining.
+    obligation: condition.battery-at-landing
+    parameters:
+      minPercent: 25
+
+  - number: 19
+    title: Inspection not overdue
+    quote: >-
+      The small unmanned aircraft must not be flown after its next inspection under the operator's maintenance program
+      is due, whether that inspection is due at a date or at a number of hours in service.
+    obligation: maintenance.inspection-due

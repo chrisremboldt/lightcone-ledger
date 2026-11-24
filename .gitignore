@@ -1,0 +1,33 @@
+.DS_Store
+node_modules/
+dist/
+dist-demo/
+coverage/
+test-results/
+playwright-report/
+.env
+.env.*
+!.env.example
+.vercel/
+.local/
+*.log
+*.tsbuildinfo
+# Airspace Link schemas are downloaded by `pnpm vendor:airspace`, not redistributed.
+apps/emulators/vendor/airspace-link/*
+!apps/emulators/vendor/airspace-link/provenance.json
+# Broker accounts written by pnpm broker:files from the sources on record
+infra/mqtt/accounts/*
+!infra/mqtt/accounts/.gitkeep
+# A deployment's own settings and broker files (docs/guides/deploy.md)
+ledger.env
+ledger-owner.env
+adapter.env
+/broker/
+/Caddyfile
+/keycloak/
+/ledger-compose.sh
+/backups/
+/packs/
+# An operator's own files and credentials (docs/guides/set-up-with-a-coding-agent.md): never committed
+.ledger/
+/organization/

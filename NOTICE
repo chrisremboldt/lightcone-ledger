@@ -1,0 +1,49 @@
+Lightcone Ledger
+Copyright 2026 Lightcone Systems, Inc.
+
+Licensed under the Apache License, Version 2.0 (SPDX: Apache-2.0). See LICENSE.
+
+Third-party material
+
+- npm dependencies are installed from the registry under their own licences
+  (MIT, Apache-2.0, ISC, BSD, MPL-2.0 and similar). None is included in this
+  repository.
+
+- The web application uses the Open Sans and Roboto Mono typefaces through the
+  @fontsource packages, under the SIL Open Font License 1.1.
+
+- packages/pack-part108-nprm/resources/govinfo-fr-2025-14992.htm is an unmodified copy of
+  a Federal Register notice of proposed rulemaking published by the United
+  States Government (FR Doc. 2025-14992,
+  https://www.govinfo.gov/content/pkg/FR-2025-08-07/html/2025-14992.htm).
+  It is a work of the U.S. Government. Organizations named in that notice are
+  named by its authors, not by this project.
+
+- packages/pack-part107/resources/govinfo-cfr-2026-title14-vol2-part107.xml is an
+  unmodified copy of 14 CFR Part 107 (Small Unmanned Aircraft Systems) as
+  published in the annual edition of Title 14 of the Code of Federal
+  Regulations revised as of January 1, 2026, by the United States Government
+  Publishing Office
+  (https://www.govinfo.gov/content/pkg/CFR-2026-title14-vol2/xml/CFR-2026-title14-vol2-part107.xml),
+  retrieved on 2026-11-19: 86803 bytes, SHA-256
+  0c07b393796351d4a6b2fef98b330d16d1318d79a5b2bb608894a93443eed70f.
+  It is a work of the U.S. Government.
+
+- The Airspace Link OpenAPI schemas are not included. `pnpm vendor:airspace`
+  downloads them from developers.airspacelink.com and checks them against the
+  pins in apps/emulators/vendor/airspace-link/provenance.json.
+
+- The local development stack pulls the PostGIS, Eclipse Mosquitto and Adobe
+  S3Mock container images. They run as separate services and are not
+  distributed with this program.
+
+Trademarks
+
+Airspace Link, AirHub, DJI, Keycloak and other product names are trademarks of
+their respective owners. Their use here identifies the interfaces Ledger
+connects to and implies no affiliation or endorsement.
+
+Fictional data
+
+All organizations, people, sites, aircraft and documents in the seed data,
+fixtures, tests and simulated operation are fictional.

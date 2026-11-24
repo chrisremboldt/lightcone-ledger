@@ -1,0 +1,112 @@
+{
+  "case": "valid",
+  "message": {
+    "contentType": "application/json",
+    "transport": {
+      "path": "/imports/roster"
+    },
+    "capturedAt": "2026-10-17T08:00:00.000Z",
+    "body": {
+      "format": "crew-roster-export",
+      "formatVersion": 1,
+      "entries": [
+        {
+          "entryId": "R-0100",
+          "employeeId": "ALPHA-PILOT-01",
+          "position": "PILOT",
+          "kind": "DUTY",
+          "start": "2026-10-16T07:00:00Z",
+          "end": "2026-10-16T15:00:00Z"
+        },
+        {
+          "entryId": "R-0101",
+          "revision": 2,
+          "employeeId": "ALPHA-PILOT-01",
+          "kind": "REST",
+          "start": "2026-10-15T15:00:00Z",
+          "end": "2026-10-16T07:00:00Z"
+        },
+        {
+          "entryId": "R-0102",
+          "employeeId": "ALPHA-OBSERVER-01",
+          "position": "OBSERVER",
+          "kind": "FLIGHT_DUTY",
+          "start": "2026-10-16T08:00:00Z"
+        }
+      ]
+    }
+  },
+  "expect": {
+    "observations": [
+      {
+        "type": "crew.duty-period",
+        "version": 1,
+        "subject": {
+          "kind": "person",
+          "id": "ALPHA-PILOT-01",
+          "scope": "source"
+        },
+        "occurredAt": "2026-10-16T07:00:00Z",
+        "interval": {
+          "start": "2026-10-16T07:00:00Z",
+          "end": "2026-10-16T15:00:00Z"
+        },
+        "sourceEventId": "R-0100@1",
+        "originalLocator": {
+          "kind": "json_pointer",
+          "value": "/entries/0"
+        },
+        "values": {
+          "period": "duty",
+          "role": "remote_pilot"
+        }
+      },
+      {
+        "type": "crew.duty-period",
+        "version": 1,
+        "subject": {
+          "kind": "person",
+          "id": "ALPHA-PILOT-01",
+          "scope": "source"
+        },
+        "occurredAt": "2026-10-15T15:00:00Z",
+        "interval": {
+          "start": "2026-10-15T15:00:00Z",
+          "end": "2026-10-16T07:00:00Z"
+        },
+        "sourceEventId": "R-0101@2",
+        "originalLocator": {
+          "kind": "json_pointer",
+          "value": "/entries/1"
+        },
+        "values": {
+          "period": "rest"
+        }
+      },
+      {
+        "type": "crew.duty-period",
+        "version": 1,
+        "subject": {
+          "kind": "person",
+          "id": "ALPHA-OBSERVER-01",
+          "scope": "source"
+        },
+        "occurredAt": "2026-10-16T08:00:00Z",
+        "interval": {
+          "start": "2026-10-16T08:00:00Z"
+        },
+        "sourceEventId": "R-0102@1",
+        "originalLocator": {
+          "kind": "json_pointer",
+          "value": "/entries/2"
+        },
+        "values": {
+          "period": "flight_duty",
+          "role": "visual_observer"
+        }
+      }
+    ],
+    "rejections": [],
+    "unmapped": []
+  }
+}

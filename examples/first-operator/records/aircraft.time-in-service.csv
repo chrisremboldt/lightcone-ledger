@@ -1,0 +1,2 @@
+subjectId,entryKind,totalTimeHours,coveredThroughAt,sourceReference,coverage,coverageNotes
+RIDGE-AC-1,running_total,119.5,2026-11-01,Aircraft logbook RIDGE-AC-1 page 14,complete,Every flight since the aircraft was delivered is in its logbook.

@@ -1,0 +1,328 @@
+.workspace > main.operations[hidden] {
+  display: none;
+}
+.records-toggle {
+  white-space: nowrap;
+}
+.records-area {
+  display: grid;
+  grid-template-columns: 292px minmax(0, 1fr);
+  min-height: 0;
+}
+/* The home of flights on record has no list beside it: it takes the page's whole width. */
+.records-area.records-home {
+  grid-template-columns: minmax(0, 1fr);
+}
+.records-nav .roster-head {
+  display: grid;
+  gap: 8px;
+}
+.records-nav select,
+.records-subject input,
+.records-form-grid input,
+.records-form-grid select,
+.records-form-grid textarea {
+  min-width: 0;
+  width: 100%;
+}
+/* The entry forms' controls look like every other field in the app, not the browser's own. */
+.records-nav select,
+.records-form-grid input:not([type='checkbox']):not([type='radio']):not([type='file']),
+.records-form-grid select,
+.records-form-grid textarea {
+  padding: 6px 9px;
+  border: 1px solid var(--line-2);
+  border-radius: 6px;
+  background: var(--sheet);
+  color: inherit;
+  font: inherit;
+  font-size: 13px;
+}
+.records-field {
+  color: var(--ink-2);
+  font-size: 12px;
+  font-weight: 600;
+}
+.records-kinds {
+  margin-bottom: 0.75rem;
+}
+
+.records-panes {
+  margin-top: 8px;
+}
+.records-description {
+  margin: 14px 16px;
+}
+.records-note {
+  color: var(--muted);
+  font-size: 12px;
+}
+.records-help {
+  display: block;
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 400;
+}
+.records-subject,
+.records-file,
+.records-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin: 12px 0;
+}
+.records-subject input {
+  max-width: 280px;
+}
+.records-subjects {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-bottom: 10px;
+}
+.records-items {
+  display: grid;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.records-item {
+  display: grid;
+  gap: 4px;
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--sheet);
+  color: var(--ink);
+  text-align: left;
+  cursor: pointer;
+}
+.records-item:hover {
+  border-color: var(--magenta);
+}
+.records-item-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+.records-item-meta {
+  color: var(--muted);
+  font: 400 12px var(--mono);
+}
+.records-missing {
+  color: var(--amber);
+  font-size: 12px;
+}
+.records-detail {
+  display: grid;
+  gap: 10px;
+  justify-items: start;
+}
+.records-fields {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 10px 20px;
+  width: 100%;
+  margin: 0;
+}
+.records-fields dt {
+  color: var(--muted);
+  font-size: 12px;
+}
+.records-fields dd {
+  margin: 2px 0 0;
+  overflow-wrap: anywhere;
+}
+.records-origin {
+  width: 100%;
+}
+.records-original {
+  max-height: 240px;
+  overflow: auto;
+  padding: 10px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: var(--paper);
+  font: 400 12px var(--mono);
+  white-space: pre-wrap;
+}
+.records-link {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--magenta);
+  font: inherit;
+  text-decoration: underline;
+  cursor: pointer;
+}
+.records-reasons {
+  margin: 4px 0;
+  padding-left: 18px;
+}
+.records-form {
+  width: 100%;
+  max-width: 720px;
+}
+.records-form-grid {
+  display: grid;
+  grid-template-columns: minmax(180px, 2fr) minmax(0, 3fr);
+  gap: 8px 14px;
+  align-items: start;
+}
+.records-form-grid > label {
+  color: var(--ink-2);
+  font-size: 12px;
+  font-weight: 600;
+}
+.records-form-grid > label small {
+  margin-left: 4px;
+  color: var(--muted);
+  font-weight: 400;
+}
+.records-form-grid > .records-help {
+  grid-column: 2;
+}
+.records-number {
+  display: flex;
+  gap: 6px;
+}
+.records-number select {
+  width: auto;
+}
+.records-unit {
+  align-self: center;
+  color: var(--muted);
+  font-size: 12px;
+}
+.records-columns table,
+.records-preview {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12px;
+}
+.records-columns th,
+.records-columns td,
+.records-preview th,
+.records-preview td {
+  padding: 6px 8px;
+  border-bottom: 1px solid var(--line);
+  text-align: left;
+  vertical-align: top;
+}
+@media (max-width: 820px) {
+  .records-area {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .records-form-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .records-form-grid > .records-help {
+    grid-column: 1;
+  }
+}
+.people-list {
+  margin: 0 16px 16px;
+}
+.people-list .records-item[aria-current='true'] {
+  border-color: var(--magenta);
+}
+.people-capabilities {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 12px;
+  margin: 12px 0;
+}
+.people-capabilities fieldset {
+  display: grid;
+  gap: 6px;
+  margin: 0;
+  padding: 10px 12px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+}
+.people-capabilities legend {
+  color: var(--ink-2);
+  font-size: 12px;
+  font-weight: 600;
+}
+.people-capability {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  font-size: 13px;
+}
+.people-credentials {
+  display: grid;
+  gap: 12px;
+  margin-top: 24px;
+  padding-top: 16px;
+  border-top: 1px solid var(--line);
+}
+.people-secret {
+  display: block;
+  padding: 8px 10px;
+  overflow-wrap: anywhere;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  font-family: 'Roboto Mono', monospace;
+  user-select: all;
+}
+.people-credential-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+.people-credential-table th,
+.people-credential-table td {
+  padding: 6px 8px;
+  border-bottom: 1px solid var(--line);
+  text-align: left;
+  vertical-align: top;
+}
+.people-credential-table .records-help {
+  display: block;
+}
+.required-record-fields .required-record-wide {
+  grid-column: 1 / -1;
+}
+.required-record-quote {
+  margin: 0 0 4px;
+  padding-left: 10px;
+  border-left: 2px solid var(--line);
+  white-space: pre-line;
+}
+.rule-quote {
+  white-space: pre-line;
+}
+.required-record-holders {
+  margin: 0;
+  padding-left: 16px;
+}
+.open-findings-filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 12px;
+  align-items: center;
+  margin: 8px 0 12px;
+}
+/* A filter's label stays on the line of its select when the row wraps. */
+.open-findings-filter {
+  display: inline-flex;
+  gap: 6px;
+  align-items: center;
+  white-space: nowrap;
+}
+.open-findings-filter select {
+  max-width: min(420px, 70vw);
+}
+.open-findings-attention {
+  margin: 6px 0 10px;
+}
+.records-home-attention .records-reasons {
+  list-style: none;
+  padding-left: 0;
+}

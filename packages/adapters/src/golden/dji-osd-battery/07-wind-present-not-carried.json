@@ -1,0 +1,70 @@
+{
+  "case": "valid",
+  "message": {
+    "contentType": "application/json",
+    "transport": {
+      "topic": "thing/product/ALPHA-AIRCRAFT-01/osd"
+    },
+    "capturedAt": "2026-10-01T17:00:00.250Z",
+    "body": {
+      "tid": "tid-alpha-b07",
+      "bid": "bid-alpha-b07",
+      "timestamp": 1790874000000,
+      "gateway": "ALPHA-DOCK-01",
+      "data": {
+        "battery": {
+          "capacity_percent": 76
+        },
+        "wind_speed": 32,
+        "wind_direction": 3
+      }
+    }
+  },
+  "expect": {
+    "observations": [
+      {
+        "type": "battery.state",
+        "version": 1,
+        "subject": {
+          "kind": "aircraft",
+          "id": "ALPHA-AIRCRAFT-01",
+          "scope": "source"
+        },
+        "occurredAt": "2026-10-01T17:00:00.000Z",
+        "sourceEventId": "tid-alpha-b07",
+        "originalLocator": {
+          "kind": "json_pointer",
+          "value": "/data"
+        },
+        "values": {
+          "totalRemainingPercent": 76
+        }
+      }
+    ],
+    "rejections": [],
+    "unmapped": [
+      {
+        "kind": "json_pointer",
+        "value": "/bid"
+      },
+      {
+        "kind": "json_pointer",
+        "value": "/data/wind_direction"
+      },
+      {
+        "kind": "json_pointer",
+        "value": "/data/wind_speed"
+      }
+    ],
+    "conversions": [
+      {
+        "observation": 0,
+        "field": "/values/totalRemainingPercent",
+        "vendorField": "/data/battery/capacity_percent",
+        "vendorUnit": "%",
+        "vendorValue": 76,
+        "expected": 76
+      }
+    ]
+  }
+}

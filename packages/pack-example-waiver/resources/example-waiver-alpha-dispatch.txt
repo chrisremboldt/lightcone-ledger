@@ -1,0 +1,41 @@
+EXAMPLE CERTIFICATE OF WAIVER
+
+Fictional certificate, written for this repository. It is not a real waiver and authorizes nothing.
+
+Certificate number: EXW-0001 (invented)
+Holder: Alpha Dispatch, a fictional organization seeded in this repository
+Responsible person: Dana Ortiz, a fictional person seeded in this repository
+Effective: 2026-09-01 through 2028-08-31 (invented dates)
+Operating area: the Canal District delivery area, an invented place
+Operations described by the holder: night parcel delivery flights within the operating area
+Relief: none. This document grants no relief from any regulation; it exists to exercise Ledger's checks.
+
+SPECIAL PROVISIONS
+
+1. Listed pilots. Only a person listed in Attachment A acts as remote pilot in command. Attachment A lists the holder's source identifiers PER-0201 (Sam Rivera) and PER-0202 (Dana Ortiz).
+
+2. Listed aircraft. Only an aircraft whose registration number is listed in Attachment B is flown. Attachment B lists FICT-0101 and FICT-0102.
+
+3. Anti-collision lighting. Between sunset and sunrise each aircraft shows anti-collision lighting that the crew confirms at the aircraft, before takeoff, is visible for at least 3 statute miles.
+
+4. Maximum height. No flight is planned higher than 300 feet above ground level.
+
+5. Maximum distance. No flight is planned farther than 1 statute mile from the control station.
+
+6. Crew location. The remote pilot in command stays within the operating area for each flight.
+
+7. Visual observer. A visual observer is assigned to each flight for the whole of its planned window.
+
+8. Notification. The holder notifies the Canal District harbor office at least 24 hours before the first flight of each day.
+
+9. Carriage. No hazardous material is carried.
+
+10. Training. Each remote pilot in command has completed the holder's Night delivery operations course within the previous 12 calendar months.
+
+11. Remote identification. Each aircraft broadcasts remote identification with a built-in or add-on broadcast module.
+
+12. Crew briefing. Before each flight the crew briefing is recorded in the preflight assessment.
+
+13. Certificate at hand. A copy of this certificate is available at the control station during each flight.
+
+END OF FICTIONAL CERTIFICATE

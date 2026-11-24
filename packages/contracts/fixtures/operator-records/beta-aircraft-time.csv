@@ -1,0 +1,3 @@
+subjectId,entryKind,totalTimeHours,coveredThroughAt,sourceReference,coverage,coverageNotes,flightCount
+BETA-AC-21,opening_balance,640,2026-05-31T23:00:00Z,Inspection fleet register,complete,Register kept since the airframe entered service.,2210
+BETA-AC-22,opening_balance,33.75,2026-05-31T23:00:00Z,Inspection fleet register,complete,Register kept since the airframe entered service.,118

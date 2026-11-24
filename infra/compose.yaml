@@ -1,0 +1,51 @@
+name: ledger
+services:
+  postgres:
+    # PostgreSQL 17 with PostGIS 3.5, built from the PostGIS project's own image recipe for both linux/amd64 and
+    # linux/arm64, so it runs natively on an Apple Silicon Mac as on an Intel or AMD machine.
+    image: imresamu/postgis:17-3.5-alpine@sha256:cd3e4f2acea6d27e5314c70ca478e6e4d2d97b1a4a594de0a7c71456472c65ef
+    environment:
+      POSTGRES_DB: ledger
+      POSTGRES_USER: ledger_owner
+      POSTGRES_PASSWORD: ledger-local-owner
+    ports: ['127.0.0.1:54329:5432']
+    volumes: ['ledger-postgres:/var/lib/postgresql/data']
+    healthcheck:
+      # Over TCP: on its first start the image answers on its socket before it has created the PostGIS extension.
+      test: ['CMD-SHELL', 'pg_isready -h 127.0.0.1 -U ledger_owner -d ledger']
+      interval: 2s
+      timeout: 2s
+      retries: 30
+  objects:
+    image: adobe/s3mock:5.2.3@sha256:ab01a6946750f451ca215a47e91030695b260e4003b8a5a6201d25029b8fca92
+    environment:
+      COM_ADOBE_TESTING_S3MOCK_STORE_INITIAL_BUCKETS: ledger-local
+      COM_ADOBE_TESTING_S3MOCK_STORE_ROOT: /s3mockroot
+      COM_ADOBE_TESTING_S3MOCK_STORE_RETAIN_FILES_ON_EXIT: 'true'
+    mem_limit: 512m
+    healthcheck:
+      test: ['CMD', 'wget', '-q', '-O', '/dev/null', 'http://localhost:9090/']
+      interval: 2s
+      timeout: 2s
+      retries: 30
+    ports: ['127.0.0.1:9090:9090']
+    volumes: ['ledger-objects:/s3mockroot']
+  mqtt:
+    image: eclipse-mosquitto:2.0.22@sha256:199ea8ef2e35ec2b1b37e59cfd1dbae538ed4dfa4a2251a121a52215a6248a21
+    # One listener for each seeded organization that uses the broker, as `pnpm broker:files:dev` writes them from the
+    # sources on record. Until it has run, the broker starts with no accounts and refuses every connection.
+    ports: ['127.0.0.1:1883:1883', '127.0.0.1:1884:1884']
+    mem_limit: 128m
+    command:
+      - sh
+      - -c
+      - >-
+        if [ -f /mosquitto/config/accounts/mosquitto.conf ]; then exec mosquitto -c /mosquitto/config/accounts/mosquitto.conf;
+        else printf 'listener 1883 0.0.0.0\nallow_anonymous false\n' > /tmp/no-accounts.conf; exec mosquitto -c /tmp/no-accounts.conf; fi
+    volumes:
+      - ./mqtt/accounts:/mosquitto/config/accounts:ro
+      - ledger-mqtt:/mosquitto/data
+volumes:
+  ledger-postgres:
+  ledger-objects:
+  ledger-mqtt:

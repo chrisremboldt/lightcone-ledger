@@ -1,0 +1,5 @@
+subjectId,entryKind,totalTimeHours,coveredThroughAt,sourceReference,coverage,coverageNotes,flightCount
+ALPHA-AC-101,opening_balance,412.6,2026-06-30T23:59:59Z,Aircraft log book 101 volume 2,complete,Totals carried from the paper log book since delivery.,1288
+ALPHA-AC-102,opening_balance,87.25,2026-06-30T23:59:59Z,Aircraft log book 102 volume 1,complete,New airframe; every flight logged since acceptance.,301
+ALPHA-AC-103,running_total,250,2026-09-30T23:59:59Z,Fleet register export,partial,Two months before the register started are missing.,
+ALPHA-AC-104,opening_balance,ninety,2026-06-30 18:00,Aircraft log book 104 volume 1,complete,Entered from the log book.,

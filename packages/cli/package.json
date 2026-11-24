@@ -1,0 +1,17 @@
+{
+  "name": "@ledger/cli",
+  "license": "Apache-2.0",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "exports": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "typecheck": "tsc -p tsconfig.json --noEmit"
+  },
+  "dependencies": {
+    "@ledger/contracts": "workspace:*",
+    "yaml": "2.8.1"
+  }
+}

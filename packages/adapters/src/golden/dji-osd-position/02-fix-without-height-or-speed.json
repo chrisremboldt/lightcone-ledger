@@ -1,0 +1,49 @@
+{
+  "case": "valid",
+  "message": {
+    "contentType": "application/json",
+    "transport": { "topic": "thing/product/ALPHA-AIRCRAFT-01/osd" },
+    "capturedAt": "2026-10-01T17:00:01.700Z",
+    "body": {
+      "tid": "tid-alpha-0002",
+      "bid": "bid-alpha-0002",
+      "timestamp": 1790874001500,
+      "gateway": "ALPHA-DOCK-01",
+      "data": { "latitude": 41.8801, "longitude": -87.6302 }
+    }
+  },
+  "expect": {
+    "observations": [
+      {
+        "type": "position.fix",
+        "version": 1,
+        "subject": { "kind": "aircraft", "id": "ALPHA-AIRCRAFT-01", "scope": "source" },
+        "occurredAt": "2026-10-01T17:00:01.500Z",
+        "sourceEventId": "tid-alpha-0002",
+        "position": { "latitudeDegrees": 41.8801, "longitudeDegrees": -87.6302 },
+        "originalLocator": { "kind": "json_pointer", "value": "/data" },
+        "values": { "fix": "unknown" }
+      }
+    ],
+    "rejections": [],
+    "unmapped": [{ "kind": "json_pointer", "value": "/bid" }],
+    "conversions": [
+      {
+        "observation": 0,
+        "field": "/position/latitudeDegrees",
+        "vendorField": "/data/latitude",
+        "vendorUnit": "deg",
+        "vendorValue": 41.8801,
+        "expected": 41.8801
+      },
+      {
+        "observation": 0,
+        "field": "/position/longitudeDegrees",
+        "vendorField": "/data/longitude",
+        "vendorUnit": "deg",
+        "vendorValue": -87.6302,
+        "expected": -87.6302
+      }
+    ]
+  }
+}

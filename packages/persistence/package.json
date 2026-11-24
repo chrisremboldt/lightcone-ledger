@@ -1,0 +1,22 @@
+{
+  "name": "@ledger/persistence",
+  "license": "Apache-2.0",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "exports": "./dist/index.js",
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "typecheck": "tsc -p tsconfig.json --noEmit"
+  },
+  "dependencies": {
+    "pg": "8.23.1",
+    "dotenv": "18.0.5",
+    "@ledger/integrity": "workspace:*",
+    "@aws-sdk/client-s3": "3.1145.0"
+  },
+  "devDependencies": {
+    "@types/pg": "8.23.1"
+  },
+  "types": "./dist/index.d.ts"
+}

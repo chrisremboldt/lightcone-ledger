@@ -1,0 +1,64 @@
+{
+  "certificate": "SECOND EXAMPLE CERTIFICATE OF WAIVER\n\nFictional certificate, written for this repository. It is not a real waiver and authorizes nothing.\n\nCertificate number: EXW-0002 (invented)\nHolder: Beta Inspection, a fictional organization seeded in this repository\nResponsible person: Lee Park, a fictional person seeded in this repository\nRelief: none.\n\nSPECIAL PROVISIONS\n\nA1. Listed pilots. Only a person listed in Attachment A acts as remote pilot in command: PER-0301.\n\nA2. Maximum height. No flight is planned higher than 200 feet above ground level.\n\nA3. Lighting. Each aircraft shows lighting visible for at least 1 statute mile.\n\nA4. Training. Each remote pilot in command has completed the Tower inspection course within the previous 6 calendar months.\n",
+  "waiver": {
+    "packId": "test.second-example-waiver",
+    "version": 1,
+    "title": "Second example waiver EXW-0002 for Beta Inspection (fictional)",
+    "certificate": {
+      "number": "EXW-0002",
+      "holder": "Beta Inspection",
+      "responsiblePerson": "Lee Park",
+      "byteLength": 753,
+      "sha256": "a1b984a2c65ce472fcfd26f3705f9b6cf7fcdcbe23546cb7e48e5bf7f6f1113d"
+    },
+    "conditionsCover": "flights_citing_certificate",
+    "effective": { "from": "2026-10-01", "through": "2027-09-30" },
+    "provisions": [
+      {
+        "number": "A1",
+        "title": "Listed pilots",
+        "start": 365,
+        "end": 463,
+        "sha256": "1f473a74bf67b0922bfd28766dd6927a68c9a4654582f5db3a54d7fdc0448bf4",
+        "obligation": "eligibility.listed-pilot",
+        "parameters": {
+          "personIds": ["PER-0301"]
+        }
+      },
+      {
+        "number": "A2",
+        "title": "Maximum height",
+        "start": 465,
+        "end": 546,
+        "sha256": "e2c45420f9653ef1399a4376d5c52a266e5e5609e320b5035b1fd8d5ede226e4",
+        "obligation": "condition.max-height",
+        "parameters": {
+          "maxFeetAboveGround": 200
+        }
+      },
+      {
+        "number": "A3",
+        "title": "Lighting",
+        "start": 548,
+        "end": 627,
+        "sha256": "586c03fc96c2a8f188bc525376a18ea74671fe729d291536f1d9f0f67323e0b6",
+        "obligation": "equipment.anti-collision-lighting",
+        "parameters": {
+          "visibleStatuteMiles": 1
+        }
+      },
+      {
+        "number": "A4",
+        "title": "Training",
+        "start": 629,
+        "end": 752,
+        "sha256": "1f13eb44f29e413deb02dc750ac2db3128a41b484c247dd7f9a2055df20f7f51",
+        "obligation": "qualification.named-training-current",
+        "parameters": {
+          "courseTitle": "Tower inspection",
+          "months": 6
+        }
+      }
+    ]
+  }
+}

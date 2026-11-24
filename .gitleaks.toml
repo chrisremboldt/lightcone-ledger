@@ -1,0 +1,12 @@
+# Secret scanning for this repository. The default rules apply; the entries below are documentation examples that
+# hold no secret.
+[extend]
+useDefault = true
+
+[allowlist]
+description = "Documentation examples that are not secrets"
+regexTarget = "line"
+regexes = [
+  # The database address in the deployment guide's identity-provider example.
+  '''jdbc:postgresql://keycloak-db:5432/keycloak''',
+]

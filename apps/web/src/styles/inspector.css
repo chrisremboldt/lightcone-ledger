@@ -1,0 +1,339 @@
+.evidence-inspector {
+  display: grid;
+  gap: 10px;
+  margin: 0 12px;
+  padding: 10px 0 12px;
+  border-top: 1px solid var(--line);
+  font-size: 12.5px;
+}
+.spine-floating .evidence-inspector,
+.unresolved-receipts .evidence-inspector {
+  margin: 0;
+  border-top: 0;
+  padding-top: 0;
+}
+.unresolved-receipts .evidence-inspector {
+  padding: 12px;
+  border: 1px solid var(--magenta);
+  border-radius: 8px;
+  background: var(--sheet);
+}
+.inspector-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+.inspector-heading h3 {
+  margin: 0;
+  font-size: 14px;
+}
+.inspection-facts {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px 18px;
+  margin: 0;
+}
+.inspection-facts .wide {
+  grid-column: 1 / -1;
+}
+.inspection-facts dt {
+  margin-bottom: 1px;
+  color: var(--muted);
+  font-size: 11px;
+}
+.inspection-facts dd {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 8px;
+  margin: 0;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.inspection-facts dd.mono,
+.inspection-facts dd .mono {
+  font-size: 12.5px;
+  font-weight: 500;
+}
+.fact-note {
+  flex-basis: 100%;
+  color: var(--amber);
+  font-size: 12px;
+  font-weight: 600;
+}
+.digest {
+  font-size: 11px !important;
+  color: var(--ink-2);
+}
+.correction-lineage {
+  padding: 8px 10px;
+  border-left: 2px solid var(--evidence);
+  background: var(--paper);
+  border-radius: 0 6px 6px 0;
+  color: var(--ink-2);
+}
+.correction-lineage p {
+  margin: 0;
+}
+.correction-lineage p + p {
+  margin-top: 4px;
+}
+.inspector-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+.inspector-actions details {
+  flex: 1 1 100%;
+}
+.evidence-inspector details > summary {
+  cursor: pointer;
+  color: var(--ink-2);
+  font-size: 12px;
+  font-weight: 600;
+}
+.evidence-inspector pre {
+  max-height: 320px;
+  margin: 8px 0 0;
+  padding: 10px;
+  overflow: auto;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: var(--paper);
+  color: var(--ink-2);
+  font: 11px/1.5 var(--mono);
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+.processing-trace .inspection-facts {
+  margin-top: 8px;
+}
+.trace-note {
+  margin: 6px 0 0;
+  color: var(--muted);
+}
+.telemetry-record-inspection {
+  display: grid;
+  gap: 10px;
+  min-width: 0;
+  padding-top: 10px;
+  border-top: 1px solid var(--line);
+}
+.telemetry-record-heading {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 4px 10px;
+}
+.telemetry-record-heading h4 {
+  margin: 0;
+  font-size: 12px;
+}
+.telemetry-record-heading > span,
+.telemetry-record-capture {
+  margin: 0;
+  color: var(--muted);
+  font-size: 11px;
+}
+.telemetry-record-picker {
+  display: grid;
+  gap: 4px;
+  color: var(--muted);
+  font-size: 11px;
+}
+.telemetry-record-picker select {
+  width: 100%;
+  min-width: 0;
+  padding: 6px 8px;
+  border: 1px solid var(--line-2);
+  border-radius: 6px;
+  background: var(--sheet);
+  color: var(--ink);
+  font: 12px var(--mono);
+}
+.telemetry-record-facts dd {
+  color: var(--ink);
+}
+.telemetry-record-datum {
+  flex-basis: 100%;
+  color: var(--ink-2);
+  font: 11px var(--sans);
+}
+.mission-inspection {
+  display: grid;
+  gap: 10px;
+}
+.mission-inspection-heading,
+.briefing-recipients li {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 4px 12px;
+}
+.mission-message {
+  margin: 0;
+  color: var(--ink);
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+.mission-inspection-note {
+  margin: 0;
+  color: var(--muted);
+  font-size: 12px;
+}
+.mission-control-summary,
+.mission-current-validity {
+  display: grid;
+  gap: 3px;
+  padding-top: 8px;
+  border-top: 1px solid var(--line);
+}
+.mission-control-summary span,
+.mission-current-validity small,
+.briefing-recipients li > span + span {
+  color: var(--ink-2);
+  font-size: 12px;
+}
+.briefing-recipients ul {
+  display: grid;
+  gap: 6px;
+  margin: 6px 0;
+  padding: 0;
+  list-style: none;
+}
+.decision-cuts strong {
+  display: block;
+  margin-top: 8px;
+  font-size: 11px;
+  color: var(--muted);
+}
+
+.decision-evidence {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 8px;
+  min-width: 0;
+  padding-top: 10px;
+  border-top: 1px dashed var(--line);
+}
+.export-heading,
+.anchor-heading,
+.inventory-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+.export-heading h4,
+.decision-evidence h5 {
+  margin: 0;
+  font-size: 13px;
+}
+.export-caption {
+  margin: 0;
+  color: var(--muted);
+  font-size: 12px;
+}
+.export-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.export-status {
+  margin: 0;
+  color: var(--flight);
+  font-weight: 600;
+}
+.export-selector {
+  display: grid;
+  gap: 4px;
+}
+.export-selector label {
+  color: var(--muted);
+  font-size: 11px;
+}
+.export-selector select {
+  width: 100%;
+  min-width: 0;
+  padding: 5px 8px;
+  border: 1px solid var(--line-2);
+  border-radius: 6px;
+  background: var(--sheet);
+}
+.export-details[open] {
+  display: grid;
+  gap: 10px;
+}
+.export-anchor,
+.export-inventory,
+.export-limitations {
+  display: grid;
+  gap: 6px;
+  padding: 10px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: var(--paper);
+}
+.export-anchor p,
+.export-limitations p {
+  margin: 0;
+  color: var(--ink-2);
+}
+.export-anchor code,
+.digest-label code,
+.inventory-heading code,
+.export-cut-details code {
+  display: block;
+  font: 11px var(--mono);
+  overflow-wrap: anywhere;
+  color: var(--ink-2);
+}
+.digest-label {
+  display: grid;
+  gap: 2px;
+  margin-top: 8px;
+  color: var(--muted);
+  font-size: 11px;
+}
+.inventory-cuts {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 6px;
+}
+.inventory-cut {
+  display: grid;
+  gap: 2px;
+  padding: 8px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: var(--sheet);
+}
+.inventory-cut span {
+  color: var(--muted);
+  font-size: 11px;
+}
+.inventory-cut small {
+  color: var(--muted);
+  font-weight: 400;
+}
+.export-cut-details {
+  margin-top: 8px;
+}
+.export-limitations ul {
+  margin: 0;
+  padding-left: 16px;
+  color: var(--ink-2);
+}
+
+@media (max-width: 820px) {
+  .anchor-heading {
+    flex-wrap: wrap;
+  }
+  .inspection-facts,
+  .inventory-cuts {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}

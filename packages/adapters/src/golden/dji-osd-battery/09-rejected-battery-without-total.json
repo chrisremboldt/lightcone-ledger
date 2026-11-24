@@ -1,0 +1,36 @@
+{
+  "case": "rejected",
+  "message": {
+    "contentType": "application/json",
+    "transport": {
+      "topic": "thing/product/ALPHA-AIRCRAFT-01/osd"
+    },
+    "capturedAt": "2026-10-01T17:00:00.250Z",
+    "body": {
+      "tid": "tid-alpha-b09",
+      "bid": "bid-alpha-b09",
+      "timestamp": 1790874000000,
+      "gateway": "ALPHA-DOCK-01",
+      "data": {
+        "battery": {
+          "landing_power": 9,
+          "batteries": [
+            {
+              "index": 0,
+              "capacity_percent": 80
+            }
+          ]
+        }
+      }
+    }
+  },
+  "expect": {
+    "observations": [],
+    "rejections": [
+      {
+        "reasonIncludes": "no total remaining percentage"
+      }
+    ],
+    "unmapped": []
+  }
+}

@@ -1,0 +1,33 @@
+{
+  "case": "rejected",
+  "message": {
+    "contentType": "application/json",
+    "transport": {
+      "path": "/imports/roster"
+    },
+    "capturedAt": "2026-10-17T08:00:00.000Z",
+    "body": {
+      "format": "crew-roster-export",
+      "formatVersion": 2,
+      "entries": [
+        {
+          "entryId": "R-0100",
+          "employeeId": "ALPHA-PILOT-01",
+          "position": "PILOT",
+          "kind": "DUTY",
+          "start": "2026-10-16T07:00:00Z",
+          "end": "2026-10-16T15:00:00Z"
+        }
+      ]
+    }
+  },
+  "expect": {
+    "observations": [],
+    "rejections": [
+      {
+        "reasonIncludes": "format version 1"
+      }
+    ],
+    "unmapped": []
+  }
+}

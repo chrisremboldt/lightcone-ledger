@@ -1,0 +1,28 @@
+EXAMPLE CERTIFICATE OF WAIVER: OPERATIONS BEYOND VISUAL LINE OF SIGHT
+
+Invented for this repository. It grants nothing, authorizes nothing and is modelled on no real waiver or exemption.
+
+Certificate number: BVW-0001 (invented)
+Holder: Alpha Dispatch, a fictional organization seeded in this repository
+Responsible person: Dana Ortiz, a fictional person seeded in this repository
+Effective: 2026-09-01 through 2028-08-31 (invented dates)
+Operating area: the Canal District delivery area, an invented place
+Operations described by the holder: parcel delivery flights beyond visual line of sight within the operating area
+
+SPECIAL PROVISIONS
+
+1. Relief from visual line of sight. For a flight whose flight plan cites certificate BVW-0001 as its operating authority, the holder need not plan the flight within visual line of sight of the remote pilot in command, provided the holder meets every other provision of this certificate.
+
+2. Operating area. Every position planned or reported for the aircraft during the planned window of a flight lies within 3000 meters of latitude 41.87995, longitude -87.6274, or within a further margin of 100 meters.
+
+3. Detect and avoid. Before each flight the holder records the aircraft's detect-and-avoid equipment as installed and serviceable.
+
+4. Lost-link procedure. The holder keeps on file a written procedure for loss of the control link, identified by document reference and revision.
+
+5. Wind at takeoff. No flight takes off while the wind last measured at its operating site, at or before the takeoff, is above 10 meters per second.
+
+6. Visibility at takeoff. No flight takes off unless the latest preflight assessment records visibility of at least 3 statute miles.
+
+7. Named pilots. Only a person named in Attachment A acts as remote pilot in command. Attachment A names the holder's source identifiers ALPHA-PILOT-01 and ALPHA-PILOT-03.
+
+8. Notification. The holder notifies the Canal District harbor office at least 24 hours before the planned start of each flight.

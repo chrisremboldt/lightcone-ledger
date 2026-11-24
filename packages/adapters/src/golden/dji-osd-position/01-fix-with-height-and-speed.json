@@ -1,0 +1,72 @@
+{
+  "case": "valid",
+  "message": {
+    "contentType": "application/json",
+    "transport": { "topic": "thing/product/ALPHA-AIRCRAFT-01/osd" },
+    "capturedAt": "2026-10-01T17:00:00.250Z",
+    "body": {
+      "tid": "tid-alpha-0001",
+      "bid": "bid-alpha-0001",
+      "timestamp": 1790874000000,
+      "gateway": "ALPHA-DOCK-01",
+      "data": { "latitude": 41.88, "longitude": -87.63, "height": 220.5, "horizontal_speed": 10.2, "mode_code": 5 }
+    }
+  },
+  "expect": {
+    "observations": [
+      {
+        "type": "position.fix",
+        "version": 1,
+        "subject": { "kind": "aircraft", "id": "ALPHA-AIRCRAFT-01", "scope": "source" },
+        "occurredAt": "2026-10-01T17:00:00.000Z",
+        "sourceEventId": "tid-alpha-0001",
+        "position": {
+          "latitudeDegrees": 41.88,
+          "longitudeDegrees": -87.63,
+          "altitude": { "meters": 220.5, "datum": "wgs84_ellipsoid" }
+        },
+        "originalLocator": { "kind": "json_pointer", "value": "/data" },
+        "values": { "fix": "unknown", "groundSpeedMetersPerSecond": 10.2 }
+      }
+    ],
+    "rejections": [],
+    "unmapped": [
+      { "kind": "json_pointer", "value": "/bid" },
+      { "kind": "json_pointer", "value": "/data/mode_code" }
+    ],
+    "conversions": [
+      {
+        "observation": 0,
+        "field": "/position/latitudeDegrees",
+        "vendorField": "/data/latitude",
+        "vendorUnit": "deg",
+        "vendorValue": 41.88,
+        "expected": 41.88
+      },
+      {
+        "observation": 0,
+        "field": "/position/longitudeDegrees",
+        "vendorField": "/data/longitude",
+        "vendorUnit": "deg",
+        "vendorValue": -87.63,
+        "expected": -87.63
+      },
+      {
+        "observation": 0,
+        "field": "/position/altitude/meters",
+        "vendorField": "/data/height",
+        "vendorUnit": "m",
+        "vendorValue": 220.5,
+        "expected": 220.5
+      },
+      {
+        "observation": 0,
+        "field": "/values/groundSpeedMetersPerSecond",
+        "vendorField": "/data/horizontal_speed",
+        "vendorUnit": "m/s",
+        "vendorValue": 10.2,
+        "expected": 10.2
+      }
+    ]
+  }
+}

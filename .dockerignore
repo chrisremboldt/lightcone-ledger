@@ -1,0 +1,14 @@
+.git
+.env
+.env.*
+.vercel
+.local
+node_modules
+**/node_modules
+**/dist
+coverage
+playwright-report
+test-results
+ledger.env
+broker
+infra/mqtt/accounts

@@ -1,0 +1,14 @@
+# The local services on other ports, for a second Ledger stack on a computer where another one already holds
+# 54329, 9090, 1883 and 1884. Use it on top of compose.yaml, under a project name of your own so the containers and
+# volumes are yours too:
+#   docker compose -p ledger-second -f infra/compose.yaml -f infra/compose.other-ports.yaml up -d --wait
+# and give the same -p and both -f to every later docker compose command of this stack. Change a port below if it is
+# taken as well, and set the matching values in .env (AGENTS.md, "Running a second stack"). Needs Docker Compose 2.24
+# or later, for !override.
+services:
+  postgres:
+    ports: !override ['127.0.0.1:54429:5432']
+  objects:
+    ports: !override ['127.0.0.1:9190:9090']
+  mqtt:
+    ports: !override ['127.0.0.1:1983:1883', '127.0.0.1:1984:1884']

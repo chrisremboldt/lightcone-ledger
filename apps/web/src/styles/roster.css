@@ -1,0 +1,430 @@
+.roster {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  background: var(--side);
+  border-right: 1px solid var(--line);
+}
+.roster-head {
+  padding: 16px 16px 6px;
+}
+.roster-head h1 {
+  margin: 0 0 10px;
+  font-size: 15px;
+  font-weight: 700;
+}
+.roster-head h1 span {
+  margin-left: 6px;
+  color: var(--muted);
+  font-size: 12.5px;
+  font-weight: 400;
+}
+.roster-views {
+  display: flex;
+  gap: 4px;
+  margin-bottom: 12px;
+}
+.roster-views button {
+  flex: 1;
+  padding: 6px 10px;
+  border: 1px solid var(--line-2);
+  border-radius: 5px;
+  background: transparent;
+  color: var(--muted);
+  font: inherit;
+  font-size: 12px;
+  cursor: pointer;
+}
+.roster-views button[aria-pressed='true'] {
+  background: var(--sheet);
+  color: var(--ink);
+  border-color: var(--plan);
+}
+.operation-scopes {
+  display: flex;
+  gap: 4px;
+  margin-bottom: 10px;
+}
+.operation-scopes button {
+  flex: 1;
+  padding: 5px 4px;
+  border: 1px solid var(--line-2);
+  border-radius: 4px;
+  background: transparent;
+  color: var(--muted);
+  font: inherit;
+  font-size: 11px;
+  cursor: pointer;
+}
+.operation-scopes button[data-attention] {
+  flex: 1.5;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  white-space: nowrap;
+}
+.operation-scopes button[data-attention='present'] {
+  border-color: var(--advisory);
+  color: var(--ink);
+}
+.scope-annunciator {
+  width: 13px;
+  height: 13px;
+  flex: none;
+  color: var(--advisory);
+}
+.scope-unconfirmed {
+  color: var(--muted);
+  font-size: 11px;
+}
+.operation-scopes button[aria-pressed='true'] {
+  border-color: var(--magenta);
+  color: var(--ink);
+  background: var(--sheet);
+}
+.roster-scope-caption {
+  margin: 0 0 10px;
+  color: var(--muted);
+  font-size: 11.5px;
+}
+.history-navigation {
+  display: flex;
+  gap: 8px;
+  padding: 12px 16px;
+}
+.roster-search {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  height: 32px;
+  padding: 0 10px;
+  border: 1px solid var(--line-2);
+  border-radius: 7px;
+  background: var(--sheet);
+  color: var(--faint);
+}
+.roster-search:focus-within {
+  border-color: var(--plan);
+}
+.roster-search input {
+  flex: 1;
+  min-width: 0;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  color: var(--ink);
+  font-size: 12.5px;
+}
+.roster-search input::placeholder {
+  color: var(--faint);
+}
+.roster-list {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding-bottom: 8px;
+  scrollbar-width: thin;
+}
+.roster-empty {
+  padding: 24px 16px;
+  color: var(--ink-2);
+}
+.roster-empty p {
+  margin: 4px 0 0;
+  color: var(--muted);
+  font-size: 12px;
+}
+.roster-group h2 {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin: 0;
+  padding: 12px 16px 6px;
+  color: var(--ink-2);
+  font-size: 11.5px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+.roster-count {
+  font: 500 11px var(--mono);
+  color: var(--muted);
+}
+.roster-group--attention h2 {
+  color: var(--advisory);
+}
+.roster-group--attention .roster-count {
+  padding: 0 7px;
+  border: 1px solid color-mix(in srgb, var(--advisory) 55%, transparent);
+  border-radius: 999px;
+  background: var(--advisory-soft);
+  color: var(--advisory);
+}
+.flight-row {
+  position: relative;
+  width: 100%;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  column-gap: 8px;
+  padding: 7px 16px;
+  border: 0;
+  border-top: 1px solid transparent;
+  background: transparent;
+  text-align: left;
+  color: var(--ink);
+}
+.flight-row + .flight-row {
+  border-top-color: var(--line);
+}
+.flight-row:hover {
+  background: color-mix(in srgb, var(--ink) 5%, transparent);
+}
+.flight-row.needs-attention {
+  background: color-mix(in srgb, var(--advisory) 22%, var(--side));
+  box-shadow: inset 3px 0 0 var(--advisory);
+}
+.flight-row.needs-attention:hover:not(.is-selected) {
+  background: color-mix(in srgb, var(--advisory) 30%, var(--side));
+}
+.roster-group--attention .flight-row + .flight-row {
+  border-top-color: color-mix(in srgb, var(--paper) 55%, transparent);
+}
+.roster-group--attention .flight-row-reason {
+  color: var(--advisory);
+}
+.roster-group--attention .flight-row-reason::before {
+  background: var(--advisory);
+}
+.flight-row.is-selected {
+  background: var(--sheet);
+  box-shadow:
+    inset 3px 0 0 var(--magenta),
+    inset 0 0 0 1px var(--line);
+}
+.flight-row-name {
+  min-width: 0;
+  font-size: 13px;
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+.roster-group--scheduled .flight-row-name,
+.roster-group--done .flight-row-name {
+  color: var(--ink-2);
+  font-weight: 500;
+}
+.flight-row-activity {
+  align-self: center;
+  color: var(--muted);
+  font-size: 11px;
+  white-space: nowrap;
+}
+.flight-row-reason {
+  grid-column: 1 / -1;
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  color: var(--amber);
+  font-size: 12px;
+  font-weight: 600;
+}
+.flight-row-owner {
+  grid-column: 1 / -1;
+  color: var(--ink-2);
+  font-size: 11.5px;
+}
+.flight-row-operation {
+  grid-column: 1 / -1;
+  color: var(--ink-2);
+  font-size: 11.5px;
+}
+.flight-row-predeparture {
+  grid-column: 1 / -1;
+  color: var(--muted);
+  font-size: 11.5px;
+}
+.flight-row-predeparture.needs-attention {
+  padding-left: 7px;
+  border-left: 2px solid var(--amber);
+  color: var(--amber);
+  font-weight: 600;
+}
+.flight-row-reason::before {
+  content: '';
+  flex: none;
+  width: 6px;
+  height: 6px;
+  transform: translateY(-1px) rotate(45deg);
+  background: var(--amber-mid);
+}
+.flight-row-meta {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+  color: var(--muted);
+  font-size: 11px;
+}
+.flight-row-aircraft {
+  display: flex;
+  min-width: 0;
+  white-space: nowrap;
+}
+.flight-row-aircraft-prefix {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.flight-row-aircraft-suffix {
+  flex: none;
+}
+.flight-row-aircraft-full {
+  position: absolute;
+  z-index: 1;
+  right: 8px;
+  bottom: 6px;
+  left: 8px;
+  padding: 6px 8px;
+  border: 1px solid var(--line);
+  background: var(--sheet);
+  color: var(--ink);
+  font-size: 12px;
+  overflow-wrap: anywhere;
+  pointer-events: none;
+  visibility: hidden;
+}
+.flight-row:not(.identity-dismissed):is(:hover, :focus-visible) .flight-row-aircraft-full {
+  visibility: visible;
+}
+.flight-row-age {
+  align-self: start;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  color: var(--muted);
+  font-size: 11px;
+  flex-wrap: wrap;
+  max-width: 125px;
+  white-space: normal;
+}
+.awaiting-order {
+  display: grid;
+  gap: 2px;
+  padding: 8px 16px;
+  color: var(--muted);
+  font-size: 11px;
+}
+.awaiting-order + .awaiting-order {
+  border-top: 1px solid var(--line);
+}
+.awaiting-order strong {
+  color: var(--ink-2);
+  font-size: 12.5px;
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+.awaiting-order-unlinked {
+  color: var(--plan);
+  font-size: 11.5px;
+}
+.awaiting-order-status {
+  margin: 0;
+  padding: 4px 16px 8px;
+  color: var(--muted);
+  font-size: 11.5px;
+}
+.awaiting-order-pages {
+  padding-top: 4px;
+  padding-bottom: 4px;
+}
+.live-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--flight);
+}
+.roster-foot {
+  padding: 10px 12px 10px;
+  border-top: 1px solid var(--line);
+  background: var(--side);
+}
+.unlinked-card {
+  width: 100%;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 2px 8px;
+  align-items: center;
+  padding: 9px 12px;
+  border: 1px solid var(--line-2);
+  border-radius: 8px;
+  background: var(--sheet);
+  text-align: left;
+}
+.unlinked-card strong {
+  font-size: 12.5px;
+}
+.unlinked-card small {
+  grid-column: 1;
+  color: var(--ink-2);
+  font-size: 11.5px;
+}
+.unlinked-action {
+  grid-row: 1 / 3;
+  grid-column: 2;
+  color: var(--ink-2);
+  font-size: 12px;
+  font-weight: 700;
+}
+.unlinked-card.has-unlinked {
+  border-color: var(--amber-line);
+  background: var(--amber-soft);
+}
+.unlinked-card.has-unlinked .unlinked-action {
+  color: var(--amber);
+}
+.unlinked-card.is-selected {
+  border-color: var(--magenta);
+  box-shadow: 0 0 0 1px var(--magenta);
+}
+.unlinked-card:disabled {
+  cursor: default;
+}
+.unlinked-card:disabled .unlinked-action {
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 500;
+}
+.connection {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 8px 2px 0;
+  color: var(--muted);
+  font: 11px var(--mono);
+}
+.connection i {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--flight);
+}
+.connection--error {
+  color: var(--alert);
+}
+.connection--error i {
+  background: var(--alert);
+}
+.connection--stale {
+  color: var(--amber);
+}
+.connection--stale i {
+  background: var(--amber);
+}
+
+@media (max-width: 820px) {
+  .roster {
+    border-right: 0;
+    border-bottom: 1px solid var(--line);
+  }
+  .roster-list {
+    max-height: 320px;
+  }
+}

@@ -1,0 +1,4 @@
+subjectId,subjectKind,actionDescription,performedAt,performedByName,returnedToService,returnToServiceByName
+RIDGE-AC-1,aircraft,Firmware updated; propellers replaced,2026-10-20T17:00:00Z,Morgan Example,true,Morgan Example
+RIDGE-AC-1,aircraft,Rear left motor replaced after a vibration warning,2026-11-05T17:00:00Z,Morgan Example,,
+RIDGE-AC-2,aircraft,Battery contacts cleaned,2026-11-06T17:00:00Z,Morgan Example,true,Morgan Example

@@ -1,0 +1,590 @@
+{
+  "version": "ledger.demo-contract.1",
+  "review": "ready_contract_reviewed",
+  "api": {
+    "version": "0.1.0",
+    "contractVersionField": "x-ledger-demo-contract-version",
+    "schema": "/openapi.json",
+    "authority": "/v1/me"
+  },
+  "fixtures": {
+    "ready": "v1/ready.ts",
+    "proposed": "v1/proposed.ts"
+  },
+  "ready": {
+    "inputKinds": [
+      "order.revision",
+      "intent.revision",
+      "flight.observation",
+      "airspace.status",
+      "source.observation",
+      "telemetry.segment",
+      "command-link.baseline",
+      "mission.revision",
+      "monitoring.window",
+      "observation"
+    ],
+    "commandKinds": [
+      "decision.record",
+      "finding.treat",
+      "finding.treat-many",
+      "evidence.correct",
+      "identity.link",
+      "flight.assign",
+      "authority.update",
+      "person.add",
+      "credential.issue",
+      "credential.revoke",
+      "rule-pack.adopt",
+      "mission.release",
+      "mission.departure-authorize",
+      "mission.brief",
+      "mission.briefing-acknowledge",
+      "observation.withdraw",
+      "observation.resolve-subject",
+      "subject.alias"
+    ],
+    "authority": {
+      "order.revision": ["input:write", "flight:create"],
+      "intent.revision": ["input:write", "flight:create"],
+      "otherInputs": ["input:write"],
+      "command-link.baseline": ["retired: 410 command_link_baseline_retired"],
+      "mission.revision": ["input:write", "mission:write", "sourceId in /v1/me missionSources"],
+      "receiptReads": ["flight:read"],
+      "decision.record": ["decision:write"],
+      "finding.treat": ["decision:write"],
+      "finding.treat-many": ["decision:write"],
+      "rule-pack.adopt": ["pack:adopt"],
+      "mission.release": ["decision:write", "flight:read", "mission:release"],
+      "mission.departure-authorize": ["decision:write", "flight:read", "mission:release"],
+      "mission.brief": ["flight:read", "briefing:write"],
+      "mission.briefing-acknowledge": ["flight:read", "briefing:ack"],
+      "observation.withdraw": ["input:write", "observation grant for the observation's type under its source"],
+      "observation.resolve-subject": ["input:write", "observation grant for the observation's type under its source"],
+      "subject.alias": ["input:write", "an observation grant under sourceId"],
+      "decisionExport": ["evidence:read"],
+      "monitoring.window": ["input:write", "monitoring:write", "sourceId in /v1/me monitoringSources"],
+      "observation": ["input:write", "an observation grant for the sourceId and type in /v1/me observationGrants"]
+    }
+  },
+  "proposed": {
+    "review": "pending",
+    "profileNote": "The 32-aircraft example is not adopted and exceeds the simulator's current 25-aircraft cap per operator.",
+    "capabilities": [
+      "site-and-mission",
+      "monitoring-and-exposure",
+      "protected-report",
+      "control-release-acknowledgement",
+      "retained-evaluation-clock"
+    ],
+    "intake": false,
+    "requires": ["lane-review", "intake-authority", "projection", "reads", "compatible-export-and-verifier"]
+  },
+  "identity": {
+    "authentication": "Tenant and principal come only from the bearer credential.",
+    "run": "Persist an isolated run ID; restart resumes it, a fresh run gets a new ID without deleting history.",
+    "external": "Source-scoped order and intent IDs include the run ID. A logical intent survives a new attempt; originationKey is intentId:attempt:N.",
+    "ledger": "Resolve API-assigned flight, receipt and artifact IDs; fixture IDs are symbolic, never deployment IDs.",
+    "capture": "Persist sourceId/sourceSessionId/deviceId and capture sequence across transport reconnects. A new capture gets a new session; never reuse a sequence for changed bytes.",
+    "incident": "One physical episode keeps its incident ID across affected flights and delayed observations; source event IDs remain independent."
+  },
+  "time": {
+    "timestamps": "UTC RFC 3339 with Z; occurrence, effective time and server receipt time remain separate.",
+    "intervals": "Half-open [start,end); durations and exposure are scenario seconds, never receipt-time differences.",
+    "live": "Wall time is the evaluation clock.",
+    "accelerated": "Proposed retained clock ID/version/evaluatedAt; pause stops scenario deadlines. Do not emit until durable deadline work supports the same clock.",
+    "receipt": "The server assigns receivedAt and computedAt; acceleration never rewrites them."
+  },
+  "geometry": {
+    "coordinates": "WGS84 longitude,latitude in degrees; GeoJSON rings close. Horizontal distances are metres.",
+    "altitude": "Explicit metres and AGL for proposed missions; observed telemetry retains its actual ellipsoid/relative/unknown reference. Do not equate relative or unknown with AGL.",
+    "versions": "Site and mission references pin immutable versions, planned operating intervals and geometry. Observed tracks never replace planned geometry."
+  },
+  "delivery": {
+    "scope": ["authenticatedTenant", "authenticatedPrincipal", "endpoint", "Idempotency-Key"],
+    "sameContent": "Same canonical request content returns the original effect; receipt processing can have advanced.",
+    "differentContent": "409 idempotency_conflict; do not mint a new key to hide the conflict.",
+    "originalBytes": "Retain exact vendor bytes through upload/finalize before input; replay keeps artifactId and original content. A correction is a new event.",
+    "knownReceipt": "GET /v1/receipts/{id}; poll processing.status until completed or failed.",
+    "lostResponse": "Replay the identical POST with the same credential identity, endpoint and key to recover the receipt. There is no lookup-by-key endpoint.",
+    "completion": "201/status accepted means durable intake only. completed means projection finished, not evidence sufficiency, a supported rule or release. outstandingWork is tenant-wide."
+  },
+  "decisions": {
+    "basis": "Copy flight revision/basisRevision plus meta.inputCut and meta.dependencyBasis from the displayed subject read. The token is opaque.",
+    "pending": "Rendered cuts contain projected positions; accepted cuts also pin relevant pending evidence. Never fabricate a rendered cut or omit a displayed dependency.",
+    "conflict": "409 stale_basis or invalid_rendered_cut requires a refreshed subject read and human/actor review, then a new command key. Unrelated tenant traffic does not advance the subject basis.",
+    "dependencies": "Register cross-subject dependencies and accepted pending evidence transactionally before relying on them; future control/release references must pin versions."
+  },
+  "extensions": {
+    "missionAdapter": {
+      "implementation": "ready",
+      "review": "simulator_reviewed",
+      "module": "@ledger/adapters",
+      "types": ["MissionAdapterConfig", "PreparedMissionInput", "MissionAdapterResult"],
+      "api": ["MissionAdapter.prepare", "MissionAdapter.send", "MissionAdapter.recover"],
+      "adapterFixturePath": "packages/adapters/fixtures/mission.ts",
+      "fixtures": [
+        "missionAdapterBinding",
+        "missionAdapterConfig",
+        "missionAdapterOriginalText",
+        "preparedMissionInput",
+        "missionAdapterResult"
+      ],
+      "binding": "The caller supplies ledger, tenantId, sourceId, sourceMissionId, aircraftId and one exact resolved flightId. Strict source JSON must match the pinned source mission and reported aircraft. The adapter does not resolve labels, infer applicability or read current heads.",
+      "prepare": "prepare(raw: Uint8Array): Promise<PreparedMissionInput> validates exact UTF-8 JSON at most 64 KiB, the complete mission mapping and altitude/interval relationships. It checks served input/upload support and actual current mission capabilities/source grant, then uploads unchanged bytes. It returns a serializable ledger.mission-submission.1 checkpoint without submitting input; the caller persists it before send.",
+      "checkpoint": "PreparedMissionInput pins version, apiUrl, tenantId, principalId, key, exact MissionInput with submitted artifactId, bytesBase64, sha256 and submissionDigest. submissionDigest is the canonical digest of all other checkpoint fields. No credential is retained. The stable key is mission:revision: followed by canonicalDigest({version:'ledger.mission-delivery.1',tenantId,sourceId,sourceMissionId,sourceRevision}); changed bytes or binding under one revision do not get a new key.",
+      "send": "send(prepared: PreparedMissionInput): Promise<MissionAdapterResult> validates the checkpoint and pinned source/flight identity, rechecks served support and actual current input:write, mission:write and missionSources under the original principal, then submits its unchanged input/key. Missing support or grants throws MissionPendingError with unsupported_contract, capability_required or source_grant_required.",
+      "recover": "recover(prepared: PreparedMissionInput): Promise<MissionAdapterResult> validates the same checkpoint and original API/tenant/principal with input:write, then replays the identical input/key/artifact. It never uploads or applies new-delivery schema or mission-source grant gates. The API decides whether an exact historical request exists. Keep one credential identity throughout each operation.",
+      "result": "MissionAdapterResult returns receipt: ReceiptResponse, submittedUploadArtifactId and sha256. The canonical receipt may retain an earlier accepted artifact and issuer after semantic deduplication. receipt.receipt.artifactId and submittedUploadArtifactId remain separate. A returned receipt is intake acceptance, not projection or an independently verified revision head.",
+      "compatibility": "Mission source/intake/read contract is already ready. This adapter lifecycle and its checkpoint/result fixture have completed Simulator review. Producers still check served support and actual source authority before new delivery; no new API, receipt kind, migration, C2 checkpoint change, world activation or UI."
+    },
+    "missionRelease": {
+      "implementation": "ready",
+      "review": "simulator_reviewed",
+      "fixtureFile": "v1/mission-release.ts",
+      "fixtures": [
+        "missionReleasePolicy",
+        "missionReleaseFindingsResponse",
+        "missionReleaseCommand",
+        "missionReleaseCommandResponse",
+        "missionReleaseRecordResponse",
+        "missionReleaseValidityScheduled",
+        "missionReleaseValidityCurrent",
+        "missionReleaseValidityExpired",
+        "missionReleaseValidityChanged",
+        "missionReleaseValidityPending",
+        "missionDeparturePolicy",
+        "missionDepartureAuthorization",
+        "missionDepartureAuthorizationResponse",
+        "missionDepartureFitWitness",
+        "missionReleaseCases"
+      ],
+      "command": "mission.release on POST /v1/commands",
+      "response": "Preserve the existing command/meta envelope. The release command ID selects its separate exact-record GET; an accepted command reply is not current validity.",
+      "reads": [
+        "/v1/flights/{id}/mission-release-findings",
+        "/v1/flights/{id}/mission-releases/{releaseId}",
+        "/v1/flights/{id}/mission-releases/{releaseId}/validity"
+      ],
+      "authority": ["decision:write", "flight:read", "mission:release"],
+      "version": "flight.mission-release.2",
+      "policy": {
+        "id": "ledger.demo.route-avoidance-release",
+        "version": 2
+      },
+      "findings": "A new release lists the open findings from active rule adoptions about the flight, its organization and the subjects its records name, and pins that list with expectedFindingsDigest from the findings read; a changed list conflicts with release_findings_changed. Proposed-rule (shadow) findings are shown beside the list and never recorded in it. Listing a finding blocks nothing. Releases recorded under policy version 1 (flight.mission-release.1) stay valid and are compared with their own version.",
+      "selection": "Only the exact supported mission accepted and successfully projected on the flight, with an exactly matching assigned aircraft, outside every overlapping risk-accepted area control record version with current context. Intersects, uncertainty, unsupported data and pending or failed evidence block acceptance.",
+      "request": "Pin flight, aircraft, exact mission revision/event/content and record digests, registered calculation/policy references, expectedContextDigest and the acting principal revision. Recompute under target-flight, authority and tenant register guards. Compare the narrow semantic context, not the clocked previewDigest or telemetry-sensitive generic flight revision/token.",
+      "retention": "The immutable record retains the actual authority snapshot under ledger.mission-release-authority.1, full policy, exact mission snapshot, compact successful avoidance snapshot and per-candidate mission.avoidance-control-record-context.1 preimages (the hazard current assessment and latest acceptance and the control record current version and status). Each preimage must match its candidate digest. Generic cuts and subject manifest retain acceptance provenance. The serialized record is limited to 2 MiB; no truncated acceptance.",
+      "window": "Finite half-open [start,end) inside the exact mission interval; start < end and commit time < end. Acceptance before start is allowed. Recheck authority and relevant selection/time boundaries at commit. Scheduled or elapsed control intervals still count when they overlap the fixed mission interval.",
+      "validity": "Exact record GET is immutable; validity GET is as-of information at evaluatedAt and never triggers takeoff. Precedence is expired, changed, pending, scheduled, current. A known higher accepted mission or changed accepted control/context blocks before projection. A known higher failed mission is changed; pending covers matching failed or unsupported evidence whose validity cannot be established. nextBoundary is a recheck time, never a validity lease. Ordinary telemetry, unrelated work and later changes to historical author grants do not rewrite the accepted record or define semantic validity. This release read governs new authorization eligibility; a separately issued finite departure lease retains its original authorization point.",
+      "recovery": "Same tenant/principal/endpoint/key and exact bytes recover the original release acceptance even when now stale or expired, subject to authentication/read scope. Recovery never creates a new release or authorizes departure.",
+      "departureAuthorization": {
+        "implementation": "ready",
+        "command": "mission.departure-authorize on POST /v1/commands",
+        "version": "flight.mission-departure-permit.1",
+        "policy": {
+          "id": "ledger.demo.route-avoidance-departure",
+          "version": 1,
+          "permitSeconds": 30
+        },
+        "allocation": "Caller first durably allocates live exclusive pad/resources covering departure, keeps ownership through consumption, then supplies an exact release ID/digest, flight, aircraft, departureAttemptId and allocation ID/digest. The allocation is a caller commitment, not Ledger resource certification.",
+        "commit": "On first issuance, atomically validate current release/context and action authority at authorizedAt. Grant one nonrenewable lease per tenant/Ledger flight, across principals, keys, attempts and allocations, with the existing immutable attempt/allocation bindings. Each tenant/allocation identity binds one flight and attempt. validUntil is min(authorizedAt + 30 seconds, release window end, the next instant at which an accepted control of the organization starts or stops being in force); commit must precede it. Later accepted safety changes affect subsequent authorizations, not this already-issued lease.",
+        "response": "Preserve command/meta and return authorization:{permit,digest,evaluatedAt,disposition} for issuance or exact unexpired recovery. Fresh response metadata does not relabel the original permit basis, authority or expiry. A GET never triggers departure, and a historical response cannot be consumed after the original expiry.",
+        "retry": "Same original tenant/principal/endpoint/key and exact bytes recover the same unexpired permit without another safety-context or expected-principal-revision comparison and without renewal; current authentication/read scope still apply. Expired restart replay returns departure_permit_expired. No new key, attempt or allocation can authorize this Ledger flight again. An unused expired permit leaves it held or abandoned; replacement needs a later explicit protocol or a new Ledger flight.",
+        "consumption": "Consume only the original exact mission/aircraft/route and live exclusive allocation, within the permit and mission intervals. Atomically retain the fit witness, once-per-tenant/Ledger-flight consumption and physical transition across restart; never swap to a revised plan or depart twice. A later accepted safety change does not revoke an issued unexpired lease. No continuous post-takeoff invalidation or airborne control claim beyond the mission interval is made.",
+        "operationFit": "Before requesting authorization, the producer establishes that the full remaining operation, expected holds, margin and lease handoff delay fit the exact mission interval. Immediately at consumption it recomputes a typed mission.departure-fit.1 witness: original permit ID/digest, exact mission record reference (which pins route), aircraft, wall clock, remainingDurationMs, holdAllowanceMs, marginMs and requiredCompletionAt. Checked duration arithmetic must equal clock plus all three durations and completion must be at most the pinned mission end. Unknown duration/holds or insufficient fit before authorization stays held and may be resolved by explicit replan/release before sending the request. After issuance, any fit, exact-plan or allocation failure leaves the flight held or abandoned; this profile allows no replacement authorization for that Ledger flight. These producer commitments do not certify aircraft performance.",
+        "review": "simulator_reviewed",
+        "consumerImplementation": "proposed_later_slice"
+      },
+      "compatibility": "The release and departure-authorization commands, explicit mission:release capability and exact release-record/validity reads are served; Simulator seam review is complete. Caller operation-fit checks and durable physical consumption remain a later slice. Ordinary evidence formats retain release and departure events opaquely while preserving issued bytes, keys and interpreters; generic decision.record notes using reserved release or departure purposes reject rather than acquire their semantics. Release is separate from risk acceptance, informational notes, preview results, briefing, implementation and enforcement. No automatic grants, producer departure activation or UI are added."
+    },
+    "missionAvoidance": {
+      "implementation": "ready",
+      "review": "simulator_reviewed",
+      "fixtureFile": "v1/mission-avoidance.ts",
+      "fixtures": [
+        "missionAvoidanceCalculation",
+        "missionAvoidanceMission",
+        "missionAvoidanceOutside",
+        "missionAvoidanceIntersects",
+        "missionAvoidanceReviewRequired",
+        "missionAvoidanceIncomplete",
+        "missionAvoidanceUnavailable"
+      ],
+      "version": "flight.mission-avoidance.1",
+      "read": "/v1/flights/{id}/mission-avoidance",
+      "authority": ["flight:read"],
+      "selection": "Compare the exact mission revision with every area control record version that the latest risk acceptance on its safety-record hazard binds, of any hazard origin, whose half-open effective interval overlaps the planned interval; an open-ended interval ends with the planned interval. Proposals alone are not candidates. Return at most 64 candidates and make an incomplete selection explicit.",
+      "references": "The compact response pins the mission event, content and full-record digest plus each exact control record version: its version event, body digest, pinned control type, acceptance and accepted assessment (cited by the signed content digest, or for an assessment by the digest of its outcome) and acceptance-time authority under ledger.sms-decision-authority.1. Unsupported authority is null and the candidate is unsupported. It does not return nested histories.",
+      "digests": "contextDigest canonically hashes {version:'mission.avoidance-context.1',mission,calculation:{id,version,digest},candidates,candidateCompleteness}; the exact candidates include their interval, geometry verdict, context and reasons. It excludes the clock, response metadata and global register revision, and is null when the mission is missing or candidate selection incomplete. previewDigest canonically hashes the entire preview payload excluding previewDigest and meta, including evaluatedAt.",
+      "geometry": "The ledger.local-mission-avoidance.1 profile uses ledger.wgs84-conservative-bounds.1 with a fixed 100000 distance budget. Its supported mission profile has at most 256 positions, absolute latitude at most 80 degrees, total centerline upper bound at most 50 km and no antimeridian crossing; radius is at most 10000 metres and lateral tolerance at most 1000 metres. Uncertainty is insufficient, not outside.",
+      "context": "Geometric outside/intersects/insufficient and current/review_required/pending/unsupported context remain separate. A stale accepted control remains an explicit candidate and prevents an overall outside claim.",
+      "safetyContext": "Each candidate requires safetyContextDigest, the digest of mission.avoidance-control-record-context.1: the hazard current assessment and latest acceptance and the control record current version and status. A newer assessment or control version asks for review. The complete candidate array, including this commitment, participates in contextDigest; acceptance references still pin the historical snapshot independently.",
+      "compatibility": "This implemented read adds no source input, receipt, command, release, control implementation, enforcement, risk reduction, UI or adopted evaluator activation. Existing mission and control records remain unchanged. Simulator contract review is complete.",
+      "controlFixtureFile": "v1/area-control.ts"
+    },
+    "missionGeometry": {
+      "implementation": "ready",
+      "review": "simulator_reviewed",
+      "fixtureFile": "v1/missions.ts",
+      "fixtures": [
+        "missionSource",
+        "missionCorridorExample",
+        "missionSourceText",
+        "missionInput",
+        "missionBinding",
+        "missionAuthority",
+        "missionRecord",
+        "missionRevision2Source",
+        "missionRevision2SourceText",
+        "missionRevision2Input",
+        "missionRevision2Record",
+        "missionPendingRead",
+        "missionFailedRead",
+        "missionCurrentRead",
+        "missionEmptyRead",
+        "missionRevisionRead",
+        "missionDeliveryCases",
+        "missionInvalidCases",
+        "authorizeMissionSource"
+      ],
+      "input": "mission.revision",
+      "recordVersion": "flight.mission.1",
+      "reads": ["/v1/flights/{id}/mission", "/v1/flights/{id}/mission/revisions/{revision}"],
+      "authority": "New delivery requires input:write, mission:write and an explicit sourceId grant in /v1/me missionSources. authority.update missionSources omission preserves grants; [] revokes. There are no automatic grants or reuse of commandLinkSources. Reads require flight:read. Accepted records retain ledger.mission-authority.1.",
+      "source": "Strict UTF-8 application/json at most 65536 bytes, without BOM or duplicate keys. sourceRevision and occurredAt copy lexically to the input top level; payload exactly copies all remaining raw fields, including the explicit centerline interpolation and lateral corridor width. The client supplies one exact existing flightId, retained original artifact and synthetic_contract fidelity, with no sourceSessionId, effectiveAt, origination key or flight creation.",
+      "geometry": "Only bounded LineString centerlines: 2 to 256 exact longitude/latitude tuples in WGS84 degrees. segmentInterpolation linear_longitude_latitude directly interpolates supplied numeric coordinates without dateline wrapping; centerline interpolation is not geodesic. The planned horizontal area is the closed corridor of every horizontal point within lateralToleranceMeters of any point on that declared interpolated centerline, measured by shortest WGS84 ellipsoidal geodesic distance. The boundary and rounded endpoint caps are included; zero tolerance means the declared centerline only. Lateral tolerance is 0 to 1000 metres. Planned altitude is 0 to 10000 metres AGL with minimum no greater than maximum; no terrain conversion is inferred. operatingInterval is finite UTC and half-open, with start before end.",
+      "identity": "The first accepted mission pins tenant/sourceId/sourceMissionId to one exact flight and reported aircraft, and the flight has one source mission binding. The server assigns a stable Ledger missionId distinct from sourceMissionId. Positive safe-integer sourceRevision identifies an immutable version independently of principal, upload and request key. There is no capture session or alias inference.",
+      "revision": "Retain revisions arriving out of order without a contiguous-number requirement. A lower revision never regresses either maximum accepted or maximum successfully projected head. A new accepted revision advances the relevant flight basis once; exact duplicate identity/content recovers the original receipt without another event or work item. Changed original bytes, normalized fields or flight binding conflict under the same revision.",
+      "contentDigest": "Canonical digest of {version:'ledger.mission-content.1',sourceId,flightId,sourceRevision,occurredAt,fidelity,payload,original:{sha256,byteLength,bytesBase64}}. Artifact and principal IDs are excluded. Original SHA-256 hashes the exact uploaded bytes independently of normalized content.",
+      "recovery": "Persist the original request, artifact and key before submission. Exact HTTP-key recovery keeps existing active-principal/input:write policy after mission grants are revoked. A new key, including semantic duplicate delivery, checks current full mission authority. The canonical accepted artifact and issuer may belong to an earlier delivery.",
+      "heads": "The bounded flat read returns binding, acceptedHead {record,processing}, projectedHead and ordinary metadata. Each head is nullable. A higher pending or failed accepted revision remains visible beside older projected geometry; neither head means all lower revision work finished. Exact revision read returns one immutable record under mission without current metadata, convergence or readiness claims.",
+      "compatibility": "Planned geometry remains separate from observed telemetry and does not replace flight activity, position, schedule, control applicability or release. No sites, intent/attempt fields, route planning, UI or live-profile activation. Current ordinary v2 evidence formats verify the exact mission receipt mapping and retained authority; issued v1 bytes and C2 selected packets remain unchanged. The source, corridor, authority and read contract has completed Simulator review. A producer/world hook remains separate."
+    },
+    "historicalRuleSelectionRead": {
+      "implementation": "ready",
+      "review": "simulator_reviewed",
+      "fixtureFile": "v1/rule-selection.ts",
+      "fixtures": ["ruleSelectionRecordRead", "ruleSelectionRecordV1", "ruleSelectionRecordV2"],
+      "read": "/v1/flights/{id}/rule-selections/{selectionId}",
+      "authority": ["flight:read"],
+      "response": "One exact nonnullable retained V1 or V2 record under selection, scoped to the authenticated tenant and requested flight. No meta, asOf, convergence or current-execution claim.",
+      "meaning": "Resolve an immutable selection reference from an evaluation without substituting the flight's latest selection. Retained V1 stays inactive; V2 retains its original policy, evaluator and adoption pins.",
+      "compatibility": "The current selection read and V1/V2 record union remain unchanged. This is an additional read only; no source input, command, execution or evidence format changes."
+    },
+    "adoptedC2Execution": {
+      "implementation": "ready",
+      "review": "simulator_reviewed",
+      "fixtureFile": "v1/c2-execution.ts",
+      "fixtures": [
+        "commandLinkEvaluator",
+        "adoptedCommandLinkSelection",
+        "expiredCommandLinkSelection",
+        "draftCommandLinkFinding",
+        "adoptedCommandLinkFinding",
+        "expiredCommandLinkFinding"
+      ],
+      "packetFixtureFile": "v1/decision-packets.ts",
+      "packetFixtures": ["commandLinkExecutionPacketCreate", "commandLinkExecutionPacketSelection"],
+      "read": "/v1/flights/{id}/rule-selection and existing timeline/findings reads",
+      "selectionVersion": "flight.rule-selection.2",
+      "evaluationProfile": "ledger.c2-evaluation.2",
+      "executionVersion": "flight.c2-execution.1",
+      "policyVersion": "ledger.company-c2-execution.1",
+      "activation": "Prospective execution uses the exact projected and effective company V3 C2 adoption under a newly retained selection V2 record. Existing selection V1 records remain inactive; no historical evaluation or adoption is relabeled as execution.",
+      "pins": "Evaluation profile and execution are paired. Execution retains mode, exact evaluator reference, selection V2 ID/digest, the selected adoption candidate or null, and the source-report, selection-change or retained-bootstrap trigger. Draft catalog metadata remains adopted false.",
+      "finding": "Draft, adopted and expiry fallback evaluations retain one finding ID, original evaluation, owner and treatment history. Finding-treatment requests keep the existing evaluationId and displayed basis; acceptance retains the complete evaluated execution pins.",
+      "packet": "The unchanged decision-packet request selects ledger.decision-packet.2 for the new evaluation profile. Its manifest pins selection ID/digest, evaluator and nullable adoption ID; typed closure adds selected_rule_selection and selected_adoption event reasons. Count and byte caps remain unchanged, with maximum reference depth three.",
+      "compatibility": "Legacy evaluations without profile/execution, selection V1 and packet V1 remain valid and unchanged. Unsupported profiles or references stay unsupported. No new source input, treatment command, authority grant, broader coverage or public UI flow is introduced by this seam, which has completed Simulator contract review."
+    },
+    "flightRuleSelection": {
+      "implementation": "ready",
+      "review": "simulator_reviewed",
+      "fixtureFile": "v1/rule-selection.ts",
+      "fixtures": [
+        "ruleSelectionRead",
+        "ruleSelectionScheduled",
+        "ruleSelectionEligible",
+        "ruleSelectionExpired",
+        "ruleSelectionPending"
+      ],
+      "read": "/v1/flights/{id}/rule-selection",
+      "authority": ["flight:read"],
+      "version": "flight.rule-selection.1",
+      "legacy": "Historical V1 records remain inactive; the adoptedC2Execution extension defines prospective V2 execution records.",
+      "scope": "Exact ledger.demo-procedures version 3 command-link loss leaf and its version 1 binding only; other coverage is unchanged.",
+      "selection": "At most one retained record, or null before bootstrap. Adoption state is not_adopted, pending, scheduled, eligible or expired using the explicit wall clock and half-open effective interval.",
+      "execution": {
+        "status": "inactive",
+        "baseline": "builtin_draft"
+      },
+      "frontier": "adoptionRevision and projectedAdoptionRevision are maximum accepted_revision values across accepted and projected organization pack adoptions, not overall organization revisions. Informational reviews do not change this selection frontier.",
+      "digest": "Canonical digest of version, flightId, organizationId, adoptionRevision, projectedAdoptionRevision, selection, execution and nextBoundary. Excludes record id, clock, cuts, dependency token and basis manifest.",
+      "convergence": "The read returns current or pending with bootstrap, organization_changed or boundary_due reason. A retained pending adoption can be current; an older retained record can await refresh. The response meta remains current subject evidence, separate from the record's retained transition basis.",
+      "compatibility": "No producer input kind, rule activation, finding behavior or export format changes. Both lanes have reviewed the contract and fixtures."
+    },
+    "decisionPacket": {
+      "implementation": "ready",
+      "review": "simulator_reviewed",
+      "fixtureFile": "v1/decision-packets.ts",
+      "fixtures": [
+        "commandLinkDecisionPacketCreate",
+        "commandLinkDecisionPacketQuery",
+        "commandLinkDecisionPacketSelection"
+      ],
+      "create": "/v1/decision-packets with flightId and an exact C2 finding-treatment decisionId",
+      "read": "/v1/decision-packets with optional flightId/decisionId filters; /{id} metadata and /{id}/content exact bytes",
+      "responses": "Create and metadata return record and requestId; list returns records, limit 20, hasMore and requestId. Packet responses do not include projection metadata.",
+      "authority": ["evidence:read"],
+      "format": "ledger.decision-packet.1",
+      "scope": "selected_c2_finding_treatment_records",
+      "selection": "command-link-finding-treatment.1",
+      "records": "The selected canonical decision event retains acceptedFindingBasis; its exact evaluation event retains the leaf and binding. Include only the evaluation's reported command-link events, their receipts and exact original artifacts through two typed reference levels.",
+      "integrity": "Manifest inventory digests canonically hash each entire EvidenceEntry, EvidenceReceipt or EvidenceArtifact item. Artifact sha256 separately hashes the decoded original bytes. Retain the manifest digest independently.",
+      "limitations": "Selected records do not prove journal membership, complete prefixes or full history, and do not reconstruct historical authority, dependency manifests or browser displays, replay evaluations, or establish present communications health.",
+      "compatibility": "Opt-in separate storage, routes, format and verifier. Existing flight/organization exports and issued bytes remain unchanged. No new input kind or UI path."
+    },
+    "flightEvidenceV2": {
+      "implementation": "ready",
+      "review": "simulator_reviewed",
+      "export": "/v1/exports with unchanged flightId, decisionId and scope whole_tenant_prefixes",
+      "format": "ledger.flight-evidence.2",
+      "download": "record.format and X-Evidence-Format identify retained bytes; LedgerClient.exportDownload returns format and bytes. Stored v1 records derive their response format without being rewritten.",
+      "compatibility": "New issuance always uses flight v2. Stored v1 bytes, idempotent retries and downloads remain available; organization reviews remain on ledger.subject-evidence.2. Flight authority and historical dependency manifests stay explicitly not_retained. Both pinned interpreters remain unchanged."
+    },
+    "commandLinkStatus": {
+      "implementation": "ready",
+      "review": "simulator_reviewed",
+      "proposalReview": "simulator_reviewed",
+      "intake": false,
+      "kind": "observation",
+      "fixtureFile": "v1/command-link.ts",
+      "fixtures": [
+        "commandLinkLossObservation",
+        "commandLinkRestorationObservation",
+        "authorizeLinkStatusSource",
+        "commandLinkLoss",
+        "commandLinkRestoration"
+      ],
+      "originals": ["commandLinkLossSource", "commandLinkRestorationSource"],
+      "source": "Exact UTF-8 application/json, bounded to 64 KiB with no BOM or duplicate keys: sourceSessionId, occurredAt, sourceEventId, incidentId, aircraftId, status lost/restored and optional WGS84 longitude/latitude. The link monitor uploads these bytes and sends the link.status@1 observation the command-link adapter makes of them (commandLinkLossObservation, commandLinkRestorationObservation).",
+      "authority": "An authority:write manager grants the link monitor's principal input:write and a link.status observation grant for its sourceId on authority.update (observationGrants). Accepted observations retain the generic observation authority. command-link:write and commandLinkSources are retired: authority.update no longer grants them; principals that hold them keep them as granted.",
+      "recovery": "The same original bytes and transport give the same upload and observation idempotency keys, so a retry after a lost response is given the same receipt.",
+      "identity": "Source event identity is tenant/source/session/type/sourceEventId at observation intake; the same identity with other content conflicts. The lost-link review binds a capture session to the flight and aircraft of its earliest report, across flights, and leaves out and names a report in a session first used for another flight or aircraft (pack version 6).",
+      "basis": "Acceptance advances the flight basis as any observation does. The command-link projector adds a thread item for each report its session is bound to; nothing is written to the retained command-link session and source-event tables.",
+      "compatibility": "RETAINED: reports accepted earlier as command-link.status keep their receipts, events, session and source-event rows, and verify as before (commandLinkLoss and commandLinkRestoration describe that retained record). POST /v1/inputs no longer accepts kind command-link.status."
+    },
+    "commandLinkAdapter": {
+      "implementation": "ready",
+      "review": "simulator_reviewed",
+      "module": "@ledger/adapters",
+      "api": ["commandLinkStatusAdapter", "translateAndSubmit", "HttpObservationSink"],
+      "binding": "The caller binds the adapter to one capture session and aircraft, and names the Ledger flight for that session in the translation context. A report naming another session or aircraft is refused.",
+      "prepare": "Retain the original bytes before delivery. translateAndSubmit uploads them once, keyed by their SHA-256, and submits the observation with a key derived from the bytes and transport.",
+      "send": "A refusal (for example a missing observation grant) leaves the report retained for a later retry.",
+      "recover": "Send the same bytes again; the upload and observation keys repeat, so Ledger returns the original receipt.",
+      "result": "One submitted observation with its receipt id, and the artifact id holding the original bytes.",
+      "transport": "The Simulator-owned POST /_simulation/command-link/deliver seam forwards decoded bytesBase64 unchanged through the existing authenticated /world/command-link/<digest> listener. The world retains prepared submissions before send and recovers the same requests across restart; runtime activation remains separate."
+    },
+    "commandLinkFinding": {
+      "implementation": "ready",
+      "review": "simulator_reviewed",
+      "fixtureFile": "v1/command-link-findings.ts",
+      "fixtures": [
+        "commandLinkProcedurePackRead",
+        "commandLinkLossEvaluation",
+        "commandLinkRestoredEvaluation",
+        "restoredCommandLinkFinding"
+      ],
+      "read": "/v1/flights/{id}/findings and timeline; ledger.demo-procedures version 3",
+      "leafId": "ledger.demo.command-link-loss-review",
+      "bindingId": "ledger.command-link-status",
+      "meaning": "One company-procedure review per flight. Legacy runs remain draft; the versioned execution context separately identifies adopted execution when registered exact support applies. The two existing landing checks continue unchanged; catalog authorization remains inactive. This is not NPRM communications assessment or SMS coverage.",
+      "scope": "Only projected immutable command-link reports for the exact flight, grouped by sourceId/sourceSessionId/incidentId/aircraftId. A restoration from another group cannot clear a loss.",
+      "evidence": "No reports or restoration-only reports stay insufficient/pending. Every known loss group requires a strictly later restoration. Equal latest loss/restoration instants conflict; a later restoration can clarify them. Future, invalid or unorderable scoped evidence blocks clearance. Pass means the reported loss groups permit manual resolution, not healthy communications or a loss rate.",
+      "treatment": "Every newly projected loss opens/reopens review, including a late loss after known restoration. Initial/latest evaluations and responsibility/history remain retained; restoration never auto-resolves. Use the existing exact finding/evaluation references and displayed decision basis for acknowledge/respond/resolve.",
+      "basis": "Each evaluation retains report references, reason, explicit wall clock and immutable leaf/binding snapshots, with rendered and accepted cuts under the source worker fence. Pending intake already changes the flight basis; duplicates do not create a second review. Upgrade work evaluates retained projected reports without replaying source work; historical losses receive review even after known restoration, and delayed bootstrap never reopens an existing treated finding.",
+      "compatibility": "Additive C2 explanation kind command_link and catalog binding/dependencies. Legacy landing explanation shapes and V1 definitions remain unchanged; v2 exports retain the new evaluation journal effects without claiming evaluator replay. No new receipt kind or pinned interpreter change."
+    },
+    "draftProcedurePack": {
+      "implementation": "ready",
+      "review": "simulator_reviewed",
+      "read": "/v1/rule-packs/{packId}/versions/{version}",
+      "authority": ["flight:read"],
+      "packId": "ledger.demo-procedures",
+      "version": 1,
+      "meaning": "An available AI-drafted pack containing only the two existing demo company procedures. Automated coverage describes implemented checks, not regulatory coverage or operator adoption.",
+      "integrity": "Each source snippet retains its exact UTF-8 text bytes, byte length, SHA-256 and zero-based half-open UTF-8 byte span. Canonical binding, leaf and pack digests pin exact content; unknown versions fail without a latest-version fallback.",
+      "adopted": false
+    },
+    "draftAuthorizationEvidencePack": {
+      "implementation": "ready",
+      "review": "simulator_reviewed",
+      "read": "/v1/rule-packs/{packId}/versions/{version}",
+      "authority": ["flight:read"],
+      "packId": "ledger.demo-procedures",
+      "version": 2,
+      "leaf": "ledger.demo.authorization-evidence-recorded",
+      "meaning": "The retained version 1 procedures plus a pure, inactive company-procedure check of reported authorization evidence. Approval means a report for the exact source and authorization identity was recorded, not regulatory clearance. Missing or unknown evidence stays insufficient.",
+      "interval": "Latest scoped status at or before the explicit wall clock is selected before checking its reported half-open UTC interval. Poll records provide startTime/endTime; callbacks provide startTime plus duration in minutes. Missing, invalid or out-of-window latest evidence never falls back to an older approval.",
+      "activation": false,
+      "adopted": false
+    },
+    "organizationPackAdoption": {
+      "implementation": "ready",
+      "review": "simulator_reviewed",
+      "read": "/v1/organization/coverage",
+      "command": "rule-pack.adopt",
+      "authority": {
+        "read": ["flight:read"],
+        "adopt": ["pack:adopt"]
+      },
+      "pack": {
+        "packId": "ledger.part108-nprm",
+        "version": 1
+      },
+      "source": "/v1/rule-sources/govinfo.fr.2025-14992/content",
+      "basis": "Copy the displayed organization revision, input cut and dependency token. Pin all exact pack, leaf and binding digests. The organization scope comes only from authentication.",
+      "acceptance": "Acceptance is immutable and may still await fenced projection. Same-pack intervals cannot overlap accepted or pending adoptions. Scheduled, effective and expired states are derived from the server read clock after projection.",
+      "coverage": "Proposed 108.550(a) assessment review remains manual; proposed 108.560(a) SMS coverage is unsupported. Adoption of this NPRM pack does not establish either or activate manual/unsupported provisions.",
+      "compatibility": "No new receipt kind. V1 verifies opaque journal integrity, not adoption semantics or historical authority, and cannot select adoption as its flight decision."
+    },
+    "organizationAdoptionReview": {
+      "implementation": "ready",
+      "review": "simulator_reviewed",
+      "read": "/v1/organization/decisions",
+      "command": "decision.record with subject.kind organization and decision.kind adoption.review",
+      "fixture": "reviewShownAdoption(shown, adoption, note)",
+      "authority": {
+        "read": ["flight:read"],
+        "record": ["decision:write"],
+        "export": ["evidence:read"]
+      },
+      "basis": "Read the current organization decisions, copy its complete rendered cut, revision and dependency token, and cite one exact organization adoption ID, accepted revision and pack digest. Pending evidence remains in the accepted cut; projection completion is not required.",
+      "acceptance": "Retains acceptance-time authority and a versioned dependency-basis manifest. Review records an informational judgment and has no activation or risk-acceptance effect.",
+      "export": "/v1/subject-exports with subject.kind organization, decisionId and scope whole_tenant_prefixes",
+      "format": "ledger.subject-evidence.2",
+      "compatibility": "Legacy flight requests and v1 bundles remain supported. V2 verifies retained record commitments, citations, cuts and authority-policy consistency; it does not reconstruct historical browser state, replay evaluations or establish a signature. New SMS input kinds remain unavailable."
+    },
+    "queueReads": {
+      "implementation": "ready",
+      "review": "simulator_reviewed",
+      "orders": "/v1/orders?view=awaiting-flight&limit=25",
+      "evidence": "/v1/receipts?linkStatus=unlinked&excludeKind=order.revision&limit=25",
+      "meaning": "Awaiting-flight orders are current projected accepted orders with no retained flight link in the authenticated tenant and source/order identity. No aircraft or crew availability is implied.",
+      "pagination": "Filters apply before the existing bounded live-projection pages. Cursors bind their filters; omitted and explicit all views are equivalent."
+    },
+    "findings": {
+      "implementation": "ready",
+      "review": "simulator_reviewed",
+      "read": "/v1/flights/{id}/findings",
+      "treatment": "decision.record with top-level findingTreatment; pin findingId, latest evaluationId and the displayed flight basis",
+      "clock": "wall",
+      "leaves": ["ledger.demo.landing-disagreement", "ledger.demo.missing-landing-evidence"]
+    },
+    "missionBriefing": {
+      "implementation": "ready",
+      "review": "simulator_reviewed",
+      "fixtureFile": "v1/mission-briefing.ts",
+      "fixtures": [
+        "missionBriefingCommand",
+        "missionBriefingRecord",
+        "missionBriefingAcknowledgementCommand",
+        "missionBriefingAcknowledgementRecord",
+        "missionBriefingRecordResponse",
+        "missionBriefingHistoricalAcknowledgements",
+        "missionBriefingNewPopulationAcknowledgements",
+        "missionBriefingCases"
+      ],
+      "commands": ["mission.brief", "mission.briefing-acknowledge"],
+      "reads": ["/v1/flights/{id}/briefings/{briefingId}", "/v1/flights/{id}/briefings/{briefingId}/acknowledgements"],
+      "authority": {
+        "read": ["flight:read"],
+        "brief": ["flight:read", "briefing:write"],
+        "acknowledge": [
+          "flight:read",
+          "briefing:ack",
+          "authenticated active human member of the exact frozen population"
+        ]
+      },
+      "identity": "Simulator personId/personName are reported attribution carried by shared tenant credentials, not Ledger principal membership. No trusted person-to-principal bridge or crew assignment exists. Select explicit same-tenant human principal IDs; never match names or allow a shared operator to acknowledge for other people. Coverage describes named recipients only.",
+      "basis": "Fresh briefing checks author revision/capabilities, exact release validity and active recipient snapshots through commit. One exact risk-accepted control candidate from one completed scheduled/current release: retain control/event/version/digest and acceptance reference, derived mission/aircraft/avoidance context and unchanged release policy. Retain the authored message plus the control record content: pinned control type and its title, record title, the wording the type gives its parameters, the parameters, the area and the interval. No latest-version substitution; context, content or membership changes create another briefing.",
+      "population": "Resolve 1-32 unique active human principals on acceptance; retain their identity snapshots sorted by principalId and hash briefing.recipient-population.1 excluding digest. Retained principal revision identifies the historical population; fresh acknowledgement checks the current principal revision instead. Later deactivation, grants or crew reassignment never remove someone from this denominator. An unmapped operational person cannot be counted as a recipient principal.",
+      "acknowledgement": "The command selects only exact briefing ID/digest and populationDigest with reviewed_exact_briefing attestation. Derive recipient from authentication; no recipient/actor/on-behalf selector. Fresh acceptance checks current human membership, explicit capability and expected principal revision through commit, retaining actual authority. One immutable acknowledgement per briefing/recipient; a new-key duplicate rejects rather than double-counting.",
+      "history": "Exact original-principal/key/content recovery retains the original record/time under active authentication/read scope, even after context or grants change. Historical review may be recorded after release context changes or expiry, but remains tied to that older briefing. As-of rows show accepted acknowledgement and projection processing separately from current release validity; nothing carries to a new briefing/population.",
+      "policy": "Informational under unchanged ledger.demo.route-avoidance-release.1 and route-avoidance-departure.1. Briefing or acknowledgement is not a release/departure prerequisite, control implementation or delivery/read proof. These informational events do not change the narrow release/departure safety context or invalidate it. A future manual-compliance prerequisite requires a new explicit policy/version; issued records and permits cannot be relabeled.",
+      "compatibility": "Informational commands, explicit briefing capabilities, exact reads and attributed fenced projection are implemented. Records are bounded to 128 KiB per briefing, 16 KiB per acknowledgement and 32 named recipients; the acknowledgement read is bounded to 1 MiB. Ordinary evidence retains these nonreceipt events opaquely without changing issued interpreters or C2 packets. No UI, directory, notification framework, grants or operational activation is added.",
+      "response": "Preserve the normal command/meta envelope: command.id selects the accepted briefing or acknowledgement, and command.payload retains the original request. Exact-briefing GET returns {briefing,digest}; acknowledgement rows return the full retained record/digest and separate projection processing. releaseValidity selects the briefing's exact release at the same evaluatedAt, never a replacement release. Both reads require current tenant-scoped flight:read."
+    },
+    "commandLinkBaseline": {
+      "implementation": "retired",
+      "review": "simulator_reviewed",
+      "sourceVersion": "command-link.baseline.1",
+      "input": "command-link.baseline",
+      "fixtureFile": "v1/monitoring-window.ts",
+      "fixtures": ["baselineSource", "baselineInput", "baselineEvidence"],
+      "read": "/v1/flights/{id}/command-link-baselines/{baselineId}",
+      "identity": "Exact source, capture session, source event, flight and aircraft identities copy the retained original. The first accepted baseline permanently binds one new tenant/source/session to that flight and aircraft; no retrospective baseline for existing V1 sessions. Baseline and incident reports share the source-event namespace, so changing kind or content under an existing source event conflicts.",
+      "authority": "Captured ledger.command-link-baseline-authority.1 uses input:write, command-link:write and the explicit source grant from commandLinkSources. Organization derives from authentication. No new capability or automatic grant is added.",
+      "recovery": "Exact original-principal endpoint/key/body recovery keeps the accepted record and occurrence/receipt times under active authentication and input:write, without reapplying revoked C2/source grants. A new key or delivery requires current C2/source authority, including semantic duplicates. Exact duplicate delivery cannot create a second baseline or advance history.",
+      "meaning": "One actual initial up, down or unknown observation at occurredAt. It has no incident ID and is not a loss, restoration, coverage interval, completeness claim or continuing health assertion. Retain exact strict JSON bytes, SHA-256, length and source-to-normalized lexical mapping.",
+      "ordering": "Intake admits this first, once, in a new session and retains exact idempotent recovery. The pure V2 calculation requires its occurrence strictly before the monitoring window and every selected incident report, with acceptance no later than selected incident acceptance. A second distinct baseline, source-time tie, older report, wrong binding or pending evidence is insufficient.",
+      "compatibility": "Bounded native intake, immutable authority/original retention, fenced projection, exact reads and the separate checkpoint adapter implement this seam. Ordinary v2 receipt/export/verifier handling is explicit; preserve issued bytes and pinned interpreters. Baselines do not become incidents or change active finding/evaluator, adoption, release or world behavior. Existing V1 loss/restoration sessions remain valid and cannot be backfilled into native-baseline success. Live Simulator producer activation remains separate.",
+      "retired": "POST /v1/inputs answers 410 command_link_baseline_retired. Live monitoring opens a control window instead. Baselines recorded earlier stay readable at the read path and verify as before."
+    },
+    "monitoringWindowV2": {
+      "implementation": "ready",
+      "review": "simulator_reviewed",
+      "sourceVersion": "monitoring.window.2",
+      "input": "monitoring.window",
+      "fixtureFile": "v1/monitoring-window.ts",
+      "fixtures": ["monitoringSourceV2", "monitoringInputV2", "monitoringRecordV2"],
+      "read": "/v1/organization/monitoring-windows/{monitoringId}",
+      "authority": "Current input:write and monitoring:write plus an explicit sourceId grant from /v1/me monitoringSources. authority.update monitoringSources omission preserves grants; [] revokes. No automatic or C2/mission source grants. Retain ledger.monitoring-authority.1 with actual principal/tenant/revision, capabilities, checked capabilities and granted sources. Organization derives from authentication; no subject or organization selector is accepted.",
+      "identity": "Permanent tenant/source/session/window context pins exact accepted control/risk-acceptance reference, finite window and sorted flight/aircraft/mission/C2-source/session/native-baseline bindings. First sourceRevision is 1, then contiguous +1. Revisions may correct observed/coverage/gap intervals, completeness and declared incident identities. A changed context needs a new sourceWindowId. Exact original bytes under the same revision return the canonical receipt across authorized principals/uploads; changed content conflicts.",
+      "retention": "Strict lexical original/source-to-input parity, 128 KiB original, at most 32 flights, 16 intervals per field, a positive window no longer than one hour, and at most 128 declared incident identities plus baseline references combined. Reported interval ends and completeThrough must be no later than occurredAt; occurredAt cannot exceed receipt. Exact same-tenant control/acceptance, mission/flight and native-baseline pins must have completed projection. Historical accepted pins remain valid; incomplete population, partial/null coverage and gaps can be retained without establishing a rate. Declared incident IDs remain bounded source claims, not proof of complete current history.",
+      "record": "MonitoringRecordV2.id is the receipt eventId. Exact reads return monitoring, canonical immutable digest and separate current processing, within 256 KiB of JSON. Retained original bytes remain available through artifact reads and ordinary V2 exports. Fenced projection records completion without changing flight state, findings or release policies.",
+      "adapter": {
+        "module": "@ledger/adapters",
+        "api": ["MonitoringWindowAdapter.prepare", "MonitoringWindowAdapter.send", "MonitoringWindowAdapter.recover"],
+        "checkpoint": "Persist ledger.monitoring-window-submission.2 before send. Exact recovery retains API, tenant, principal, bytes, artifact, original request and window/revision key without new-delivery support/source gates or another upload. A new key requires current source authority, including semantic retries; canonical receipt artifacts may differ from submitted uploads."
+      },
+      "compatibility": "Only monitoring.window.2 is live intake. Proposed V1 source and record formats remain unchanged and unavailable for intake. Ordinary flight/organization V2 exports explicitly verify this receipt kind, including unrelated whole-tenant prefixes; issued bytes and pinned interpreters remain unchanged. Indicator results over a control window are recorded through their own contract.",
+      "v1Fixtures": ["monitoringSource", "monitoringInput", "monitoringRecord"]
+    },
+    "assuranceHistory": {
+      "status": "implemented",
+      "review": "schema_simulator_reviewed",
+      "fixtures": "v1/assurance-history.ts",
+      "routes": {
+        "monitoring": "GET /v1/hazards/{id}/monitoring-windows?controlEventId={controlEventId}"
+      },
+      "authority": "Active authentication and flight:read; implicit tenant and exact hazard/control ownership. No human write or source grant is required.",
+      "pagination": {
+        "defaultLimit": 25,
+        "maxLimit": 100,
+        "order": "recorded_descending",
+        "consistency": "accepted_history",
+        "maxSummaryBytes": 16384,
+        "maxResponseBytes": 262144
+      },
+      "semantics": "Persisted accepted summaries include records before projection. Row digests commit whole monitoring records. Scoped deterministic keysets use an initial upper boundary; readAt is this page read, not a completeness snapshot or action basis. No originals, payloads, currentness, eligibility or per-row exact reads. Oversized rows/pages fail explicitly without skipped identities.",
+      "implementation": "Migration 0037 adds stored summary metadata and directly scoped keyset indexes. The active flight:read API/client read validates exact parent ownership and preflights bounded summaries without per-row record, original or currentness reads. Existing exact reads remain unchanged.",
+      "clients": ["hazardMonitoringWindows"]
+    },
+    "operationScopes": {
+      "implementation": "ready",
+      "review": "simulator_reviewed",
+      "fixtureFile": "v1/operation.ts",
+      "fixtures": ["currentOperation", "overdueOperation", "pendingOperation", "historicalIssueOperation"],
+      "flights": "GET /v1/flights?view=monitor|overdue|historical-issues|history&limit=100",
+      "orders": "GET /v1/orders?view=awaiting-current|awaiting-overdue&limit=25",
+      "meaning": "Read-time scopes separate current operation, elapsed nonterminal plans or unconfirmed outcomes, terminal historical issues and clean terminal history. Actual activity and finding state never change because time passes. Accepted orders remain accepted until explicit source revision or cancellation; no resource availability is inferred.",
+      "window": "Requested schedule remains separate. A mission window is current only when the highest accepted revision is completed and equals the projected head. Newer pending or failed revisions retain both compact heads with window null. An elapsed requested baseline remains an explicit overdue planning issue, never an older current-plan substitute.",
+      "freshness": "Reported-active flights remain current when actual activity or position occurrence is within 90 seconds of the server read clock and not future-dated, even after the window. Generic receipt, decision and evaluation clocks never refresh physical activity.",
+      "pagination": "Scopes filter before the bounded page. Flight scope, search, authority and upper creation position are pinned in opaque cursors, ordered by creation time descending then flight ID under C collation descending. All retains raw-ID pagination. Live scope membership can change with new evidence and time; web never automatically exhausts all pages. Orders retain existing filter-scoped bounded pages.",
+      "basis": "operation is read-time context on scoped lists and exact flight reads, omitted from generic all lists; it is not retained decision basis and changes no intake, evaluator, deadline, command, export or immutable historical format."
+    }
+  }
+}

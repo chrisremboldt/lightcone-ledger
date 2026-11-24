@@ -1,0 +1,3 @@
+subjectId,credentialKind,credentialNumber,recordedStatus,issuedOn,issuingBody
+RIDGE-PILOT-1,remote_pilot_certificate,EXAMPLE-RPC-4001,held,2025-02-14,Example Aviation Authority
+RIDGE-PILOT-2,remote_pilot_certificate,EXAMPLE-RPC-4002,held,2025-06-02,Example Aviation Authority

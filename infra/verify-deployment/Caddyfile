@@ -1,0 +1,16 @@
+# The verification's proxy: TLS for the three names with a certificate from the local authority verify.mjs makes.
+# A deployment's Caddyfile names its real hosts and lets Caddy obtain certificates itself (see docs/guides/deploy.md).
+{
+	http_port 18080
+	https_port 18443
+}
+
+ledger.localhost:18443, ledger-api.localhost:18443 {
+	tls /certs/server.pem /certs/server-key.pem
+	reverse_proxy ledger:4000
+}
+
+id.localhost:18443 {
+	tls /certs/server.pem /certs/server-key.pem
+	reverse_proxy keycloak:8080
+}

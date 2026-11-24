@@ -1,0 +1,368 @@
+.spatial-map {
+  margin: 14px 0;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  overflow: hidden;
+  background: var(--paper);
+}
+.spatial-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  padding: 10px;
+  border-bottom: 1px solid var(--line);
+  align-items: center;
+}
+.spatial-toolbar button,
+.spatial-empty button {
+  background: transparent;
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  color: var(--ink);
+  padding: 6px 10px;
+  font: inherit;
+  font-size: 12px;
+  min-height: 34px;
+}
+.spatial-toolbar button.is-active {
+  border-color: var(--magenta);
+  background: var(--magenta-soft);
+}
+.spatial-toolbar span {
+  margin-left: auto;
+  font: 11px var(--mono);
+  color: var(--muted);
+}
+.spatial-map svg {
+  display: block;
+  width: 100%;
+  max-height: 520px;
+  touch-action: none;
+  cursor: grab;
+}
+.spatial-map svg.is-placing {
+  cursor: crosshair;
+}
+.spatial-grid line {
+  stroke: var(--line);
+  stroke-width: 0.6;
+}
+.spatial-line path {
+  fill: none;
+  stroke: var(--plan);
+  stroke-width: 2;
+  stroke-linejoin: round;
+  stroke-linecap: round;
+}
+.spatial-line .spatial-corridor {
+  stroke: var(--plan);
+  opacity: 0.12;
+}
+.spatial-line--observed path {
+  stroke: var(--ink-2);
+  stroke-width: 1.5;
+  stroke-dasharray: 3 3;
+}
+.spatial-line--proposed path {
+  stroke: var(--magenta);
+  stroke-width: 3;
+}
+.spatial-area {
+  fill: var(--amber);
+  fill-opacity: 0.08;
+  stroke: var(--amber);
+  stroke-width: 1.6;
+}
+.spatial-area--proposed {
+  stroke-dasharray: 5 4;
+}
+.spatial-area--draft {
+  fill: var(--magenta);
+  fill-opacity: 0.06;
+  stroke: var(--magenta);
+  stroke-dasharray: 6 3;
+}
+.spatial-point circle {
+  fill: var(--paper);
+  stroke: var(--ink-2);
+  stroke-width: 2;
+}
+.spatial-point--event circle {
+  fill: var(--amber);
+  stroke: var(--amber);
+}
+.spatial-point--sample circle {
+  stroke: none;
+  fill: var(--ink-2);
+}
+.spatial-point.is-selected circle {
+  stroke: var(--magenta);
+  stroke-width: 3;
+}
+.spatial-point text,
+.spatial-radius text,
+.spatial-scale text,
+.spatial-control-number {
+  fill: var(--ink);
+  font: 11px var(--mono);
+  paint-order: stroke;
+  stroke: var(--paper);
+  stroke-width: 4px;
+  stroke-linejoin: round;
+}
+.spatial-control-number {
+  fill: var(--amber);
+  font-weight: 600;
+}
+.spatial-area-list {
+  list-style: none;
+  padding: 10px 12px 0;
+  margin: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px 18px;
+  font-size: 11px;
+  color: var(--ink-2);
+}
+.spatial-area-list b {
+  color: var(--amber);
+  margin-right: 5px;
+}
+.spatial-draft-center circle,
+.spatial-radius circle {
+  fill: var(--paper);
+  stroke: var(--magenta);
+  stroke-width: 2;
+}
+.spatial-draft-center path,
+.spatial-radius line {
+  stroke: var(--magenta);
+  stroke-width: 1.5;
+}
+.spatial-draft-center.is-editable,
+.spatial-radius[role='slider'] {
+  cursor: move;
+}
+.spatial-draft-center:focus circle,
+.spatial-radius:focus circle {
+  stroke: var(--plan);
+  stroke-width: 4;
+}
+.spatial-scale path {
+  fill: none;
+  stroke: var(--ink);
+  stroke-width: 2;
+}
+.spatial-map figcaption,
+.spatial-instruction,
+.spatial-empty {
+  padding: 10px 12px;
+  margin: 0;
+  color: var(--muted);
+  font-size: 11px;
+  line-height: 1.6;
+}
+.spatial-instruction {
+  color: var(--ink);
+  border-bottom: 1px solid var(--line);
+}
+.occurrence-locations {
+  display: grid;
+  gap: 8px;
+}
+.occurrence-location {
+  border-left: 2px solid var(--line);
+  padding: 8px 12px;
+}
+.occurrence-location.is-selected {
+  border-color: var(--magenta);
+}
+.occurrence-location p {
+  margin: 4px 0;
+}
+.occurrence-location small {
+  display: block;
+  color: var(--muted);
+  line-height: 1.6;
+}
+.occurrence-location button {
+  margin: 7px 8px 2px 0;
+}
+.hazard-location-header {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.hazard-location-header h3 {
+  margin-right: auto;
+}
+.control-map-radius {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 8px 0;
+}
+.control-map-radius input {
+  width: 110px;
+}
+.spatial-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 18px;
+  color: var(--muted);
+  font-size: 11px;
+  margin: 8px 0;
+}
+.spatial-legend span:before {
+  content: '';
+  display: inline-block;
+  height: 2px;
+  width: 18px;
+  margin-right: 6px;
+  vertical-align: middle;
+  background: var(--plan);
+}
+.spatial-legend .is-proposed:before {
+  background: var(--magenta);
+}
+.spatial-legend .is-observed:before {
+  background: var(--ink-2);
+}
+.spatial-legend .is-control:before {
+  background: var(--amber);
+}
+@media (max-width: 600px) {
+  .spatial-map svg {
+    min-height: 280px;
+  }
+  .spatial-toolbar button {
+    min-height: 40px;
+  }
+  .spatial-point text {
+    font-size: 10px;
+  }
+}
+.mission-detour {
+  margin: 16px 0;
+}
+.detour-request {
+  display: flex;
+  gap: 12px;
+  align-items: flex-end;
+  flex-wrap: wrap;
+  margin: 14px 0;
+}
+.detour-request label {
+  display: grid;
+  gap: 5px;
+  color: var(--ink-2);
+  font-size: 12px;
+}
+.detour-request input {
+  width: 130px;
+  min-height: 34px;
+  padding: 5px 8px;
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  background: var(--paper);
+}
+.detour-comparison {
+  display: flex;
+  gap: 14px 30px;
+  flex-wrap: wrap;
+  margin: 18px 0;
+}
+.detour-comparison dt {
+  font-size: 11px;
+  color: var(--muted);
+}
+.detour-comparison dd {
+  margin: 4px 0;
+  font: 14px var(--mono);
+}
+.detour-application {
+  border-left: 2px solid var(--magenta);
+  padding: 4px 14px;
+  margin: 18px 0;
+}
+.mission-detour .action-success {
+  display: block;
+}
+.mission-detour .action-success button {
+  margin: 10px 0 0;
+  display: block;
+}
+
+.spatial-area-details {
+  padding: 10px 14px;
+  color: var(--muted);
+  font-size: 12px;
+}
+.spatial-area-details summary {
+  cursor: pointer;
+}
+.spatial-map.telemetry-map {
+  margin: 0;
+  border: 0;
+  border-radius: 0;
+}
+.spatial-map.telemetry-map .spatial-line path.telemetry-track {
+  fill: none;
+  stroke: var(--map-track);
+  stroke-width: 2;
+  stroke-dasharray: none;
+  stroke-linecap: round;
+  vector-effect: non-scaling-stroke;
+}
+.spatial-map.telemetry-map .telemetry-point {
+  fill: var(--map-point);
+  stroke: none;
+  cursor: pointer;
+}
+.spatial-map.telemetry-map .telemetry-point.is-selected {
+  fill: var(--magenta);
+  stroke: #fff;
+  stroke-width: 1.5;
+}
+.spatial-map.telemetry-map .telemetry-late-ring {
+  fill: none;
+  stroke: var(--map-late);
+  stroke-width: 1.5;
+}
+/* The avoidance-area editor sits in the record's rail: while it is open the rail takes the room the map needs. */
+.safety-layout:has(.safety-rail [data-testid='hazard-control-map']) {
+  grid-template-columns: minmax(0, 1fr) minmax(348px, 46%);
+}
+.safety-rail [data-testid='hazard-control-map'] {
+  width: 100%;
+}
+.safety-rail [data-testid='hazard-control-map'] .spatial-map svg {
+  min-height: 360px;
+}
+.spatial-outline-area {
+  fill: none;
+  stroke: var(--ink-2);
+  stroke-width: 1;
+  stroke-dasharray: 4 3;
+}
+.spatial-outline text {
+  fill: var(--ink-2);
+  font: 10px var(--mono);
+  paint-order: stroke;
+  stroke: var(--paper);
+  stroke-width: 4px;
+  stroke-linejoin: round;
+}
+.spatial-outline-list {
+  list-style: none;
+  padding: 6px 12px 0;
+  margin: 0;
+  font-size: 11px;
+  color: var(--ink-2);
+}
+.spatial-legend .is-not-applicable:before {
+  background: var(--ink-2);
+  opacity: 0.5;
+}

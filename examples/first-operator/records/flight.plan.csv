@@ -1,0 +1,5 @@
+subjectId,secondarySubjectId,windowStartsAt,windowEndsAt,operationKind,plannedOriginDescription,plannedDestinationDescription,routeSummary,visualMode,operatingAuthorityReference,pilotInOperatingArea,plannedMaxHeightAboveGround [ft],plannedMaxDistanceFromControlStation [mi],plannedMaxGroundSpeed [kn]
+FLT-2026-1101,RIDGE-AC-1,2026-11-10T16:00:00Z,2026-11-10T17:00:00Z,inspection,North substation pad,North substation pad,"Transmission line segment 14, towers 3 to 22",beyond_visual_line_of_sight,107W-EX-2026-00417,yes,150,1.8,25
+FLT-2026-1102,RIDGE-AC-2,2026-11-12T16:00:00Z,2026-11-12T17:30:00Z,inspection,Ridge road pullout,Ridge road pullout,"Transmission line segment 15, towers 1 to 30",beyond_visual_line_of_sight,107W-EX-2026-00417,yes,250,2.4,25
+FLT-2026-1103,RIDGE-AC-3,2026-11-14T18:00:00Z,2026-11-14T18:40:00Z,aerial_survey,Quarry gate,Quarry gate,"Stockpile survey, east quarry",visual_line_of_sight,,yes,300,0.3,20
+FLT-2026-1201,RIDGE-AC-1,2026-12-01T16:00:00Z,2026-12-01T17:00:00Z,inspection,North substation pad,North substation pad,"Transmission line segment 14, towers 22 to 40",beyond_visual_line_of_sight,107W-EX-2026-00417,yes,180,1.9,25

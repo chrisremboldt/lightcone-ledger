@@ -1,0 +1,6 @@
+subjectId,trainingKind,courseTitle,completedOn,program,evidenceReference,providerName
+RIDGE-P-01,recurrent,Recurrent knowledge training,2025-06-12,remote_pilot_certificate,TR-2025-011,Fictional training provider
+RIDGE-P-02,recurrent,Recurrent knowledge training,2024-10-03,remote_pilot_certificate,TR-2024-019,Fictional training provider
+RIDGE-P-03,knowledge_test,Initial aeronautical knowledge test,2024-01-08,remote_pilot_certificate,TR-2024-002,Fictional testing centre
+RIDGE-P-01,role_specific,Ridge BVLOS course,2026-04-20,operator_program,TR-2026-007,Example Ridge Survey
+RIDGE-P-02,role_specific,Ridge BVLOS course,2025-08-30,operator_program,TR-2025-015,Example Ridge Survey

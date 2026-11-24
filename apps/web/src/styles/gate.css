@@ -1,0 +1,318 @@
+.gate {
+  min-height: 100vh;
+  display: grid;
+  grid-template-rows: auto 1fr auto;
+  background: var(--paper);
+}
+.gate-brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 18px 28px;
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: 0.22em;
+}
+.gate-body {
+  align-self: center;
+  justify-self: center;
+  width: min(980px, 100%);
+  display: grid;
+  grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr);
+  gap: 56px;
+  align-items: center;
+  padding: 24px 28px 48px;
+}
+.gate-story h1 {
+  margin: 0;
+  font-size: 34px;
+  line-height: 1.15;
+  font-weight: 700;
+  letter-spacing: -0.015em;
+}
+.gate-lede {
+  margin: 10px 0 0;
+  color: var(--ink-2);
+  font-size: 15px;
+}
+.gate-previews {
+  margin: 28px 0 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 14px;
+}
+.gate-previews li {
+  display: grid;
+  grid-template-columns: 14px minmax(0, 1fr);
+  column-gap: 12px;
+}
+.gate-previews li::before {
+  content: '';
+  grid-row: 1 / 3;
+  width: 9px;
+  height: 9px;
+  margin-top: 5px;
+  background: var(--plan);
+  border-radius: 2px;
+}
+.gate-previews li:nth-child(2)::before {
+  background: var(--amber-mid);
+  transform: rotate(45deg) scale(0.86);
+  border-radius: 0;
+}
+.gate-previews li:nth-child(3)::before {
+  width: 0;
+  height: 0;
+  background: none;
+  border-left: 5.5px solid transparent;
+  border-right: 5.5px solid transparent;
+  border-bottom: 9.5px solid var(--decision);
+  border-radius: 0;
+}
+.gate-previews strong {
+  font-size: 14px;
+}
+.gate-previews span {
+  grid-column: 2;
+  color: var(--ink-2);
+  font-size: 13px;
+}
+.gate-panel {
+  padding: 22px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--sheet);
+  box-shadow: 0 18px 40px -28px rgba(23, 20, 15, 0.4);
+}
+.gate-form {
+  display: grid;
+  gap: 16px;
+}
+.operator-choice {
+  margin: 0;
+  padding: 0;
+  border: 0;
+  display: grid;
+  gap: 8px;
+}
+.operator-choice legend {
+  margin-bottom: 8px;
+  padding: 0;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--ink-2);
+}
+.operator-card {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 12px 14px;
+  border: 1px solid var(--line-2);
+  border-radius: 8px;
+  background: var(--sheet);
+  cursor: pointer;
+}
+.operator-card:has(input:checked) {
+  border-color: var(--magenta);
+  box-shadow: 0 0 0 1px var(--magenta);
+}
+.operator-card input {
+  margin: 3px 0 0;
+  accent-color: var(--magenta);
+}
+.operator-card-text {
+  display: grid;
+}
+.operator-card-text strong {
+  font-size: 14px;
+}
+.operator-card-text span {
+  color: var(--muted);
+  font-size: 12.5px;
+}
+.local-person-choice {
+  display: grid;
+  gap: 6px;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--ink-2);
+}
+.local-person-choice select {
+  min-width: 0;
+  min-height: 36px;
+  padding: 8px 10px;
+  border: 1px solid var(--line-2);
+  border-radius: 6px;
+  background: var(--sheet);
+  color: var(--ink);
+  font: inherit;
+  font-size: 13px;
+  font-weight: 400;
+}
+.local-person-choice small {
+  font-size: 12px;
+  font-weight: 400;
+  color: var(--muted);
+}
+.gate-form .button {
+  min-height: 36px;
+  font-size: 13px;
+}
+.gate-invite {
+  margin: 0 0 12px;
+  color: var(--ink-2);
+}
+.gate-foot {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  padding: 16px 28px;
+  border-top: 1px solid var(--line);
+  color: var(--muted);
+  font-size: 12px;
+}
+.gate-foot .simulation-pill {
+  cursor: default;
+}
+
+@media (max-width: 820px) {
+  .gate-body {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 28px;
+    padding: 12px 16px 32px;
+  }
+  .gate-story h1 {
+    font-size: 26px;
+  }
+  .gate-foot {
+    flex-wrap: wrap;
+    padding: 14px 16px;
+  }
+}
+
+.gate-note {
+  font-size: 12px;
+  color: var(--muted);
+  text-align: center;
+}
+
+.gate-scenes {
+  display: grid;
+  gap: 8px;
+  padding-top: 14px;
+  border-top: 1px solid var(--line);
+}
+.gate-scenes h2 {
+  margin: 0;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--ink-2);
+}
+.gate-scene-group {
+  display: grid;
+  gap: 6px;
+}
+.gate-scene-group h3 {
+  margin: 4px 0 0;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.gate-scene {
+  display: grid;
+  gap: 3px;
+  padding: 10px 12px;
+  border: 1px solid var(--magenta);
+  border-radius: 6px;
+  background: var(--magenta-deep);
+  color: var(--ink);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+.gate-scene:hover {
+  background: color-mix(in srgb, var(--magenta) 30%, var(--paper));
+}
+.gate-scene strong {
+  font-size: 13px;
+}
+.gate-scene span {
+  font-size: 12px;
+  color: var(--muted);
+}
+.local-token {
+  display: grid;
+  gap: 6px;
+  font-size: 13px;
+}
+.local-token[open] {
+  padding-bottom: 4px;
+}
+.local-token summary {
+  cursor: pointer;
+  color: var(--muted);
+}
+.local-token-form {
+  display: grid;
+  gap: 10px;
+  padding-top: 8px;
+}
+.local-token-form input {
+  min-width: 0;
+  min-height: 36px;
+  padding: 8px 10px;
+  border: 1px solid var(--line-2);
+  border-radius: 6px;
+  background: var(--sheet);
+  color: var(--ink);
+  font: inherit;
+  font-size: 13px;
+  font-weight: 400;
+}
+.local-token-form .button {
+  min-height: 36px;
+  font-size: 13px;
+}
+.local-token--lead .local-token-form {
+  padding-top: 0;
+}
+
+/* A deployment's own sign-in screen: its name and one way in. */
+.gate-body--single {
+  width: min(420px, 100%);
+  grid-template-columns: minmax(0, 1fr);
+}
+.gate-deployment-name {
+  margin: 0 0 18px;
+  font-size: 24px;
+  line-height: 1.2;
+  font-weight: 700;
+}
+.gate-sign-in {
+  display: grid;
+  gap: 10px;
+}
+.gate-sign-in .button {
+  min-height: 40px;
+}
+.gate-account {
+  display: grid;
+  gap: 4px;
+  margin: 16px 0;
+}
+.gate-account dd {
+  margin: 0 0 8px;
+  overflow-wrap: anywhere;
+  user-select: all;
+}
+.local-identity-provider {
+  display: grid;
+  gap: 6px;
+}
+.gate-panel > .local-token {
+  margin-top: 16px;
+}

@@ -1,0 +1,6 @@
+subjectId,trainingKind,courseTitle,completedOn,evidenceReference,materialsReference,providerName,providerAddress,programName,instructorName
+ALPHA-PILOT-01,initial,Delivery operations initial course,2026-01-12,TRN-2026-0012,Delivery operations manual rev 4,Alpha training office,"14 Harbor Lane, Fictional Bay",Delivery crew program,Casey Morgan
+ALPHA-PILOT-01,recurrent,Recurrent emergency procedures,2026-07-08,TRN-2026-0188,Emergency procedures handbook rev 2,Alpha training office,"14 Harbor Lane, Fictional Bay",Delivery crew program,Casey Morgan
+ALPHA-PILOT-02,knowledge_test,Remote pilot knowledge test,2026-03-03,TEST-RP-55821,,Fictional Testing Center,,,
+ALPHA-PILOT-02,aircraft_specific,Delivery aircraft differences training,2026-04-19,,Aircraft differences notes rev 1,Alpha training office,,Delivery crew program,Casey Morgan
+ALPHA-PILOT-03,recurrent,Recurrent emergency procedures,2026-02-30,TRN-2026-0201,,Alpha training office,,,

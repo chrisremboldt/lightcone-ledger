@@ -1,0 +1,3 @@
+subjectId,subjectKind,notifiedAt,recipient,means,confirmationReference
+RIDGE-FLT-1101,flight,2026-11-09T09:00:00Z,Flight Service,online_form,NOTICE 11/004
+RIDGE-FLT-1102,flight,2026-11-12T06:00:00Z,Flight Service,online_form,NOTICE 11/009

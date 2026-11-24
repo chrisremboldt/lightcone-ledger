@@ -1,0 +1,27 @@
+# The internal audit of February, with what it found and the actions it set.
+id: ERS-IA-2026-1
+title: Internal audit, February 2026
+owner: Rowan Example
+type: audit
+performedOn: 2026-02-10
+completedOn: 2026-02-12
+scope: Line inspection flights against the waiver and the operations manual, September to January.
+examined: 40 flight records, the training records of four pilots, two flights observed from the operations room.
+findings:
+  - { id: F1, text: Three preflight checklists were not signed by the pilot in command. }
+  - { id: F2, text: The lost-link procedure on file is one revision behind the one pilots use. }
+actions:
+  - {
+      id: A1,
+      what: Brief every pilot on signing the preflight checklist.,
+      owner: Rowan Example,
+      due: 2026-03-15,
+      finding: F1,
+    }
+  - {
+      id: A2,
+      what: Issue the current lost-link procedure and withdraw the old one.,
+      owner: Rowan Example,
+      due: 2026-04-30,
+      finding: F2,
+    }

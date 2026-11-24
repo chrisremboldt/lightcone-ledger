@@ -1,0 +1,172 @@
+{
+  "vendor": "Airspace Link",
+  "index": "https://developers.airspacelink.com/llms.txt",
+  "capturedAt": "2026-10-01T20:20:16.780138+00:00",
+  "fidelity": "documented_schema_conformant",
+  "limitation": "Published schemas leave auth declarations and some authorization response bodies empty; callback delivery semantics and auth are synthetic pending sandbox validation. No sandbox or live requests made.",
+  "sources": [
+    {
+      "url": "https://developers.airspacelink.com/api-31492994.md",
+      "file": "31492994.yaml",
+      "sourceSha256": "8d318eed159275f40c449aa2b0cca44fc4dabcf636e705a18d2469ce0616933b",
+      "sha256": "4a2025c8befda15ef0027506e435d8ef77e5f8a46476ae3ff389b6a5a2b71f13",
+      "sourceFile": "31492994.md",
+      "schemaSha256": "10d2b645d0beca1dbe49e62faeba2348a0146c8886e7de36b59f617da85023f6"
+    },
+    {
+      "url": "https://developers.airspacelink.com/api-29873889.md",
+      "file": "29873889.yaml",
+      "sourceSha256": "25c7c9b6b19e26cd9d62cd3ba73504f3a1243f4190db65daae162637dd54cc94",
+      "sha256": "b52b7e6c5f25984f77d5ac65e40cdb471ab6035c52e04e2628d42c22a5e3cb70",
+      "sourceFile": "29873889.md",
+      "schemaSha256": "222535e50801cdb8adf319cddb0f2d3a4baaca794bed9218a266c058694d583b"
+    },
+    {
+      "url": "https://developers.airspacelink.com/api-29873890.md",
+      "file": "29873890.yaml",
+      "sourceSha256": "24ae0aa1602369e0f1cb64070eb89867125958cee0253ad4aeaf4cbc8202636f",
+      "sha256": "5838bc3ae8e975faa72362f97f0c66d7d8a4d7e764aa2fa602a5bbf6e96d0103",
+      "sourceFile": "29873890.md",
+      "schemaSha256": "cbcf8279e6292ae717ef8411cb2ff1d816d6edcada6a1d9b2998ca0b9f07ba31"
+    },
+    {
+      "url": "https://developers.airspacelink.com/api-29873891.md",
+      "file": "29873891.yaml",
+      "sourceSha256": "2494dde37bf118ee7265d3ff7621f68149f73245e6daf6352ace9a72f59b3208",
+      "sha256": "e2f0b6fd30416321d28c8b0ba99033513e8fbfaf09ff0f98b4ee5c9e11317428",
+      "sourceFile": "29873891.md",
+      "schemaSha256": "1790ad26fc35059c8e85420f25fe2fcc9963b84b97e4b83a61da68582482f7f3"
+    },
+    {
+      "url": "https://developers.airspacelink.com/api-29873892.md",
+      "file": "29873892.yaml",
+      "sourceSha256": "d6dbd8bf449e9a7716f12a3b85b47688cad1c7d42e24f89e6fb691e647e0a918",
+      "sha256": "c23688a980e0625fb98d56e58263199090b6917ee0bfcfa21344ee9497c7fbdf",
+      "sourceFile": "29873892.md",
+      "schemaSha256": "b998ac6773961cacf64b68e3261deac2ca42fe20512aed3a14d6d6e6d4d9d977"
+    },
+    {
+      "url": "https://developers.airspacelink.com/api-29873893.md",
+      "file": "29873893.yaml",
+      "sourceSha256": "d5e3f6d057a5d7951e592c05e180676c81942debcc577c0da2755572e358c105",
+      "sha256": "5ad46315f65309f5135786e169d3d87998754c3b41a7136efed3b6f61c75c6e0",
+      "sourceFile": "29873893.md",
+      "schemaSha256": "43e2448d6477740735d0f0d86c8e2e0c827ce36576384c12d09785374bbbe3a0"
+    },
+    {
+      "url": "https://developers.airspacelink.com/api-10829370.md",
+      "file": "10829370.yaml",
+      "sourceSha256": "f6f3f48a10d9c0ec03b16df4f8c52899e146d6a5a5803b0b66ba98e79184c4e2",
+      "sha256": "fbdd89230d9c694086de882bcf1f64f6eab9e982fe92be4980e7780d0a11deff",
+      "sourceFile": "10829370.md",
+      "schemaSha256": "56bc937908568b5e6e5a0fda775c6f9d2154537cfa188e3a679997c235c9124d"
+    },
+    {
+      "url": "https://developers.airspacelink.com/api-10829371.md",
+      "file": "10829371.yaml",
+      "sourceSha256": "560f40e5b41c6b5b8878845ee599f0f873810f38922f6eb6c70d178d9e92e739",
+      "sha256": "84235556bf5f315e0a4ccfd818f51c80acd00e2ab9ca93c257fd1c9524810837",
+      "sourceFile": "10829371.md",
+      "schemaSha256": "fa087d54c21dc114f042867a4696f0d7daf3752fda55eb224fb625be69876100"
+    },
+    {
+      "url": "https://developers.airspacelink.com/api-10829372.md",
+      "file": "10829372.yaml",
+      "sourceSha256": "dca79060072737c99f50828cd991c65d03a14e6b27a131d2db83107d1d2dc7e2",
+      "sha256": "2ec0f3a0197e1f1c0ace3db68bcfee2efa15b8c0263e6323e272c1f7f7e02309",
+      "sourceFile": "10829372.md",
+      "schemaSha256": "87c9e079440d93805b1b5c72b21f1659ad98116b833477c83d5724a145e61ef6"
+    },
+    {
+      "url": "https://developers.airspacelink.com/api-10829373.md",
+      "file": "10829373.yaml",
+      "sourceSha256": "297971603dc5ce48e3a2ceb9831cef408fdfabba8571415824cdd4a5f2492fe0",
+      "sha256": "09df83346394d607dc768d204596272603e9308d998cf1883df96884aed3d73b",
+      "sourceFile": "10829373.md",
+      "schemaSha256": "f0b89545603c4fefa5f5867e3f0dcb592bf8186a9ecf3b8054cb81e0e041b5aa"
+    },
+    {
+      "url": "https://developers.airspacelink.com/api-29742696.md",
+      "file": "29742696.yaml",
+      "sourceSha256": "16fc17408e4ff35e9878ee3a5805d096b269adea47a2b01850cc7e591d2678e0",
+      "sha256": "792b33b5879c058f82abe663f3e7a2b6a0a2ab311028e3d92701893116176313",
+      "sourceFile": "29742696.md",
+      "schemaSha256": "525726afb591a6c90f864bf12801a996d4b736a914ed3ba7b56ba826d455b6ac"
+    },
+    {
+      "url": "https://developers.airspacelink.com/api-29742697.md",
+      "file": "29742697.yaml",
+      "sourceSha256": "097a35475a4b1bf249d1cb88d181b730c2fa4866a4b7745e4050e1d85e24791c",
+      "sha256": "b5c21ae730d30cac75245204c83777d744b85f75f94dbc937b7a7d168b738676",
+      "sourceFile": "29742697.md",
+      "schemaSha256": "fc18c891921b6608fd123ae685919557211cfe87c4eec3f3e320992b3d2678dd"
+    },
+    {
+      "url": "https://developers.airspacelink.com/api-29742698.md",
+      "file": "29742698.yaml",
+      "sourceSha256": "eed2accf78b07716ca3ce521a8bc8471ee368f8128f93d61c414fe0e8eafc8f1",
+      "sha256": "e370b4f275eea0642fa1f9bbe8ed23e89c9da7ef04511584574787616723c377",
+      "sourceFile": "29742698.md",
+      "schemaSha256": "23993d2a015f4bdb06e980ac48d58d9acdc6a170891733fd18826d4f4695eff9"
+    },
+    {
+      "url": "https://developers.airspacelink.com/api-29742699.md",
+      "file": "29742699.yaml",
+      "sourceSha256": "9bebafefc4c4239e526a8fbf1dd903904ab044cfd6244f30b8607cbad82b9b62",
+      "sha256": "e85195fcb6c981caa5287e06de010fa8768bdb37040d4303fffba08ab35f4ca7",
+      "sourceFile": "29742699.md",
+      "schemaSha256": "bd452cd67afe651896e3d04d46ba897c070488d035653ec5c9334e6d77f6fe07"
+    },
+    {
+      "url": "https://developers.airspacelink.com/api-29742700.md",
+      "file": "29742700.yaml",
+      "sourceSha256": "e2147507faf35278d3a3e7e9311f9dc4d33ce968ecf2fcef260b50f2cd6da56d",
+      "sha256": "a7197981084d176cb1aea2ca661eab26d6aae114903040850d7d3798be1ccee5",
+      "sourceFile": "29742700.md",
+      "schemaSha256": "8167f1737bd719e99f55fc8a3ca450da8a9a0ead33ae7ff4329ad140a06bdfa8"
+    },
+    {
+      "url": "https://developers.airspacelink.com/api-29742701.md",
+      "file": "29742701.yaml",
+      "sourceSha256": "7f5225f8620d909f2da139bdf016763974fbdc7b25b0df7067274e8d0226ae90",
+      "sha256": "8ad76fa682fe04fb0567d78721957c35a86d557b040a71c079793d978a3980cc",
+      "sourceFile": "29742701.md",
+      "schemaSha256": "8eeecc182c1cbcf3435b06d18a5dd1f983a71a0620324296b425c842354aa866"
+    },
+    {
+      "url": "https://developers.airspacelink.com/api-29886782.md",
+      "file": "29886782.yaml",
+      "sourceSha256": "a9c7750978510f50bd5742b65d57808f6457b1541d40ca36075ba241e0d95322",
+      "sha256": "797db081e2c698ab2d4c0a70eb2667f84655d1ab64dd60207a032f705a37416b",
+      "sourceFile": "29886782.md",
+      "schemaSha256": "8be1fbfdda9a7e8d2547ec71754e4cc2974b3346eff396d7f91908772b8cf7d7"
+    },
+    {
+      "url": "https://developers.airspacelink.com/api-29744367.md",
+      "file": "29744367.yaml",
+      "sourceSha256": "53afb984fb7e83b434ad62d1e4e769601426badc23a4c03f587961d715f37717",
+      "sha256": "fca90f0ee7152287299c28747749aa8bd2b3515d84b3ad825063f14000a9fb44",
+      "sourceFile": "29744367.md",
+      "schemaSha256": "5b278e884ca442da4eed18c7eee228098cefc865d1ef25251ab21fcafcc98658"
+    },
+    {
+      "url": "https://developers.airspacelink.com/api-29744368.md",
+      "file": "29744368.yaml",
+      "sourceSha256": "0756921dfaea7a173385cf7841fb5ed73bf7a9ff2552c216844820944c2e1888",
+      "sha256": "b09a201aa626bba61299a51d37f51b999f0879ee59d24718ef3d8db256398cc2",
+      "sourceFile": "29744368.md",
+      "schemaSha256": "e7da97de653069f2c33d5fbdec45e4ca7015c8ba17f32b199ab26b08fb0f087a"
+    },
+    {
+      "url": "https://developers.airspacelink.com/doc-2002712.md",
+      "file": "2002712.md",
+      "sha256": "dd07e52876153a2be500f793de1d9352de6080c965aa05d9c1376d4f10769414"
+    },
+    {
+      "url": "https://developers.airspacelink.com/doc-706838.md",
+      "file": "706838.md",
+      "sha256": "be57e608c8d858d43c12c26fa6f3d7f20debcbf0e2bcc79a4f05d39f8cc2e4c5"
+    }
+  ],
+  "schemaDigest": "schemaSha256 is the SHA-256 of the parsed schema as JSON, with keys sorted and x- extension keys removed. sha256 and sourceSha256 record the bytes captured on capturedAt."
+}

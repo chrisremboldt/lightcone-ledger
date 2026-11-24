@@ -1,0 +1,3 @@
+subjectId,aircraftMakeModel,serialNumber,registrationNumber,registrationExpiresOn,remoteIdentificationMethod
+RIDGE-AC-1,Example Quadcopter Q4,EXQ4-000101,FA-EXAMPLE-0101,2028-03-31,standard_broadcast
+RIDGE-AC-2,Example Quadcopter Q4,EXQ4-000102,FA-EXAMPLE-0102,2028-03-31,standard_broadcast

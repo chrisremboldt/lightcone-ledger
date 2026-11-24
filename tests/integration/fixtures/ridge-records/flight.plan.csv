@@ -1,0 +1,4 @@
+subjectId,secondarySubjectId,windowStartsAt,windowEndsAt,operationKind,plannedOriginDescription,plannedDestinationDescription,routeSummary,visualMode,operatingAuthorityReference,pilotInOperatingArea,plannedMaxHeightAboveGround [ft],plannedMaxGroundSpeed [kn]
+RIDGE-FLT-1,RIDGE-AC-1,2026-11-10T16:00:00Z,2026-11-10T17:00:00Z,inspection,North pad,North pad,"Ridge line segment 4, towers 3 to 22",beyond_visual_line_of_sight,RIDGE-WAIVER-1,yes,150,25
+RIDGE-FLT-2,RIDGE-AC-2,2026-11-12T16:00:00Z,2026-11-12T17:30:00Z,aerial_survey,Quarry gate,Quarry gate,East quarry stockpiles,visual_line_of_sight,,yes,300,20
+RIDGE-FLT-3,RIDGE-AC-1,2026-12-01T16:00:00Z,2026-12-01T17:00:00Z,inspection,North pad,North pad,Ridge line segment 5,beyond_visual_line_of_sight,RIDGE-WAIVER-1,yes,150,25

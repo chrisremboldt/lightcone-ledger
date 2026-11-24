@@ -1,0 +1,35 @@
+{
+  "case": "malformed",
+  "message": {
+    "contentType": "application/json",
+    "transport": {
+      "method": "POST",
+      "path": "/command-link"
+    },
+    "capturedAt": "2026-10-15T14:12:00.400Z",
+    "bodyText": "{\"sourceSessionId\":\"capture:alpha:one\",\"status\":\"lost\","
+  },
+  "context": {
+    "subjects": {
+      "scope": "ledger",
+      "ids": {
+        "flight": {
+          "capture:alpha:one": "flight-alpha"
+        }
+      }
+    },
+    "binding": {
+      "sourceSessionId": "capture:alpha:one",
+      "aircraftId": "fictional-aircraft-one"
+    }
+  },
+  "expect": {
+    "observations": [],
+    "rejections": [
+      {
+        "reasonIncludes": "Invalid or ambiguous"
+      }
+    ],
+    "unmapped": []
+  }
+}

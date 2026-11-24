@@ -1,0 +1,477 @@
+{
+  "format": "crew-roster-export",
+  "formatVersion": 1,
+  "entries": [
+    {
+      "entryId": "R-0001",
+      "employeeId": "ALPHA-PILOT-02",
+      "kind": "REST",
+      "start": "2026-10-04T18:00:00Z",
+      "end": "2026-10-05T06:00:00Z"
+    },
+    {
+      "entryId": "R-0002",
+      "employeeId": "ALPHA-PILOT-01",
+      "kind": "REST",
+      "start": "2026-10-04T19:00:00Z",
+      "end": "2026-10-05T07:00:00Z"
+    },
+    {
+      "entryId": "R-0003",
+      "employeeId": "ALPHA-OBSERVER-01",
+      "kind": "REST",
+      "start": "2026-10-04T20:00:00Z",
+      "end": "2026-10-05T08:00:00Z"
+    },
+    {
+      "entryId": "R-0004",
+      "employeeId": "ALPHA-PILOT-02",
+      "position": "PILOT",
+      "kind": "DUTY",
+      "start": "2026-10-05T06:00:00Z",
+      "end": "2026-10-05T14:00:00Z"
+    },
+    {
+      "entryId": "R-0005",
+      "employeeId": "ALPHA-PILOT-01",
+      "position": "PILOT",
+      "kind": "DUTY",
+      "start": "2026-10-05T07:00:00Z",
+      "end": "2026-10-05T15:00:00Z"
+    },
+    {
+      "entryId": "R-0006",
+      "employeeId": "ALPHA-OBSERVER-01",
+      "position": "OBSERVER",
+      "kind": "DUTY",
+      "start": "2026-10-05T08:00:00Z",
+      "end": "2026-10-05T16:00:00Z"
+    },
+    {
+      "entryId": "R-0007",
+      "employeeId": "ALPHA-PILOT-02",
+      "kind": "REST",
+      "start": "2026-10-05T14:00:00Z",
+      "end": "2026-10-06T06:00:00Z"
+    },
+    {
+      "entryId": "R-0008",
+      "employeeId": "ALPHA-PILOT-01",
+      "kind": "REST",
+      "start": "2026-10-05T15:00:00Z",
+      "end": "2026-10-06T07:00:00Z"
+    },
+    {
+      "entryId": "R-0009",
+      "employeeId": "ALPHA-OBSERVER-01",
+      "kind": "REST",
+      "start": "2026-10-05T16:00:00Z",
+      "end": "2026-10-06T08:00:00Z"
+    },
+    {
+      "entryId": "R-0010",
+      "employeeId": "ALPHA-PILOT-02",
+      "position": "PILOT",
+      "kind": "DUTY",
+      "start": "2026-10-06T06:00:00Z",
+      "end": "2026-10-06T14:00:00Z"
+    },
+    {
+      "entryId": "R-0011",
+      "employeeId": "ALPHA-PILOT-01",
+      "position": "PILOT",
+      "kind": "DUTY",
+      "start": "2026-10-06T07:00:00Z",
+      "end": "2026-10-06T15:00:00Z"
+    },
+    {
+      "entryId": "R-0012",
+      "employeeId": "ALPHA-OBSERVER-01",
+      "position": "OBSERVER",
+      "kind": "DUTY",
+      "start": "2026-10-06T08:00:00Z",
+      "end": "2026-10-06T16:00:00Z"
+    },
+    {
+      "entryId": "R-0013",
+      "employeeId": "ALPHA-PILOT-02",
+      "kind": "REST",
+      "start": "2026-10-06T14:00:00Z",
+      "end": "2026-10-07T06:00:00Z"
+    },
+    {
+      "entryId": "R-0014",
+      "employeeId": "ALPHA-PILOT-01",
+      "kind": "REST",
+      "start": "2026-10-06T15:00:00Z",
+      "end": "2026-10-07T07:00:00Z"
+    },
+    {
+      "entryId": "R-0015",
+      "employeeId": "ALPHA-OBSERVER-01",
+      "kind": "REST",
+      "start": "2026-10-06T16:00:00Z",
+      "end": "2026-10-07T08:00:00Z"
+    },
+    {
+      "entryId": "R-0016",
+      "employeeId": "ALPHA-PILOT-02",
+      "position": "PILOT",
+      "kind": "DUTY",
+      "start": "2026-10-07T06:00:00Z",
+      "end": "2026-10-07T14:00:00Z"
+    },
+    {
+      "entryId": "R-0017",
+      "employeeId": "ALPHA-PILOT-01",
+      "position": "PILOT",
+      "kind": "DUTY",
+      "start": "2026-10-07T07:00:00Z",
+      "end": "2026-10-07T15:00:00Z"
+    },
+    {
+      "entryId": "R-0018",
+      "employeeId": "ALPHA-OBSERVER-01",
+      "position": "OBSERVER",
+      "kind": "DUTY",
+      "start": "2026-10-07T08:00:00Z",
+      "end": "2026-10-07T16:00:00Z"
+    },
+    {
+      "entryId": "R-0019",
+      "employeeId": "ALPHA-PILOT-02",
+      "kind": "REST",
+      "start": "2026-10-07T14:00:00Z",
+      "end": "2026-10-08T06:00:00Z"
+    },
+    {
+      "entryId": "R-0020",
+      "employeeId": "ALPHA-PILOT-01",
+      "kind": "REST",
+      "start": "2026-10-07T15:00:00Z",
+      "end": "2026-10-08T07:00:00Z"
+    },
+    {
+      "entryId": "R-0021",
+      "employeeId": "ALPHA-OBSERVER-01",
+      "kind": "REST",
+      "start": "2026-10-07T16:00:00Z",
+      "end": "2026-10-08T08:00:00Z"
+    },
+    {
+      "entryId": "R-0022",
+      "employeeId": "ALPHA-PILOT-02",
+      "position": "PILOT",
+      "kind": "DUTY",
+      "start": "2026-10-08T06:00:00Z",
+      "end": "2026-10-08T14:00:00Z"
+    },
+    {
+      "entryId": "R-0023",
+      "employeeId": "ALPHA-PILOT-01",
+      "position": "PILOT",
+      "kind": "DUTY",
+      "start": "2026-10-08T07:00:00Z",
+      "end": "2026-10-08T15:00:00Z"
+    },
+    {
+      "entryId": "R-0024",
+      "employeeId": "ALPHA-OBSERVER-01",
+      "position": "OBSERVER",
+      "kind": "DUTY",
+      "start": "2026-10-08T08:00:00Z",
+      "end": "2026-10-08T16:00:00Z"
+    },
+    {
+      "entryId": "R-0025",
+      "employeeId": "ALPHA-PILOT-02",
+      "kind": "REST",
+      "start": "2026-10-08T14:00:00Z",
+      "end": "2026-10-09T06:00:00Z"
+    },
+    {
+      "entryId": "R-0026",
+      "employeeId": "ALPHA-PILOT-01",
+      "kind": "REST",
+      "start": "2026-10-08T15:00:00Z",
+      "end": "2026-10-09T07:00:00Z"
+    },
+    {
+      "entryId": "R-0027",
+      "employeeId": "ALPHA-OBSERVER-01",
+      "kind": "REST",
+      "start": "2026-10-08T16:00:00Z",
+      "end": "2026-10-09T08:00:00Z"
+    },
+    {
+      "entryId": "R-0028",
+      "employeeId": "ALPHA-PILOT-02",
+      "position": "PILOT",
+      "kind": "DUTY",
+      "start": "2026-10-09T06:00:00Z",
+      "end": "2026-10-09T14:00:00Z"
+    },
+    {
+      "entryId": "R-0029",
+      "employeeId": "ALPHA-PILOT-01",
+      "position": "PILOT",
+      "kind": "DUTY",
+      "start": "2026-10-09T07:00:00Z",
+      "end": "2026-10-09T15:00:00Z"
+    },
+    {
+      "entryId": "R-0030",
+      "employeeId": "ALPHA-OBSERVER-01",
+      "position": "OBSERVER",
+      "kind": "DUTY",
+      "start": "2026-10-09T08:00:00Z",
+      "end": "2026-10-09T16:00:00Z"
+    },
+    {
+      "entryId": "R-0031",
+      "employeeId": "ALPHA-PILOT-02",
+      "kind": "REST",
+      "start": "2026-10-09T14:00:00Z",
+      "end": "2026-10-12T06:00:00Z"
+    },
+    {
+      "entryId": "R-0032",
+      "employeeId": "ALPHA-PILOT-01",
+      "kind": "REST",
+      "start": "2026-10-09T15:00:00Z",
+      "end": "2026-10-12T07:00:00Z"
+    },
+    {
+      "entryId": "R-0033",
+      "employeeId": "ALPHA-OBSERVER-01",
+      "kind": "REST",
+      "start": "2026-10-09T16:00:00Z",
+      "end": "2026-10-12T08:00:00Z"
+    },
+    {
+      "entryId": "R-0034",
+      "employeeId": "ALPHA-PILOT-02",
+      "position": "PILOT",
+      "kind": "DUTY",
+      "start": "2026-10-12T06:00:00Z",
+      "end": "2026-10-12T14:00:00Z"
+    },
+    {
+      "entryId": "R-0035",
+      "employeeId": "ALPHA-PILOT-01",
+      "position": "PILOT",
+      "kind": "DUTY",
+      "start": "2026-10-12T07:00:00Z",
+      "end": "2026-10-12T15:00:00Z"
+    },
+    {
+      "entryId": "R-0036",
+      "employeeId": "ALPHA-OBSERVER-01",
+      "position": "OBSERVER",
+      "kind": "DUTY",
+      "start": "2026-10-12T08:00:00Z",
+      "end": "2026-10-12T16:00:00Z"
+    },
+    {
+      "entryId": "R-0037",
+      "employeeId": "ALPHA-PILOT-02",
+      "kind": "REST",
+      "start": "2026-10-12T14:00:00Z",
+      "end": "2026-10-13T06:00:00Z"
+    },
+    {
+      "entryId": "R-0038",
+      "employeeId": "ALPHA-PILOT-01",
+      "kind": "REST",
+      "start": "2026-10-12T15:00:00Z",
+      "end": "2026-10-13T07:00:00Z"
+    },
+    {
+      "entryId": "R-0039",
+      "employeeId": "ALPHA-OBSERVER-01",
+      "kind": "REST",
+      "start": "2026-10-12T16:00:00Z",
+      "end": "2026-10-13T08:00:00Z"
+    },
+    {
+      "entryId": "R-0040",
+      "employeeId": "ALPHA-PILOT-02",
+      "position": "PILOT",
+      "kind": "DUTY",
+      "start": "2026-10-13T06:00:00Z",
+      "end": "2026-10-13T14:00:00Z"
+    },
+    {
+      "entryId": "R-0041",
+      "employeeId": "ALPHA-PILOT-01",
+      "position": "PILOT",
+      "kind": "DUTY",
+      "start": "2026-10-13T07:00:00Z",
+      "end": "2026-10-13T15:00:00Z"
+    },
+    {
+      "entryId": "R-0042",
+      "employeeId": "ALPHA-OBSERVER-01",
+      "position": "OBSERVER",
+      "kind": "DUTY",
+      "start": "2026-10-13T08:00:00Z",
+      "end": "2026-10-13T16:00:00Z"
+    },
+    {
+      "entryId": "R-0043",
+      "employeeId": "ALPHA-PILOT-02",
+      "kind": "REST",
+      "start": "2026-10-13T14:00:00Z",
+      "end": "2026-10-14T06:00:00Z"
+    },
+    {
+      "entryId": "R-0044",
+      "employeeId": "ALPHA-PILOT-01",
+      "kind": "REST",
+      "start": "2026-10-13T15:00:00Z",
+      "end": "2026-10-14T07:00:00Z"
+    },
+    {
+      "entryId": "R-0045",
+      "employeeId": "ALPHA-OBSERVER-01",
+      "kind": "REST",
+      "start": "2026-10-13T16:00:00Z",
+      "end": "2026-10-14T08:00:00Z"
+    },
+    {
+      "entryId": "R-0046",
+      "employeeId": "ALPHA-PILOT-02",
+      "position": "PILOT",
+      "kind": "DUTY",
+      "start": "2026-10-14T06:00:00Z",
+      "end": "2026-10-14T14:00:00Z"
+    },
+    {
+      "entryId": "R-0047",
+      "employeeId": "ALPHA-PILOT-01",
+      "position": "PILOT",
+      "kind": "DUTY",
+      "start": "2026-10-14T07:00:00Z",
+      "end": "2026-10-14T15:00:00Z"
+    },
+    {
+      "entryId": "R-0048",
+      "employeeId": "ALPHA-OBSERVER-01",
+      "position": "OBSERVER",
+      "kind": "DUTY",
+      "start": "2026-10-14T08:00:00Z",
+      "end": "2026-10-14T16:00:00Z"
+    },
+    {
+      "entryId": "R-0049",
+      "employeeId": "ALPHA-PILOT-02",
+      "kind": "REST",
+      "start": "2026-10-14T14:00:00Z",
+      "end": "2026-10-15T06:00:00Z"
+    },
+    {
+      "entryId": "R-0050",
+      "employeeId": "ALPHA-PILOT-01",
+      "kind": "REST",
+      "start": "2026-10-14T15:00:00Z",
+      "end": "2026-10-15T07:00:00Z"
+    },
+    {
+      "entryId": "R-0051",
+      "employeeId": "ALPHA-OBSERVER-01",
+      "kind": "REST",
+      "start": "2026-10-14T16:00:00Z",
+      "end": "2026-10-15T13:00:00Z"
+    },
+    {
+      "entryId": "R-0052",
+      "employeeId": "ALPHA-PILOT-02",
+      "position": "PILOT",
+      "kind": "DUTY",
+      "start": "2026-10-15T06:00:00Z",
+      "end": "2026-10-15T14:00:00Z"
+    },
+    {
+      "entryId": "R-0053",
+      "employeeId": "ALPHA-PILOT-01",
+      "position": "PILOT",
+      "kind": "DUTY",
+      "start": "2026-10-15T07:00:00Z",
+      "end": "2026-10-15T15:00:00Z"
+    },
+    {
+      "entryId": "R-0054",
+      "employeeId": "ALPHA-OBSERVER-01",
+      "position": "OBSERVER",
+      "kind": "DUTY",
+      "start": "2026-10-15T13:00:00Z",
+      "end": "2026-10-15T21:00:00Z"
+    },
+    {
+      "entryId": "R-0055",
+      "employeeId": "ALPHA-PILOT-02",
+      "kind": "REST",
+      "start": "2026-10-15T14:00:00Z",
+      "end": "2026-10-16T06:00:00Z"
+    },
+    {
+      "entryId": "R-0056",
+      "employeeId": "ALPHA-PILOT-01",
+      "kind": "REST",
+      "start": "2026-10-15T15:00:00Z",
+      "end": "2026-10-16T07:00:00Z"
+    },
+    {
+      "entryId": "R-0057",
+      "employeeId": "ALPHA-OBSERVER-01",
+      "kind": "REST",
+      "start": "2026-10-15T21:00:00Z",
+      "end": "2026-10-16T05:00:00Z"
+    },
+    {
+      "entryId": "R-0058",
+      "employeeId": "ALPHA-OBSERVER-01",
+      "position": "OBSERVER",
+      "kind": "DUTY",
+      "start": "2026-10-16T05:00:00Z",
+      "end": "2026-10-16T13:00:00Z"
+    },
+    {
+      "entryId": "R-0059",
+      "employeeId": "ALPHA-PILOT-02",
+      "position": "PILOT",
+      "kind": "DUTY",
+      "start": "2026-10-16T06:00:00Z",
+      "end": "2026-10-16T18:30:00Z"
+    },
+    {
+      "entryId": "R-0060",
+      "employeeId": "ALPHA-PILOT-01",
+      "position": "PILOT",
+      "kind": "DUTY",
+      "start": "2026-10-16T07:00:00Z",
+      "end": "2026-10-16T15:00:00Z"
+    },
+    {
+      "entryId": "R-0061",
+      "employeeId": "ALPHA-OBSERVER-01",
+      "kind": "REST",
+      "start": "2026-10-16T13:00:00Z",
+      "end": "2026-10-18T20:00:00Z"
+    },
+    {
+      "entryId": "R-0062",
+      "employeeId": "ALPHA-PILOT-01",
+      "kind": "REST",
+      "start": "2026-10-16T15:00:00Z",
+      "end": "2026-10-18T20:00:00Z"
+    },
+    {
+      "entryId": "R-0063",
+      "employeeId": "ALPHA-PILOT-02",
+      "kind": "REST",
+      "start": "2026-10-16T18:30:00Z",
+      "end": "2026-10-18T20:00:00Z"
+    }
+  ]
+}

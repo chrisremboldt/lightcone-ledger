@@ -1,0 +1,3 @@
+subjectId,entryKind,totalTimeHours,coveredThroughAt,sourceReference,coverage,coverageNotes,flightCount
+UTIL-AC-7,opening_balance,96.4,2026-07-31T00:00:00Z,Line inspection fleet log,complete,Every flight since acceptance is in the fleet log.,412
+UTIL-AC-8,running_total,15.5,2026-10-31T00:00:00Z,Line inspection fleet log,partial,,57

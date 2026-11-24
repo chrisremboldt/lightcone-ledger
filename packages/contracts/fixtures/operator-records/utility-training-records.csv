@@ -1,0 +1,4 @@
+subjectId,trainingKind,courseTitle,completedOn,evidenceReference,providerName,instructorName
+UTIL-PILOT-01,initial,Line inspection flight course,2026-02-02,UV-TRN-0007,Fictional Valley Power training,Riley Brooks
+UTIL-PILOT-01,role_specific,Energized line clearance briefing,2026-05-14,UV-TRN-0042,Fictional Valley Power training,Riley Brooks
+UTIL-PILOT-02,recurrent,Recurrent line inspection,2026-08-21,,Fictional Valley Power training,

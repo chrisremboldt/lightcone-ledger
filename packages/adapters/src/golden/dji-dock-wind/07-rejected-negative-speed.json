@@ -1,0 +1,28 @@
+{
+  "case": "rejected",
+  "message": {
+    "contentType": "application/json",
+    "transport": {
+      "topic": "thing/product/ALPHA-DOCK-01/osd"
+    },
+    "capturedAt": "2026-10-01T17:00:00.250Z",
+    "body": {
+      "tid": "tid-alpha-w07",
+      "bid": "bid-alpha-w07",
+      "timestamp": 1790874000000,
+      "gateway": "ALPHA-DOCK-01",
+      "data": {
+        "wind_speed": -0.5
+      }
+    }
+  },
+  "expect": {
+    "observations": [],
+    "rejections": [
+      {
+        "reasonIncludes": "outside 0 to 150"
+      }
+    ],
+    "unmapped": []
+  }
+}

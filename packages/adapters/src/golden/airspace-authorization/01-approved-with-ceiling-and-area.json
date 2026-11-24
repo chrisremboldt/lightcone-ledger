@@ -1,0 +1,178 @@
+{
+  "case": "valid",
+  "message": {
+    "contentType": "application/json",
+    "transport": {
+      "method": "GET",
+      "path": "/v1/operations/0b7f2c1e-5d1a-4c55-9a51-6a0e5c3c2f10/laanc"
+    },
+    "capturedAt": "2026-10-20T08:30:00.500Z",
+    "body": {
+      "operation": {
+        "license": "LICENSE_PART_107",
+        "fixedAltitude": false,
+        "candidates": [],
+        "notices": [],
+        "authorizations": [
+          {
+            "id": "SIMA1B2C3D4E",
+            "submissionType": "SUBMISSION_TYPE_AUTO_AUTHORIZATION",
+            "geom": {
+              "type": "Polygon",
+              "coordinates": [
+                [
+                  [-87.64, 41.87],
+                  [-87.64, 41.89],
+                  [-87.62, 41.89],
+                  [-87.62, 41.87],
+                  [-87.64, 41.87]
+                ]
+              ]
+            },
+            "altitude": 200,
+            "startTime": "2026-10-20T09:00:00Z",
+            "endTime": "2026-10-20T11:00:00Z",
+            "status": "STATUS_APPROVED",
+            "createdAt": "2026-10-20T08:20:00.123456Z",
+            "createdBy": "fictional-pilot",
+            "lastUpdatedAt": "2026-10-20T08:20:00.123456Z",
+            "editedBy": "fictional-pilot",
+            "justification": "",
+            "airTrafficControl": "SIM",
+            "airspaceClassCodes": ["CLASS_D"],
+            "facilityMaps": []
+          }
+        ]
+      }
+    }
+  },
+  "expect": {
+    "observations": [
+      {
+        "type": "airspace.authorization",
+        "version": 1,
+        "subject": {
+          "kind": "flight",
+          "id": "ALPHA-FLIGHT-0042",
+          "scope": "source"
+        },
+        "occurredAt": "2026-10-20T08:20:00.123Z",
+        "interval": {
+          "start": "2026-10-20T09:00:00.000Z",
+          "end": "2026-10-20T11:00:00.000Z"
+        },
+        "sourceEventId": "SIMA1B2C3D4E@2026-10-20T08:20:00.123456Z",
+        "originalLocator": {
+          "kind": "json_pointer",
+          "value": "/operation/authorizations/0"
+        },
+        "values": {
+          "authorizationId": "SIMA1B2C3D4E",
+          "reportedStatus": "approved",
+          "sourceStatusCode": "STATUS_APPROVED",
+          "ceiling": {
+            "meters": 60.96,
+            "datum": "ground_level"
+          },
+          "area": {
+            "boundary": [
+              {
+                "latitudeDegrees": 41.87,
+                "longitudeDegrees": -87.64
+              },
+              {
+                "latitudeDegrees": 41.89,
+                "longitudeDegrees": -87.64
+              },
+              {
+                "latitudeDegrees": 41.89,
+                "longitudeDegrees": -87.62
+              },
+              {
+                "latitudeDegrees": 41.87,
+                "longitudeDegrees": -87.62
+              }
+            ]
+          }
+        }
+      }
+    ],
+    "rejections": [],
+    "unmapped": [
+      {
+        "kind": "json_pointer",
+        "value": "/operation/candidates"
+      },
+      {
+        "kind": "json_pointer",
+        "value": "/operation/fixedAltitude"
+      },
+      {
+        "kind": "json_pointer",
+        "value": "/operation/license"
+      },
+      {
+        "kind": "json_pointer",
+        "value": "/operation/notices"
+      },
+      {
+        "kind": "json_pointer",
+        "value": "/operation/authorizations/0/airTrafficControl"
+      },
+      {
+        "kind": "json_pointer",
+        "value": "/operation/authorizations/0/airspaceClassCodes"
+      },
+      {
+        "kind": "json_pointer",
+        "value": "/operation/authorizations/0/createdAt"
+      },
+      {
+        "kind": "json_pointer",
+        "value": "/operation/authorizations/0/createdBy"
+      },
+      {
+        "kind": "json_pointer",
+        "value": "/operation/authorizations/0/editedBy"
+      },
+      {
+        "kind": "json_pointer",
+        "value": "/operation/authorizations/0/facilityMaps"
+      },
+      {
+        "kind": "json_pointer",
+        "value": "/operation/authorizations/0/justification"
+      },
+      {
+        "kind": "json_pointer",
+        "value": "/operation/authorizations/0/submissionType"
+      }
+    ],
+    "conversions": [
+      {
+        "observation": 0,
+        "field": "/values/ceiling/meters",
+        "vendorField": "/operation/authorizations/0/altitude",
+        "vendorUnit": "ft",
+        "vendorValue": 200,
+        "expected": 60.96
+      },
+      {
+        "observation": 0,
+        "field": "/values/area/boundary/1/latitudeDegrees",
+        "vendorField": "/operation/authorizations/0/geom/coordinates/0/1/1",
+        "vendorUnit": "deg",
+        "vendorValue": 41.89,
+        "expected": 41.89
+      },
+      {
+        "observation": 0,
+        "field": "/values/area/boundary/1/longitudeDegrees",
+        "vendorField": "/operation/authorizations/0/geom/coordinates/0/1/0",
+        "vendorUnit": "deg",
+        "vendorValue": -87.64,
+        "expected": -87.64
+      }
+    ]
+  }
+}

@@ -1,0 +1,16 @@
+node_modules/
+dist/
+.local/
+test-results/
+playwright-report/
+pnpm-lock.yaml
+packages/contracts/src/generated/
+docs/openapi.json
+apps/emulators/vendor/
+packages/persistence/migrations/
+# Issued evidence bundles and the offline verifier pin this interpreter's exact source bytes.
+packages/evidence/src/evidence-cut.mjs
+tools/verifier/evidence-cut.1.mjs
+*.md
+packages/pack-part108-nprm/resources/govinfo-fr-2025-14992.htm
+apps/web/src/autopilot/tapes/

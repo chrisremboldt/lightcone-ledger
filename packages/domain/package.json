@@ -1,0 +1,27 @@
+{
+  "name": "@ledger/domain",
+  "license": "Apache-2.0",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./dist/index.js",
+    "./rule-pack-registry": "./dist/rule-pack-registry.js",
+    "./builtin-packs": "./dist/rules/demo-procedures-pack.js",
+    "./indicators": "./dist/indicators.js",
+    "./retained-c2-execution": "./dist/rules/command-link-execution-v1.js"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "typecheck": "tsc -p tsconfig.json --noEmit"
+  },
+  "dependencies": {
+    "@ledger/contracts": "workspace:*",
+    "@ledger/integrity": "workspace:*",
+    "@ledger/persistence": "workspace:*",
+    "ajv": "8.20.0",
+    "ajv-formats": "3.0.1",
+    "geographiclib-geodesic": "2.2.0"
+  },
+  "types": "./dist/index.d.ts"
+}

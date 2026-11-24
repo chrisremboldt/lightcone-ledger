@@ -1,0 +1,4 @@
+subjectId,subjectKind,personId,role,startsAt,endsAt
+RIDGE-FLT-1,flight,RIDGE-P-01,pilot_in_command,2026-11-10T16:00:00Z,2026-11-10T17:00:00Z
+RIDGE-FLT-2,flight,RIDGE-P-02,pilot_in_command,2026-11-12T16:00:00Z,2026-11-12T17:30:00Z
+RIDGE-FLT-2,flight,RIDGE-P-01,visual_observer,2026-11-12T16:00:00Z,2026-11-12T17:30:00Z

@@ -1,0 +1,134 @@
+{
+  "case": "valid",
+  "message": {
+    "contentType": "application/json",
+    "transport": {
+      "topic": "thing/product/ALPHA-AIRCRAFT-01/osd"
+    },
+    "capturedAt": "2026-10-01T17:00:00.250Z",
+    "body": {
+      "tid": "tid-alpha-b03",
+      "bid": "bid-alpha-b03",
+      "timestamp": 1790874000000,
+      "gateway": "ALPHA-DOCK-01",
+      "data": {
+        "battery": {
+          "capacity_percent": 12,
+          "remain_flight_time": 95,
+          "return_home_power": 27,
+          "landing_power": 10,
+          "batteries": [
+            {
+              "index": 0,
+              "sn": "PACK-ALPHA-01",
+              "capacity_percent": 12,
+              "voltage": 13980,
+              "temperature": -2.5
+            },
+            {
+              "index": 1,
+              "sn": "PACK-ALPHA-02",
+              "capacity_percent": 11,
+              "voltage": 13950,
+              "temperature": -3
+            }
+          ]
+        },
+        "low_battery_warning_threshold": 30,
+        "serious_low_battery_warning_threshold": 15
+      }
+    }
+  },
+  "expect": {
+    "observations": [
+      {
+        "type": "battery.state",
+        "version": 1,
+        "subject": {
+          "kind": "aircraft",
+          "id": "ALPHA-AIRCRAFT-01",
+          "scope": "source"
+        },
+        "occurredAt": "2026-10-01T17:00:00.000Z",
+        "sourceEventId": "tid-alpha-b03",
+        "originalLocator": {
+          "kind": "json_pointer",
+          "value": "/data"
+        },
+        "values": {
+          "totalRemainingPercent": 12,
+          "packs": [
+            {
+              "serialNumber": "PACK-ALPHA-01",
+              "slotIndex": 0,
+              "remainingPercent": 12,
+              "voltageVolts": 13.98,
+              "temperatureCelsius": -2.5
+            },
+            {
+              "serialNumber": "PACK-ALPHA-02",
+              "slotIndex": 1,
+              "remainingPercent": 11,
+              "voltageVolts": 13.95,
+              "temperatureCelsius": -3
+            }
+          ],
+          "forcedLandingRemainingPercent": 10,
+          "returnHomeRemainingPercent": 27,
+          "remainingFlightTimeSeconds": 95,
+          "lowWarningThresholdPercent": 30,
+          "criticalWarningThresholdPercent": 15
+        }
+      }
+    ],
+    "rejections": [],
+    "unmapped": [
+      {
+        "kind": "json_pointer",
+        "value": "/bid"
+      }
+    ],
+    "conversions": [
+      {
+        "observation": 0,
+        "field": "/values/totalRemainingPercent",
+        "vendorField": "/data/battery/capacity_percent",
+        "vendorUnit": "%",
+        "vendorValue": 12,
+        "expected": 12
+      },
+      {
+        "observation": 0,
+        "field": "/values/packs/0/voltageVolts",
+        "vendorField": "/data/battery/batteries/0/voltage",
+        "vendorUnit": "mV",
+        "vendorValue": 13980,
+        "expected": 13.98
+      },
+      {
+        "observation": 0,
+        "field": "/values/packs/0/temperatureCelsius",
+        "vendorField": "/data/battery/batteries/0/temperature",
+        "vendorUnit": "degC",
+        "vendorValue": -2.5,
+        "expected": -2.5
+      },
+      {
+        "observation": 0,
+        "field": "/values/forcedLandingRemainingPercent",
+        "vendorField": "/data/battery/landing_power",
+        "vendorUnit": "%",
+        "vendorValue": 10,
+        "expected": 10
+      },
+      {
+        "observation": 0,
+        "field": "/values/criticalWarningThresholdPercent",
+        "vendorField": "/data/serious_low_battery_warning_threshold",
+        "vendorUnit": "%",
+        "vendorValue": 15,
+        "expected": 15
+      }
+    ]
+  }
+}
