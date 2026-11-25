@@ -1,0 +1,93 @@
+# Try Ledger on this computer with Docker and nothing else: Ledger from the published image, and PostgreSQL. Not a
+# start for a server: it accepts development tokens (LEDGER_ENV=local), keeps uploaded files in a volume instead of
+# object storage, and publishes Ledger on this computer's own address only. docs/guides/deploy.md covers a server.
+#
+#   docker compose -f infra/compose.try.yaml up -d --wait
+#
+# If the image cannot be pulled, Compose builds it from infra/Dockerfile; --build builds it again. The migrations
+# run by themselves before Ledger starts. Then create your own organization; it prints your development token once:
+#
+#   docker compose -f infra/compose.try.yaml run --rm setup apps/api/dist/create-organization.js \
+#     --name "<your organization>" --time-zone <IANA zone, for example America/Denver> --admin "<your name>"
+#
+# Open http://127.0.0.1:4000, choose "Use a development token" and paste it. LEDGER_TRY_PORT moves Ledger to another
+# port of this computer. `down` stops it and keeps the records; `down -v` deletes them.
+name: ledger-try
+x-ledger-settings: &settings
+  # Development sign-in: Ledger accepts development tokens and the web app offers them. Set here and nowhere else; a
+  # server runs the image's own LEDGER_ENV=staging and NODE_ENV=production, and refuses development tokens.
+  LEDGER_ENV: local
+  NODE_ENV: development
+  DATABASE_URL: postgresql://ledger_app:ledger-try-app@postgres:5432/ledger
+  WORKER_DATABASE_URL: postgresql://ledger_worker:ledger-try-worker@postgres:5432/ledger
+  DATABASE_APP_PASSWORD: ledger-try-app
+  DATABASE_WORKER_PASSWORD: ledger-try-worker
+  # Uploaded and imported files, written once, in the ledger-try-files volume.
+  OBJECT_STORAGE_DIR: /app/.local/objects
+  LEDGER_PACKS_DIR: /packs
+  CORS_ORIGINS: http://127.0.0.1:${LEDGER_TRY_PORT:-4000},http://localhost:${LEDGER_TRY_PORT:-4000}
+  WEB_URL: http://127.0.0.1:${LEDGER_TRY_PORT:-4000}
+services:
+  ledger:
+    image: ${LEDGER_IMAGE:-ghcr.io/chrisremboldt/lightcone-ledger:latest}
+    build:
+      context: ..
+      dockerfile: infra/Dockerfile
+    environment: *settings
+    ports: ['127.0.0.1:${LEDGER_TRY_PORT:-4000}:4000']
+    # The organization's own rule pack files (*.pack.json) from packs/ at the checkout's root, read when Ledger starts.
+    volumes: ['ledger-try-files:/app/.local', '../packs:/packs:ro']
+    healthcheck:
+      test:
+        - CMD
+        - node
+        - -e
+        - "fetch('http://127.0.0.1:4000/readyz').then((r) => process.exit(r.ok ? 0 : 1), () => process.exit(1))"
+      interval: 5s
+      timeout: 5s
+      retries: 60
+    depends_on:
+      setup: { condition: service_completed_successfully }
+  # Runs the migrations on every start, then exits; and runs the setup commands, which are given the database owner's
+  # connection: `docker compose -f infra/compose.try.yaml run --rm setup <script> [arguments]`.
+  setup:
+    image: ${LEDGER_IMAGE:-ghcr.io/chrisremboldt/lightcone-ledger:latest}
+    environment:
+      <<: *settings
+      DATABASE_ADMIN_URL: postgresql://ledger_owner:ledger-try-owner@postgres:5432/ledger
+    user: '1000:1000'
+    entrypoint: ['node']
+    command: ['packages/persistence/dist/migrate.js']
+    depends_on:
+      postgres: { condition: service_healthy }
+  # The command-line client, `ledger`, from the image, against this start's API. It reads and writes files in the
+  # folder the command is typed in, and its credential from LEDGER_TOKEN in that shell or from .ledger/credentials in
+  # that folder: `docker compose -f infra/compose.try.yaml run --rm client me`.
+  client:
+    profiles: [client]
+    image: ${LEDGER_IMAGE:-ghcr.io/chrisremboldt/lightcone-ledger:latest}
+    environment:
+      LEDGER_API_URL: http://ledger:4000
+      LEDGER_TOKEN: ${LEDGER_TOKEN:-}
+    user: '1000:1000'
+    working_dir: /work
+    volumes: ['${PWD}:/work']
+    entrypoint: ['node', '/app/packages/cli/dist/main.js']
+    depends_on:
+      ledger: { condition: service_healthy }
+  postgres:
+    image: imresamu/postgis:17-3.5-alpine@sha256:cd3e4f2acea6d27e5314c70ca478e6e4d2d97b1a4a594de0a7c71456472c65ef
+    environment:
+      POSTGRES_DB: ledger
+      POSTGRES_USER: ledger_owner
+      POSTGRES_PASSWORD: ledger-try-owner
+    volumes: ['ledger-try-postgres:/var/lib/postgresql/data']
+    healthcheck:
+      # Over TCP: on its first start the image answers on its socket before it has created the PostGIS extension.
+      test: ['CMD-SHELL', 'pg_isready -h 127.0.0.1 -U ledger_owner -d ledger']
+      interval: 2s
+      timeout: 2s
+      retries: 30
+volumes:
+  ledger-try-postgres:
+  ledger-try-files:

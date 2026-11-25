@@ -10,7 +10,7 @@ Ledger's exports can be checked by someone who does not run Ledger and does not 
 
 ## 1. Produce a packet
 
-Run the stack from the [README quickstart](../../README.md#quickstart) and find a finding. The fictional Alpha Dispatch tenant has them: run the **A landing report goes missing** scene (`/?autopilot=landing`), or `pnpm scenario`.
+Run the stack from the [README quickstart](../../README.md#from-a-source-checkout) and find a finding. The fictional Alpha Dispatch tenant has them: run the **A landing report goes missing** scene (`/?autopilot=landing`), or `pnpm scenario`.
 
 In the web app, either:
 

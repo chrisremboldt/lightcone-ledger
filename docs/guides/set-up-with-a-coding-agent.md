@@ -42,6 +42,8 @@ LEDGER_TOKEN=<the credential>
 
 ## 1. Start Ledger
 
+**Or with Docker alone.** If the operator is only trying Ledger on this computer, `infra/compose.try.yaml` starts it with Docker and nothing else, as [Try Ledger on one computer](deploy.md#try-ledger-on-one-computer) shows. Run its two commands in place of the ones below and of step 2's `pnpm org:create`, and type `docker compose -f infra/compose.try.yaml run --rm client <command>` wherever this guide says `pnpm ledger <command>`. Building the waiver's pack file (step 6) still needs the checkout's Node and pnpm.
+
 On a local computer, with Node 24, Docker and the pnpm that Corepack provides:
 
 ```sh

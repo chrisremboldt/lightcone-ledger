@@ -50,7 +50,7 @@ This is a rule about what is committed to this repository, which is public. It d
 
 ## Running the stack and the checks
 
-Set up the stack as described in the [README quickstart](README.md#quickstart). The checks:
+Set up the stack as described in the [README quickstart](README.md#from-a-source-checkout). The checks:
 
 ```sh
 pnpm verify             # format check, build, typecheck, unit tests

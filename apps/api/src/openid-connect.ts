@@ -286,6 +286,19 @@ export function createTokenVerifier(options: TokenVerifierOptions): TokenVerifie
   return { verify, metadata };
 }
 
+/**
+ * The line the API logs when it starts with development sign-in on (LEDGER_ENV local or test), so no one mistakes such
+ * a start for a server's. None with LEDGER_ENV=staging.
+ */
+export function developmentSignInNotice(env: Environment): string | undefined {
+  if (env === 'staging') return undefined;
+  return (
+    `Development sign-in is on (LEDGER_ENV=${env}): this API accepts development tokens and the web app offers them. ` +
+    'This is a start for one computer that faces no network, not a start for a server; a server runs with ' +
+    'LEDGER_ENV=staging and people sign in through an identity provider (docs/guides/deploy.md).'
+  );
+}
+
 /** What the web app reads before anyone signs in: public values only. */
 export async function publicSignInConfiguration(
   settings: SignInSettings,

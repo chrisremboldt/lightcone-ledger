@@ -17,12 +17,23 @@ import {
 export interface SignedIn {
   token: () => Promise<string | null>;
   account: React.ReactNode;
-  confirmIdentity: ConfirmIdentity;
+  /** Absent for a development token, which confirms a signature with the token itself. */
+  confirmIdentity?: ConfirmIdentity;
   sessionKey: string;
+  /** Signed in with a development token, on an API that reports it runs for one computer (LEDGER_ENV=local). */
+  local?: boolean;
 }
 
 /** The sign-in screen of a deployment: its own name and one way in. Nothing fictional appears here. */
-export function DeploymentGate({ name, children }: { name?: string; children: React.ReactNode }) {
+export function DeploymentGate({
+  name,
+  local = false,
+  children,
+}: {
+  name?: string;
+  local?: boolean;
+  children: React.ReactNode;
+}) {
   return (
     <main className="gate gate--deployment">
       <header className="gate-brand">
@@ -35,8 +46,104 @@ export function DeploymentGate({ name, children }: { name?: string; children: Re
           {children}
         </section>
       </div>
-      <footer className="gate-foot" />
+      <footer className="gate-foot">{local && <span>Local development</span>}</footer>
     </main>
+  );
+}
+
+/**
+ * Opens the organization with a development token, on an API that reports it accepts them: one started for a single
+ * computer with LEDGER_ENV=local, such as infra/compose.try.yaml. The API decides; with LEDGER_ENV=staging it reports
+ * none, this is not shown, and the API refuses such a token anyway.
+ */
+export function DevelopmentTokenSignIn({
+  open,
+  checking,
+  onOpen,
+}: {
+  open: boolean;
+  checking: boolean;
+  onOpen: (token: string) => void;
+}) {
+  const [token, setToken] = React.useState('');
+  const entered = token.trim();
+  return (
+    <details className="local-token" open={open}>
+      <summary>Use a development token</summary>
+      <form
+        className="local-token-form"
+        onSubmit={(event) => {
+          event.preventDefault();
+          if (entered) onOpen(entered);
+        }}
+      >
+        <label className="local-person-choice" htmlFor="development-token">
+          <span id="development-token-label">Development token</span>
+          <input
+            id="development-token"
+            type="password"
+            autoComplete="off"
+            value={token}
+            onChange={(event) => setToken(event.target.value)}
+            aria-labelledby="development-token-label"
+            aria-describedby="development-token-description"
+          />
+          <small id="development-token-description">
+            Yours: the one create-organization printed when your organization was made, or one an administrator issued
+            you on the People screen. Ledger is running for this computer only, so it accepts development tokens.
+          </small>
+        </label>
+        <Button kind={open ? 'primary' : 'secondary'} type="submit" disabled={!entered || checking}>
+          Open with this token
+        </Button>
+      </form>
+    </details>
+  );
+}
+
+/** The ways in the sign-in screen offers, from what the API reported: its providers, and development tokens if any. */
+export function SignInChoices({
+  configuration,
+  starting,
+  onStart,
+  onDevelopmentToken,
+}: {
+  configuration: SignInConfiguration;
+  starting: boolean;
+  onStart: (entry: IssuerEntry) => void;
+  onDevelopmentToken: (token: string) => void;
+}) {
+  const issuers = configuration.issuers;
+  return (
+    <>
+      {issuers.length === 0 && !configuration.developmentTokens ? (
+        <Notice title="Sign-in is not configured">
+          This deployment has no sign-in provider yet. Its administrator sets LEDGER_OIDC_ISSUER and
+          LEDGER_OIDC_CLIENT_ID for the API.
+        </Notice>
+      ) : issuers.length > 0 ? (
+        <div className="gate-sign-in">
+          {issuers.map((entry) => (
+            <Button
+              key={entry.issuer}
+              kind="primary"
+              disabled={starting || !entry.authorizationEndpoint}
+              onClick={() => onStart(entry)}
+            >
+              {issuers.length === 1 ? 'Sign in' : `Sign in with ${entry.label}`}
+            </Button>
+          ))}
+          {issuers.some((entry) => !entry.authorizationEndpoint) && (
+            <small className="gate-note">
+              The sign-in provider cannot be reached right now. Reload the page to try again.
+            </small>
+          )}
+        </div>
+      ) : null}
+      {configuration.developmentTokens && (
+        <DevelopmentTokenSignIn open={issuers.length === 0} checking={starting} onOpen={onDevelopmentToken} />
+      )}
+    </>
   );
 }
 
@@ -63,6 +170,7 @@ export function OpenIdSignIn({
   const [starting, setStarting] = React.useState(false);
   const [completing, setCompleting] = React.useState(true);
   const [untied, setUntied] = React.useState<{ error: UntiedAccountError; signOut: () => void } | null>(null);
+  const [developmentToken, setDevelopmentToken] = React.useState<string | null>(null);
   const sessions = React.useRef(0);
 
   React.useEffect(() => {
@@ -121,6 +229,15 @@ export function OpenIdSignIn({
         </div>
       </DeploymentGate>
     );
+  if (developmentToken) {
+    const token = developmentToken;
+    return workspace({
+      token: async () => token,
+      sessionKey: `development-${sessions.current}`,
+      local: true,
+      account: <Button onClick={() => setDevelopmentToken(null)}>Sign out</Button>,
+    });
+  }
   if (session)
     return workspace({
       token: session.token,
@@ -150,7 +267,6 @@ export function OpenIdSignIn({
         )}
       </DeploymentGate>
     );
-  const issuers = configuration.issuers;
   const start = async (entry: IssuerEntry) => {
     setStarting(true);
     setProblem(null);
@@ -161,37 +277,44 @@ export function OpenIdSignIn({
       setStarting(false);
     }
   };
+  // The token is checked before the workspace opens, so a mistyped one is said here rather than on every screen.
+  const openWithToken = async (token: string) => {
+    setStarting(true);
+    setProblem(null);
+    try {
+      const response = await fetch(`${apiUrl.replace(/\/$/, '')}/v1/me`, {
+        headers: { authorization: `Bearer ${token}` },
+        credentials: 'omit',
+        cache: 'no-store',
+      });
+      if (response.ok) {
+        sessions.current++;
+        setDevelopmentToken(token);
+      } else
+        setProblem(
+          response.status === 401
+            ? 'Ledger did not accept this development token. Check that it is the whole token, and that no one has issued you a newer one.'
+            : 'Ledger cannot be reached. Try again shortly.',
+        );
+    } catch {
+      setProblem('Ledger cannot be reached. Try again shortly.');
+    } finally {
+      setStarting(false);
+    }
+  };
   return (
-    <DeploymentGate name={configuration.deploymentName}>
+    <DeploymentGate name={configuration.deploymentName} local={configuration.developmentTokens}>
       {problem && (
         <Notice tone="alert" title="Not signed in">
           {problem}
         </Notice>
       )}
-      {issuers.length === 0 ? (
-        <Notice title="Sign-in is not configured">
-          This deployment has no sign-in provider yet. Its administrator sets LEDGER_OIDC_ISSUER and
-          LEDGER_OIDC_CLIENT_ID for the API.
-        </Notice>
-      ) : (
-        <div className="gate-sign-in">
-          {issuers.map((entry) => (
-            <Button
-              key={entry.issuer}
-              kind="primary"
-              disabled={starting || !entry.authorizationEndpoint}
-              onClick={() => void start(entry)}
-            >
-              {issuers.length === 1 ? 'Sign in' : `Sign in with ${entry.label}`}
-            </Button>
-          ))}
-          {issuers.some((entry) => !entry.authorizationEndpoint) && (
-            <small className="gate-note">
-              The sign-in provider cannot be reached right now. Reload the page to try again.
-            </small>
-          )}
-        </div>
-      )}
+      <SignInChoices
+        configuration={configuration}
+        starting={starting}
+        onStart={(entry) => void start(entry)}
+        onDevelopmentToken={(token) => void openWithToken(token)}
+      />
     </DeploymentGate>
   );
 }

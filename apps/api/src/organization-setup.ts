@@ -157,7 +157,9 @@ export function setupReport(options: OrganizationSetupOptions, result: Organizat
       '',
       `  ${result.developmentToken}`,
       '',
-      `With pnpm dev running, open http://localhost:${process.env.LEDGER_WEB_PORT || '5173'}, choose "Use a development token", and paste it.`,
+      process.env.WEB_URL
+        ? `Open ${process.env.WEB_URL}, choose "Use a development token", and paste it.`
+        : `With pnpm dev running, open http://localhost:${process.env.LEDGER_WEB_PORT || '5173'}, choose "Use a development token", and paste it.`,
       'For the API, send it as "Authorization: Bearer <token>". The API refuses development tokens outside local and test.',
       '',
       'Each person you add signs in the same way: on the People screen, choose the person and "Issue a development',

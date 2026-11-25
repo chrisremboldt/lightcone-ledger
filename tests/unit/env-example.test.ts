@@ -3,8 +3,8 @@ import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { codeFiles, exampleVariables, readsIn, root } from './environment-variables.js';
 
-/** Set by the tools themselves (Vite, pnpm, a CI runner), never by a person running Ledger. */
-const setByTools = new Set(['DEV', 'BASE_URL', 'INIT_CWD', 'CI']);
+/** Set by the tools themselves (Vite, pnpm, a CI runner, the shell), never by a person running Ledger. */
+const setByTools = new Set(['DEV', 'BASE_URL', 'INIT_CWD', 'CI', 'PWD']);
 
 function reads() {
   const names = new Map<string, string>();

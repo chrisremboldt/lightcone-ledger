@@ -103,7 +103,30 @@ Invariants every change keeps:
 
 ## Quickstart
 
-You need Node 24, pnpm 11.19.0 and Docker. Everything runs locally; no account or external service is required. Node 24 ships with Corepack, which provides the pinned pnpm: run `corepack enable` once. Where `corepack enable` is not allowed (it writes to a system folder), type `corepack pnpm` wherever this guide says `pnpm`, or put a one-line `pnpm` in a folder on your `PATH` that runs it for you:
+### Try it with Docker
+
+You need Docker and nothing else (Docker Desktop, or Docker Engine with the Compose plugin 2.24 or later), and a copy of this repository: `git clone`, or the zip from its GitHub page. This starts Ledger and PostgreSQL on your computer, with no fictional organizations, and Ledger on `127.0.0.1` only:
+
+```sh
+git clone https://github.com/chrisremboldt/lightcone-ledger.git
+cd lightcone-ledger
+docker compose -f infra/compose.try.yaml up -d --wait
+```
+
+It runs the published image (`ghcr.io/chrisremboldt/lightcone-ledger`, for amd64 and arm64) and the migrations, then waits until Ledger answers. If the image cannot be pulled (none has been published yet), the same command builds it from the checkout instead, which takes several minutes; `--build` builds it again after you change the checkout. Then create your own organization, with its name, its [time zone](https://en.wikipedia.org/wiki/List_of_tz_database_time_zones) and your name:
+
+```sh
+docker compose -f infra/compose.try.yaml run --rm setup apps/api/dist/create-organization.js \
+  --name "Example Aerial Survey" --time-zone America/Denver --admin "Avery Example"
+```
+
+It prints your development token once. Open [127.0.0.1:4000](http://127.0.0.1:4000), choose **Use a development token** and paste it. From there, [Your own organization](#your-own-organization) below says what comes next; the commands it names with `pnpm` run against this start as [Try Ledger on one computer](docs/guides/deploy.md#try-ledger-on-one-computer) shows.
+
+This start is for one computer and is plainly not a server: it accepts development tokens, says "Local development" on its sign-in screen and in its log, and keeps uploaded files in a Docker volume. `docker compose -f infra/compose.try.yaml down` stops it and keeps your records; `down -v` deletes them. For a server other people use, follow [Deploy Ledger](docs/guides/deploy.md).
+
+### From a source checkout
+
+To change Ledger, or to watch the simulated operation with its fictional organizations, run it from the checkout. You need Node 24, pnpm 11.19.0 and Docker. Everything runs locally; no account or external service is required. Node 24 ships with Corepack, which provides the pinned pnpm: run `corepack enable` once. Where `corepack enable` is not allowed (it writes to a system folder), type `corepack pnpm` wherever this guide says `pnpm`, or put a one-line `pnpm` in a folder on your `PATH` that runs it for you:
 
 ```sh
 mkdir -p ~/.local/bin && printf '#!/bin/sh\nexec corepack pnpm "$@"\n' > ~/.local/bin/pnpm && chmod +x ~/.local/bin/pnpm

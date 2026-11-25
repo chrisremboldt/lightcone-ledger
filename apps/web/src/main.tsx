@@ -295,12 +295,12 @@ function Workspace({ account, ...rest }: AppProps & { confirmIdentity?: ConfirmI
   );
   if (failed) return flights;
   if (program === null)
-    return props.local ? (
+    return props.local && localAllowed ? (
       <Gate>
         <Spinner label="Opening your organization" />
       </Gate>
     ) : (
-      <DeploymentGate>
+      <DeploymentGate local={props.local}>
         <Spinner label="Opening your organization" />
       </DeploymentGate>
     );
@@ -599,6 +599,7 @@ function Root() {
           token={signedIn.token}
           account={signedIn.account}
           confirmIdentity={signedIn.confirmIdentity}
+          local={signedIn.local}
         />
       )}
     />

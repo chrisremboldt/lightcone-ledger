@@ -470,6 +470,12 @@ describe.runIf(process.env.LEDGER_ENV !== 'staging')('Development tokens for eve
     });
     try {
       await staging.ready();
+      // The web app offers development tokens only when the API's sign-in settings say so: here they do not.
+      const signIn = await staging.inject({ method: 'GET', url: '/v1/sign-in' });
+      expect(signIn.json()).toMatchObject({ deploymentName: 'Example Ridge Survey', developmentTokens: false });
+      expect((await app.inject({ method: 'GET', url: '/v1/sign-in' })).json()).toMatchObject({
+        developmentTokens: true,
+      });
       const people = await read<{ principals: { id: string; name: string }[] }>(
         administrator,
         '/v1/authority/principals',

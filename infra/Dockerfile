@@ -6,7 +6,8 @@ COPY apps ./apps
 COPY packages ./packages
 COPY tools/check-production-build.mjs ./tools/
 RUN pnpm install --frozen-lockfile
-RUN pnpm --filter @ledger/api... --filter @ledger/workers... --filter @ledger/simulator... --filter @ledger/adapter-host... build
+# The command-line client too, so `ledger` commands can run from the image against its API (infra/compose.try.yaml).
+RUN pnpm --filter @ledger/api... --filter @ledger/workers... --filter @ledger/simulator... --filter @ledger/adapter-host... --filter @ledger/cli... build
 # The web app is served from the API's own origin, so it calls the API with relative URLs and needs no API URL; it
 # reads the sign-in settings from the API when it starts.
 RUN pnpm --filter @ledger/web... build && node tools/check-production-build.mjs

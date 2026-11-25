@@ -18,8 +18,41 @@ On one computer (Docker 29 with Compose 5.5, arm64), in containers of its own, w
 - The organization's own pack file placed in the folder the `ledger` service mounts ([Your own rule packs](#your-own-rule-packs-in-the-deployment)): offered for adoption as the organization's file, its adoption printed.
 - The backup in [section 9](#9-backups-and-restoring) of that deployment, taken and checked by `infra/backup.mjs`, restored into empty containers: both people signed in, the records, coverage and people read the same, the journal's hash chains verified with the same heads, and records produced after the restore, with their originals, verified offline.
 - The API and the workers as two containers, the workers evaluating a new import; `credential:issue`, `broker:files` and the broker profile from the image; the position adapter as its own container (the `adapter` profile), submitting every message an aircraft account published to the broker, and under the image's supervisor, where it signed in and subscribed ([section 10](#10-connect-a-source-run-an-adapter)); the realm import command of the Keycloak example.
+- `infra/compose.try.yaml` with an image built from the checkout (`up --build`; the published image was not pulled, as none had been published): the migrations ran by themselves, the organization was created with the `setup` service, its development token was accepted over HTTP and on the web app's sign-in screen, `/readyz` answered as `ledger_app`, the API logged its development sign-in line, the `client` service ran `me` and imported a records file, whose bytes were kept in the volume, and the records were there after `down` and `up`.
 
 Not run: the nightly schedule line for the backup (the script was run, not from cron), a real host name with certificates the proxy obtains itself (needs a public server), Google Workspace and Microsoft Entra ID (need accounts), and Keycloak's admin console clicked through by hand (the realm was imported from a file with the same settings).
+
+## Try Ledger on one computer
+
+`infra/compose.try.yaml` starts Ledger from the published image beside PostgreSQL, with Docker and nothing else, for someone deciding whether Ledger is for them. **It is not a start for a server**, and differs from one on purpose:
+
+- It runs the image with `LEDGER_ENV=local` (and `NODE_ENV=development`), set in that file and nowhere else. The API then accepts development tokens, and the web app, which asks the API at start, offers **Use a development token** on its sign-in screen, marked "Local development". At start the API logs one line saying development sign-in is on and that this is not a start for a server. A server runs the image's own `LEDGER_ENV=staging` and `NODE_ENV=production`: its API refuses development tokens and reports none to the web app, which then offers none.
+- It keeps uploaded and imported files in a Docker volume (`ledger-try-files`), written once, instead of object storage, and needs no identity provider.
+- It publishes Ledger on `127.0.0.1` only, and PostgreSQL not at all. Its passwords are fixed values in the file. Never publish its port beyond the computer, and never put it behind a proxy.
+
+From a checkout:
+
+```sh
+docker compose -f infra/compose.try.yaml up -d --wait
+docker compose -f infra/compose.try.yaml run --rm setup apps/api/dist/create-organization.js \
+  --name "Example Aerial Survey" --time-zone America/Denver --admin "Avery Example"
+```
+
+`up` pulls the image, runs the migrations (the `setup` service, which exits once they are done; it runs them again, applying nothing, on every start), starts Ledger and waits until `/readyz` answers. If the image cannot be pulled, for example before one is published, Compose builds it from `infra/Dockerfile` instead; `--build` builds it again from the checkout. `LEDGER_IMAGE` names another image, for example a release pinned by its digest, and `LEDGER_TRY_PORT` another port of the computer (default 4000). The second command creates the organization and prints the administrator's development token once, and where to open the web app: `http://127.0.0.1:4000`, **Use a development token**. Its `setup` service is the only one given the database owner's connection. A lost token is replaced, and a token for another person issued, with `docker compose -f infra/compose.try.yaml run --rm setup apps/api/dist/issue-development-token.js --organization <id> --for "<the person's name>"`, or on the People screen.
+
+The organization's own rule pack files go in `packs/` at the checkout's root (make it with `mkdir -p packs` before the first start; otherwise Docker makes it, on Linux owned by root), as on a server ([Your own rule packs in the deployment](#your-own-rule-packs-in-the-deployment)); `docker compose -f infra/compose.try.yaml restart ledger` reads them. `docker compose -f infra/compose.try.yaml down` stops it and keeps the records in their volumes; `down -v` deletes them.
+
+### The command-line client against it
+
+The image holds the command-line client. The `client` service runs it against this start's API, in the folder the command is typed in, which it mounts, so files named on the command line are read and written there:
+
+```sh
+mkdir -p .ledger && printf 'LEDGER_TOKEN=%s\n' '<the development token>' > .ledger/credentials
+docker compose -f infra/compose.try.yaml run --rm client me
+docker compose -f infra/compose.try.yaml run --rm client records import aircraft.identity organization/records/aircraft.csv
+```
+
+Each `pnpm ledger <command>` in the guides is `docker compose -f infra/compose.try.yaml run --rm client <command>` here. The credential is read from `LEDGER_TOKEN` in the shell, or from `.ledger/credentials` in the folder the command is typed in (git ignores it in this checkout); a credential is never given as an argument. A coding agent does the same. The client runs as user 1000 in the container: on Linux, a file it writes into the folder belongs to that user. From a checkout with Node 24 and pnpm (as in the [README](../../README.md#from-a-source-checkout), `pnpm install --frozen-lockfile && pnpm build`), `pnpm ledger` reaches the same API at `http://127.0.0.1:4000`, its default; set `LEDGER_API_URL` in `.ledger/credentials` for another `LEDGER_TRY_PORT`.
 
 ## What you run
 
@@ -113,7 +146,9 @@ The image in `infra/Dockerfile` builds the API, the workers and the web app from
 docker build -f infra/Dockerfile -t ledger:local .
 ```
 
-The build fails if the web app contains any development sign-in or demonstration code (`tools/check-production-build.mjs`). The web app calls the API with relative URLs, so it needs no API URL: the API serves it from the same origin.
+The build fails if the web app contains demonstration code or the fictional people's credentials (`tools/check-production-build.mjs`). Its sign-in screen offers a development token only when the API reports that it accepts them, which with the image's `LEDGER_ENV=staging` it never does. The web app calls the API with relative URLs, so it needs no API URL: the API serves it from the same origin.
+
+Each published release of Ledger is also an image in the GitHub Container Registry, `ghcr.io/<owner>/<repository>` of the repository it was released from in lower case (for this repository, `ghcr.io/chrisremboldt/lightcone-ledger`), built for linux/amd64 and linux/arm64 by `.github/workflows/image.yml`. It is tagged with the release's tag, and `latest` for a release that is not a pre-release. The workflow run's summary gives its digest. To run it instead of building, put `image: ghcr.io/chrisremboldt/lightcone-ledger@sha256:<digest>` for the `ledger`, `setup` and `adapter` services of `infra/compose.production.yaml` (or tag it `ledger:local` after pulling): a digest names exactly the image that was built, where a tag can be moved. The workflow can also be run by hand from the repository's Actions page; it then builds both platforms and publishes nothing unless its **publish** box is ticked, and then only as `sha-<commit>`.
 
 The image sets `NODE_ENV=production`, `LEDGER_ENV=staging`, `HOST=0.0.0.0`, `PORT=4000` and `LEDGER_WEB_DIR=/app/apps/web/dist`. Outside local development Ledger always runs with `LEDGER_ENV=staging`: the API refuses to start with development sign-in when `NODE_ENV=production`.
 

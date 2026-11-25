@@ -709,7 +709,7 @@ In the product, the API and the workers register every shipped pack at startup t
 
 ## Adopt it in shadow, then in active
 
-Run the stack from the [README quickstart](../../README.md#quickstart), sign in as a fictional person who can adopt packs (the Alpha Dispatch dispatcher can), and open **Rules**.
+Run the stack from the [README quickstart](../../README.md#from-a-source-checkout), sign in as a fictional person who can adopt packs (the Alpha Dispatch dispatcher can), and open **Rules**.
 
 1. Under **Adopted rule packs**, use **Adopt a rule pack**. Pick the pack and version, set the date range, fill in the values its rules ask for (the wind limit in Part 2, the ground speed limit in Part 1), choose **shadow**, and write a note. For a waiver, the form says what dates the certificate states and starts from them: from their first day (or now, once it has passed) to the end of their last day, in your organization's time zone. Clear "In effect for the certificate’s stated dates" to give a number of days instead.
 2. In shadow, every rule is evaluated and its findings are recorded and labelled "Proposed rule: recorded, not counted". They are never counted in what a person attests to.
