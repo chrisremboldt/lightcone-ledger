@@ -4,7 +4,16 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { afterAll, describe, expect, it } from 'vitest';
 import * as screen from '../../../apps/web/src/rule-coverage.js';
-import { adoptionInstant, chooseValues, importRowLines, readConnection, runCli, usage } from '../src/index.js';
+import {
+  adoptionInstant,
+  chooseValues,
+  importRowLines,
+  mappingLines,
+  readConnection,
+  runCli,
+  usage,
+} from '../src/index.js';
+import { listOperatorRecordTypes } from '../../domain/src/operator-record-import.js';
 import * as words from '../src/words.js';
 import type { RulePackVersion } from '@ledger/contracts';
 
@@ -405,6 +414,65 @@ describe('The command line', () => {
         expect(words.populationWords(item)).toBe(screen.populationWords(item));
       }
     expect(words.missingWords(['training record'])).toBe(screen.missingWords(['training record']));
+  });
+});
+
+describe('Column mappings from the command line', () => {
+  const flightRecord = listOperatorRecordTypes().find((type) => type.recordType === 'flight.record')!;
+  const types = { 'GET /v1/operator-records/types': { body: { types: [flightRecord], sourceId: 'operator-records' } } };
+
+  it('starts a mapping from an export: every column listed and unassigned, and never over a file already there', async () => {
+    writeFileSync(join(folder, 'log-export.csv'), 'Flight No.,Takeoff,"Max Alt, ft"\nFLT-1,11/10/2026 9:05 AM,148\n');
+    const api = fakeApi(types);
+    const printed = await cli(['records', 'mapping', 'flight.record', 'log-export.csv'], api.fetcher);
+    expect(printed.code, printed.err).toBe(0);
+    expect(printed.out).toContain('columns:\n  "Flight No.": ~\n  "Takeoff": ~\n  "Max Alt, ft": ~\n');
+    const written = await cli(
+      ['records', 'mapping', 'flight.record', 'log-export.csv', '--out', 'log.mapping.yaml'],
+      api.fetcher,
+    );
+    expect(written.code, written.err).toBe(0);
+    expect(written.out).toContain('Wrote');
+    expect(readFileSync(join(folder, 'log.mapping.yaml'), 'utf8')).toBe(`${printed.out}\n`);
+    const again = await cli(
+      ['records', 'mapping', 'flight.record', 'log-export.csv', '--out', 'log.mapping.yaml'],
+      api.fetcher,
+    );
+    expect(again.code).toBe(2);
+    expect(again.err).toContain('already exists; nothing was written');
+    expect(api.sent.every((request) => request.method === 'GET')).toBe(true);
+  });
+
+  it('reads --mapping only on check and import, and refuses a mapping file it cannot read before sending', async () => {
+    const api = fakeApi({ ...types, 'GET /v1/me': { body: me } });
+    const unread = await cli(['records', 'list', 'flight.record', '--mapping', 'log.mapping.yaml'], api.fetcher);
+    expect(unread.code).toBe(2);
+    expect(unread.err).toContain('records list does not read --mapping');
+    const missing = await cli(
+      ['records', 'check', 'flight.record', 'log-export.csv', '--mapping', 'no-such.yaml'],
+      api.fetcher,
+    );
+    expect(missing.code).toBe(2);
+    expect(missing.err).toBe(`Cannot read ${join(folder, 'no-such.yaml')}.`);
+    expect(api.sent.some((request) => request.method === 'POST')).toBe(false);
+  });
+
+  it('prints what each column became, what was not read, the constants and the rows left out', () => {
+    expect(
+      mappingLines({
+        artifactId: 'artifact-9',
+        columns: [{ source: 'Takeoff', becomes: 'takeoffAt (Takeoff at), times in UTC written MM/DD/YYYY h:mm A' }],
+        unread: ['PIC', 'Remarks'],
+        constants: [{ field: 'heightNotes', value: 'none' }],
+        leftOut: [{ row: 4, reason: 'Status is "Cancelled".' }],
+      }),
+    ).toEqual([
+      'The mapping (file artifact-9) read the export’s columns as:',
+      '  Takeoff: takeoffAt (Takeoff at), times in UTC written MM/DD/YYYY h:mm A',
+      'Not read: PIC, Remarks.',
+      'Stated by the mapping for every row, not held by the export: heightNotes = none.',
+      '  Row 4: left out by the mapping; Status is "Cancelled".',
+    ]);
   });
 });
 

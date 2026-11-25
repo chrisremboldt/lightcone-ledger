@@ -711,6 +711,7 @@ export * from './sms-matrix-rules.js';
 export * from './observations/index.js';
 export * from './observation-intake.js';
 export * from './operator-record-import.js';
+export * from './operator-record-mapping.js';
 export * from './zoned-time.js';
 export * from './request-shape.js';
 export * from './operator-record-api.js';

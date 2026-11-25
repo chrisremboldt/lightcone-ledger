@@ -109044,7 +109044,7 @@
             "application/json": {
               "schema": {
                 "additionalProperties": false,
-                "description": "Preview or commit one retained file (uploaded through /v1/uploads) as records of one record type: CSV with a header row, or JSON with a records array.",
+                "description": "Preview or commit one retained file (uploaded through /v1/uploads) as records of one record type: CSV with a header row, or JSON with a records array; or, with a column mapping, a CSV export as it was received.",
                 "type": "object",
                 "required": [
                   "artifactId",
@@ -109072,6 +109072,12 @@
                     "minLength": 1,
                     "maxLength": 200,
                     "description": "The source the records are recorded under. Defaults to operator-records.",
+                    "type": "string"
+                  },
+                  "mappingArtifactId": {
+                    "minLength": 1,
+                    "maxLength": 200,
+                    "description": "A retained column mapping file (YAML, uploaded through /v1/uploads) that reads the file, an export in its own columns, as this record type. Each record cites the export as its original and names the mapping.",
                     "type": "string"
                   }
                 }
@@ -109138,6 +109144,94 @@
                       "type": "array",
                       "items": {
                         "type": "string"
+                      }
+                    },
+                    "mapping": {
+                      "additionalProperties": false,
+                      "description": "How the column mapping read the export.",
+                      "type": "object",
+                      "required": [
+                        "artifactId",
+                        "columns",
+                        "unread",
+                        "constants",
+                        "leftOut"
+                      ],
+                      "properties": {
+                        "artifactId": {
+                          "minLength": 1,
+                          "maxLength": 200,
+                          "type": "string"
+                        },
+                        "columns": {
+                          "type": "array",
+                          "items": {
+                            "additionalProperties": false,
+                            "type": "object",
+                            "required": [
+                              "source",
+                              "becomes"
+                            ],
+                            "properties": {
+                              "source": {
+                                "description": "The export’s heading.",
+                                "type": "string"
+                              },
+                              "becomes": {
+                                "description": "What the mapping reads it as, in plain words.",
+                                "type": "string"
+                              }
+                            }
+                          }
+                        },
+                        "unread": {
+                          "description": "The export’s columns the mapping does not read.",
+                          "type": "array",
+                          "items": {
+                            "type": "string"
+                          }
+                        },
+                        "constants": {
+                          "description": "Values the mapping states for every row, which the export does not hold.",
+                          "type": "array",
+                          "items": {
+                            "additionalProperties": false,
+                            "type": "object",
+                            "required": [
+                              "field",
+                              "value"
+                            ],
+                            "properties": {
+                              "field": {
+                                "type": "string"
+                              },
+                              "value": {
+                                "type": "string"
+                              }
+                            }
+                          }
+                        },
+                        "leftOut": {
+                          "description": "Rows of the export the mapping leaves out, by their value in a column. They are not in rows.",
+                          "type": "array",
+                          "items": {
+                            "additionalProperties": false,
+                            "type": "object",
+                            "required": [
+                              "row",
+                              "reason"
+                            ],
+                            "properties": {
+                              "row": {
+                                "minimum": 1,
+                                "type": "integer"
+                              },
+                              "reason": {
+                                "type": "string"
+                              }
+                            }
+                          }
+                        }
                       }
                     },
                     "granted": {
@@ -109837,7 +109931,7 @@
             "application/json": {
               "schema": {
                 "additionalProperties": false,
-                "description": "Preview or commit one retained file (uploaded through /v1/uploads) as records of one record type: CSV with a header row, or JSON with a records array.",
+                "description": "Preview or commit one retained file (uploaded through /v1/uploads) as records of one record type: CSV with a header row, or JSON with a records array; or, with a column mapping, a CSV export as it was received.",
                 "type": "object",
                 "required": [
                   "artifactId",
@@ -109865,6 +109959,12 @@
                     "minLength": 1,
                     "maxLength": 200,
                     "description": "The source the records are recorded under. Defaults to operator-records.",
+                    "type": "string"
+                  },
+                  "mappingArtifactId": {
+                    "minLength": 1,
+                    "maxLength": 200,
+                    "description": "A retained column mapping file (YAML, uploaded through /v1/uploads) that reads the file, an export in its own columns, as this record type. Each record cites the export as its original and names the mapping.",
                     "type": "string"
                   }
                 }
@@ -109929,6 +110029,94 @@
                       "type": "array",
                       "items": {
                         "type": "string"
+                      }
+                    },
+                    "mapping": {
+                      "additionalProperties": false,
+                      "description": "How the column mapping read the export.",
+                      "type": "object",
+                      "required": [
+                        "artifactId",
+                        "columns",
+                        "unread",
+                        "constants",
+                        "leftOut"
+                      ],
+                      "properties": {
+                        "artifactId": {
+                          "minLength": 1,
+                          "maxLength": 200,
+                          "type": "string"
+                        },
+                        "columns": {
+                          "type": "array",
+                          "items": {
+                            "additionalProperties": false,
+                            "type": "object",
+                            "required": [
+                              "source",
+                              "becomes"
+                            ],
+                            "properties": {
+                              "source": {
+                                "description": "The export’s heading.",
+                                "type": "string"
+                              },
+                              "becomes": {
+                                "description": "What the mapping reads it as, in plain words.",
+                                "type": "string"
+                              }
+                            }
+                          }
+                        },
+                        "unread": {
+                          "description": "The export’s columns the mapping does not read.",
+                          "type": "array",
+                          "items": {
+                            "type": "string"
+                          }
+                        },
+                        "constants": {
+                          "description": "Values the mapping states for every row, which the export does not hold.",
+                          "type": "array",
+                          "items": {
+                            "additionalProperties": false,
+                            "type": "object",
+                            "required": [
+                              "field",
+                              "value"
+                            ],
+                            "properties": {
+                              "field": {
+                                "type": "string"
+                              },
+                              "value": {
+                                "type": "string"
+                              }
+                            }
+                          }
+                        },
+                        "leftOut": {
+                          "description": "Rows of the export the mapping leaves out, by their value in a column. They are not in rows.",
+                          "type": "array",
+                          "items": {
+                            "additionalProperties": false,
+                            "type": "object",
+                            "required": [
+                              "row",
+                              "reason"
+                            ],
+                            "properties": {
+                              "row": {
+                                "minimum": 1,
+                                "type": "integer"
+                              },
+                              "reason": {
+                                "type": "string"
+                              }
+                            }
+                          }
+                        }
                       }
                     },
                     "summary": {
@@ -110421,6 +110609,94 @@
                       "type": "array",
                       "items": {
                         "type": "string"
+                      }
+                    },
+                    "mapping": {
+                      "additionalProperties": false,
+                      "description": "How the column mapping read the export.",
+                      "type": "object",
+                      "required": [
+                        "artifactId",
+                        "columns",
+                        "unread",
+                        "constants",
+                        "leftOut"
+                      ],
+                      "properties": {
+                        "artifactId": {
+                          "minLength": 1,
+                          "maxLength": 200,
+                          "type": "string"
+                        },
+                        "columns": {
+                          "type": "array",
+                          "items": {
+                            "additionalProperties": false,
+                            "type": "object",
+                            "required": [
+                              "source",
+                              "becomes"
+                            ],
+                            "properties": {
+                              "source": {
+                                "description": "The export’s heading.",
+                                "type": "string"
+                              },
+                              "becomes": {
+                                "description": "What the mapping reads it as, in plain words.",
+                                "type": "string"
+                              }
+                            }
+                          }
+                        },
+                        "unread": {
+                          "description": "The export’s columns the mapping does not read.",
+                          "type": "array",
+                          "items": {
+                            "type": "string"
+                          }
+                        },
+                        "constants": {
+                          "description": "Values the mapping states for every row, which the export does not hold.",
+                          "type": "array",
+                          "items": {
+                            "additionalProperties": false,
+                            "type": "object",
+                            "required": [
+                              "field",
+                              "value"
+                            ],
+                            "properties": {
+                              "field": {
+                                "type": "string"
+                              },
+                              "value": {
+                                "type": "string"
+                              }
+                            }
+                          }
+                        },
+                        "leftOut": {
+                          "description": "Rows of the export the mapping leaves out, by their value in a column. They are not in rows.",
+                          "type": "array",
+                          "items": {
+                            "additionalProperties": false,
+                            "type": "object",
+                            "required": [
+                              "row",
+                              "reason"
+                            ],
+                            "properties": {
+                              "row": {
+                                "minimum": 1,
+                                "type": "integer"
+                              },
+                              "reason": {
+                                "type": "string"
+                              }
+                            }
+                          }
+                        }
                       }
                     },
                     "summary": {

@@ -295,6 +295,8 @@ export interface ParsedRecordFile {
   readonly problems: readonly string[];
   readonly recordType?: string;
   readonly recordVersion?: number;
+  /** A CSV file's header row, in order, as written. */
+  readonly columns?: readonly string[];
 }
 
 export function recordFileFormat(contentType: string, bytes: Uint8Array): RecordFileFormat {
@@ -405,7 +407,7 @@ function parseCsvRecords(text: string, baseOffset: number): ParsedRecordFile {
         : {}),
     };
   });
-  return { format: 'csv', rows, problems: [] };
+  return { format: 'csv', rows, problems: [], columns: keys };
 }
 
 function tooManyRows(count: number): string {
@@ -576,6 +578,9 @@ function validUtcTime(value: string): boolean {
 
 const wallTimePattern = /^(\d{4})-(\d{2})-(\d{2})[T ](\d{2}):(\d{2})(?::(\d{2}))?$/;
 const offsetTimePattern = /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})(?::(\d{2})(?:\.\d{1,3})?)?(Z|[+-]\d{2}:?\d{2})$/;
+
+/** A time written in UTC or with its offset, which every time column reads whatever its heading. */
+export const statesItsOwnZone = (raw: string): boolean => utcTime.test(raw) || offsetTimePattern.test(raw);
 
 /** The UTC milliseconds a wall reading names taken as UTC, or undefined when it is not a real calendar time. */
 function wallReading(match: RegExpExecArray): number | undefined {

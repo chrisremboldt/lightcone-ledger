@@ -1,0 +1,39 @@
+# Column mapping: how flight-log.export.csv, the flight log as Example Ridge Survey's log service exports it, is read
+# as flight.record version 1 records. It was started with
+#   pnpm ledger records mapping flight.record records/flight-log.export.csv --out records/flight-log.mapping.yaml
+# and each column was then given the field it holds. docs/design/operator-record-import.md, "Column mappings",
+# describes every key.
+recordType: flight.record
+recordVersion: 1
+
+# The log keeps times as the pilots read them on the tablet: Mountain time, the organization's own, US style.
+times:
+  zone: organization
+  style: MM/DD/YYYY h:mm A
+
+subject:
+  column: Flight No.
+relatedSubject:
+  column: Aircraft
+
+columns:
+  'Flight No.': ~ # the subject, above
+  'Date/Time Up': takeoffAt
+  'Date/Time Down': landingAt
+  'Aircraft': ~ # the related subject, above
+  'PIC': ~ # who flew is an operation.role-assignment record, imported from its own file
+  'Launch Site': takeoffLocation
+  'Recovery Site': landingLocations
+  'Max Alt (ft AGL)': { field: maxHeightFlownAboveGroundMeters, unit: ft }
+  'Wind (kts)': { field: windAtTakeoffMetersPerSecond, unit: kts }
+  'Vis (SM)': { field: visibilityAtTakeoffMeters, unit: sm }
+  'Batt at Land (%)': batteryAtLandingPercent
+  'Track File': flightPathReference
+  'Status': ~ # decides which rows are left out, below
+  'Remarks': ~
+
+constants: {}
+
+# A flight the log lists but that never took off has no takeoff or landing to record.
+leaveOut:
+  - { column: Status, is: [Cancelled] }

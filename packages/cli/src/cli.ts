@@ -21,6 +21,7 @@ import {
 } from './commands.js';
 import { ConfigurationError, readConnection } from './config.js';
 import { findingGroups, openFindings, treatFindingSet } from './findings.js';
+import { startRecordMapping } from './record-mapping.js';
 import { draftPlan, produceRecords } from './records-plan.js';
 import { addPerson, listPeople, listPresets } from './people.js';
 import { issuePersonToken, setPerson } from './people-authority.js';
@@ -33,8 +34,17 @@ export const usage = `Usage: pnpm ledger <noun> <verb> [options]
   records types                          the record types and what each is about
   records columns <type>                 each column of a record type, what it holds and what it means
   records template <type> [--out <file>] an empty CSV file with the header row
-  records check <type> <file>            what importing a CSV or JSON file would record; makes no record (the file is kept as an upload)
-  records import <type> <file>           import a CSV or JSON file
+  records check <type> <file> [--mapping <file>]
+                                         what importing a CSV or JSON file would record; makes no record (the file is
+                                         kept as an upload). With --mapping, the file is an export in its own columns,
+                                         read through a column mapping: what each column became, what was not read,
+                                         and each refused row
+  records import <type> <file> [--mapping <file>]
+                                         import a CSV or JSON file, or an export through its column mapping; Ledger
+                                         keeps the export as received and the mapping with the records
+  records mapping <type> <export.csv> [--out <file>]
+                                         start a column mapping from an export: every column listed, none assigned,
+                                         and the record type's fields as comments; nothing is guessed
   records list <type> [--subject <id>] [--limit <n>]
   records produce --reason "<why>" --requested-by "<who asked>" --out <file.zip>
               [--subject <kind>:<id>]... [--type <type>]... [--from <date>] [--until <date>] [--originals]
@@ -129,6 +139,7 @@ const options = {
   json: { type: 'boolean' },
   help: { type: 'boolean', short: 'h' },
   out: { type: 'string' },
+  mapping: { type: 'string' },
   subject: { type: 'string', multiple: true },
   type: { type: 'string', multiple: true },
   to: { type: 'string' },
@@ -189,8 +200,9 @@ const commandOptions: Record<string, readonly string[]> = {
   'records types': [],
   'records columns': [],
   'records template': ['out'],
-  'records check': [],
-  'records import': [],
+  'records check': ['mapping'],
+  'records import': ['mapping'],
+  'records mapping': ['out'],
   'records list': ['subject', 'limit'],
   'records produce': [
     'subject',
@@ -263,6 +275,7 @@ async function dispatch(
   const text = (name: string) => values[name] as string | undefined;
   const list = (name: string) => (values[name] as string[] | undefined) ?? [];
   const command = `${noun ?? ''} ${verb ?? ''}`.trim();
+  const mapping = () => (text('mapping') === undefined ? undefined : path(text('mapping')!));
   refuseUnread(command, values);
   if (noun === 'safety')
     return runSafety(context, {
@@ -293,11 +306,20 @@ async function dispatch(
     }
     case 'records check': {
       const [type, file] = needs(rest, 2, 'a record type and a file');
-      return checkRecords(context, type!, path(file!));
+      return checkRecords(context, type!, path(file!), mapping());
     }
     case 'records import': {
       const [type, file] = needs(rest, 2, 'a record type and a file');
-      return importRecords(context, type!, path(file!));
+      return importRecords(context, type!, path(file!), mapping());
+    }
+    case 'records mapping': {
+      const [type, file] = needs(rest, 2, 'a record type and the export file');
+      return startRecordMapping(
+        context,
+        type!,
+        path(file!),
+        text('out') === undefined ? undefined : path(text('out')!),
+      );
     }
     case 'records list': {
       const subjects = list('subject');

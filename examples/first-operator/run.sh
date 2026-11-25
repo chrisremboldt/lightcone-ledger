@@ -54,6 +54,9 @@ records() {
   echo
   echo "== A flight plan file saved as it was kept, checked before import (it records nothing):"
   ledger records check flight.plan "$here/records/flight.plan.unfixed.csv" || true
+  echo
+  echo "== The flight log as the log service exports it, checked through its column mapping (it records nothing):"
+  ledger records check flight.record "$here/records/flight-log.export.csv" --mapping "$here/records/flight-log.mapping.yaml"
   for type in aircraft.identity aircraft.inspection aircraft.time-in-service aircraft.detect-and-avoid maintenance.action \
     person.standing person.certificate person.training organization.procedure organization.operating-area \
     flight.plan operation.role-assignment operation.notification flight.preflight-assessment flight.record \

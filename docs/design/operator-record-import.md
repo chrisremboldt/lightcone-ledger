@@ -1,6 +1,6 @@
 # Operator record import and entry
 
-Status: built. Code: `packages/contracts/src/operator-record-import.ts` (shapes, parsing, conversion, time), `packages/contracts/src/operator-record-api.ts` (API schemas), `packages/domain/src/operator-record-import.ts` (preview, commit, reading), `apps/api/src/operator-records.ts` (routes), `apps/web/src/RecordsArea.tsx` and `apps/web/src/RecordForm.tsx` (screen). Sample files: `packages/contracts/fixtures/operator-records/`.
+Status: built. Code: `packages/contracts/src/operator-record-import.ts` (shapes, parsing, conversion, time), `packages/contracts/src/operator-record-mapping.ts` and `operator-record-mapping-file.ts` (column mappings), `packages/contracts/src/operator-record-api.ts` (API schemas), `packages/domain/src/operator-record-import.ts` (preview, commit, reading), `apps/api/src/operator-records.ts` (routes), `apps/web/src/RecordsArea.tsx` and `apps/web/src/RecordForm.tsx` (screen). Sample files: `packages/contracts/fixtures/operator-records/`.
 
 Everything is generated from a record type's field metadata (`operator-records.md`). No code names a record type.
 
@@ -29,6 +29,49 @@ A produced CSV (`record-productions.md`) adds `recordId`, `recordedAt`, `recorde
 **CSV**: UTF-8, comma separated, RFC 4180 quoting, one header row. **JSON**: `{ "recordType", "recordVersion", "records": [ { column: value, … } ] }`.
 
 Templates: `GET /v1/operator-records/types/{recordType}/versions/{version}/template?format=csv|json`. `GET /v1/operator-records/types` returns every registered type with its fields and generated columns.
+
+## Column mappings
+
+An operator's history is often a log service's or a spreadsheet's export with its own headings, units, date style and words. A column mapping reads such an export as it is: a YAML file, kept beside the export, that says for one record type which column is which field. It is data, read by a pure function (`applyRecordMapping`) that turns each row of the export into a row of the import's own columns, which is then read exactly as a row of an import file is. Same export and mapping, same result. It never fills in a value the export did not hold, other than the constants the mapping states, and never guesses a unit or a zone. A mapping holds no expression, no code and no arithmetic: a value that needs a formula, or two columns put together, is not something a mapping does.
+
+```yaml
+recordType: flight.plan
+recordVersion: 1
+times:
+  zone: organization
+  style: MM/DD/YYYY h:mm A
+subject:
+  column: Job No.
+relatedSubject:
+  column: Aircraft
+columns:
+  'Window Start': windowStartsAt
+  'Window End': windowEndsAt
+  'Ceiling (ft AGL)': { field: plannedMaxHeightAboveGroundMeters, unit: ft }
+  'Mission': { field: visualMode, words: { BVLOS: beyond_visual_line_of_sight } }
+  'Crew': ~
+constants:
+  operatingAuthorityReference: 107W-EX-2026-00417
+leaveOut:
+  - { column: Status, is: [Cancelled] }
+```
+
+| Key | Meaning |
+| --- | --- |
+| `recordType`, `recordVersion` | The record type the mapping reads the export as. It must be the type the import names. |
+| `times.zone` | `organization` (the organization's time zone) or `utc`: the zone of every time column. Required for every time column, here or on the column; a mapping never assumes one. |
+| `times.style` | How a time is written, from `YYYY`, `MM` or `M` (month), `DD` or `D` (day), `HH` or `H` (hour 0 to 23), `hh` or `h` (hour 1 to 12, with `A` for AM or PM), `mm`, `ss`, and spaces, `/`, `-`, `.`, `:`, a comma or `T` between them: `MM/DD/YYYY h:mm A` reads `11/10/2026 9:05 AM`. Without one, times are read in Ledger's own form, `2026-11-10 09:05` (with `T` or seconds too). A cell written in another form is refused with the style it should have; a cell in UTC (`…Z`) or with its offset is read whatever the style. |
+| `times.dateStyle` | How a date alone is written (`MM/DD/YYYY`), in a column that takes one; without it, `2026-11-10`. In a `utc` column a date alone is refused, since it is read as a day in the organization's zone. |
+| `subject.column` | The column that holds the operator's own id for the subject. Required for a record type about a subject; absent for one about the organization only. |
+| `subject.kind`, `subject.kindColumn` | When the record type allows more than one subject kind: the kind every row has, or the column that holds it. |
+| `relatedSubject` | The same for the related subject (`secondarySubjectId`), for types that have one. |
+| `columns` | Every column of the export by its heading. `~` leaves it unread. A field name reads it as that field. Or a set of: `field`; `unit`, the unit a number is written in (required for a number field unless its unit is written only one way, as percent and hours are; a unit in the cell still wins); `zone`, `style` and `dateStyle`, overriding `times` for this column; `words`, the export's words for the field's options (`BVLOS: beyond_visual_line_of_sight`), matched ignoring case and surrounding spaces, for a select or a yes/no field. A cell that is not one of the words is read as written, so an option's own value or label still reads. |
+| `constants` | A value for a field the export never states because it is the same on every row: `field: value`. A number carries its unit (`120 ft`). A time is never a constant. The records say the mapping stated it. |
+| `leaveOut` | Rows to leave out: each a `column` and the values (`is`) that leave a row out, ignoring case and surrounding spaces. A row left out is not refused and not recorded; the check lists it. |
+
+A mapping is refused when it is loaded, with the line, when it names a field the record type does not have, an option a field does not offer, a unit a field does not accept, a style it cannot read, a time column without a zone, a number column without a unit, a key that is not one of these, or no subject column for a record type about a subject. An export that lacks a column the mapping reads is refused whole; the export's columns the mapping does not read are listed. A mapping reads a CSV export with one header row.
+
+Import with a mapping: upload the export and the mapping, and give the mapping's artifact in `mappingArtifactId` beside the export's `artifactId` in preview and commit. The response's `mapping` says what each column became, which columns were not read, the constants and the rows left out (by their row number in the export; they are not in `rows`). Each record cites the export as its original, at the export's own row (`originalLocator`), as it was received, and its `limitations` begin with a sentence naming the mapping's artifact, and the fields the mapping stated, so that a later reader can repeat the reading. A time read through a style keeps the cell as the export wrote it in its conversion ("Takeoff at was entered as 11/10/2026 9:05 AM in America/Denver and recorded as 2026-11-10T16:05:00Z."). The export is the source session, so committing it again, with this mapping or another, finds the rows it already recorded. The command line's `records mapping <type> <export.csv>` starts a mapping from the export's header row: every column listed and unassigned, the type's fields as comments, nothing guessed; `records check` and `records import` take `--mapping`. The Import screen in the browser does not take a mapping yet.
 
 ## Flow
 

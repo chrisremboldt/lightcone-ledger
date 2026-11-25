@@ -8,7 +8,8 @@
     ".": "./dist/index.js",
     "./client": "./dist/client.js",
     "./openapi": "./dist/openapi.js",
-    "./development-tokens": "./dist/development-tokens.js"
+    "./development-tokens": "./dist/development-tokens.js",
+    "./record-mapping-file": "./dist/operator-record-mapping-file.js"
   },
   "types": "./dist/index.d.ts",
   "scripts": {
@@ -16,6 +17,7 @@
     "typecheck": "tsc -p tsconfig.json --noEmit && tsc -p tsconfig.fixtures.json"
   },
   "dependencies": {
-    "@sinclair/typebox": "0.34.52"
+    "@sinclair/typebox": "0.34.52",
+    "yaml": "2.8.1"
   }
 }

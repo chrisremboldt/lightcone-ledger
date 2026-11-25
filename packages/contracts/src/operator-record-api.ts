@@ -162,11 +162,19 @@ export const OperatorRecordImportRequestSchema = Type.Object(
         description: `The source the records are recorded under. Defaults to ${OPERATOR_RECORD_SOURCE_ID}.`,
       }),
     ),
+    mappingArtifactId: Type.Optional(
+      Type.String({
+        minLength: 1,
+        maxLength: 200,
+        description:
+          'A retained column mapping file (YAML, uploaded through /v1/uploads) that reads the file, an export in its own columns, as this record type. Each record cites the export as its original and names the mapping.',
+      }),
+    ),
   },
   {
     ...Closed,
     description:
-      'Preview or commit one retained file (uploaded through /v1/uploads) as records of one record type: CSV with a header row, or JSON with a records array.',
+      'Preview or commit one retained file (uploaded through /v1/uploads) as records of one record type: CSV with a header row, or JSON with a records array; or, with a column mapping, a CSV export as it was received.',
   },
 );
 export type OperatorRecordImportRequest = Static<typeof OperatorRecordImportRequestSchema>;
@@ -282,6 +290,29 @@ export const OperatorRecordCommitRowSchema = Type.Object(
 );
 export type OperatorRecordCommitRow = Static<typeof OperatorRecordCommitRowSchema>;
 
+const MappingReadSchema = Type.Object(
+  {
+    artifactId: Id,
+    columns: Type.Array(
+      Type.Object(
+        {
+          source: Type.String({ description: 'The export’s heading.' }),
+          becomes: Type.String({ description: 'What the mapping reads it as, in plain words.' }),
+        },
+        Closed,
+      ),
+    ),
+    unread: Type.Array(Type.String(), { description: 'The export’s columns the mapping does not read.' }),
+    constants: Type.Array(Type.Object({ field: Type.String(), value: Type.String() }, Closed), {
+      description: 'Values the mapping states for every row, which the export does not hold.',
+    }),
+    leftOut: Type.Array(Type.Object({ row: Type.Integer({ minimum: 1 }), reason: Type.String() }, Closed), {
+      description: 'Rows of the export the mapping leaves out, by their value in a column. They are not in rows.',
+    }),
+  },
+  { ...Closed, description: 'How the column mapping read the export.' },
+);
+
 const fileProperties = {
   artifactId: Id,
   sourceId: Id,
@@ -289,6 +320,7 @@ const fileProperties = {
   recordVersion: ObservationVersionSchema,
   format: literals(['csv', 'json'] as const),
   problems: Type.Array(Type.String(), { description: 'Problems with the whole file; such a file yields no rows.' }),
+  mapping: Type.Optional(MappingReadSchema),
 };
 
 export const OperatorRecordPreviewResponseSchema = Type.Object(

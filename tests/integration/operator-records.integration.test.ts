@@ -227,6 +227,91 @@ describe.runIf(process.env.LEDGER_ENV !== 'staging')('Operator record import and
     ]);
   });
 
+  it('reads an export in its own columns through a column mapping, keeping the export and the mapping', async () => {
+    const flight = `${run}-ALPHA-FLIGHT-MAPPED`;
+    const exportText = [
+      'Flight,Up,Down,Drone,Launch,Land,Alt (ft),Status,Pilot',
+      `${flight}-1,11/10/2026 9:05 AM,11/10/2026 9:47 AM,${run}-ALPHA-AC-101,Pad A,Pad A,148,Flown,Robin`,
+      `${flight}-2,,,${run}-ALPHA-AC-101,Pad A,,,Cancelled,Robin`,
+      `${flight}-3,2026-11-12 09:10,11/12/2026 10:02 AM,${run}-ALPHA-AC-101,Pad B,Pad B,236,Flown,Robin`,
+    ].join('\n');
+    const mappingText = `recordType: flight.record
+recordVersion: 1
+times:
+  zone: organization
+  style: MM/DD/YYYY h:mm A
+subject: { column: Flight }
+relatedSubject: { column: Drone }
+columns:
+  Up: takeoffAt
+  Down: landingAt
+  Launch: takeoffLocation
+  Land: landingLocations
+  "Alt (ft)": { field: maxHeightFlownAboveGroundMeters, unit: ft }
+  Pilot: ~
+leaveOut:
+  - { column: Status, is: [Cancelled] }
+`;
+    const exported = await upload('alpha', 'operator', Buffer.from(exportText), 'text/csv');
+    const mapping = await upload('alpha', 'operator', Buffer.from(mappingText), 'application/yaml');
+    const body = { artifactId: exported, mappingArtifactId: mapping, recordType: 'flight.record', recordVersion: 1 };
+
+    const shown = await preview('alpha', 'operator', body);
+    expect(shown.statusCode, shown.body).toBe(200);
+    expect(shown.json().mapping).toMatchObject({
+      artifactId: mapping,
+      unread: ['Pilot'],
+      constants: [],
+      leftOut: [{ row: 2, reason: 'Status is "Cancelled".' }],
+    });
+    expect(shown.json().summary).toMatchObject({ rows: 2, acceptable: 1, refused: 1 });
+    expect(shown.json().rows[1]).toMatchObject({ row: 3, status: 'refused' });
+    expect(shown.json().rows[1].reasons[0]).toBe(
+      'Takeoff at (takeoffAt): "2026-11-12 09:10" is not written as MM/DD/YYYY h:mm A, the style the mapping gives for column "Up"; nor is it a date alone written as YYYY-MM-DD.',
+    );
+
+    const committed = await commit('alpha', 'operator', body);
+    expect(committed.statusCode, committed.body).toBe(201);
+    expect(committed.json().summary).toEqual({ rows: 2, recorded: 1, incomplete: 0, alreadyRecorded: 0, refused: 1 });
+    const [record] = await records('alpha', { recordType: 'flight.record', subjectId: `${flight}-1` });
+    expect(record).toMatchObject({
+      record: { takeoffAt: '2026-11-10T15:05:00Z', maxHeightFlownAboveGroundMeters: 45.1104 },
+      origin: { artifactId: exported, contentType: 'text/csv' },
+    });
+    expect(record.limitations).toEqual([
+      `Read from its original file through the column mapping retained as file ${mapping}.`,
+      'Takeoff at was entered as 11/10/2026 9:05 AM in America/Chicago and recorded as 2026-11-10T15:05:00Z.',
+      'Landing at was entered as 11/10/2026 9:47 AM in America/Chicago and recorded as 2026-11-10T15:47:00Z.',
+      'Maximum height flown above ground was entered as 148 ft and recorded as 45.1104 m.',
+    ]);
+    // The record cites the export's own row, as it was received, and the mapping is retained beside it.
+    const bytes = await call('alpha', 'operator', 'GET', `/v1/artifacts/${exported}/content`);
+    const { offsetBytes, lengthBytes } = record.origin.locator.value;
+    expect(bytes.rawPayload.subarray(offsetBytes, offsetBytes + lengthBytes).toString()).toBe(
+      exportText.split('\n')[1],
+    );
+    const kept = await call('alpha', 'operator', 'GET', `/v1/artifacts/${mapping}/content`);
+    expect(kept.body).toBe(mappingText);
+    const again = await commit('alpha', 'operator', body);
+    expect(again.json().summary).toMatchObject({ recorded: 0, alreadyRecorded: 1 });
+
+    // A mapping that names a field the record type does not have is refused when it is loaded, with its line.
+    const wrong = await upload(
+      'alpha',
+      'operator',
+      Buffer.from(mappingText.replace('Land: landingLocations', 'Land: landingSite')),
+      'application/yaml',
+    );
+    const refusedMapping = await preview('alpha', 'operator', { ...body, mappingArtifactId: wrong });
+    expect(refusedMapping.json().rows).toEqual([]);
+    expect(refusedMapping.json().problems[0]).toMatch(
+      /^The mapping: Line 12: column "Land": flight.record has no field "landingSite"\./,
+    );
+    const refusedCommit = await commit('alpha', 'operator', { ...body, mappingArtifactId: wrong });
+    expect(refusedCommit.statusCode).toBe(400);
+    expect(refusedCommit.json().error.code).toBe('import_file_invalid');
+  });
+
   it('answers 200 with the same body when every row of a file is refused', async () => {
     const file = await upload(
       'alpha',

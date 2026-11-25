@@ -1,5 +1,6 @@
 import {
   OPERATOR_RECORD_SOURCE_ID,
+  applyRecordMapping,
   describeConversion,
   describeTimeConversion,
   enteredValues,
@@ -8,6 +9,7 @@ import {
   isOperatorRecordDefinition,
   missingFieldLabel,
   missingRequiredFields,
+  mappingLimitation,
   observedRecordValues,
   recordRuleRead,
   operatorRecordTime,
@@ -25,7 +27,10 @@ import {
   type ParsedRecordRow,
   type ObservationInput,
   type ObservationSubject,
+  type RecordMapping,
+  type RecordRowInterpretation,
 } from '@ledger/contracts';
+import { readRecordMappingFile } from '@ledger/contracts/record-mapping-file';
 import { sha256 } from '@ledger/integrity';
 import { DomainError, type AuthContext, type ObjectStore, type PoolClient } from '@ledger/persistence';
 import { acceptInput, requireRow } from './index.js';
@@ -127,6 +132,27 @@ interface Evaluation {
   format: 'csv' | 'json';
   problems: string[];
   rows: EvaluatedRow[];
+  mapping?: OperatorRecordPreviewResponse['mapping'];
+}
+
+/** The retained column mapping a request names, read against the record type, or the problems with it. */
+async function readMapping(
+  client: PoolClient,
+  store: ObjectStore,
+  definition: OperatorRecordDefinition,
+  artifactId: string,
+): Promise<{ mapping: RecordMapping } | { problems: string[] }> {
+  const file = await readRetainedFile(client, store, artifactId);
+  let text: string;
+  try {
+    text = new TextDecoder('utf-8', { fatal: true }).decode(file.bytes);
+  } catch {
+    return { problems: ['The mapping: the file is not UTF-8 text.'] };
+  }
+  const read = readRecordMappingFile(definition, text);
+  return 'mapping' in read
+    ? { mapping: read.mapping }
+    : { problems: read.problems.map((problem) => `The mapping: ${problem}`) };
 }
 
 const named = (definition: OperatorRecordDefinition, names: string[]) =>
@@ -161,6 +187,14 @@ async function evaluate(
   const file = await readRetainedFile(client, store, request.artifactId);
   const format = recordFileFormat(file.contentType, file.bytes);
   const parsed = parseRecordFile(file.bytes, format);
+  if (request.mappingArtifactId)
+    return evaluateMapped(client, principal, store, request, recordedAt, {
+      definition,
+      sourceId,
+      timeZone,
+      file,
+      parsed,
+    });
   const problems = [...parsed.problems];
   if (
     format === 'json' &&
@@ -176,19 +210,75 @@ async function evaluate(
   const fileRecords = new Map<string, EvaluatedRow>();
   const rows: EvaluatedRow[] = [];
   for (const row of parsed.rows) {
-    const evaluated = row.problem
-      ? refused(row, [row.problem])
-      : await evaluateRow(client, principal, definition, file, sourceId, row, recordedAt, {
+    const reading = row.problem ? undefined : interpretRecordRow(definition, row.cells, { timeZone });
+    const evaluated = !reading
+      ? refused(row, [row.problem!])
+      : await evaluateRow(client, principal, definition, file, sourceId, row, reading, recordedAt, {
           replacedInFile,
           fileRecords,
           ownIds,
-          timeZone,
         });
     rows.push(evaluated);
-    const recordId = row.problem ? undefined : interpretRecordRow(definition, row.cells, { timeZone }).recordId;
-    if (recordId && !fileRecords.has(recordId)) fileRecords.set(recordId, evaluated);
+    if (reading?.recordId && !fileRecords.has(reading.recordId)) fileRecords.set(reading.recordId, evaluated);
   }
   return { definition, timeZone, sourceId, format, problems, rows };
+}
+
+/**
+ * An export in its own columns, read through a retained column mapping. Each record cites the export as its original,
+ * at the export's own row, and names the mapping.
+ */
+async function evaluateMapped(
+  client: PoolClient,
+  principal: AuthContext,
+  store: ObjectStore,
+  request: OperatorRecordImportRequest,
+  recordedAt: string,
+  read: {
+    definition: OperatorRecordDefinition;
+    sourceId: string;
+    timeZone: string;
+    file: RetainedFile;
+    parsed: ReturnType<typeof parseRecordFile>;
+  },
+): Promise<Evaluation> {
+  const { definition, sourceId, timeZone, file, parsed } = read;
+  const mappingArtifactId = request.mappingArtifactId!;
+  const base = { definition, timeZone, sourceId, format: parsed.format };
+  const loaded = await readMapping(client, store, definition, mappingArtifactId);
+  if ('problems' in loaded) return { ...base, problems: loaded.problems, rows: [] };
+  const mapped = applyRecordMapping(definition, loaded.mapping, parsed, { timeZone });
+  const mapping = {
+    artifactId: mappingArtifactId,
+    columns: [...mapped.columns],
+    unread: [...mapped.unread],
+    constants: [...mapped.constants],
+    leftOut: [...mapped.leftOut],
+  };
+  if (mapped.problems.length) return { ...base, problems: [...mapped.problems], rows: [], mapping };
+  const limitation = mappingLimitation(mappingArtifactId, loaded.mapping.constants);
+  const inFile = {
+    replacedInFile: new Map<string, number>(),
+    fileRecords: new Map<string, EvaluatedRow>(),
+    ownIds: new Map<string, number>(),
+  };
+  const rows: EvaluatedRow[] = [];
+  for (const row of mapped.rows)
+    rows.push(
+      await evaluateRow(
+        client,
+        principal,
+        definition,
+        file,
+        sourceId,
+        row,
+        row.reading,
+        recordedAt,
+        inFile,
+        limitation,
+      ),
+    );
+  return { ...base, problems: [], rows, mapping };
 }
 
 async function evaluateRow(
@@ -198,16 +288,17 @@ async function evaluateRow(
   file: RetainedFile,
   sourceId: string,
   parsed: ParsedRecordRow,
+  reading: RecordRowInterpretation,
   recordedAt: string,
   inFile: {
     replacedInFile: Map<string, number>;
     fileRecords: ReadonlyMap<string, EvaluatedRow>;
     ownIds: Map<string, number>;
-    timeZone: string;
   },
+  /** Said of every record of the file, such as the mapping that read it. */
+  readWith?: string,
 ): Promise<EvaluatedRow> {
-  const { replacedInFile, fileRecords, timeZone } = inFile;
-  const reading = interpretRecordRow(definition, parsed.cells, { timeZone });
+  const { replacedInFile, fileRecords } = inFile;
   const missingRequired = named(definition, missingRequiredFields(definition, reading.record));
   // A record about the operator's own organization is about the Ledger organization, the subject rules read.
   const subject: ObservationSubject | undefined = reading.ownOrganization
@@ -267,6 +358,7 @@ async function evaluateRow(
     sourceEventId: eventId,
     fidelity: FIDELITY,
     limitations: [
+      ...(readWith ? [readWith] : []),
       ...reading.timeConversions.map((conversion) => describeTimeConversion(definition, conversion)),
       ...reading.conversions.map((conversion) => describeConversion(definition, conversion)),
     ],
@@ -470,6 +562,7 @@ export async function previewOperatorRecordImport(
     recordVersion: evaluation.definition.recordVersion,
     format: evaluation.format,
     problems: evaluation.problems,
+    ...(evaluation.mapping ? { mapping: evaluation.mapping } : {}),
     granted: await hasGrant(client, principal, evaluation.sourceId),
     summary: {
       rows: rows.length,
@@ -578,6 +671,7 @@ export async function commitOperatorRecordImport(
     recordVersion: evaluation.definition.recordVersion,
     format: evaluation.format,
     problems: [],
+    ...(evaluation.mapping ? { mapping: evaluation.mapping } : {}),
     summary: {
       rows: rows.length,
       recorded: count('recorded'),

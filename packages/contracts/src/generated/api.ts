@@ -27135,6 +27135,8 @@ export interface operations {
                     recordVersion: number;
                     /** @description The source the records are recorded under. Defaults to operator-records. */
                     sourceId?: string;
+                    /** @description A retained column mapping file (YAML, uploaded through /v1/uploads) that reads the file, an export in its own columns, as this record type. Each record cites the export as its original and names the mapping. */
+                    mappingArtifactId?: string;
                 };
             };
         };
@@ -27154,6 +27156,28 @@ export interface operations {
                         format: "csv" | "json";
                         /** @description Problems with the whole file; such a file yields no rows. */
                         problems: string[];
+                        /** @description How the column mapping read the export. */
+                        mapping?: {
+                            artifactId: string;
+                            columns: {
+                                /** @description The export’s heading. */
+                                source: string;
+                                /** @description What the mapping reads it as, in plain words. */
+                                becomes: string;
+                            }[];
+                            /** @description The export’s columns the mapping does not read. */
+                            unread: string[];
+                            /** @description Values the mapping states for every row, which the export does not hold. */
+                            constants: {
+                                field: string;
+                                value: string;
+                            }[];
+                            /** @description Rows of the export the mapping leaves out, by their value in a column. They are not in rows. */
+                            leftOut: {
+                                row: number;
+                                reason: string;
+                            }[];
+                        };
                         /** @description Whether you may commit: input:write and a grant for this source. */
                         granted: boolean;
                         summary: {
@@ -27388,6 +27412,8 @@ export interface operations {
                     recordVersion: number;
                     /** @description The source the records are recorded under. Defaults to operator-records. */
                     sourceId?: string;
+                    /** @description A retained column mapping file (YAML, uploaded through /v1/uploads) that reads the file, an export in its own columns, as this record type. Each record cites the export as its original and names the mapping. */
+                    mappingArtifactId?: string;
                 };
             };
         };
@@ -27407,6 +27433,28 @@ export interface operations {
                         format: "csv" | "json";
                         /** @description Problems with the whole file; such a file yields no rows. */
                         problems: string[];
+                        /** @description How the column mapping read the export. */
+                        mapping?: {
+                            artifactId: string;
+                            columns: {
+                                /** @description The export’s heading. */
+                                source: string;
+                                /** @description What the mapping reads it as, in plain words. */
+                                becomes: string;
+                            }[];
+                            /** @description The export’s columns the mapping does not read. */
+                            unread: string[];
+                            /** @description Values the mapping states for every row, which the export does not hold. */
+                            constants: {
+                                field: string;
+                                value: string;
+                            }[];
+                            /** @description Rows of the export the mapping leaves out, by their value in a column. They are not in rows. */
+                            leftOut: {
+                                row: number;
+                                reason: string;
+                            }[];
+                        };
                         summary: {
                             rows: number;
                             recorded: number;
@@ -27529,6 +27577,28 @@ export interface operations {
                         format: "csv" | "json";
                         /** @description Problems with the whole file; such a file yields no rows. */
                         problems: string[];
+                        /** @description How the column mapping read the export. */
+                        mapping?: {
+                            artifactId: string;
+                            columns: {
+                                /** @description The export’s heading. */
+                                source: string;
+                                /** @description What the mapping reads it as, in plain words. */
+                                becomes: string;
+                            }[];
+                            /** @description The export’s columns the mapping does not read. */
+                            unread: string[];
+                            /** @description Values the mapping states for every row, which the export does not hold. */
+                            constants: {
+                                field: string;
+                                value: string;
+                            }[];
+                            /** @description Rows of the export the mapping leaves out, by their value in a column. They are not in rows. */
+                            leftOut: {
+                                row: number;
+                                reason: string;
+                            }[];
+                        };
                         summary: {
                             rows: number;
                             recorded: number;

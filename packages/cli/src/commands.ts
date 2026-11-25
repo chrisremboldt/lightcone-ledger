@@ -88,7 +88,7 @@ async function recordTypes(client: LedgerClient): Promise<OperatorRecordTypesRes
   return client.request<OperatorRecordTypesResponse>('/v1/operator-records/types');
 }
 
-async function recordType(client: LedgerClient, name: string): Promise<OperatorRecordTypeSummary> {
+export async function recordType(client: LedgerClient, name: string): Promise<OperatorRecordTypeSummary> {
   const { types } = await recordTypes(client);
   const found = types.filter((type) => type.recordType === name).sort((a, b) => b.recordVersion - a.recordVersion)[0];
   if (!found) throw new UsageError(`${name} is not a record type. pnpm ledger records types lists them.`);
@@ -188,6 +188,22 @@ export async function recordTemplate(context: Context, name: string): Promise<Ou
 
 type ImportResponse = OperatorRecordPreviewResponse | OperatorRecordCommitResponse;
 
+/** How the mapping read the export: what each column became, what was not read, constants and rows left out. */
+export function mappingLines(mapping: OperatorRecordPreviewResponse['mapping']): string[] {
+  if (!mapping) return [];
+  return [
+    `The mapping (file ${mapping.artifactId}) read the export’s columns as:`,
+    ...mapping.columns.map((column) => `  ${column.source}: ${column.becomes}`),
+    mapping.unread.length ? `Not read: ${mapping.unread.join(', ')}.` : 'Every column of the export was read.',
+    ...(mapping.constants.length
+      ? [
+          `Stated by the mapping for every row, not held by the export: ${mapping.constants.map((constant) => `${constant.field} = ${constant.value}`).join('; ')}.`,
+        ]
+      : []),
+    ...mapping.leftOut.map((row) => `  Row ${row.row}: left out by the mapping; ${row.reason}`),
+  ];
+}
+
 /** A reason about a column heading, the same for every row that fills the column. */
 const columnReason = (reason: string) => reason.startsWith('Column "');
 
@@ -217,25 +233,32 @@ export function importRowLines(response: Pick<ImportResponse, 'rows'>): string[]
   return lines;
 }
 
+function readBytes(path: string): Buffer {
+  try {
+    return readFileSync(path);
+  } catch {
+    throw new UsageError(`Cannot read ${path}.`);
+  }
+}
+
 async function sendFile(
   context: Context,
   name: string,
   path: string,
   commit: boolean,
+  mappingPath?: string,
 ): Promise<{ response: ImportResponse; as: CurrentPrincipalResponse }> {
   const type = await recordType(context.client, name);
-  let bytes: Buffer;
-  try {
-    bytes = readFileSync(path);
-  } catch {
-    throw new UsageError(`Cannot read ${path}.`);
-  }
+  const bytes = readBytes(path);
+  const mappingBytes = mappingPath === undefined ? undefined : readBytes(mappingPath);
   const as = await recordedAs(context.client);
   const json = /\.json$/i.test(path);
+  const file = mappingPath ? `${basename(path)} with the mapping ${basename(mappingPath)}` : basename(path);
+  const kept = mappingPath ? 'the two files themselves as uploads' : 'the file itself as an upload';
   context.say(
     commit
-      ? `Importing ${basename(path)} as ${type.recordType} records, recorded as ${as.principal.name} (${as.principal.id}).`
-      : `Checking ${basename(path)} as ${type.recordType} records. No record is made from it and no rule reads it; Ledger keeps the file itself as an upload by ${as.principal.name}, as it keeps every file sent to it.`,
+      ? `Importing ${file} as ${type.recordType} records, recorded as ${as.principal.name} (${as.principal.id}).`
+      : `Checking ${file} as ${type.recordType} records. No record is made from it and no rule reads it; Ledger keeps ${kept} by ${as.principal.name}, as it keeps every file sent to it.`,
   );
   const key = randomUUID();
   const { artifact } = await context.client.upload(
@@ -244,19 +267,34 @@ async function sendFile(
     key,
     basename(path),
   );
+  const mapping = mappingBytes
+    ? (
+        await context.client.upload(
+          new Uint8Array(mappingBytes),
+          'application/yaml',
+          `${key}:mapping`,
+          basename(mappingPath!),
+        )
+      ).artifact
+    : undefined;
   const response = await context.client.request<ImportResponse>(
     `/v1/operator-records/imports${commit ? '' : '/preview'}`,
     {
       method: 'POST',
-      body: JSON.stringify({ artifactId: artifact.id, recordType: type.recordType, recordVersion: type.recordVersion }),
+      body: JSON.stringify({
+        artifactId: artifact.id,
+        recordType: type.recordType,
+        recordVersion: type.recordVersion,
+        ...(mapping ? { mappingArtifactId: mapping.id } : {}),
+      }),
     },
     `${key}:import`,
   );
   return { response, as };
 }
 
-export async function checkRecords(context: Context, name: string, path: string): Promise<Output> {
-  const { response } = await sendFile(context, name, path, false);
+export async function checkRecords(context: Context, name: string, path: string, mapping?: string): Promise<Output> {
+  const { response } = await sendFile(context, name, path, false, mapping);
   const preview = response as OperatorRecordPreviewResponse;
   const { summary } = preview;
   return {
@@ -264,6 +302,7 @@ export async function checkRecords(context: Context, name: string, path: string)
     refused: summary.refused > 0 || preview.problems.length > 0,
     lines: [
       ...preview.problems.map((problem) => `The file: ${problem}`),
+      ...mappingLines(preview.mapping),
       `${plural(summary.rows, 'row')}: ${summary.acceptable} can be recorded (${summary.incomplete} of them incomplete), ${summary.alreadyRecorded} already recorded, ${summary.refused} refused.`,
       ...(preview.granted
         ? []
@@ -273,8 +312,8 @@ export async function checkRecords(context: Context, name: string, path: string)
   };
 }
 
-export async function importRecords(context: Context, name: string, path: string): Promise<Output> {
-  const { response } = await sendFile(context, name, path, true);
+export async function importRecords(context: Context, name: string, path: string, mapping?: string): Promise<Output> {
+  const { response } = await sendFile(context, name, path, true, mapping);
   const committed = response as OperatorRecordCommitResponse;
   const { summary } = committed;
   return {
@@ -282,6 +321,7 @@ export async function importRecords(context: Context, name: string, path: string
     refused: summary.refused > 0 || committed.problems.length > 0,
     lines: [
       ...committed.problems.map((problem) => `The file: ${problem}`),
+      ...mappingLines(committed.mapping),
       `${plural(summary.rows, 'row')}: ${summary.recorded} recorded (${summary.incomplete} of them incomplete), ${summary.alreadyRecorded} already recorded, ${summary.refused} refused.`,
       ...(summary.recorded ? [] : ['Nothing was recorded from this file.']),
       ...importRowLines(committed),

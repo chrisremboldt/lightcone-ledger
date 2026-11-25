@@ -135,6 +135,28 @@ describe.runIf(process.env.LEDGER_ENV !== 'staging')('The first operator, set up
     expect(unfixed.out).toMatch(/Row 1 \(FLT-BAD-1\): refused\. .+/);
     expect(unfixed.out).toMatch(/Row 2 \(FLT-BAD-2\): refused\. .+/);
 
+    // The flight log as the log service exports it, read through its column mapping: checked, it records nothing.
+    const exported = await ledger(
+      token,
+      'records',
+      'check',
+      'flight.record',
+      'records/flight-log.export.csv',
+      '--mapping',
+      'records/flight-log.mapping.yaml',
+    );
+    expect(exported.code, `${exported.out}\n${exported.err}`).toBe(0);
+    expect(exported.out).toContain('Checking flight-log.export.csv with the mapping flight-log.mapping.yaml');
+    expect(exported.out).toContain('3 rows: 3 can be recorded (0 of them incomplete), 0 already recorded, 0 refused.');
+    expect(exported.out).toContain(
+      '  Max Alt (ft AGL): maxHeightFlownAboveGroundMeters (Maximum height flown above ground), in ft',
+    );
+    expect(exported.out).toContain('Not read: PIC, Remarks.');
+    expect(exported.out).toContain('  Row 4: left out by the mapping; Status is "Cancelled".');
+    expect(exported.out).toContain(
+      '  Row 1 (FLT-2026-1101): takeoffAt 11/10/2026 9:05 AM in America/Denver kept as 2026-11-10T16:05:00Z.',
+    );
+
     for (const type of importOrder) {
       const checked = await ledger(token, 'records', 'check', type, `records/${type}.csv`);
       expect(checked.code, `${type}: ${checked.out}\n${checked.err}`).toBe(0);
