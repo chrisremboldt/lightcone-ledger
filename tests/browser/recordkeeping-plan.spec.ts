@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test';
+import { ruleRow } from './rule-coverage-fixture.js';
 
 // The records the adopted rules require, and a recordkeeping plan started from them, filled, signed and issued
 // (docs/design/required-records.md). Alpha Dispatch adopts the proposed Part 108 pack in shadow first, if it has not;
@@ -115,6 +116,6 @@ test('a dispatcher reads the required records, starts a recordkeeping plan, fill
   // The recordkeeping-plan rule reads it as on file once the worker has evaluated it.
   await page.getByRole('button', { name: 'Return to flights', exact: true }).click();
   await page.getByRole('button', { name: 'Rules', exact: true }).click();
-  const row = rules.locator(`[data-testid="rule-coverage-row"][data-rule="${PLAN_RULE}"]`);
+  const row = await ruleRow(rules, PLAN_RULE);
   await expect(row).toContainText('Supported by the record', { timeout: 60_000 });
 });

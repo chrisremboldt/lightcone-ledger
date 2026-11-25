@@ -1,5 +1,9 @@
 import { describe, expect, it } from 'vitest';
-import type { RuleCoverage } from '../../packages/contracts/src/index.js';
+import {
+  observationSubjectKindValues,
+  type CoverageSection,
+  type RuleCoverage,
+} from '../../packages/contracts/src/index.js';
 import { getRulePackVersion } from '../../packages/domain/src/rule-pack-registry.js';
 import {
   answered,
@@ -17,10 +21,18 @@ import {
 } from '../../apps/web/src/rule-adoption.js';
 import {
   completeness,
+  coverageFilterLabels,
+  coverageGroups,
   coverageResultLabels,
   emptyPopulationHint,
+  filterCounts,
   leafCheckedBy,
   missingWords,
+  nothingYetIn,
+  oneSubject,
+  recordTypeName,
+  ruleMatches,
+  sectionWords,
   shownCounts,
 } from '../../apps/web/src/rule-coverage.js';
 
@@ -218,9 +230,158 @@ describe('what the adopt form offers and starts with', () => {
       },
     } as RuleCoverage;
     expect(emptyPopulationHint(designated)).toBe(
-      'A person is counted here once a record of type operation.role-assignment names them. Import or enter it under Records.',
+      'A person is counted here once a record of type Role assignment names them. Import or enter it under Records.',
     );
     expect(emptyPopulationHint({ ...rule, populationSize: 2 })).toBeNull();
     expect(emptyPopulationHint({ ...rule, populationSize: null })).toBeNull();
+  });
+});
+
+describe('a rule that counts nothing yet', () => {
+  it('starts its sentence with the article its subject kind takes, for every kind', () => {
+    const expected: Record<(typeof observationSubjectKindValues)[number], string> = {
+      flight: 'A flight',
+      aircraft: 'An aircraft',
+      person: 'A person',
+      site: 'A site',
+      organization: 'An organization',
+      component: 'A component',
+    };
+    for (const kind of observationSubjectKindValues) expect(oneSubject(kind)).toBe(expected[kind]);
+    expect(oneSubject(undefined)).toBe('A subject');
+  });
+
+  it('names the record type as a person picks it under Records', () => {
+    expect(recordTypeName('occurrence.security')).toBe('Security occurrence');
+    expect(recordTypeName('fictional.unknown-type')).toBe('fictional.unknown-type');
+    const rule = {
+      subjectKind: 'organization',
+      populationSize: 0,
+      population: {
+        of: 'designated',
+        by: {
+          type: 'operator.record',
+          versions: [1],
+          field: 'subject',
+          where: [{ field: 'values.recordType', oneOf: ['occurrence.security'] }],
+        },
+      },
+    } as RuleCoverage;
+    expect(emptyPopulationHint(rule)).toBe(
+      'An organization is counted here once a record of type Security occurrence names it. Import or enter it under Records.',
+    );
+    expect(emptyPopulationHint({ subjectKind: 'aircraft', populationSize: 0 } as RuleCoverage)).toBe(
+      'An aircraft is on record once a record about it is imported or entered under Records.',
+    );
+  });
+});
+
+describe('the counts a pack’s coverage opens with', () => {
+  const none = {
+    supported: 0,
+    attention: 0,
+    no_record: 0,
+    pending: 0,
+    not_applicable: 0,
+    relieved: 0,
+    other: 0,
+    not_evaluated: 0,
+  };
+  const rule = (
+    leafId: string,
+    section: string,
+    counts: Partial<typeof none> | null,
+    more: Partial<RuleCoverage> = {},
+  ) =>
+    ({
+      leafId,
+      title: leafId,
+      checkedBy: 'automatic',
+      section,
+      subjectKind: 'flight',
+      populationSize: counts ? Object.values(counts).reduce((sum, value) => sum + value, 0) : null,
+      counts: counts && { ...none, ...counts },
+      complete: true,
+      ...more,
+    }) as RuleCoverage;
+  const rules = [
+    rule('a.attention', 'a', { attention: 1, supported: 2 }),
+    rule('a.supported', 'a', { supported: 3 }),
+    rule('a.nothing', 'a', {}),
+    rule('b.supported', 'b', { supported: 1, not_applicable: 4 }),
+    rule('b.reviewed', 'b', null, { checkedBy: 'person' }),
+    rule('c.nothing', 'c', {}),
+  ];
+  const section = (id: string): CoverageSection => {
+    const leafIds = rules.filter((item) => item.section === id).map((item) => item.leafId);
+    return {
+      id,
+      title: `Section ${id}`,
+      leafIds,
+      checkedBy: { automatic: leafIds.length, person: 0, not_supported: 0 },
+      needingAttention: 0,
+      withNoRecord: 0,
+    };
+  };
+  const coverage = { sections: [section('a'), section('b'), section('c')], rules };
+
+  it('counts rules, each in every count it has a subject in, the empty counts included', () => {
+    expect(filterCounts(rules)).toEqual([
+      { filter: 'attention', count: 1 },
+      { filter: 'no_record', count: 0 },
+      { filter: 'supported', count: 3 },
+      { filter: 'relieved', count: 0 },
+      { filter: 'person', count: 1 },
+      { filter: 'not_applicable', count: 1 },
+      { filter: 'nothing_yet', count: 2 },
+    ]);
+    expect(ruleMatches(rules[0]!, 'supported')).toBe(true);
+    expect(ruleMatches(rules[2]!, 'supported')).toBe(false);
+  });
+
+  it('uses the words the rows use, none of them a verdict', () => {
+    expect(coverageFilterLabels).toEqual({
+      attention: 'Needs attention',
+      no_record: 'No record on file',
+      supported: 'Supported by the record',
+      relieved: 'Relieved by a waiver',
+      person: 'A person reviews it',
+      not_applicable: 'Does not apply',
+      nothing_yet: 'Nothing counted yet',
+    });
+    for (const label of Object.values(coverageFilterLabels))
+      expect(label).not.toMatch(/\b(compliant|compliance|ready|passed|authori[sz]ed|go|no-go)\b/i);
+  });
+
+  it('opens a section with something to do, folds the others, and lists the rules counting nothing yet last', () => {
+    const groups = coverageGroups(coverage, null);
+    expect(
+      groups.map((group) => [group.section?.id ?? 'nothing yet', group.rules.map((item) => item.leafId), group.opens]),
+    ).toEqual([
+      ['a', ['a.attention', 'a.supported'], true],
+      ['b', ['b.supported', 'b.reviewed'], false],
+      ['nothing yet', ['a.nothing', 'c.nothing'], false],
+    ]);
+    expect(nothingYetIn(section('a'), rules)).toBe(1);
+    expect(sectionWords(section('a'), 1)).toBe(
+      '3 rules: 3 checked automatically; 1 counting nothing yet, listed under Nothing counted yet.',
+    );
+    expect(sectionWords(section('b'))).toBe('2 rules: 2 checked automatically.');
+  });
+
+  it('with a filter, shows only the sections with a matching rule, open, with those rules', () => {
+    const shown = (filter: Parameters<typeof coverageGroups>[1]) =>
+      coverageGroups(coverage, filter).map((group) => [
+        group.section?.id ?? 'nothing yet',
+        group.rules.map((item) => item.leafId),
+        group.opens,
+      ]);
+    expect(shown('supported')).toEqual([
+      ['a', ['a.attention', 'a.supported'], true],
+      ['b', ['b.supported'], true],
+    ]);
+    expect(shown('person')).toEqual([['b', ['b.reviewed'], true]]);
+    expect(shown('nothing_yet')).toEqual([['nothing yet', ['a.nothing', 'c.nothing'], true]]);
+    expect(shown('relieved')).toEqual([]);
   });
 });

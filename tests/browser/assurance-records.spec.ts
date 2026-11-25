@@ -1,4 +1,5 @@
 import { test, expect, type Page } from '@playwright/test';
+import { ruleRow } from './rule-coverage-fixture.js';
 
 /**
  * Safety assurance records on the screens (docs/design/assurance-records.md), for a new organization made with
@@ -172,7 +173,7 @@ test('a new organization records an audit and a review, closes an action, opens 
   await page.getByRole('button', { name: 'Return to flights', exact: true }).click();
 
   await page.getByRole('button', { name: 'Rules', exact: true }).click();
-  const row = area.locator('[data-testid="rule-coverage-row"][data-rule="ledger.nprm.108.560.a.safety-assurance"]');
+  const row = await ruleRow(area, 'ledger.nprm.108.560.a.safety-assurance');
   await row.getByRole('button', { name: '1 · Supported by the record', exact: true }).click({ timeout: 60_000 });
   const subjects = area.getByTestId('rule-subjects');
   await expect(subjects).toContainText('2 signed safety assurance records on file since');

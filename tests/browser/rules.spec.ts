@@ -1,4 +1,5 @@
 import { test, expect } from '@playwright/test';
+import { ruleRow } from './rule-coverage-fixture.js';
 
 test('a dispatcher reviews adopted packs, sees proposed text offered in shadow only, and lists findings for a subject', async ({
   page,
@@ -80,6 +81,18 @@ test('the Rules screen lists an adopted pack’s rules under its sections, each 
     await expect(adopted.getByText('In effect', { exact: true })).toBeVisible({ timeout: 60_000 });
   }
   const coverage = adopted.getByTestId('rule-coverage');
+  // The pack opens with its rules counted by result, marked as the shadow heading is, each count a filter.
+  const summary = coverage.getByRole('group', { name: 'Rules by result', exact: true });
+  await expect(summary).toContainText('Each count is of rules, not findings');
+  await expect(summary.getByText('Shadow: findings recorded, not counted', { exact: true })).toBeVisible();
+  const everything = summary.getByRole('button', { name: 'Everything', exact: true });
+  await expect(everything).toHaveAttribute('aria-pressed', 'true');
+  const count = summary.getByRole('button', { name: /^\d+ · / }).first();
+  await count.click();
+  await expect(count).toHaveAttribute('aria-pressed', 'true');
+  await expect(everything).toHaveAttribute('aria-pressed', 'false');
+  await everything.click();
+  await expect(everything).toHaveAttribute('aria-pressed', 'true');
   const sections = coverage.getByTestId('rule-coverage-section');
   // Sections in the order of the proposed part, each a heading with its counts.
   await expect(sections.first().getByRole('heading', { level: 6 })).toHaveText(
@@ -88,8 +101,8 @@ test('the Rules screen lists an adopted pack’s rules under its sections, each 
   const areas = coverage.locator('[data-testid="rule-coverage-section"][data-section="108.165"]');
   await expect(areas.getByRole('heading', { level: 6 })).toHaveText('§ 108.165 Area of operations');
   await expect(areas.getByTestId('rule-coverage-section-counts')).toHaveText(/^\d+ rules: \d+ checked automatically/);
-  // Each rule beside the paragraph it reads.
-  const approval = areas.locator('[data-testid="rule-coverage-row"][data-rule="ledger.nprm.108.165.a"]');
+  // Each rule beside the paragraph it reads, its section opened first when it starts folded.
+  const approval = await ruleRow(areas, 'ledger.nprm.108.165.a');
   await expect(approval.getByTestId('rule-paragraph')).toHaveText('§ 108.165(a)');
   await expect(approval.getByRole('rowheader')).toContainText('Each current operating area names its approval');
 

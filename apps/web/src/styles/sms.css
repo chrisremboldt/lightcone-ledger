@@ -1273,3 +1273,20 @@
     table-layout: auto;
   }
 }
+.rule-coverage-summary {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 8px;
+  margin: 4px 0 8px;
+}
+.rule-coverage-section > summary {
+  margin-top: 16px;
+  cursor: pointer;
+}
+.rule-coverage-section > summary > .rule-coverage-section-title {
+  display: inline;
+}
+.rule-coverage-section > summary > p {
+  margin: 2px 0 0;
+}

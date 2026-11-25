@@ -4,30 +4,39 @@ import type {
   AdoptionRuleCoverageResponse,
   CoverageResult,
   NamedSubject,
+  RuleCoverage,
   RuleCoverageSubjectsResponse,
   SubjectsOnRecordResponse,
 } from '@ledger/contracts';
 import type { LedgerClient } from '@ledger/contracts/client';
-import { Button, Notice, Spinner } from '@ledger/ui';
+import { Badge, Button, Notice, Spinner } from '@ledger/ui';
 import { coverageReadDelayMs, readsCoverageAgain } from './coverage-read.js';
 import { errorMessage } from './format.js';
 import { readFailureOutcome, readFailureStep } from './read-failure.js';
+import { modeLabels } from './rule-adoption.js';
 import {
   checkedByLabels,
   completeness,
+  coverageFilterLabels,
+  coverageGroups,
   coverageResultLabels,
   emptyPopulationHint,
+  filterCounts,
   missingWords,
+  nothingYetIn,
+  nothingYetTitle,
   populationWords,
   sectionWords,
   shownCounts,
+  type CoverageFilter,
 } from './rule-coverage.js';
 import { SubjectFindings } from './SubjectFindings.js';
 import { subjectLabel } from './subject-label.js';
 
 /**
- * One adoption's rules with their members counted by latest result. A count opens the subjects behind it; a subject
- * opens its findings. Reads again while a count is still being evaluated, and after a failed read, as the coverage
+ * One adoption's rules with their members counted by latest result. It opens with the rules counted by result, each
+ * count a filter; sections fold, open where something asks a person, and the rules that count nothing yet are listed
+ * apart at the end. A count opens the subjects behind it; a subject opens its findings. Reads again while a count is still being evaluated, and after a failed read, as the coverage
  * pane does.
  */
 export function RuleCoverageTable({ client, adoptionId }: { client: LedgerClient; adoptionId: string }) {
@@ -35,6 +44,9 @@ export function RuleCoverageTable({ client, adoptionId }: { client: LedgerClient
   const [error, setError] = useState<string | null>(null);
   const [reload, setReload] = useState(0);
   const [chosen, setChosen] = useState<{ leafId: string; result: CoverageResult } | null>(null);
+  const [filter, setFilter] = useState<CoverageFilter | null>(null);
+  // What a person opened or closed, by filter and section, kept while the screen stays.
+  const [folds, setFolds] = useState<Record<string, boolean>>({});
   const failedInARow = useRef(0);
   const refresh = useCallback(() => setReload((value) => value + 1), []);
   useEffect(() => {
@@ -80,34 +92,48 @@ export function RuleCoverageTable({ client, adoptionId }: { client: LedgerClient
   );
   if (!shown) return unavailable || <Spinner label="Reading coverage by rule" />;
   const rule = chosen && shown.rules.find((item) => item.leafId === chosen.leafId);
+  const groups = coverageGroups(shown, filter);
+  const opened = (id: string, opens: boolean) => folds[`${filter ?? 'everything'}/${id}`] ?? opens;
+  const fold = (id: string, opens: boolean, open: boolean) => {
+    // The toggle event also follows a change the screen made itself; only a person's own change is kept.
+    if (open !== opened(id, opens)) setFolds((earlier) => ({ ...earlier, [`${filter ?? 'everything'}/${id}`]: open }));
+  };
   return (
     <section aria-label="Coverage by rule" data-testid="rule-coverage">
       {unavailable}
       <h5>Coverage by rule</h5>
-      {shown.sections.map((section) => (
-        <section
-          key={section.id}
-          aria-label={section.title}
-          data-testid="rule-coverage-section"
-          data-section={section.id}
-        >
-          <h6 className="rule-coverage-section-title">{section.title}</h6>
-          <p className="rail-muted" data-testid="rule-coverage-section-counts">
-            {sectionWords(section)}
-          </p>
-          <table className="sms-ledger-table rule-coverage-table">
-            <thead>
-              <tr>
-                <th scope="col">Rule</th>
-                <th scope="col">How it is checked</th>
-                <th scope="col">Counted over</th>
-                <th scope="col">Latest results</th>
-              </tr>
-            </thead>
-            <tbody>
-              {shown.rules
-                .filter((item) => section.leafIds.includes(item.leafId))
-                .map((item) => (
+      <CoverageSummary rules={shown.rules} shadow={shown.mode === 'shadow'} filter={filter} onFilter={setFilter} />
+      {groups.map(({ section, rules, opens }) => {
+        const id = section ? `section/${section.id}` : 'nothing-yet';
+        return (
+          <details
+            key={id}
+            className="rule-coverage-section"
+            aria-label={section?.title ?? nothingYetTitle}
+            data-testid={section ? 'rule-coverage-section' : 'rule-coverage-nothing-yet'}
+            data-section={section?.id}
+            open={opened(id, opens)}
+            onToggle={(event) => fold(id, opens, event.currentTarget.open)}
+          >
+            <summary>
+              <h6 className="rule-coverage-section-title">{section?.title ?? nothingYetTitle}</h6>
+              <p className="rail-muted" data-testid="rule-coverage-section-counts">
+                {section
+                  ? sectionWords(section, nothingYetIn(section, shown.rules))
+                  : `${rules.length} ${rules.length === 1 ? 'rule covers' : 'rules cover'} no subject yet; each says what record would make it count.`}
+              </p>
+            </summary>
+            <table className="sms-ledger-table rule-coverage-table">
+              <thead>
+                <tr>
+                  <th scope="col">Rule</th>
+                  <th scope="col">How it is checked</th>
+                  <th scope="col">Counted over</th>
+                  <th scope="col">Latest results</th>
+                </tr>
+              </thead>
+              <tbody>
+                {rules.map((item) => (
                   <tr key={item.leafId} data-testid="rule-coverage-row" data-rule={item.leafId}>
                     <th scope="row">
                       {item.title}
@@ -143,10 +169,11 @@ export function RuleCoverageTable({ client, adoptionId }: { client: LedgerClient
                     </td>
                   </tr>
                 ))}
-            </tbody>
-          </table>
-        </section>
-      ))}
+              </tbody>
+            </table>
+          </details>
+        );
+      })}
       {chosen && rule && (
         <RuleSubjects
           key={`${chosen.leafId}/${chosen.result}`}
@@ -159,6 +186,51 @@ export function RuleCoverageTable({ client, adoptionId }: { client: LedgerClient
         />
       )}
     </section>
+  );
+}
+
+/**
+ * The line a pack's coverage opens with: its rules counted by their subjects' latest results, each count a filter.
+ * A shadow pack's counts carry the marking its heading carries.
+ */
+function CoverageSummary({
+  rules,
+  shadow,
+  filter,
+  onFilter,
+}: {
+  rules: readonly RuleCoverage[];
+  shadow: boolean;
+  filter: CoverageFilter | null;
+  onFilter: (filter: CoverageFilter | null) => void;
+}) {
+  return (
+    <div
+      className="rule-coverage-summary"
+      role="group"
+      aria-label="Rules by result"
+      data-testid="rule-coverage-summary"
+    >
+      {shadow && <Badge tone="advisory">{modeLabels.shadow}</Badge>}
+      <span>
+        {rules.length} {rules.length === 1 ? 'rule' : 'rules'}. Each count is of rules, not findings; a rule with
+        subjects in several results is in each:
+      </span>
+      <Button kind="quiet" aria-pressed={filter === null} onClick={() => onFilter(null)}>
+        Everything
+      </Button>
+      {filterCounts(rules).map(({ filter: value, count }) =>
+        count ? (
+          <Button key={value} kind="quiet" aria-pressed={filter === value} onClick={() => onFilter(value)}>
+            {count} · {coverageFilterLabels[value]}
+          </Button>
+        ) : (
+          <span key={value} className="rail-muted" data-testid="rule-coverage-empty-count">
+            0 · {coverageFilterLabels[value]}
+          </span>
+        ),
+      )}
+    </div>
   );
 }
 

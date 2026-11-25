@@ -229,6 +229,8 @@ Then load the pack:
 
 On **Rules**, each adopted pack shows **Coverage by rule**: every rule, how it is checked, who it covers and the latest result for each, under a heading for each section of the pack (for the proposed Part 108, "§ 108.165 Area of operations" and the like), with the paragraph each rule reads beside its title. A pack without sections, such as a waiver described without them, lists its provisions in number order.
 
+Coverage opens with a line counting the pack's rules, not its findings: how many have a subject needing attention, a record not on file, a subject supported by the record, one relieved by a waiver, how many a person reviews, how many have a subject the rule does not apply to, and how many count nothing yet. A rule with subjects in several results is in each count. Each count is a button that shows only those rules; **Everything** shows them all again. A pack adopted in shadow carries the same "recorded, not counted" label on this line as on its heading. Sections fold: a section with a rule needing attention or a record not on file opens, the others stay closed with their one-line tally, and what you open or close stays so while you are on the screen. Rules that cover no one yet are listed together at the end, under **Nothing counted yet**, each saying which record would make it count, by the record type's name under **Records**.
+
 | Count | Meaning |
 | --- | --- |
 | Supported by the record | The records on file support what the rule asks |
