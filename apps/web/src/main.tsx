@@ -31,7 +31,7 @@ import {
   type IssuerEntry,
 } from './openid-connect.js';
 import { SafetyRecordLink } from './area-controls.js';
-import { PublicReportPage, SubmitReportDialog } from './SafetyReportSubmission.js';
+import { blankSignedInReport, PublicReportPage, SubmitReportDialog } from './SafetyReportSubmission.js';
 import type { FlightLinks, FlightRequest, SafetyDestination } from './safety-navigation.js';
 import { operators } from './labels.js';
 import { fictionalPeople } from './demo/fictional-organizations.js';
@@ -208,6 +208,8 @@ interface Program {
  */
 function Workspace({ account, ...rest }: AppProps & { confirmIdentity?: ConfirmIdentity }) {
   const [reporting, setReporting] = React.useState(false);
+  // An unsent report stays here, in memory only, while the page is open: closing the dialog keeps it.
+  const [reportDraft, setReportDraft] = React.useState(blankSignedInReport);
   // Any signed-in person can report a safety concern from every screen.
   const props = {
     ...rest,
@@ -218,6 +220,8 @@ function Workspace({ account, ...rest }: AppProps & { confirmIdentity?: ConfirmI
         {reporting && (
           <SubmitReportDialog
             client={new LedgerClient(rest.apiUrl, rest.token, appFetch)}
+            draft={reportDraft}
+            onDraft={setReportDraft}
             onClose={() => setReporting(false)}
           />
         )}

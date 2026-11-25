@@ -20,8 +20,11 @@ const Time = Type.String({ format: 'date-time' });
 const Slug = Type.String({ pattern: '^[a-z][a-z0-9_]{0,39}$' });
 const Text = (maxLength: number, options: { description?: string } = {}) =>
   Type.String({ minLength: 1, maxLength, pattern: '\\S', ...options });
-const literals = <const T extends readonly string[]>(values: T) =>
-  Type.Union(values.map((value) => Type.Literal(value))) as TUnion<TLiteral<T[number]>[]>;
+const literals = <const T extends readonly string[]>(values: T, options?: { description: string }) =>
+  Type.Union(
+    values.map((value) => Type.Literal(value)),
+    options,
+  ) as TUnion<TLiteral<T[number]>[]>;
 const strict = <T extends Parameters<typeof Type.Object>[0]>(properties: T, description?: string) =>
   Type.Object(properties, { additionalProperties: false, ...(description ? { description } : {}) });
 
@@ -1310,11 +1313,47 @@ export const SmsSigningPreviewQuerySchema = strict({
   meaning: literals(signingMeaningValues),
 });
 export type SmsSigningPreviewQuery = Static<typeof SmsSigningPreviewQuerySchema>;
+/** How a register is ordered: by when each record was opened, newest or oldest first, or soonest due first. */
+export const smsRegisterOrderValues = ['newest', 'oldest', 'due'] as const;
+export type SmsRegisterOrder = (typeof smsRegisterOrderValues)[number];
+const RegisterDay = (description: string) => Type.String({ pattern: '^[0-9]{4}-[0-9]{2}-[0-9]{2}$', description });
 export const SmsRegisterQuerySchema = strict({
   kind: Type.Optional(literals(smsRecordKindValues)),
   limit: Type.Optional(Type.Integer({ minimum: 1, maximum: 200, default: 200 })),
   cursor: Type.Optional(
-    Type.String({ minLength: 1, maxLength: 200, description: 'The nextCursor of the previous page.' }),
+    Type.String({
+      minLength: 1,
+      maxLength: 300,
+      description: 'The nextCursor of the previous page, read with the same filters and order.',
+    }),
+  ),
+  order: Type.Optional(
+    literals(smsRegisterOrderValues, {
+      description:
+        'newest (the default) or oldest: by when each record was opened, then by id. due: the soonest due date first, records with none last, then by id.',
+    }),
+  ),
+  search: Type.Optional(
+    Type.String({
+      minLength: 1,
+      maxLength: 80,
+      description:
+        "Part of a record's title or of the organization's own id for it, in any case. A record whose content is restricted, such as a safety report, is found by its own id only: its title is never searched.",
+    }),
+  ),
+  status: Type.Optional(
+    Type.String({ pattern: '^[a-z_]{1,40}$', description: 'Only records in this status, such as accepted or closed.' }),
+  ),
+  assuranceType: Type.Optional(
+    literals(assuranceTypeValues, { description: 'Only safety assurance records of this type.' }),
+  ),
+  openedFrom: Type.Optional(
+    RegisterDay(
+      "The first day, in the organization's time zone, the record was opened. A safety report is opened when it is recorded as received.",
+    ),
+  ),
+  openedUntil: Type.Optional(
+    RegisterDay("The last day, in the organization's time zone, the record was opened, included."),
   ),
   findingId: Type.Optional(
     Type.String({
@@ -1585,7 +1624,9 @@ export const SmsRegisterResponseSchema = strict({
   records: Type.Array(SmsRecordSummarySchema),
   limit: Type.Integer(),
   hasMore: Type.Boolean(),
-  nextCursor: Type.Union([Id, Type.Null()], { description: 'Newest first by opening time; send as cursor.' }),
+  nextCursor: Type.Union([Type.String({ minLength: 1, maxLength: 300 }), Type.Null()], {
+    description: 'Send as cursor, with the same filters and order, for the next page.',
+  }),
   computedAt: Time,
 });
 export const SmsRecordDetailResponseSchema = strict(

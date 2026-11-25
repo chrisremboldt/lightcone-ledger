@@ -39,6 +39,7 @@ import {
   FlightRuleSelectionRecordParamsSchema,
   OrganizationPeopleQuerySchema,
   AuthorityPrincipalParamsSchema,
+  PrincipalAuthorityListQuerySchema,
   AcceptedAreaControlParamsSchema,
   FlightMissionParamsSchema,
   FlightMissionRevisionParamsSchema,
@@ -60,6 +61,7 @@ import {
   type FlightRuleSelectionRecordParams,
   type OrganizationPeopleQuery,
   type AuthorityPrincipalParams,
+  type PrincipalAuthorityListQuery,
   type AcceptedAreaControlParams,
   type FlightMissionParams,
   type FlightMissionRevisionParams,
@@ -591,15 +593,17 @@ export async function createApp(options: AppOptions = {}) {
       organization: await getOrganizationSummary(client, who.tenantId),
     })),
   );
-  app.get(
+  app.get<{ Querystring: PrincipalAuthorityListQuery }>(
     '/v1/authority/principals',
     {
+      schema: { querystring: PrincipalAuthorityListQuerySchema },
       async onSend(_request, reply, payload) {
         reply.header('Cache-Control', 'private, no-store');
         return payload;
       },
     },
-    async (request) => read(request, 'authority:write', (client, who) => listPrincipalAuthority(client, who)),
+    async (request) =>
+      read(request, 'authority:write', (client, who) => listPrincipalAuthority(client, who, request.query)),
   );
   app.get(
     '/v1/authority/credentials',

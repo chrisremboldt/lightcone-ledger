@@ -51,21 +51,25 @@ export function PeopleArea({ client, principal }: { client: LedgerClient; princi
   const [selection, setSelection] = useState<Selection>({ kind: 'add' });
   const [recorded, setRecorded] = useState<string | null>(null);
   const [reload, setReload] = useState(0);
+  // How many pages are shown: reading again after a change reads as many, so the person changed stays in view.
+  const [pageCount, setPageCount] = useState(1);
+  const [reading, setReading] = useState(false);
 
   useEffect(() => {
     let stopped = false;
-    client
-      .principalAuthorities()
+    setReading(true);
+    readPeoplePages(client, pageCount)
       .then((response) => {
         if (stopped) return;
         setList(response);
         setError(null);
       })
-      .catch((failure) => !stopped && setError(plainError(failure).message));
+      .catch((failure) => !stopped && setError(plainError(failure).message))
+      .finally(() => !stopped && setReading(false));
     return () => {
       stopped = true;
     };
-  }, [client, reload]);
+  }, [client, reload, pageCount]);
 
   const signIn = useSignInConfiguration(client);
   const changed = useCallback((message: string, select?: Selection) => {
@@ -117,7 +121,11 @@ export function PeopleArea({ client, principal }: { client: LedgerClient; princi
             </li>
           ))}
         </ul>
-        {list?.hasMore && <p className="records-note">Only the first {list.principals.length} are listed.</p>}
+        {list?.hasMore && (
+          <Button kind="secondary" disabled={reading} onClick={() => setPageCount((count) => count + 1)}>
+            {reading ? 'Reading…' : 'More people'}
+          </Button>
+        )}
       </aside>
       <section className="thread-workspace" aria-label="Person">
         <div className="thread-main">
@@ -151,6 +159,16 @@ export function PeopleArea({ client, principal }: { client: LedgerClient; princi
       </section>
     </main>
   );
+}
+
+/** The first pages of everyone in the organization, as one list. */
+async function readPeoplePages(client: LedgerClient, count: number): Promise<PrincipalAuthorityListResponse> {
+  let shown = await client.principalAuthorities();
+  for (let page = 1; page < count && shown.nextCursor; page += 1) {
+    const next = await client.principalAuthorities({ cursor: shown.nextCursor });
+    shown = { ...next, principals: [...shown.principals, ...next.principals] };
+  }
+  return shown;
 }
 
 function CapabilityChoices({

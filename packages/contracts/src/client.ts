@@ -47,6 +47,7 @@ import type {
   OrganizationPeopleQuery,
   OrganizationPeopleResponse,
   AuthorityPrincipalResponse,
+  PrincipalAuthorityListQuery,
   PrincipalAuthorityListResponse,
   CredentialListResponse,
   RolePresetListResponse,
@@ -430,8 +431,10 @@ export class LedgerClient {
       key,
     );
   }
-  principalAuthorities() {
-    return this.request<PrincipalAuthorityListResponse>('/v1/authority/principals', { cache: 'no-store' });
+  principalAuthorities(query: PrincipalAuthorityListQuery = {}) {
+    return this.request<PrincipalAuthorityListResponse>(`/v1/authority/principals${queryString(query)}`, {
+      cache: 'no-store',
+    });
   }
   credentials() {
     return this.request<CredentialListResponse>('/v1/authority/credentials', { cache: 'no-store' });

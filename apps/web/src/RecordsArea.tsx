@@ -11,6 +11,8 @@ import {
 } from '@ledger/contracts';
 import { Badge, Button, Notice, Spinner } from '@ledger/ui';
 import { RecordForm } from './RecordForm.js';
+import { SubjectPicker } from './SubjectPicker.js';
+import { searchableKinds } from './subject-picker.js';
 import { RequiredRecords } from './RequiredRecords.js';
 import {
   ProducePanel,
@@ -244,10 +246,14 @@ export function RecordsArea({
                   }}
                 >
                   <label htmlFor="records-subject">Subject id</label>
-                  <input
+                  <SubjectPicker
+                    client={client}
+                    sourceId={sourceId}
                     id="records-subject"
+                    kinds={searchableKinds(type.subjectKinds)}
                     value={subject}
-                    onChange={(event) => setSubject(event.target.value)}
+                    onChange={setSubject}
+                    onChoose={(option) => setShownSubject(option.id)}
                     placeholder={`Your id for the ${type.subjectKinds.join(' or ')}`}
                   />
                   <Button type="submit">Show records</Button>
@@ -358,32 +364,50 @@ function RecordList({
   onSubject: (id: string) => void;
   onChanged: () => void;
 }) {
-  const [list, setList] = useState<OperatorRecordListResponse | null>(null);
+  // Every page read so far, the first one first; More records reads the next one.
+  const [pages, setPages] = useState<OperatorRecordListResponse[]>([]);
   const [error, setError] = useState<string | null>(null);
+  const [reading, setReading] = useState(false);
   const [open, setOpen] = useState<string | null>(null);
-  useEffect(() => {
-    let stopped = false;
-    const query = new URLSearchParams({
+  const path = (cursor?: string) =>
+    `/v1/operator-records?${new URLSearchParams({
       recordType: type.recordType,
       recordVersion: String(type.recordVersion),
       sourceId,
       ...(subjectId ? { subjectId } : {}),
-    });
+      ...(cursor ? { cursor } : {}),
+    })}`;
+  useEffect(() => {
+    let stopped = false;
     client
-      .request<OperatorRecordListResponse>(`/v1/operator-records?${query}`)
-      .then((response) => !stopped && setList(response))
+      .request<OperatorRecordListResponse>(path())
+      .then((response) => !stopped && setPages([response]))
       .catch((failure) => !stopped && setError(plainError(failure).message));
     return () => {
       stopped = true;
     };
   }, [client, type, sourceId, subjectId]);
-  if (error)
+  async function more() {
+    const cursor = pages.at(-1)?.page.nextCursor;
+    if (!cursor) return;
+    setReading(true);
+    try {
+      const next = await client.request<OperatorRecordListResponse>(path(cursor));
+      setPages((previous) => [...previous, next]);
+    } catch (failure) {
+      setError(plainError(failure).message);
+    } finally {
+      setReading(false);
+    }
+  }
+  if (error && !pages.length)
     return (
       <Notice tone="alert" title="Records could not be read">
         {error}
       </Notice>
     );
-  if (!list) return <Spinner label="Loading records" />;
+  if (!pages.length) return <Spinner label="Loading records" />;
+  const list = { records: pages.flatMap((page) => page.records), page: pages.at(-1)!.page };
   const opened = list.records.find((record) => record.observationId === open);
   if (opened)
     return (
@@ -450,6 +474,16 @@ function RecordList({
           </li>
         ))}
       </ol>
+      {error && (
+        <Notice tone="alert" title="More records could not be read">
+          {error}
+        </Notice>
+      )}
+      {list.page.hasMore && list.page.nextCursor && (
+        <Button kind="secondary" disabled={reading} onClick={() => void more()}>
+          {reading ? 'Reading…' : 'More records'}
+        </Button>
+      )}
     </section>
   );
 }
@@ -525,10 +559,7 @@ function RecordDetail({
       <dl className="records-fields">
         {type.fields.map((field) => (
           <div key={field.name}>
-            <dt>
-              {field.label}
-              {field.replayOnly && <small> for replay</small>}
-            </dt>
+            <dt>{field.label}</dt>
             <dd>
               {displayValue(
                 field,
@@ -706,7 +737,7 @@ function ImportPanel({
                 </td>
                 <td>
                   {column.label}
-                  {column.required ? ' · required' : column.replayOnly ? ' · for replay' : ''}
+                  {column.required ? ' · required' : column.replayOnly ? ' · optional, explains the record' : ''}
                   {column.help && <small className="records-help">{column.help}</small>}
                 </td>
                 <td>

@@ -19,6 +19,7 @@ import { DraftDocumentForm, IdentifyHazardForm } from './SmsForms.js';
 import { SmsRecordView } from './SmsRecord.js';
 import { DocumentReviewsDue, MyDocumentReading, OrganizationReading } from './SmsDocumentControl.js';
 import { DocumentLibrary } from './SmsDocumentLibrary.js';
+import { RegisterMore } from './SmsRegisterTools.js';
 import { RecordsArea, RecordsToggle } from './RecordsArea.js';
 import { FindingHazard, HazardRegister, RecordRow } from './SmsHazards.js';
 import { FirstSteps } from './FirstSteps.js';
@@ -76,9 +77,14 @@ export function SmsApp({ apiUrl, token, account, local = false, confirmIdentity,
   const [documents, setDocuments] = useState<SmsRecordSummary[] | null>(null);
   const [reports, setReports] = useState<SmsRecordSummary[] | null>(null);
   const [assurance, setAssurance] = useState<SmsRecordSummary[] | null>(null);
+  // The first page of each register, as read: its registers read the pages after it.
+  const [reportRegister, setReportRegister] = useState<SmsRegisterResponse | null>(null);
+  const [assuranceRegister, setAssuranceRegister] = useState<SmsRegisterResponse | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [screen, setScreen] = useState<Screen>(() => firstScreen(initial));
   const [ownDocuments, setOwnDocuments] = useState(0);
+  // Where the documents and risk matrices read so far end, for the documents register to read further.
+  const [documentsAfter, setDocumentsAfter] = useState<DocumentPages>([]);
   const [reload, setReload] = useState(0);
   const refresh = useCallback(() => setReload((value) => value + 1), []);
 
@@ -104,10 +110,18 @@ export function SmsApp({ apiUrl, token, account, local = false, confirmIdentity,
         setPrincipal(session.principal);
         setReports(shownReports.records);
         setAssurance(shownAssurance?.records ?? []);
+        setReportRegister(shownReports);
+        setAssuranceRegister(shownAssurance ?? { ...shownReports, records: [], hasMore: false, nextCursor: null });
         setHome(shownHome);
         setRegister(shownRegister);
         setDocuments([...shownDocuments.records, ...shownMatrices.records]);
         setOwnDocuments(shownDocuments.records.length);
+        setDocumentsAfter(
+          [
+            { kind: 'document' as const, cursor: shownDocuments.nextCursor },
+            { kind: 'risk_matrix' as const, cursor: shownMatrices.nextCursor },
+          ].filter((page): page is DocumentPages[number] => page.cursor !== null),
+        );
         setError(null);
       } catch (failure) {
         if (stopped) return;
@@ -340,6 +354,7 @@ export function SmsApp({ apiUrl, token, account, local = false, confirmIdentity,
               key={screen.drafting ? 'drafting' : 'listing'}
               drafting={screen.drafting}
               documents={documents}
+              after={documentsAfter}
               home={home}
               principal={principal}
               client={client}
@@ -347,18 +362,18 @@ export function SmsApp({ apiUrl, token, account, local = false, confirmIdentity,
               onChanged={refresh}
             />
           )}
-          {home && principal && screen.view === 'reports' && reports && (
+          {home && principal && screen.view === 'reports' && reportRegister && (
             <ReportsRegister
-              reports={reports}
+              register={reportRegister}
               principal={principal}
               client={client}
               onOpen={open}
               onChanged={refresh}
             />
           )}
-          {home && principal && screen.view === 'assurance' && assurance && (
+          {home && principal && screen.view === 'assurance' && assuranceRegister && (
             <AssuranceRegister
-              records={assurance}
+              register={assuranceRegister}
               home={home}
               principal={principal}
               client={client}
@@ -668,9 +683,47 @@ function SafetyHome({
   );
 }
 
+/** The kinds of document record with more to read, and the cursor of the next page of each. */
+type DocumentPages = { kind: 'document' | 'risk_matrix'; cursor: string }[];
+
+/**
+ * Documents and risk matrices after the first page of each, read on request. The library searches and filters the
+ * ones read, so while more remain the register says so.
+ */
+function useLaterDocuments(client: LedgerClient, first: SmsRecordSummary[], after: DocumentPages) {
+  const [later, setLater] = useState<{ records: SmsRecordSummary[]; after: DocumentPages } | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [failure, setFailure] = useState<string | null>(null);
+  const remaining = later ? later.after : after;
+  const shown = new Set(first.map((record) => record.id));
+  const documents = [...first, ...(later?.records ?? []).filter((record) => !shown.has(record.id))];
+  async function more() {
+    setLoading(true);
+    setFailure(null);
+    try {
+      const pages = await Promise.all(
+        remaining.map(async ({ kind, cursor }) => ({
+          kind,
+          page: await client.request<SmsRegisterResponse>(`/v1/sms/records?${new URLSearchParams({ kind, cursor })}`),
+        })),
+      );
+      setLater((previous) => ({
+        records: [...(previous?.records ?? []), ...pages.flatMap(({ page }) => page.records)],
+        after: pages.flatMap(({ kind, page }) => (page.nextCursor ? [{ kind, cursor: page.nextCursor }] : [])),
+      }));
+    } catch (error) {
+      setFailure(plainError(error).message);
+    } finally {
+      setLoading(false);
+    }
+  }
+  return { documents, more: remaining.length ? more : null, loading, failure };
+}
+
 function DocumentsRegister({
   drafting: startDrafting,
-  documents,
+  documents: first,
+  after,
   home,
   principal,
   client,
@@ -679,6 +732,7 @@ function DocumentsRegister({
 }: {
   drafting?: boolean;
   documents: SmsRecordSummary[];
+  after: DocumentPages;
   home: SmsHomeResponse;
   principal: Principal;
   client: LedgerClient;
@@ -686,6 +740,8 @@ function DocumentsRegister({
   onChanged: () => void;
 }) {
   const [opened, setOpened] = useState<boolean | null>(startDrafting ? true : null);
+  const read = useLaterDocuments(client, first, after);
+  const documents = read.documents;
   const drafting = opened ?? documents.length === 0;
   return (
     <div className="thread-layout safety-layout">
@@ -693,7 +749,10 @@ function DocumentsRegister({
         <p className="thread-crumbs">Safety / Documents</p>
         <div className="thread-title">
           <h2>Controlled documents</h2>
-          <Badge>{documents.length} recorded</Badge>
+          <Badge>
+            {documents.length}
+            {read.more ? '+' : ''} recorded
+          </Badge>
         </div>
         <p className="safety-intro">
           Policy, procedures, received OEM manuals and other controlled documents. Review and sign each revision, set
@@ -707,6 +766,12 @@ function DocumentsRegister({
         ) : (
           <DocumentLibrary documents={documents} onOpen={onOpen} />
         )}
+        {read.more && (
+          <p className="sms-register-hint">
+            More documents are on file than are listed here; the search and filters cover the ones listed.
+          </p>
+        )}
+        <RegisterMore label="More documents" list={read} />
       </div>
       <aside className="rail safety-rail" aria-label="Document actions">
         {drafting || !principal.capabilities.includes('sms:write') ? (

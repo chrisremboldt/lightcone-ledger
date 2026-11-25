@@ -9,14 +9,17 @@ import type {
   SmsRecordContentResponse,
   SmsRecordDetailResponse,
   SmsRecordSummary,
+  SmsRegisterResponse,
 } from '@ledger/contracts';
 import { recordedReportChannelValues } from '@ledger/contracts';
-import { Badge, Button, Notice } from '@ledger/ui';
+import { Badge, Button, Notice, Spinner } from '@ledger/ui';
 import { time, timeZoneLabel, timeZoneName } from './format.js';
 import { centralDateTimeInput, documentTime, fromCentralDateTimeInput } from './sms-document-dates.js';
-import { plainError } from './sms-labels.js';
+import { plainError, statusPresentation } from './sms-labels.js';
 import { FailureNotice, useCommand } from './SmsForms.js';
 import { RecordRow } from './SmsHazards.js';
+import { RegisterMore, RegisterTools, useRegisterList } from './SmsRegisterTools.js';
+import { narrowed, registerCount, unnarrowed } from './sms-register-query.js';
 
 const channelLabels: Record<ReportBody['received']['channel'], string> = {
   in_person: 'In person',
@@ -33,33 +36,57 @@ export function mayRecordReports(principal: Pick<Principal, 'capabilities'>): bo
   return principal.capabilities.includes('sms:write') && principal.capabilities.includes('sms:report:read');
 }
 
-/** The safety reports register: every report recorded as received, listed without its protected content. */
+const reportStatuses = ['received', 'closed'].map((value) => ({ value, label: statusPresentation(value).label }));
+
+/**
+ * The safety reports register: every report recorded as received, listed without its protected content. It is
+ * searched by the organization's own id for a report only, never by what a report says or who sent it.
+ */
 export function ReportsRegister({
-  reports,
+  register,
   principal,
   client,
   onOpen,
   onChanged,
 }: {
-  reports: SmsRecordSummary[];
+  register: SmsRegisterResponse;
   principal: Principal;
   client: LedgerClient;
   onOpen: (record: Pick<SmsRecordSummary, 'id' | 'kind'>) => void;
   onChanged: () => void;
 }) {
+  const [query, setQuery] = useState(unnarrowed);
+  const list = useRegisterList(client, 'report', register, query);
+  const reports = list.records ?? [];
   return (
     <div className="thread-layout safety-layout">
       <div className="thread-main safety-main">
         <p className="thread-crumbs">Safety / Safety reports</p>
         <div className="thread-title">
           <h2>Safety reports</h2>
-          <Badge>{reports.length} recorded</Badge>
+          <Badge>{list.records ? registerCount(reports.length, Boolean(list.more), query) : '…'}</Badge>
         </div>
         <p className="safety-intro">
           Reports recorded as received, newest first. A report&apos;s title, account and reporter are stored apart: only
           people cleared to read safety reports can open them, and each reading is retained.
         </p>
-        {reports.length === 0 ? (
+        {(register.records.length > 0 || narrowed(query)) && (
+          <RegisterTools
+            noun="reports"
+            query={query}
+            onQuery={setQuery}
+            searchLabel="Your reference for the report"
+            searchHint="Search finds a report by your reference for it only. What a report says and who sent it are never searched."
+            statuses={reportStatuses}
+            orders={['newest', 'oldest']}
+            openedLabel="Recorded as received"
+          />
+        )}
+        {!list.records ? (
+          <Spinner label="Reading safety reports" />
+        ) : reports.length === 0 && narrowed(query) ? (
+          <p className="sms-empty">No safety reports match. Try another reference, state or day.</p>
+        ) : reports.length === 0 ? (
           <div className="safety-empty">
             <h3>No safety reports recorded yet</h3>
             <p>
@@ -75,6 +102,7 @@ export function ReportsRegister({
             ))}
           </div>
         )}
+        <RegisterMore label="More safety reports" list={list} />
       </div>
       <aside className="rail safety-rail" aria-label="Report actions">
         <RecordReportForm

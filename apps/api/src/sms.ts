@@ -25,6 +25,7 @@ import {
   getSmsRecordContent,
   getSmsRegister,
   getSmsSigningPreview,
+  type SmsRegisterPage,
   listControlTypes,
   readSmsAttachmentObject,
   type Reauthenticate,
@@ -56,6 +57,11 @@ type Environment = 'local' | 'test' | 'staging';
 export const FRESH_CONFIRMATION_SECONDS = 300;
 // A provider's clock may run a little ahead of the database's.
 const AUTH_TIME_TOLERANCE_SECONDS = 30;
+
+/** The register query without its kind and without the parameters left out, as getSmsRegister takes it. */
+function registerPage({ kind: _kind, ...page }: SmsRegisterQuery): SmsRegisterPage {
+  return Object.fromEntries(Object.entries(page).filter(([, value]) => value !== undefined)) as SmsRegisterPage;
+}
 
 function isLocalFixture(identity: RequestIdentity, env: Environment): boolean {
   return (env === 'local' || env === 'test') && Boolean(identity.token?.startsWith('ledger-dev-'));
@@ -158,12 +164,7 @@ export function registerSmsRoutes(
     { ...privately, schema: { querystring: SmsRegisterQuerySchema } },
     async (request) =>
       read(request, 'sms:read', (client, who) =>
-        getSmsRegister(client, who, request.query.kind, {
-          ...(request.query.cursor ? { cursor: request.query.cursor } : {}),
-          ...(request.query.findingId ? { findingId: request.query.findingId } : {}),
-          ...(request.query.reference ? { reference: request.query.reference } : {}),
-          ...(request.query.limit ? { limit: request.query.limit } : {}),
-        }),
+        getSmsRegister(client, who, request.query.kind, registerPage(request.query)),
       ),
   );
   app.get<{ Params: { id: string } }>(

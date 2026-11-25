@@ -70,7 +70,7 @@ Use the same id every time. The aircraft `AC-1` in your aircraft file is the air
 
 Open **Records** and pick a record type. For each type you can:
 
-- **Enter a record** in a form, one at a time.
+- **Enter a record** in a form, one at a time. As you type a subject id, or the id of a related flight, aircraft, person, site or component, the form lists the ones already on file by id and by the name their records give them. A new id is still taken: the form says, before anything is recorded, that no record names it yet and that recording makes it a new aircraft, person or flight. **Browse records** offers the same list for its subject id, and **More records** reads the next page.
 - **Import a file**: a CSV file, as a spreadsheet saves it, or a JSON file. **Download CSV template** gives the header row, and **Columns** lists every column with its meaning and the values it accepts. The file is checked first and nothing is recorded until you confirm. A row that cannot be recorded says why in plain words, for example `"No defects" is not one of serviceable, unserviceable, serviceable_with_deferred_items`, and never stops the other rows.
 - **Correct this record** on a record you opened. The correction is a new record; the earlier one stays, marked as replaced.
 

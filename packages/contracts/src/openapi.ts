@@ -125,6 +125,7 @@ import {
   AuthorityPrincipalSchema,
   AuthorityPrincipalResponseSchema,
   OrganizationSummarySchema,
+  PrincipalAuthorityListQuerySchema,
   PrincipalAuthorityListResponseSchema,
   CommandSchema,
   ExportCreateSchema,
@@ -945,7 +946,13 @@ export const openApiDocument = {
     },
     '/v1/me': { get: operation('currentPrincipal', PrincipalResponseSchema) },
     '/v1/authority/principals': {
-      get: operation('principalAuthorities', PrincipalAuthorityListResponseSchema),
+      get: operation(
+        'principalAuthorities',
+        PrincipalAuthorityListResponseSchema,
+        200,
+        undefined,
+        queryParameters(PrincipalAuthorityListQuerySchema),
+      ),
     },
     '/v1/authority/credentials': {
       get: operation('credentials', CredentialListResponseSchema),

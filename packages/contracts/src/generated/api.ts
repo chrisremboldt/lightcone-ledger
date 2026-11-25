@@ -5429,7 +5429,7 @@ export interface components {
                 }[];
             };
         };
-        /** @description Every person, source and service of the organization, active and inactive, with their current complete authority, ordered by name. Workers are not listed. Requires authority:write. Private, no-store. At most 1000 entries; hasMore says whether more exist. */
+        /** @description Every person, source and service of the organization, active and inactive, with their current complete authority, ordered by name and then id, a page at a time. Workers are not listed. Requires authority:write. Private, no-store. At most 1000 entries a page; hasMore says whether more exist. */
         PrincipalAuthorityListResponse: {
             principals: {
                 id: string;
@@ -5452,6 +5452,8 @@ export interface components {
                 signInLinked: boolean;
             }[];
             hasMore: boolean;
+            /** @description Send as cursor to read the next page; null on the last page. */
+            nextCursor: string | null;
         };
         /** @description Every credential of the organization's sources and services, usable ones first, newest first. Requires authority:write. Private, no-store. At most 1000 entries; hasMore says whether more exist. */
         CredentialListResponse: {
@@ -14834,7 +14836,11 @@ export interface operations {
     };
     principalAuthorities: {
         parameters: {
-            query?: never;
+            query?: {
+                /** @description Opaque continuation scoped to tenant, principal authority, route and filters. Current read models, not a frozen historical snapshot. */
+                cursor?: string;
+                limit?: number;
+            };
             header?: never;
             path?: never;
             cookie?: never;
@@ -14869,6 +14875,8 @@ export interface operations {
                             signInLinked: boolean;
                         }[];
                         hasMore: boolean;
+                        /** @description Send as cursor to read the next page; null on the last page. */
+                        nextCursor: string | null;
                     };
                 };
             };
@@ -35311,6 +35319,12 @@ export interface operations {
                 limit?: number;
                 /** @description Opaque continuation scoped to tenant, principal authority, route and filters. Current read models, not a frozen historical snapshot. */
                 cursor?: string;
+                order?: "newest" | "oldest" | "due";
+                search?: string;
+                status?: string;
+                assuranceType?: "audit" | "program_evaluation" | "occurrence_investigation" | "noncompliance_investigation" | "management_review" | "change_assessment" | "hazard_notice_sent" | "hazard_notice_received";
+                openedFrom?: string;
+                openedUntil?: string;
                 findingId?: string;
                 reference?: string;
             };
@@ -35402,7 +35416,7 @@ export interface operations {
                         }[];
                         limit: number;
                         hasMore: boolean;
-                        /** @description Newest first by opening time; send as cursor. */
+                        /** @description Send as cursor, with the same filters and order, for the next page. */
                         nextCursor: string | null;
                         /** Format: date-time */
                         computedAt: string;

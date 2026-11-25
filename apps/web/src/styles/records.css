@@ -326,3 +326,50 @@
   list-style: none;
   padding-left: 0;
 }
+
+/* Choosing a subject already on file: the list opens under the field, over what follows it. */
+.subject-picker {
+  position: relative;
+  min-width: 0;
+}
+.records-subject .subject-picker {
+  flex: 1 1 220px;
+  max-width: 280px;
+}
+.subject-picker-list {
+  position: absolute;
+  z-index: 20;
+  top: 100%;
+  right: 0;
+  left: 0;
+  max-height: 260px;
+  margin: 2px 0 0;
+  padding: 4px 0;
+  overflow-y: auto;
+  border: 1px solid var(--line-2);
+  border-radius: 6px;
+  background: var(--sheet);
+  list-style: none;
+  box-shadow: 0 6px 18px rgb(0 0 0 / 12%);
+}
+.subject-picker-list[hidden] {
+  display: none;
+}
+.subject-picker-option {
+  display: grid;
+  gap: 1px;
+  padding: 5px 9px;
+  cursor: pointer;
+  font-size: 13px;
+}
+.subject-picker-option small {
+  color: var(--muted);
+  font-size: 11px;
+}
+.subject-picker-option[aria-selected='true'],
+.subject-picker-option:hover {
+  background: var(--paper);
+}
+.subject-picker-new {
+  color: var(--ink-2);
+}

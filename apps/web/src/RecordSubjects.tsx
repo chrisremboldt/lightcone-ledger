@@ -613,33 +613,55 @@ function ProductionSummary({ client, production }: { client: LedgerClient; produ
 
 /** Every production of records, newest first, with who, when, why and the selection, each downloadable again. */
 export function ProductionsList({ client }: { client: LedgerClient }) {
-  const [list, setList] = useState<RecordProductionListResponse | null>(null);
+  const [pages, setPages] = useState<RecordProductionListResponse[]>([]);
   const [error, setError] = useState<string | null>(null);
+  const [reading, setReading] = useState(false);
+  const path = (cursor?: string) =>
+    `/v1/record-productions?${new URLSearchParams({ limit: '50', ...(cursor ? { cursor } : {}) })}`;
   useEffect(() => {
     let stopped = false;
     client
-      .request<RecordProductionListResponse>('/v1/record-productions?limit=50')
-      .then((response) => !stopped && setList(response))
+      .request<RecordProductionListResponse>(path())
+      .then((response) => !stopped && setPages([response]))
       .catch((failure) => !stopped && setError(plainError(failure).message));
     return () => {
       stopped = true;
     };
   }, [client]);
-  if (error)
+  async function more() {
+    const cursor = pages.at(-1)?.page.nextCursor;
+    if (!cursor) return;
+    setReading(true);
+    try {
+      const next = await client.request<RecordProductionListResponse>(path(cursor));
+      setPages((previous) => [...previous, next]);
+    } catch (failure) {
+      setError(plainError(failure).message);
+    } finally {
+      setReading(false);
+    }
+  }
+  if (error && !pages.length)
     return (
       <Notice tone="alert" title="Produced records could not be read">
         {error}
       </Notice>
     );
-  if (!list) return <Spinner label="Reading produced records" />;
+  if (!pages.length) return <Spinner label="Reading produced records" />;
+  const records = pages.flatMap((page) => page.records);
+  const last = pages.at(-1)!;
   return (
     <section className="records-list" aria-label="Produced records">
       <h2>
-        Produced records <span className="roster-count">{list.records.length}</span>
+        Produced records{' '}
+        <span className="roster-count">
+          {records.length}
+          {last.page.hasMore ? '+' : ''}
+        </span>
       </h2>
-      {!list.records.length && <p className="records-note">No records have been produced yet.</p>}
+      {!records.length && <p className="records-note">No records have been produced yet.</p>}
       <ol className="records-items">
-        {list.records.map((production) => (
+        {records.map((production) => (
           <li key={production.id} data-testid="record-production-item">
             <h3>
               {time(production.producedAt, true)} {timeZoneLabel()} · {production.requestedBy}
@@ -648,8 +670,15 @@ export function ProductionsList({ client }: { client: LedgerClient }) {
           </li>
         ))}
       </ol>
-      {list.page.hasMore && (
-        <p className="records-note">Older productions are not shown here; read them through the API.</p>
+      {error && (
+        <Notice tone="alert" title="Older productions could not be read">
+          {error}
+        </Notice>
+      )}
+      {last.page.hasMore && last.page.nextCursor && (
+        <Button kind="secondary" disabled={reading} onClick={() => void more()}>
+          {reading ? 'Reading…' : 'Older productions'}
+        </Button>
       )}
     </section>
   );

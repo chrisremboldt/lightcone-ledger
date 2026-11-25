@@ -73,6 +73,23 @@ test('a dispatcher imports aircraft time records, then enters a training record 
   await expect(detail.getByText('Complete', { exact: true })).toBeVisible();
   await expect(detail).toContainText('This record replaces record');
 
+  // A second entry offers the pilot already on file as the person types, and says when an id is new.
+  await area.getByRole('button', { name: 'Enter a record' }).click();
+  const again = area.getByRole('form', { name: 'Enter Training' });
+  const subject = again.getByRole('combobox', { name: /^Subject id/ });
+  await subject.fill(`${run}-ALPHA-PILOT`);
+  const offered = again.getByRole('listbox', { name: 'Subjects on file' });
+  await expect(offered.getByRole('option', { name: new RegExp(`^${run}-ALPHA-PILOT-07`) })).toBeVisible();
+  await expect(again.getByRole('status').first()).toHaveText(`1 subject on file matches ${run}-ALPHA-PILOT.`);
+  await subject.press('ArrowDown');
+  await subject.press('Enter');
+  await expect(subject).toHaveValue(`${run}-ALPHA-PILOT-07`);
+  await expect(again.getByTestId('new-subject-note')).toHaveCount(0);
+  await subject.fill(`${run}-ALPHA-PILOT-70`);
+  await expect(again.getByTestId('new-subject-note')).toHaveText(
+    `No record names ${run}-ALPHA-PILOT-70 yet: recording this makes it a new person.`,
+  );
+
   // Closing Records returns to the operation screen as it was.
   await page.getByRole('button', { name: 'Close records' }).click();
   await expect(page.getByRole('complementary', { name: 'Flight monitor' })).toBeVisible();

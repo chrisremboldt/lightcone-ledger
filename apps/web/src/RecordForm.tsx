@@ -12,6 +12,11 @@ import {
 } from './operator-records.js';
 import { plainError } from './sms-labels.js';
 import { timeZoneName } from './format.js';
+import { SubjectPicker } from './SubjectPicker.js';
+import { searchableKinds } from './subject-picker.js';
+
+/** What a field that only explains a record is for, said where a person enters it. */
+const explainsRecord = 'Explains the record to a later reader; it never counts toward a complete record.';
 
 /**
  * One form for every operator record type, generated from its field metadata. A submission is uploaded as a
@@ -97,13 +102,17 @@ export function RecordForm({
             <label htmlFor={id('subjectId')}>
               {subjectColumn.label} <small>{subjectColumn.help}</small>
             </label>
-            <input
+            <SubjectPicker
+              client={client}
+              sourceId={sourceId}
               id={id('subjectId')}
+              kinds={searchableKinds(type.subjectKinds, draft.subjectKind)}
               value={draft.subjectId}
-              onChange={(event) => setDraft({ ...draft, subjectId: event.target.value })}
+              onChange={(value) => setDraft((previous) => ({ ...previous, subjectId: value }))}
+              onChoose={(option) => setDraft((previous) => ({ ...previous, subjectKind: option.kind }))}
+              sayNew
               readOnly={Boolean(replaces)}
               required
-              maxLength={200}
             />
           </>
         )}
@@ -131,11 +140,15 @@ export function RecordForm({
             <label htmlFor={id('secondarySubjectId')}>
               Related {type.secondarySubjectKinds.join(' or ')} id <small>Optional</small>
             </label>
-            <input
+            <SubjectPicker
+              client={client}
+              sourceId={sourceId}
               id={id('secondarySubjectId')}
+              kinds={searchableKinds(type.secondarySubjectKinds, draft.secondarySubjectKind)}
               value={draft.secondarySubjectId}
-              onChange={(event) => setDraft({ ...draft, secondarySubjectId: event.target.value })}
-              maxLength={200}
+              onChange={(value) => setDraft((previous) => ({ ...previous, secondarySubjectId: value }))}
+              onChoose={(option) => setDraft((previous) => ({ ...previous, secondarySubjectKind: option.kind }))}
+              sayNew
             />
             {type.secondarySubjectKinds.length > 1 && (
               <>
@@ -159,6 +172,8 @@ export function RecordForm({
         {type.fields.map((field) => (
           <FieldInput
             key={field.name}
+            client={client}
+            sourceId={sourceId}
             id={id(field.name)}
             field={field}
             type={type}
@@ -195,6 +210,8 @@ export function RecordForm({
 }
 
 function FieldInput({
+  client,
+  sourceId,
   id,
   field,
   type,
@@ -203,6 +220,8 @@ function FieldInput({
   onChange,
   onUnit,
 }: {
+  client: LedgerClient;
+  sourceId: string;
   id: string;
   field: RecordField;
   type: RecordTypeSummary;
@@ -211,12 +230,13 @@ function FieldInput({
   onChange: (value: string) => void;
   onUnit: (unit: string) => void;
 }) {
-  const marker = field.required ? 'Required' : field.replayOnly ? 'For replay' : 'Optional';
   const label = (
     <label htmlFor={id}>
       {field.label}
-      {field.kind === 'date_time' ? ` (${timeZoneName()})` : ''} <small>{marker}</small>
+      {field.kind === 'date_time' ? ` (${timeZoneName()})` : ''}{' '}
+      <small>{field.required ? 'Required' : 'Optional'}</small>
       {field.help && <small className="records-help">{field.help}</small>}
+      {field.replayOnly && <small className="records-help">{explainsRecord}</small>}
     </label>
   );
   const change = (event: { target: { value: string } }) => onChange(event.target.value);
@@ -299,19 +319,29 @@ function FieldInput({
         </>
       );
     }
-    case 'reference':
+    case 'reference': {
+      const placeholder = `Your id for the ${field.referenceKind?.replace('_', ' ')}`;
+      const kinds = searchableKinds(field.referenceKind ? [field.referenceKind] : []);
       return (
         <>
           {label}
-          <input
-            id={id}
-            value={value}
-            onChange={change}
-            maxLength={200}
-            placeholder={`Your id for the ${field.referenceKind?.replace('_', ' ')}`}
-          />
+          {kinds.length ? (
+            <SubjectPicker
+              client={client}
+              sourceId={sourceId}
+              id={id}
+              kinds={kinds}
+              value={value}
+              onChange={onChange}
+              sayNew
+              placeholder={placeholder}
+            />
+          ) : (
+            <input id={id} value={value} onChange={change} maxLength={200} placeholder={placeholder} />
+          )}
         </>
       );
+    }
     default:
       return (
         <>

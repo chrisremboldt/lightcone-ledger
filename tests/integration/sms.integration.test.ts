@@ -10,6 +10,7 @@ import type {
   SmsExportRecord,
   SmsRecordContentResponse,
   SmsRecordDetailResponse,
+  SmsRegisterResponse,
   SmsSigningPreviewResponse,
 } from '../../packages/contracts/src/index.js';
 import { exampleRiskMatrix } from '../../packages/domain/src/sms-example-matrix.js';
@@ -791,6 +792,134 @@ describe.runIf(process.env.LEDGER_ENV !== 'staging')('PostgreSQL SMS record enve
       status: 'verified',
       counts: { withheld: 2 },
     });
+  });
+
+  it('searches, filters, orders and pages a register, and finds a safety report by its own id only', async () => {
+    const t = await tenant('register');
+    async function open(record: Record<string, unknown>, reference?: string) {
+      return (
+        await command(t.token.safety, {
+          kind: 'sms.record.open',
+          ...(reference ? { reference } : {}),
+          record: { ownerId: t.principal.safety, ...record },
+        })
+      ).subject.id;
+    }
+    const hazard = (title: string, dueAt?: string) => ({
+      kind: 'hazard',
+      schema: 'sms.hazard.1',
+      title,
+      ...(dueAt ? { dueAt } : {}),
+      body: {
+        description: 'A fictional hazard on the ridge survey.',
+        consequence: 'A fictional aircraft is lost.',
+        source: { kind: 'manual_identification' },
+      },
+    });
+    const icing = await open(hazard('Rotor icing on the ridge survey', '2027-03-01T17:00:00Z'), 'H-101');
+    const battery = await open(hazard('Battery swelling 100%_test', '2027-01-15T17:00:00Z'), 'H-102');
+    const bird = await open(hazard('Bird strike near the ridge'));
+    const link = await open(hazard('Lost link over the ridge', '2027-01-15T17:00:00Z'), 'H-104');
+
+    async function register(query: Record<string, string>, role: Role = 'safety') {
+      const response = await call(t.token[role], 'GET', `/v1/sms/records?${new URLSearchParams(query)}`);
+      expect(response.statusCode, response.body).toBe(200);
+      return response.json() as SmsRegisterResponse;
+    }
+    /** Every record a query finds, read one record a page, so each page resumes from the cursor before it. */
+    async function paged(query: Record<string, string>, role: Role = 'safety') {
+      const ids: string[] = [];
+      let cursor: string | null = null;
+      do {
+        const page: SmsRegisterResponse = await register({ ...query, limit: '1', ...(cursor ? { cursor } : {}) }, role);
+        ids.push(...page.records.map((record) => record.id));
+        cursor = page.nextCursor;
+        expect(page.hasMore).toBe(cursor !== null);
+      } while (cursor);
+      return ids;
+    }
+    const hazards = (query: Record<string, string> = {}) => paged({ kind: 'hazard', ...query });
+
+    expect(await hazards()).toEqual([link, bird, battery, icing]);
+    expect(await hazards({ order: 'oldest' })).toEqual([icing, battery, bird, link]);
+    expect(await hazards({ order: 'due' })).toEqual([...[battery, link].sort(), icing, bird]);
+    expect((await register({ kind: 'hazard', order: 'due' })).records.map((record) => record.id)).toEqual(
+      await hazards({ order: 'due' }),
+    );
+
+    // Search: part of a title or of the organization's own id, in any case, matched literally.
+    expect(await hazards({ search: 'RIDGE' })).toEqual([link, bird, icing]);
+    expect(await hazards({ search: 'h-10', order: 'oldest' })).toEqual([icing, battery, link]);
+    expect(await hazards({ search: '%' })).toEqual([battery]);
+    expect(await hazards({ search: '0%_t' })).toEqual([battery]);
+    expect(await hazards({ search: 'ridge', order: 'due' })).toEqual([link, icing, bird]);
+
+    // Filters: status, and the days a record was opened in the organization's time zone.
+    expect(await hazards({ status: 'identified' })).toHaveLength(4);
+    expect(await hazards({ status: 'accepted' })).toEqual([]);
+    const day = (
+      await admin.query<{ today: string; yesterday: string; tomorrow: string }>(
+        `SELECT to_char(d,'YYYY-MM-DD') AS today,to_char(d-1,'YYYY-MM-DD') AS yesterday,to_char(d+1,'YYYY-MM-DD') AS tomorrow
+         FROM (SELECT (now() AT TIME ZONE COALESCE(time_zone,'UTC'))::date AS d FROM tenants WHERE id=$1) x`,
+        [t.id],
+      )
+    ).rows[0]!;
+    expect(await hazards({ openedFrom: day.today, openedUntil: day.today })).toHaveLength(4);
+    expect(await hazards({ openedFrom: day.tomorrow })).toEqual([]);
+    expect(await hazards({ openedUntil: day.yesterday })).toEqual([]);
+    const refused = async (query: string, code: string) => {
+      const response = await call(t.token.safety, 'GET', `/v1/sms/records?kind=hazard&${query}`);
+      expect(response.statusCode, response.body).toBe(400);
+      expect(response.json().error.code).toBe(code);
+    };
+    await refused('openedFrom=2026-02-30', 'invalid_day');
+    await refused(`openedFrom=${day.today}&openedUntil=${day.yesterday}`, 'invalid_day');
+    await refused('order=due&cursor=not-a-cursor', 'invalid_cursor');
+    await refused(`order=oldest&cursor=${encodeURIComponent('no-such-record')}`, 'invalid_cursor');
+
+    // Safety assurance records by type.
+    const assurance = (title: string, assuranceType: 'audit' | 'program_evaluation') => ({
+      kind: 'assurance',
+      schema: 'sms.assurance.1',
+      title,
+      body: {
+        assuranceType,
+        performedOn: day.today,
+        scope: 'The fictional ridge survey crews.',
+        examined: 'Their flight records.',
+        findings: [],
+        actions: [],
+      },
+    });
+    const audit = await open(assurance('Ridge records audit', 'audit'));
+    const evaluation = await open(assurance('Ridge program evaluation', 'program_evaluation'));
+    expect(await paged({ kind: 'assurance', assuranceType: 'audit' })).toEqual([audit]);
+    expect(await paged({ kind: 'assurance', search: 'ridge' })).toEqual([evaluation, audit]);
+
+    // A safety report is found by the organization's own id only. Its title, account and reporter are never searched,
+    // nor the date title its register entry shows, by anyone, with or without the capability to read reports.
+    const marker = `MARKER${randomUUID().slice(0, 8)}`;
+    const report = await open(
+      {
+        kind: 'report',
+        schema: 'sms.report.1',
+        title: `${marker} drone drifted over the yard`,
+        body: {
+          narrative: `${marker}: the fictional crew chief saw it drift.`,
+          received: { channel: 'phone' },
+          reporter: { name: `${marker} Reporter` },
+        },
+      },
+      'SR-7',
+    );
+    for (const role of ['safety', 'pilot'] as const) {
+      for (const words of [marker, marker.toLowerCase(), 'drifted', 'Reporter', 'Safety report', 'recorded'])
+        expect(await paged({ kind: 'report', search: words }, role), `${role} searching ${words}`).toEqual([]);
+      expect(await paged({ kind: 'report', search: 'sr-7' }, role)).toEqual([report]);
+      expect(await paged({ kind: 'report', status: 'received', openedFrom: day.today }, role)).toEqual([report]);
+      const listed = await call(t.token[role], 'GET', '/v1/sms/records?kind=report&search=sr-7');
+      expect(listed.body).not.toContain(marker);
+    }
   });
 
   it('exports a period with its dependencies and a reading copy rendered from the bundle', async () => {

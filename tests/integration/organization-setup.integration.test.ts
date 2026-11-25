@@ -241,6 +241,28 @@ describe.runIf(process.env.LEDGER_ENV !== 'staging')('Creating an organization a
       dispatcher.observationGrants,
     );
     expect(list.body).not.toContain(`user_${run}_dispatcher`);
+    expect(list.json()).toMatchObject({ hasMore: false, nextCursor: null });
+
+    // A page at a time, by name and then id: the pages together are the whole list, each person once.
+    const paged: PrincipalAuthorityEntry[] = [];
+    let cursor: string | null = null;
+    do {
+      const page = await call(
+        token,
+        'GET',
+        `/v1/authority/principals?limit=2${cursor ? `&cursor=${encodeURIComponent(cursor)}` : ''}`,
+      );
+      expect(page.statusCode, page.body).toBe(200);
+      expect(validList(page.json()), JSON.stringify(validList.errors)).toBe(true);
+      expect(page.json().principals.length).toBeLessThanOrEqual(2);
+      paged.push(...page.json().principals);
+      cursor = page.json().nextCursor;
+      expect(page.json().hasMore).toBe(cursor !== null);
+    } while (cursor);
+    expect(paged.map((person) => person.id)).toEqual(people.map((person) => person.id));
+    const forged = await call(token, 'GET', '/v1/authority/principals?cursor=not-a-cursor');
+    expect(forged.statusCode, forged.body).toBe(400);
+    expect(forged.json().error.code).toBe('invalid_cursor');
 
     const current = people.find((person) => person.id === pilotId)!;
     const changed = await call(token, 'POST', '/v1/commands', {

@@ -1,4 +1,4 @@
-import { findingAttention, readOpenFindingEntries } from './open-findings.js';
+import { findingAttention, readOpenFindingEntries, validDay } from './open-findings.js';
 import type {
   AssessedPosition,
   AssuranceBody,
@@ -24,6 +24,8 @@ import type {
   SmsRecordKind,
   SmsRecordSummary,
   SmsRecordVersion,
+  SmsRegisterOrder,
+  SmsRegisterQuery,
   SmsRegisterResponse,
   SmsSignatureRecord,
   SmsSigningPreviewResponse,
@@ -474,29 +476,100 @@ export async function getSmsHome(client: PoolClient, principal: AuthContext): Pr
  * One page of a register, newest first by when each record was opened. `cursor` is the last record of the previous
  * page; `findingId` keeps the hazards promoted from that finding, from any of its evaluations.
  */
+/** What a register page may be narrowed by, besides its kind. */
+export type SmsRegisterPage = Omit<SmsRegisterQuery, 'kind'>;
+
+/**
+ * Where the next page starts. Opening times never change, so newest and oldest pages resume after a record id. A due
+ * date can change between pages, so a due page carries the last record's due date as it was read.
+ */
+function registerCursor(order: SmsRegisterOrder, row: { id: string; due_at: Date | null }): string {
+  return order === 'due' ? `${row.due_at?.toISOString() ?? ''}|${row.id}` : row.id;
+}
+function readRegisterCursor(order: SmsRegisterOrder, cursor: string): { id: string; due: string | null } {
+  if (order !== 'due') return { id: cursor, due: null };
+  const split = cursor.indexOf('|');
+  const due = cursor.slice(0, split);
+  if (split < 0 || (due && Number.isNaN(Date.parse(due))))
+    throw new DomainError(400, 'invalid_cursor', 'The register cursor is not one this order gave');
+  return { id: cursor.slice(split + 1), due: due || null };
+}
+
+/** Records after the cursor in each order, and the order itself; at(value) adds a parameter and names it. */
+const registerOrders: Record<
+  SmsRegisterOrder,
+  { after: (cursor: { id: string; due: string | null }, at: (value: unknown) => string) => string; by: string }
+> = {
+  newest: {
+    after: (cursor, at) =>
+      `(r.opened_at,r.id)<(SELECT c.opened_at,c.id FROM sms_records c WHERE c.tenant_id=r.tenant_id AND c.id=${at(cursor.id)})`,
+    by: 'r.opened_at DESC,r.id DESC',
+  },
+  oldest: {
+    after: (cursor, at) =>
+      `(r.opened_at,r.id)>(SELECT c.opened_at,c.id FROM sms_records c WHERE c.tenant_id=r.tenant_id AND c.id=${at(cursor.id)})`,
+    by: 'r.opened_at,r.id',
+  },
+  due: {
+    after: (cursor, at) => {
+      if (cursor.due === null) return `(r.due_at IS NULL AND r.id>${at(cursor.id)})`;
+      const due = at(cursor.due);
+      return `(r.due_at IS NULL OR r.due_at>${due}::timestamptz OR (r.due_at=${due}::timestamptz AND r.id>${at(cursor.id)}))`;
+    },
+    by: 'r.due_at NULLS LAST,r.id',
+  },
+};
+
+/** A search's words as a case-insensitive LIKE pattern that matches them literally. */
+const containing = (text: string) => `%${text.trim().replace(/[\\%_]/g, (character) => `\\${character}`)}%`;
+
 export async function getSmsRegister(
   client: PoolClient,
   principal: AuthContext,
   kind: SmsRecordKind = 'hazard',
-  page: { cursor?: string; findingId?: string; reference?: string; limit?: number } = {},
+  page: SmsRegisterPage = {},
 ): Promise<SmsRegisterResponse> {
   const matrix = await adoptedMatrix(client, principal.tenantId);
   const limit = page.limit ?? REGISTER_LIMIT;
-  if (page.cursor) {
+  const order = page.order ?? 'newest';
+  const after = page.cursor ? readRegisterCursor(order, page.cursor) : null;
+  if (after) {
     const anchor = await client.query('SELECT 1 FROM sms_records WHERE tenant_id=$1 AND id=$2 AND kind=$3', [
       principal.tenantId,
-      page.cursor,
+      after.id,
       kind,
     ]);
     if (!anchor.rowCount) throw new DomainError(400, 'invalid_cursor', 'The register cursor is not a record here');
   }
+  for (const day of [page.openedFrom, page.openedUntil])
+    if (day && !validDay(day))
+      throw new DomainError(400, 'invalid_day', `${day} is not a calendar date; give a day such as 2026-11-01`);
+  if (page.openedFrom && page.openedUntil && page.openedUntil < page.openedFrom)
+    throw new DomainError(400, 'invalid_day', 'The last day opened comes before the first');
+  const params: unknown[] = [principal.tenantId, kind, limit + 1];
+  const at = (value: unknown) => {
+    params.push(value);
+    return `$${params.length}`;
+  };
+  const searched = (pattern: string) =>
+    // A restricted record's title is never searched, whoever asks: it is found by the organization's own id only.
+    `(r.reference ILIKE ${pattern} OR (r.confidentiality='ordinary' AND r.title ILIKE ${pattern}))`;
+  const narrowing = [
+    after ? registerOrders[order].after(after, at) : '',
+    page.findingId ? `h.finding_id=${at(page.findingId)}` : '',
+    page.reference ? `r.reference=${at(page.reference)}` : '',
+    page.search?.trim() ? searched(at(containing(page.search))) : '',
+    page.status ? `r.status=${at(page.status)}` : '',
+    page.assuranceType ? `v.body->>'assuranceType'=${at(page.assuranceType)}` : '',
+    page.openedFrom ? `r.opened_at>=(${at(page.openedFrom)}::date::timestamp AT TIME ZONE z.zone)` : '',
+    page.openedUntil ? `r.opened_at<((${at(page.openedUntil)}::date+1)::timestamp AT TIME ZONE z.zone)` : '',
+  ].filter(Boolean);
   const rows = await client.query<SummaryRow>(
-    `${summarySql} WHERE r.tenant_id=$1 AND r.kind=$2
-     AND ($4::text IS NULL OR (r.opened_at,r.id)<(SELECT c.opened_at,c.id FROM sms_records c WHERE c.tenant_id=$1 AND c.id=$4))
-     AND ($5::text IS NULL OR h.finding_id=$5)
-     AND ($6::text IS NULL OR r.reference=$6)
-     ORDER BY r.opened_at DESC,r.id DESC LIMIT $3`,
-    [principal.tenantId, kind, limit + 1, page.cursor ?? null, page.findingId ?? null, page.reference ?? null],
+    `${summarySql}
+     CROSS JOIN (SELECT COALESCE(time_zone,'UTC') AS zone FROM tenants WHERE id=$1) z
+     WHERE r.tenant_id=$1 AND r.kind=$2${narrowing.map((condition) => ` AND ${condition}`).join('')}
+     ORDER BY ${registerOrders[order].by} LIMIT $3`,
+    params,
   );
   const shown = rows.rows.slice(0, limit);
   const documents = kind === 'document' ? await documentSummaries(client, principal, shown) : new Map();
@@ -521,7 +594,7 @@ export async function getSmsRegister(
     }),
     limit,
     hasMore,
-    nextCursor: hasMore ? shown[shown.length - 1]!.id : null,
+    nextCursor: hasMore ? registerCursor(order, shown[shown.length - 1]!) : null,
     computedAt: rows.rows[0]?.now.toISOString() ?? new Date().toISOString(),
   };
 }

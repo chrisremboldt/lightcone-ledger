@@ -34,6 +34,52 @@ test('a pilot submits a report without their name and is shown a receipt code on
   await expect(dialog).toHaveCount(0);
 });
 
+test('the report dialog keeps focus, closes on Escape without sending, and keeps the draft until discarded', async ({
+  page,
+}) => {
+  await openAs(page, 'pilot');
+  const opener = page.getByRole('button', { name: 'Report a safety concern', exact: true });
+  await opener.click();
+  const dialog = page.getByRole('dialog', { name: 'Report a safety concern' });
+  const seen = dialog.getByLabel('What happened or what you saw', { exact: true });
+  await expect(seen).toBeFocused();
+  const words = `Loose propeller guard on the spare aircraft ${randomUUID().slice(0, 8)}`;
+  await seen.fill(words);
+  // The page behind is inert: tabbing never reaches it (past the last control the browser may hold focus itself).
+  for (let step = 0; step < 14; step += 1) {
+    await page.keyboard.press('Tab');
+    const inside = await dialog.evaluate(
+      (element) => element.contains(document.activeElement) || document.activeElement === document.body,
+    );
+    expect(inside).toBe(true);
+  }
+
+  let sent = false;
+  page.on('request', (request) => {
+    if (request.method() === 'POST' && new URL(request.url()).pathname === '/v1/safety-reports') sent = true;
+  });
+  await page.keyboard.press('Escape');
+  await expect(dialog).toHaveCount(0);
+  await expect(opener).toBeFocused();
+  expect(sent).toBe(false);
+
+  await opener.click();
+  await expect(dialog.getByTestId('report-draft-kept')).toBeVisible();
+  await expect(dialog.getByLabel('What happened or what you saw', { exact: true })).toHaveValue(words);
+  await dialog.getByRole('button', { name: 'Close', exact: true }).click();
+  await expect(dialog).toHaveCount(0);
+  await expect(opener).toBeFocused();
+
+  await opener.click();
+  await dialog.getByRole('button', { name: 'Discard', exact: true }).click();
+  await expect(dialog.getByLabel('What happened or what you saw', { exact: true })).toHaveValue('');
+  await expect(dialog.getByRole('button', { name: 'Discard', exact: true })).toHaveCount(0);
+  await page.keyboard.press('Escape');
+  await opener.click();
+  await expect(dialog.getByTestId('report-draft-kept')).toHaveCount(0);
+  expect(sent).toBe(false);
+});
+
 test('a safety manager issues a reporting link, and a report sent through it is received', async ({ page }) => {
   const label = `Line crew trailer ${randomUUID().slice(0, 8)}`;
   await openAs(page, 'safety');

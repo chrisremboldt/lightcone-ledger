@@ -223,6 +223,7 @@ export {
   getSmsProgram,
   getSmsHome,
   getSmsRegister,
+  type SmsRegisterPage,
   getSmsRecord,
   getSmsRecordContent,
   getSmsSigningPreview,

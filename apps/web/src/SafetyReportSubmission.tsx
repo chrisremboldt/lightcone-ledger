@@ -1,4 +1,5 @@
-import { useState, type FormEvent, type ReactNode } from 'react';
+import { useEffect, useRef, useState, type FormEvent, type ReactNode } from 'react';
+import { createPortal } from 'react-dom';
 import { LedgerClient } from '@ledger/contracts/client';
 import type {
   LinkSafetyReport,
@@ -19,6 +20,14 @@ interface Draft {
   contact: string;
 }
 const blank = (): Draft => ({ whatWasSeen: '', occurredAt: '', where: '', contact: '' });
+
+/** What a signed-in person has typed and not sent. It is kept in memory while the page is open, never in storage. */
+export interface SignedInReportDraft extends Draft {
+  named: boolean;
+}
+export const blankSignedInReport = (): SignedInReportDraft => ({ ...blank(), named: false });
+export const reportDraftStarted = (draft: SignedInReportDraft): boolean =>
+  Boolean(draft.whatWasSeen.trim() || draft.occurredAt || draft.where.trim() || draft.contact.trim() || draft.named);
 
 /** The report's fields as the API takes them. The time is read on the reporter's own device. */
 function reportFields(draft: Draft): Omit<SignedInSafetyReport, 'named'> {
@@ -49,6 +58,7 @@ function ReportFields({
       <label htmlFor={`${idPrefix}-seen`}>What happened or what you saw</label>
       <textarea
         id={`${idPrefix}-seen`}
+        data-first-field
         rows={6}
         value={draft.whatWasSeen}
         onChange={set('whatWasSeen')}
@@ -93,23 +103,50 @@ function ReceiptShown({ receipt, onDone }: { receipt: SafetyReportReceipt['recei
   );
 }
 
-/** Report a safety concern while signed in, from any screen. */
-export function SubmitReportDialog({ client, onClose }: { client: LedgerClient; onClose: () => void }) {
-  const [draft, setDraft] = useState(blank);
-  const [named, setNamed] = useState(false);
+/**
+ * Report a safety concern while signed in, from any screen: a native modal dialog, so focus moves into it, stays in it
+ * and returns to the button that opened it. Escape and Close keep the draft, which the caller holds while the page is
+ * open; Discard clears it.
+ */
+export function SubmitReportDialog({
+  client,
+  draft,
+  onDraft,
+  onClose,
+}: {
+  client: LedgerClient;
+  draft: SignedInReportDraft;
+  onDraft: (draft: SignedInReportDraft) => void;
+  onClose: () => void;
+}) {
+  const dialog = useRef<HTMLDialogElement>(null);
+  const [resumed] = useState(() => reportDraftStarted(draft));
   const [pending, setPending] = useState(false);
   const [failure, setFailure] = useState<string | null>(null);
   const [receipt, setReceipt] = useState<SafetyReportReceipt['receipt'] | null>(null);
+
+  useEffect(() => {
+    const element = dialog.current!;
+    const opener = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+    element.showModal();
+    element.querySelector<HTMLElement>('[data-first-field]')?.focus();
+    return () => {
+      element.close();
+      if (opener?.isConnected) opener.focus();
+    };
+  }, []);
+
   async function submit(event: FormEvent) {
     event.preventDefault();
     setPending(true);
     setFailure(null);
     try {
-      const body: SignedInSafetyReport = { ...reportFields(draft), named };
+      const body: SignedInSafetyReport = { ...reportFields(draft), named: draft.named };
       const answer = await client.request<SafetyReportReceipt>('/v1/safety-reports', {
         method: 'POST',
         body: JSON.stringify(body),
       });
+      onDraft(blankSignedInReport());
       setReceipt(answer.receipt);
     } catch (error) {
       setFailure(plainError(error).message);
@@ -117,42 +154,69 @@ export function SubmitReportDialog({ client, onClose }: { client: LedgerClient; 
       setPending(false);
     }
   }
-  return (
-    <div className="safety-report-overlay">
-      <div className="safety-report-dialog" role="dialog" aria-modal="true" aria-label="Report a safety concern">
-        {receipt ? (
-          <ReceiptShown receipt={receipt} onDone={onClose} />
-        ) : (
-          <form className="action-form safety-form" onSubmit={(event) => void submit(event)}>
-            <h3>Report a safety concern</h3>
-            <p className="safety-form-note">
-              Only the people cleared to read safety reports can read it. It is stored as sent through the
-              organization&apos;s safety reporting channel: unless you put your name or a way to reach you on it,
-              nothing Ledger keeps says it was you.
+  return createPortal(
+    <dialog
+      ref={dialog}
+      className="safety-report-dialog"
+      aria-label="Report a safety concern"
+      onCancel={(event) => {
+        event.preventDefault();
+        if (!pending) onClose();
+      }}
+    >
+      {receipt ? (
+        <ReceiptShown receipt={receipt} onDone={onClose} />
+      ) : (
+        <form className="action-form safety-form" onSubmit={(event) => void submit(event)}>
+          <h3>Report a safety concern</h3>
+          <p className="safety-form-note">
+            Only the people cleared to read safety reports can read it. It is stored as sent through the
+            organization&apos;s safety reporting channel: unless you put your name or a way to reach you on it, nothing
+            Ledger keeps says it was you.
+          </p>
+          {resumed && (
+            <p className="safety-form-note" data-testid="report-draft-kept">
+              Your unsent report is as you left it. It is kept only while this page stays open, and nothing is sent
+              until you send it.
             </p>
-            <ReportFields draft={draft} onChange={setDraft} idPrefix="signed-in-report">
-              <label className="safety-report-named">
-                <input type="checkbox" checked={named} onChange={(event) => setNamed(event.target.checked)} />
-                Put my name on this report
-              </label>
-            </ReportFields>
-            {failure && (
-              <Notice tone="alert" title="The report was not sent">
-                {failure}
-              </Notice>
+          )}
+          <ReportFields
+            draft={draft}
+            onChange={(fields) => onDraft({ ...draft, ...fields })}
+            idPrefix="signed-in-report"
+          >
+            <label className="safety-report-named">
+              <input
+                type="checkbox"
+                checked={draft.named}
+                onChange={(event) => onDraft({ ...draft, named: event.target.checked })}
+              />
+              Put my name on this report
+            </label>
+          </ReportFields>
+          {failure && (
+            <Notice tone="alert" title="The report was not sent">
+              {failure}
+            </Notice>
+          )}
+          <div className="safety-report-actions">
+            <Button kind="primary" type="submit" disabled={pending}>
+              {pending ? 'Sending…' : 'Send report'}
+            </Button>
+            <Button type="button" onClick={onClose} disabled={pending}>
+              Close
+            </Button>
+            {reportDraftStarted(draft) && (
+              <Button type="button" kind="quiet" disabled={pending} onClick={() => onDraft(blankSignedInReport())}>
+                Discard
+              </Button>
             )}
-            <div className="safety-report-actions">
-              <Button kind="primary" type="submit" disabled={pending}>
-                {pending ? 'Sending…' : 'Send report'}
-              </Button>
-              <Button type="button" onClick={onClose}>
-                Cancel
-              </Button>
-            </div>
-          </form>
-        )}
-      </div>
-    </div>
+          </div>
+          <p className="safety-form-note">Close keeps what you typed while this page stays open; Discard clears it.</p>
+        </form>
+      )}
+    </dialog>,
+    document.body,
   );
 }
 

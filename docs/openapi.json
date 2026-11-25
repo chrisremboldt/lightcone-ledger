@@ -15299,11 +15299,12 @@
       },
       "PrincipalAuthorityListResponse": {
         "additionalProperties": false,
-        "description": "Every person, source and service of the organization, active and inactive, with their current complete authority, ordered by name. Workers are not listed. Requires authority:write. Private, no-store. At most 1000 entries; hasMore says whether more exist.",
+        "description": "Every person, source and service of the organization, active and inactive, with their current complete authority, ordered by name and then id, a page at a time. Workers are not listed. Requires authority:write. Private, no-store. At most 1000 entries a page; hasMore says whether more exist.",
         "type": "object",
         "required": [
           "principals",
-          "hasMore"
+          "hasMore",
+          "nextCursor"
         ],
         "properties": {
           "principals": {
@@ -15538,6 +15539,17 @@
           },
           "hasMore": {
             "type": "boolean"
+          },
+          "nextCursor": {
+            "description": "Send as cursor to read the next page; null on the last page.",
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
           }
         }
       },
@@ -61227,7 +61239,29 @@
             "bearerAuth": []
           }
         ],
-        "parameters": [],
+        "parameters": [
+          {
+            "name": "cursor",
+            "in": "query",
+            "schema": {
+              "minLength": 1,
+              "maxLength": 4096,
+              "description": "The nextCursor of the previous page.",
+              "type": "string"
+            },
+            "description": "Opaque continuation scoped to tenant, principal authority, route and filters. Current read models, not a frozen historical snapshot."
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": {
+              "minimum": 1,
+              "maximum": 1000,
+              "default": 1000,
+              "type": "integer"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "description": "Success",
@@ -61235,11 +61269,12 @@
               "application/json": {
                 "schema": {
                   "additionalProperties": false,
-                  "description": "Every person, source and service of the organization, active and inactive, with their current complete authority, ordered by name. Workers are not listed. Requires authority:write. Private, no-store. At most 1000 entries; hasMore says whether more exist.",
+                  "description": "Every person, source and service of the organization, active and inactive, with their current complete authority, ordered by name and then id, a page at a time. Workers are not listed. Requires authority:write. Private, no-store. At most 1000 entries a page; hasMore says whether more exist.",
                   "type": "object",
                   "required": [
                     "principals",
-                    "hasMore"
+                    "hasMore",
+                    "nextCursor"
                   ],
                   "properties": {
                     "principals": {
@@ -61474,6 +61509,17 @@
                     },
                     "hasMore": {
                       "type": "boolean"
+                    },
+                    "nextCursor": {
+                      "description": "Send as cursor to read the next page; null on the last page.",
+                      "anyOf": [
+                        {
+                          "type": "string"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
                     }
                   }
                 }
@@ -141815,11 +141861,110 @@
             "in": "query",
             "schema": {
               "minLength": 1,
-              "maxLength": 200,
-              "description": "The nextCursor of the previous page.",
+              "maxLength": 300,
+              "description": "The nextCursor of the previous page, read with the same filters and order.",
               "type": "string"
             },
             "description": "Opaque continuation scoped to tenant, principal authority, route and filters. Current read models, not a frozen historical snapshot."
+          },
+          {
+            "name": "order",
+            "in": "query",
+            "schema": {
+              "description": "newest (the default) or oldest: by when each record was opened, then by id. due: the soonest due date first, records with none last, then by id.",
+              "anyOf": [
+                {
+                  "const": "newest",
+                  "type": "string"
+                },
+                {
+                  "const": "oldest",
+                  "type": "string"
+                },
+                {
+                  "const": "due",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          {
+            "name": "search",
+            "in": "query",
+            "schema": {
+              "minLength": 1,
+              "maxLength": 80,
+              "description": "Part of a record's title or of the organization's own id for it, in any case. A record whose content is restricted, such as a safety report, is found by its own id only: its title is never searched.",
+              "type": "string"
+            }
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "schema": {
+              "pattern": "^[a-z_]{1,40}$",
+              "description": "Only records in this status, such as accepted or closed.",
+              "type": "string"
+            }
+          },
+          {
+            "name": "assuranceType",
+            "in": "query",
+            "schema": {
+              "description": "Only safety assurance records of this type.",
+              "anyOf": [
+                {
+                  "const": "audit",
+                  "type": "string"
+                },
+                {
+                  "const": "program_evaluation",
+                  "type": "string"
+                },
+                {
+                  "const": "occurrence_investigation",
+                  "type": "string"
+                },
+                {
+                  "const": "noncompliance_investigation",
+                  "type": "string"
+                },
+                {
+                  "const": "management_review",
+                  "type": "string"
+                },
+                {
+                  "const": "change_assessment",
+                  "type": "string"
+                },
+                {
+                  "const": "hazard_notice_sent",
+                  "type": "string"
+                },
+                {
+                  "const": "hazard_notice_received",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          {
+            "name": "openedFrom",
+            "in": "query",
+            "schema": {
+              "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}$",
+              "description": "The first day, in the organization's time zone, the record was opened. A safety report is opened when it is recorded as received.",
+              "type": "string"
+            }
+          },
+          {
+            "name": "openedUntil",
+            "in": "query",
+            "schema": {
+              "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}$",
+              "description": "The last day, in the organization's time zone, the record was opened, included.",
+              "type": "string"
+            }
           },
           {
             "name": "findingId",
@@ -142457,11 +142602,11 @@
                       "type": "boolean"
                     },
                     "nextCursor": {
-                      "description": "Newest first by opening time; send as cursor.",
+                      "description": "Send as cursor, with the same filters and order, for the next page.",
                       "anyOf": [
                         {
                           "minLength": 1,
-                          "maxLength": 200,
+                          "maxLength": 300,
                           "type": "string"
                         },
                         {

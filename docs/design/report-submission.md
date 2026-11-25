@@ -25,7 +25,7 @@ Ledger does not protect a report's content from a person who administers its dat
 
 ### 1. Signed in, with or without a name
 
-Any active person of the organization (any principal of kind `human`, with or without any permission) can submit a report from any screen: **Report a safety concern** in the top bar. The form asks what was seen, when and where, and offers **Put my name on this report** (off by default) and an optional way to reach the reporter. Attachments are not taken; the form says so.
+Any active person of the organization (any principal of kind `human`, with or without any permission) can submit a report from any screen: **Report a safety concern** in the top bar. The form asks what was seen, when and where, and offers **Put my name on this report** (off by default) and an optional way to reach the reporter. Attachments are not taken; the form says so. The form is a modal dialog: Escape or **Close** closes it without sending, and what the person typed stays in the page's memory, never in browser storage, so opening it again shows the draft with **Discard** to clear it. Reloading or leaving the page loses it.
 
 `POST /v1/safety-reports`, signed in. The API uses the signed-in person for two things only, and only in memory: to know which organization the report goes to, and, when they ticked the box, to copy their display name into the report's protected content. The transaction that writes the report runs as the organization's **reporting channel** (below), not as the person: the person's id is never a parameter of any statement it runs.
 

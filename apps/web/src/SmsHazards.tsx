@@ -14,6 +14,8 @@ import { dueLabel, levelName, levelTone, plainError, statusPresentation } from '
 import { FailureNotice, IdentifyHazardForm, useCommand } from './SmsForms.js';
 import { originLabels, type FlightFinding, type FlightLinks } from './safety-navigation.js';
 import { LandingReports } from './LandingReports.js';
+import { RegisterMore, RegisterTools, useRegisterList } from './SmsRegisterTools.js';
+import { narrowed, registerCount, unnarrowed } from './sms-register-query.js';
 
 const findingStatusLabels: Record<SmsFindingPromotionResponse['findingStatus'], string> = {
   open: 'Needs an owner',
@@ -66,7 +68,11 @@ export function RecordRow({
   );
 }
 
-/** Every hazard of the organization, newest first, a page at a time. */
+const hazardStatuses = ['identified', 'awaiting_acceptance', 'needs_reassessment', 'accepted', 'closed'].map(
+  (value) => ({ value, label: statusPresentation(value).label }),
+);
+
+/** Every hazard of the organization, newest first, a page at a time; searched, filtered and ordered on request. */
 export function HazardRegister({
   register,
   home,
@@ -84,45 +90,37 @@ export function HazardRegister({
   onOpen: (record: Pick<SmsRecordSummary, 'id' | 'kind'>) => void;
   onChanged: () => void;
 }) {
-  // Later pages, read on request after the first page the safety section keeps current.
-  const [later, setLater] = useState<{ records: SmsRecordSummary[]; nextCursor: string | null } | null>(null);
-  const [loading, setLoading] = useState(false);
-  const [failure, setFailure] = useState<string | null>(null);
-  const shownIds = new Set(register.records.map((record) => record.id));
-  const records = [...register.records, ...(later?.records ?? []).filter((record) => !shownIds.has(record.id))];
-  const nextCursor = later ? later.nextCursor : register.nextCursor;
-  async function more() {
-    if (!nextCursor) return;
-    setLoading(true);
-    setFailure(null);
-    try {
-      const page = await client.request<SmsRegisterResponse>(registerPath({ cursor: nextCursor }));
-      setLater((previous) => ({
-        records: [...(previous?.records ?? []), ...page.records],
-        nextCursor: page.nextCursor,
-      }));
-    } catch (error) {
-      setFailure(plainError(error).message);
-    } finally {
-      setLoading(false);
-    }
-  }
+  const [query, setQuery] = useState(unnarrowed);
+  const list = useRegisterList(client, 'hazard', register, query);
+  const records = list.records ?? [];
   return (
     <div className="thread-layout safety-layout">
       <div className="thread-main safety-main">
         <p className="thread-crumbs">Safety / Hazard register</p>
         <div className="thread-title">
           <h2>Hazard register</h2>
-          <Badge>
-            {records.length}
-            {nextCursor ? '+' : ''} recorded
-          </Badge>
+          <Badge>{list.records ? registerCount(records.length, Boolean(list.more), query) : '…'}</Badge>
         </div>
         <p className="safety-intro">
           Every hazard your organization has identified, from any source, newest first. Each keeps its owner,
           assessment, risk acceptance and full history.
         </p>
-        {records.length === 0 ? (
+        {(register.records.length > 0 || narrowed(query)) && (
+          <RegisterTools
+            noun="hazards"
+            query={query}
+            onQuery={setQuery}
+            searchLabel="Title or reference"
+            searchHint="Search finds a hazard by its title or your reference for it."
+            statuses={hazardStatuses}
+            orders={['newest', 'oldest', 'due']}
+          />
+        )}
+        {!list.records ? (
+          <Spinner label="Reading hazards" />
+        ) : records.length === 0 && narrowed(query) ? (
+          <p className="sms-empty">No hazards match. Try other words, another state or another order.</p>
+        ) : records.length === 0 ? (
           <div className="safety-empty">
             <h3>No hazards recorded yet</h3>
             <p>
@@ -141,18 +139,7 @@ export function HazardRegister({
             ))}
           </div>
         )}
-        {failure && (
-          <Notice tone="alert" title="More hazards unavailable">
-            {failure}
-          </Notice>
-        )}
-        {nextCursor && (
-          <div className="history-navigation">
-            <Button kind="quiet" disabled={loading} onClick={() => void more()}>
-              {loading ? 'Loading…' : 'More hazards'}
-            </Button>
-          </div>
-        )}
+        <RegisterMore label="More hazards" list={list} />
       </div>
       <aside className="rail safety-rail" aria-label="Safety actions">
         <IdentifyHazardForm

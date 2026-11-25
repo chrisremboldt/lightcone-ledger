@@ -13,8 +13,9 @@ import {
   type SmsLinkedRecord,
   type SmsRecordDetailResponse,
   type SmsRecordSummary,
+  type SmsRegisterResponse,
 } from '@ledger/contracts';
-import { Badge, Button, Notice } from '@ledger/ui';
+import { Badge, Button, Notice, Spinner } from '@ledger/ui';
 import { ctDay, time, timeZoneLabel } from './format.js';
 import {
   assuranceDraft,
@@ -26,6 +27,8 @@ import {
 } from './assurance-form.js';
 import { FailureNotice, useCommand } from './SmsForms.js';
 import { RecordRow } from './SmsHazards.js';
+import { RegisterMore, RegisterTools, useRegisterList } from './SmsRegisterTools.js';
+import { narrowed, registerCount, unnarrowed } from './sms-register-query.js';
 
 // Safety assurance records (docs/design/assurance-records.md): audits, evaluations, investigations, reviews, change
 // assessments and hazard notices, with the actions they set.
@@ -44,8 +47,14 @@ const fieldLabels: Record<AssuranceTypeField, string> = {
 const today = () => ctDay(Date.now());
 
 /** Every safety assurance record, newest first, with the form to record one beside it. */
+const assuranceStatuses = [
+  { value: 'draft', label: 'Draft, not signed' },
+  { value: 'signed', label: 'Signed' },
+];
+const assuranceTypeChoices = assuranceTypeValues.map((value) => ({ value, label: assuranceTypeLabel(value) }));
+
 export function AssuranceRegister({
-  records,
+  register,
   home,
   principal,
   client,
@@ -53,7 +62,7 @@ export function AssuranceRegister({
   onOpen,
   onChanged,
 }: {
-  records: SmsRecordSummary[];
+  register: SmsRegisterResponse;
   home: SmsHomeResponse;
   principal: Principal;
   client: LedgerClient;
@@ -62,6 +71,9 @@ export function AssuranceRegister({
   onChanged: () => void;
 }) {
   const [recording, setRecording] = useState(false);
+  const [query, setQuery] = useState(unnarrowed);
+  const list = useRegisterList(client, 'assurance', register, query);
+  const records = list.records ?? [];
   const mayWrite = principal.capabilities.includes('sms:write');
   return (
     <div className="thread-layout safety-layout">
@@ -69,7 +81,7 @@ export function AssuranceRegister({
         <p className="thread-crumbs">Safety / Safety assurance</p>
         <div className="thread-title">
           <h2>Safety assurance</h2>
-          <Badge>{records.length} recorded</Badge>
+          <Badge>{list.records ? registerCount(records.length, Boolean(list.more), query) : '…'}</Badge>
         </div>
         <p className="safety-intro">
           Audits, evaluations of the safety program, investigations, reviews of safety performance by the accountable
@@ -77,6 +89,18 @@ export function AssuranceRegister({
           covered, what it looked at, what it found and the actions it set. A person with the authority to adopt safety
           documentation signs each version; signing sets its actions.
         </p>
+        {!recording && (register.records.length > 0 || narrowed(query)) && (
+          <RegisterTools
+            noun="safety assurance records"
+            query={query}
+            onQuery={setQuery}
+            searchLabel="Title or reference"
+            searchHint="Search finds a record by its title or your reference for it."
+            statuses={assuranceStatuses}
+            types={assuranceTypeChoices}
+            orders={['newest', 'oldest']}
+          />
+        )}
         {recording && mayWrite ? (
           <AssuranceForm
             client={client}
@@ -90,6 +114,10 @@ export function AssuranceRegister({
             }}
             onCancel={() => setRecording(false)}
           />
+        ) : !list.records ? (
+          <Spinner label="Reading safety assurance records" />
+        ) : records.length === 0 && narrowed(query) ? (
+          <p className="sms-empty">No safety assurance records match. Try other words, another state or type.</p>
         ) : records.length === 0 ? (
           <div className="safety-empty">
             <h3>No safety assurance record yet</h3>
@@ -102,6 +130,7 @@ export function AssuranceRegister({
             ))}
           </div>
         )}
+        {!recording && <RegisterMore label="More safety assurance records" list={list} />}
       </div>
       <aside className="rail safety-rail" aria-label="Safety assurance actions">
         <section className="safety-next-action sms-next-step">

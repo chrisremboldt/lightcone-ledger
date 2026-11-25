@@ -32,7 +32,7 @@ Each type is an `OperatorRecordDefinition`, registered with the existing `regist
 - `missingReplayFields(definition, body)`: replay-only fields with no value. This is thin replay, never an incomplete record.
 - A field may be `requiredUnless` another: of two fields that say the same thing in different ways, one is needed (an inspection's next due time, or its next due hours in service). With neither, `missingRequiredFields` names the first, and `missingFieldLabel` names both ("Next inspection due or Next inspection due at hours in service").
 
-`replayOnly` fields support replay and explanation only (who assessed, a work-order number, a mission name). A field cannot be both required and replay-only; `defineOperatorRecordType` refuses it.
+`replayOnly` fields support replay and explanation only (who assessed, a work-order number, a mission name). A field cannot be both required and replay-only; `defineOperatorRecordType` refuses it. A person entering a record today can fill one as well as an import can, so the entry form marks it Optional and says it explains the record to a later reader and never counts toward a complete record.
 
 `standardObservationRegistry` is the default registry: the vocabulary types (`observationRegistryV1`, unchanged) plus every type here. `findOperatorRecordDefinition` returns a registered type with its field metadata, so file import can build a form or a CSV/JSON template (one column per field, label as header, help as note, options as allowed values) from the registry alone.
 

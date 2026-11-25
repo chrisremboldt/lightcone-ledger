@@ -95,3 +95,42 @@ describe('generated entry form', () => {
     });
   });
 });
+
+describe('entry form fields', () => {
+  it('marks a field that only explains a record as optional, says what it is for, and offers subjects on file', async () => {
+    const { createRequire } = await import('node:module');
+    const webRequire = createRequire(new URL('../../apps/web/package.json', import.meta.url));
+    const { createElement } = webRequire('react') as typeof import('react');
+    const { renderToStaticMarkup } = webRequire('react-dom/server') as typeof import('react-dom/server');
+    const { RecordForm } = await import('../../apps/web/src/RecordForm.js');
+    const type = types.find(
+      (candidate) =>
+        candidate.fields.some((field) => field.replayOnly) &&
+        candidate.fields.some((field) => field.kind === 'reference' && field.referenceKind !== 'duty_period') &&
+        !candidate.subjectKinds.includes('organization'),
+    )!;
+    const shown = renderToStaticMarkup(
+      createElement(RecordForm, {
+        client: {} as never,
+        type,
+        sourceId: 'operator-records',
+        onRecorded: () => {},
+      }),
+    );
+    expect(shown).not.toMatch(/for replay/i);
+    const replay = type.fields.find((field) => field.replayOnly)!;
+    const label = shown.slice(
+      shown.indexOf(`>${replay.label}`),
+      shown.indexOf('</label>', shown.indexOf(`>${replay.label}`)),
+    );
+    expect(label).toContain('<small>Optional</small>');
+    expect(label).toContain('Explains the record to a later reader; it never counts toward a complete record.');
+    // The subject id and each reference to a person, aircraft, site or component are comboboxes over subjects on file.
+    const references = type.fields.filter(
+      (field) => field.kind === 'reference' && field.referenceKind !== 'duty_period',
+    );
+    expect(shown.match(/role="combobox"/g)).toHaveLength(
+      1 + references.length + (type.secondarySubjectKinds.some((kind) => kind !== 'organization') ? 1 : 0),
+    );
+  });
+});

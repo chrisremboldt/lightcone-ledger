@@ -40,6 +40,7 @@ A hazard is not assessed by drafting. Its before and after columns stay in the f
 
 - Opening a record with a reference already in use for that kind is refused with `409 reference_in_use`, naming the record that has it.
 - `GET /v1/sms/records?kind=<kind>&reference=<reference>` finds it; every record summary carries its `reference`.
+- `search` finds records whose reference, or whose title, contains the words in any case. A record whose content is restricted, such as a safety report, is found by its reference only: its title, account and reporter are never searched, by anyone. The register also takes `status`, `assuranceType`, `openedFrom` and `openedUntil` (days in the organization's time zone) and `order` (`newest`, `oldest`, or `due`: the soonest due date first), and pages under each order. The Safety screens offer the same above the hazard register, the safety reports and the safety assurance records.
 - `pnpm ledger safety draft` looks each item up first. One on file opens nothing and is reported as on file, with its Ledger id; if the file's content differs from the version on file, the client says so and opens nothing. Revising it is a person's work on the record's page.
 - A control drafted from a hazard row carries the reference `<hazard reference>/<n>`, its place in the row's list.
 

@@ -54,7 +54,8 @@ export interface AboutBounds {
   before?: string;
 }
 
-function validDay(text: string): boolean {
+/** Whether a YYYY-MM-DD text is a calendar date. */
+export function validDay(text: string): boolean {
   const [year, month, day] = text.split('-').map(Number);
   const date = new Date(Date.UTC(year!, month! - 1, day!));
   return date.getUTCFullYear() === year && date.getUTCMonth() === month! - 1 && date.getUTCDate() === day;

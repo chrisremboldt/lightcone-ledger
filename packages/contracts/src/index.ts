@@ -138,14 +138,29 @@ export const PrincipalAuthorityEntrySchema = Type.Object(
   { additionalProperties: false },
 );
 export type PrincipalAuthorityEntry = Static<typeof PrincipalAuthorityEntrySchema>;
+export const PrincipalAuthorityListQuerySchema = Type.Object(
+  {
+    cursor: Type.Optional(
+      Type.String({ minLength: 1, maxLength: 4096, description: 'The nextCursor of the previous page.' }),
+    ),
+    limit: Type.Optional(
+      Type.Integer({ minimum: 1, maximum: PRINCIPAL_AUTHORITY_LIST_LIMIT, default: PRINCIPAL_AUTHORITY_LIST_LIMIT }),
+    ),
+  },
+  { additionalProperties: false },
+);
+export type PrincipalAuthorityListQuery = Static<typeof PrincipalAuthorityListQuerySchema>;
 export const PrincipalAuthorityListResponseSchema = Type.Object(
   {
     principals: Type.Array(PrincipalAuthorityEntrySchema, { maxItems: PRINCIPAL_AUTHORITY_LIST_LIMIT }),
     hasMore: Type.Boolean(),
+    nextCursor: Type.Union([Type.String(), Type.Null()], {
+      description: 'Send as cursor to read the next page; null on the last page.',
+    }),
   },
   {
     additionalProperties: false,
-    description: `Every person, source and service of the organization, active and inactive, with their current complete authority, ordered by name. Workers are not listed. Requires authority:write. Private, no-store. At most ${PRINCIPAL_AUTHORITY_LIST_LIMIT} entries; hasMore says whether more exist.`,
+    description: `Every person, source and service of the organization, active and inactive, with their current complete authority, ordered by name and then id, a page at a time. Workers are not listed. Requires authority:write. Private, no-store. At most ${PRINCIPAL_AUTHORITY_LIST_LIMIT} entries a page; hasMore says whether more exist.`,
   },
 );
 export type PrincipalAuthorityListResponse = Static<typeof PrincipalAuthorityListResponseSchema>;

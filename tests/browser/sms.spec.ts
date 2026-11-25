@@ -133,3 +133,49 @@ test('an organization that flies keeps its hazard register and matrix in a Safet
   await page.getByRole('button', { name: 'Return to flights', exact: true }).click();
   await expect(page.getByRole('searchbox', { name: 'Find flight' })).toBeVisible();
 });
+
+test('a safety manager searches, filters and orders the hazard register, and finds reports by reference only', async ({
+  page,
+}) => {
+  const word = `Quarry${randomUUID().slice(0, 8)}`;
+  await openAs(page, 'safety');
+  for (const title of [`${word} dust on the optics`, `${word} blasting schedule`]) {
+    const identify = page.getByRole('form', { name: 'Identify a hazard' });
+    await identify.getByLabel('Hazard', { exact: true }).fill(title);
+    await identify.getByLabel('What could go wrong, and where').fill('Fictional quarry operations near the route.');
+    await identify.getByLabel('Worst credible outcome').fill('Loss of the fictional aircraft.');
+    await identify.getByRole('button', { name: 'Record hazard' }).click();
+    await expect(page.getByTestId('sms-record').getByRole('heading', { name: title })).toBeVisible();
+    await page
+      .getByRole('button', { name: /^Hazard register/ })
+      .first()
+      .click();
+  }
+
+  const rows = page.locator('[aria-label="Recorded hazards"] [data-testid^="sms-row-"]');
+  await page.getByRole('searchbox', { name: 'Find hazards', exact: true }).fill(word.toLowerCase());
+  await expect(rows).toHaveCount(2);
+  await expect(rows.first()).toContainText(`${word} blasting schedule`);
+  await page.getByLabel('Order', { exact: true }).selectOption('oldest');
+  await expect(rows.first()).toContainText(`${word} dust on the optics`);
+  await page.getByLabel('State', { exact: true }).selectOption('accepted');
+  await expect(page.getByText('No hazards match. Try other words, another state or another order.')).toBeVisible();
+  await page.getByRole('button', { name: 'Clear search and filters', exact: true }).click();
+  await expect(page.getByRole('searchbox', { name: 'Find hazards', exact: true })).toHaveValue('');
+
+  // A safety report's title is never searched: only the organization's own reference for it finds it.
+  await page
+    .getByRole('button', { name: /^Safety reports/ })
+    .first()
+    .click();
+  const report = page.getByRole('form', { name: 'Record a safety report' });
+  await report.getByLabel('Short title', { exact: true }).fill(`${word} crew saw a drone near the crusher`);
+  await report.getByLabel('What was reported', { exact: true }).fill('A fictional account of what was seen.');
+  await report.getByRole('button', { name: 'Record report', exact: true }).click();
+  await page
+    .getByRole('button', { name: /^Safety reports/ })
+    .first()
+    .click();
+  await page.getByRole('searchbox', { name: 'Find reports', exact: true }).fill(word);
+  await expect(page.getByText('No safety reports match. Try another reference, state or day.')).toBeVisible();
+});

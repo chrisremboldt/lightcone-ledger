@@ -8,6 +8,7 @@ import {
   type OrganizationSummary,
   type PersonAddCommand,
   type PrincipalAuthorityEntry,
+  type PrincipalAuthorityListQuery,
   type PrincipalAuthorityListResponse,
 } from '@ledger/contracts';
 import { appendEvent, DomainError, type AuthContext, type PoolClient } from '@ledger/persistence';
@@ -268,21 +269,49 @@ export async function createOrganization(
   };
 }
 
-/** Everyone in the organization but its worker and its reporting channel, active or not, with their current authority. */
+/** A page's position in the list: the name and id of its last entry, as the order compares them. */
+function principalCursor(name: string, id: string): string {
+  return Buffer.from(JSON.stringify([name, id])).toString('base64url');
+}
+function readPrincipalCursor(cursor: string): [string, string] {
+  try {
+    const position: unknown = JSON.parse(Buffer.from(cursor, 'base64url').toString('utf8'));
+    if (
+      Array.isArray(position) &&
+      position.length === 2 &&
+      position.every((part) => typeof part === 'string') &&
+      principalCursor(position[0], position[1]) === cursor
+    )
+      return [position[0], position[1]];
+  } catch {
+    // Refused below, like any other cursor this list did not give.
+  }
+  throw new DomainError(400, 'invalid_cursor', 'The people list cursor is not one this list gave');
+}
+
+/**
+ * Everyone in the organization but its worker and its reporting channel, active or not, with their current authority,
+ * by name and then id, a page at a time.
+ */
 export async function listPrincipalAuthority(
   client: PoolClient,
   principal: AuthContext,
+  query: PrincipalAuthorityListQuery = {},
 ): Promise<PrincipalAuthorityListResponse> {
   if (!principal.capabilities.includes('authority:write'))
     throw new DomainError(403, 'capability_required', 'Reading principal authority requires authority:write');
+  const limit = Math.min(query.limit ?? PRINCIPAL_AUTHORITY_LIST_LIMIT, PRINCIPAL_AUTHORITY_LIST_LIMIT);
+  const after = query.cursor ? readPrincipalCursor(query.cursor) : null;
   const rows = (
     await client.query<AuthorityPrincipalRow & { sign_in_linked: boolean }>(
       `SELECT ${AUTHORITY_PRINCIPAL_COLUMNS},sign_in_subject IS NOT NULL AS sign_in_linked
-       FROM principals WHERE tenant_id=$1 AND kind NOT IN ('worker','intake') ORDER BY name COLLATE "C",id COLLATE "C" LIMIT $2`,
-      [principal.tenantId, PRINCIPAL_AUTHORITY_LIST_LIMIT + 1],
+       FROM principals WHERE tenant_id=$1 AND kind NOT IN ('worker','intake')
+         AND ($3::text IS NULL OR (name COLLATE "C",id COLLATE "C")>($3::text COLLATE "C",$4::text COLLATE "C"))
+       ORDER BY name COLLATE "C",id COLLATE "C" LIMIT $2`,
+      [principal.tenantId, limit + 1, after?.[0] ?? null, after?.[1] ?? null],
     )
   ).rows;
-  const shown = rows.slice(0, PRINCIPAL_AUTHORITY_LIST_LIMIT);
+  const shown = rows.slice(0, limit);
   const grants = new Map<string, ObservationGrant[]>();
   for (const grant of (
     await client.query<{ principal_id: string; source_id: string; observation_type: string }>(
@@ -299,5 +328,7 @@ export async function listPrincipalAuthority(
     ...authorityPrincipal(row, grants.get(row.id) ?? []),
     signInLinked: row.sign_in_linked,
   }));
-  return { principals, hasMore: rows.length > PRINCIPAL_AUTHORITY_LIST_LIMIT };
+  const hasMore = rows.length > limit;
+  const last = shown.at(-1);
+  return { principals, hasMore, nextCursor: hasMore && last ? principalCursor(last.name, last.id) : null };
 }
