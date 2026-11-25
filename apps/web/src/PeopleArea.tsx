@@ -20,24 +20,7 @@ import {
 } from './people.js';
 import { plainError } from './sms-labels.js';
 import { SourcesAndServices } from './SourcesAndServices.js';
-
-/** The shell's way into the People area. Shown to people who manage authority. */
-export function PeopleToggle({
-  principal,
-  open,
-  onToggle,
-}: {
-  principal: Principal | null;
-  open: boolean;
-  onToggle: () => void;
-}) {
-  if (!principal?.capabilities.includes('authority:write')) return null;
-  return (
-    <Button kind="quiet" className="records-toggle" aria-pressed={open} onClick={onToggle}>
-      {open ? 'Close people' : 'People'}
-    </Button>
-  );
-}
+import { goTo } from './place.js';
 
 type Selection = { kind: 'add' } | { kind: 'person'; id: string };
 
@@ -45,10 +28,24 @@ type Selection = { kind: 'add' } | { kind: 'person'; id: string };
  * People: who is in the organization and what each may do. An administrator adds a person, changes what they may do,
  * and deactivates them. Every change is a recorded command; no one is deleted.
  */
-export function PeopleArea({ client, principal }: { client: LedgerClient; principal: Principal | null }) {
+export function PeopleArea({
+  client,
+  principal,
+  personId,
+}: {
+  client: LedgerClient;
+  principal: Principal | null;
+  /** The person the address opens; none opens the form to add one. */
+  personId?: string;
+}) {
   const [list, setList] = useState<PrincipalAuthorityListResponse | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [selection, setSelection] = useState<Selection>({ kind: 'add' });
+  const selection: Selection = personId ? { kind: 'person', id: personId } : { kind: 'add' };
+  const setSelection = useCallback(
+    (next: Selection) =>
+      goTo(next.kind === 'person' ? { section: 'people', personId: next.id } : { section: 'people' }),
+    [],
+  );
   const [recorded, setRecorded] = useState<string | null>(null);
   const [reload, setReload] = useState(0);
   // How many pages are shown: reading again after a change reads as many, so the person changed stays in view.
@@ -72,11 +69,14 @@ export function PeopleArea({ client, principal }: { client: LedgerClient; princi
   }, [client, reload, pageCount]);
 
   const signIn = useSignInConfiguration(client);
-  const changed = useCallback((message: string, select?: Selection) => {
-    setRecorded(message);
-    if (select) setSelection(select);
-    setReload((value) => value + 1);
-  }, []);
+  const changed = useCallback(
+    (message: string, select?: Selection) => {
+      setRecorded(message);
+      if (select) setSelection(select);
+      setReload((value) => value + 1);
+    },
+    [setSelection],
+  );
   const chosen = selection.kind === 'person' ? list?.principals.find((item) => item.id === selection.id) : undefined;
 
   return (
@@ -135,6 +135,13 @@ export function PeopleArea({ client, principal }: { client: LedgerClient; princi
             </Notice>
           )}
           {recorded && <Notice tone="observed">{recorded}</Notice>}
+          {list && selection.kind === 'person' && !chosen && (
+            <Notice tone="neutral" title="Person not shown">
+              {list.hasMore
+                ? 'This person is not among the people read so far. Choose More people to read further.'
+                : 'No one with this id is in your organization.'}
+            </Notice>
+          )}
           {selection.kind === 'add' && (
             <AddPerson
               client={client}

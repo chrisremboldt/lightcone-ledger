@@ -646,7 +646,7 @@ test('an accepted control prepares a held flight, follows the human detour and b
     // The area's hazard opens on its safety record page; the mission stays open behind the safety section.
     await controlPreview.getByRole('button', { name: hazard.title, exact: true }).click();
     await expect(safety.getByRole('heading', { name: hazard.title, exact: true })).toBeVisible();
-    await page.getByRole('button', { name: 'Return to flights', exact: true }).click();
+    await page.getByRole('link', { name: 'Flights', exact: true }).click();
     await expect(mission.getByRole('button', { name: 'Return to accepted control', exact: true })).toBeVisible();
     await mission.getByRole('button', { name: 'Return to accepted control', exact: true }).click();
     await expect(demo).toContainText('Demo flight history');

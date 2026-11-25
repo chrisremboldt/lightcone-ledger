@@ -23,7 +23,7 @@ test('a dispatcher opens the fleet, a pilot’s file, and produces the pilot’s
   await page.goto('/');
   await page.getByRole('radio', { name: 'Alpha Dispatch', exact: true }).check();
   await page.getByRole('button', { name: 'Open operations' }).click();
-  await page.getByRole('button', { name: 'Records', exact: true }).click();
+  await page.getByRole('link', { name: 'Records', exact: true }).click();
   const area = page.getByRole('main', { name: 'Operator records' });
 
   await importFile(area, 'Personnel file', 'person.standing.csv', run, 2);
@@ -79,6 +79,6 @@ test('a dispatcher opens the fleet, a pilot’s file, and produces the pilot’s
     .click();
   await expect(page.getByTestId('record-production-item').first()).toContainText('Inspector, regional office');
 
-  await page.getByRole('button', { name: 'Close records' }).click();
+  await page.getByRole('link', { name: 'Flights', exact: true }).click();
   await expect(page.getByRole('complementary', { name: 'Flight monitor' })).toBeVisible();
 });

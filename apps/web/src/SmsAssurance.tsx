@@ -28,7 +28,7 @@ import {
 import { FailureNotice, useCommand } from './SmsForms.js';
 import { RecordRow } from './SmsHazards.js';
 import { RegisterMore, RegisterTools, useRegisterList } from './SmsRegisterTools.js';
-import { narrowed, registerCount, unnarrowed } from './sms-register-query.js';
+import { narrowed, registerCount, useRegisterQuery } from './sms-register-query.js';
 
 // Safety assurance records (docs/design/assurance-records.md): audits, evaluations, investigations, reviews, change
 // assessments and hazard notices, with the actions they set.
@@ -71,7 +71,7 @@ export function AssuranceRegister({
   onChanged: () => void;
 }) {
   const [recording, setRecording] = useState(false);
-  const [query, setQuery] = useState(unnarrowed);
+  const [query, setQuery] = useRegisterQuery();
   const list = useRegisterList(client, 'assurance', register, query);
   const records = list.records ?? [];
   const mayWrite = principal.capabilities.includes('sms:write');

@@ -877,7 +877,7 @@ const wind: Scene = {
     );
     await signIn(actor, 'Alpha Dispatch', 'operator');
     await actor.say('First, a wind limit. Dana opens Rules, where Alpha adopts the rule packs it is checked against.');
-    await actor.click(page.button('Rules', { exact: true }));
+    await actor.click(page.link('Rules', { exact: true }));
     await actor.see(page.testId('organization-coverage'), 30_000);
     await adoptPack(
       actor,
@@ -888,7 +888,7 @@ const wind: Scene = {
       'Dock flights hold at 10 m/s of measured wind.',
     );
     await actor.say('Adopted as active, with Alpha’s own limit: 10 m/s at takeoff and for the whole flight.');
-    await actor.click(page.button('Close rules', { exact: true }));
+    await actor.click(page.link('Flights', { exact: true }));
 
     await actor.click(page.testId(`flight-row-${survey.flight.id}`));
     await actor.say('A survey from the north roof dock is in the air. The dock reports the wind, and it is rising.');
@@ -1085,7 +1085,7 @@ const rules: Scene = {
     );
     await signIn(actor, 'Alpha Dispatch', 'operator');
     await actor.say('Part 108 is proposed, not in force. Dana wants to see how Alpha’s flights would fare under it.');
-    await actor.click(page.button('Rules', { exact: true }));
+    await actor.click(page.link('Rules', { exact: true }));
     await actor.see(page.testId('organization-coverage'), 30_000);
     const timeZone: [RegExp, string] = [/^Time zone/, 'America/Chicago'];
     await adoptPack(
@@ -1125,7 +1125,7 @@ const rules: Scene = {
       [timeZone, [/^First day/, '1']],
       'To see what the proposed rule would find, without counting it.',
     );
-    await actor.click(page.button('Close rules', { exact: true }));
+    await actor.click(page.link('Flights', { exact: true }));
     for (const [index, { recordType, record }] of planned.entries())
       await actor.happen(ALPHA_OPERATOR, '/v1/inputs', {
         sourceId: 'operator-records',
@@ -1147,7 +1147,7 @@ const rules: Scene = {
       });
 
     await actor.say('The proposed rule asks more of training records. Dana imports the crew’s, as kept today.');
-    await actor.click(page.button('Records', { exact: true }));
+    await actor.click(page.link('Records', { exact: true }));
     const records = page.labelled('Operator records');
     await actor.choose(records.field('Record type', { exact: true }), 'person.training@1');
     await actor.click(records.button('Import a file', { exact: true }));
@@ -1163,7 +1163,7 @@ const rules: Scene = {
     );
     await actor.click(records.button('Record 4 rows', { exact: true }));
     await actor.see(records.text(/Recorded 4 of 5 rows/), 30_000);
-    await actor.click(page.button('Close records', { exact: true }));
+    await actor.click(page.link('Flights', { exact: true }));
 
     await actor.say(
       'A delivery to Eastside Clinic is about to leave. Its plan and crew came in from the planning tool.',

@@ -54,6 +54,10 @@ describe('the web app served from the API origin', () => {
     expect(screen.statusCode).toBe(200);
     expect(screen.body).toContain('<title>Ledger</title>');
     expect(screen.headers['cache-control']).toBe('no-cache');
+    // A rule pack's id has a dot in it; the address is still a screen.
+    const pack = await app.inject({ method: 'GET', url: '/rules/coverage/ledger.part107' });
+    expect(pack.statusCode).toBe(200);
+    expect(pack.body).toContain('<title>Ledger</title>');
     expect((await app.inject({ method: 'GET', url: '/assets/missing.js' })).statusCode).toBe(404);
     expect((await app.inject({ method: 'GET', url: '/%2e%2e/outside.txt' })).statusCode).toBe(404);
     const api = await app.inject({ method: 'GET', url: '/v1/unknown' });

@@ -115,6 +115,14 @@ export class Locator {
     });
   }
 
+  /** A link, such as a section in the bar, found by its text. */
+  link(name: Match, options: MatchOptions = {}): Locator {
+    return this.within(`link “${String(name)}”`, 'a[href]', (element) => {
+      const text = tidy(element.getAttribute('aria-label')) || tidy(element.textContent);
+      return matches(text, name, options.exact);
+    });
+  }
+
   heading(name: Match): Locator {
     return this.within(`heading “${String(name)}”`, 'h1, h2, h3, h4, h5, h6', (element) =>
       matches(tidy(element.textContent), name),

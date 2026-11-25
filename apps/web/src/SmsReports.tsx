@@ -19,7 +19,7 @@ import { plainError, statusPresentation } from './sms-labels.js';
 import { FailureNotice, useCommand } from './SmsForms.js';
 import { RecordRow } from './SmsHazards.js';
 import { RegisterMore, RegisterTools, useRegisterList } from './SmsRegisterTools.js';
-import { narrowed, registerCount, unnarrowed } from './sms-register-query.js';
+import { narrowed, registerCount, useRegisterQuery } from './sms-register-query.js';
 
 const channelLabels: Record<ReportBody['received']['channel'], string> = {
   in_person: 'In person',
@@ -55,7 +55,7 @@ export function ReportsRegister({
   onOpen: (record: Pick<SmsRecordSummary, 'id' | 'kind'>) => void;
   onChanged: () => void;
 }) {
-  const [query, setQuery] = useState(unnarrowed);
+  const [query, setQuery] = useRegisterQuery();
   const list = useRegisterList(client, 'report', register, query);
   const reports = list.records ?? [];
   return (

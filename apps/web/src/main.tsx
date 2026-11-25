@@ -32,7 +32,8 @@ import {
 } from './openid-connect.js';
 import { SafetyRecordLink } from './area-controls.js';
 import { blankSignedInReport, PublicReportPage, SubmitReportDialog } from './SafetyReportSubmission.js';
-import type { FlightLinks, FlightRequest, SafetyDestination } from './safety-navigation.js';
+import { safetyDestinationPlace, type FlightLinks, type SafetyDestination } from './safety-navigation.js';
+import { forgetPlaces, goTo, usePlace } from './place.js';
 import { operators } from './labels.js';
 import { fictionalPeople } from './demo/fictional-organizations.js';
 import { developmentToken, heldOrganizations, offeredOrganizations } from './local-sign-in.js';
@@ -203,8 +204,9 @@ interface Program {
 }
 
 /**
- * One shell. A person who reads flights opens on flights, with a Safety section beside them that holds the one hazard
- * register and record page; an organization without flights opens on its safety home, as it always has.
+ * One shell under one bar. An organization that records flights opens on them, with Safety, Records, Rules and People
+ * beside them; an organization without flights opens on its safety home, as it always has. Where a person is lives in
+ * the address, so a link, a refresh, and back and forward keep the place.
  */
 function Workspace({ account, ...rest }: AppProps & { confirmIdentity?: ConfirmIdentity }) {
   const [reporting, setReporting] = React.useState(false);
@@ -217,23 +219,23 @@ function Workspace({ account, ...rest }: AppProps & { confirmIdentity?: ConfirmI
       <>
         <Button onClick={() => setReporting(true)}>Report a safety concern</Button>
         {account}
-        {reporting && (
-          <SubmitReportDialog
-            client={new LedgerClient(rest.apiUrl, rest.token, appFetch)}
-            draft={reportDraft}
-            onDraft={setReportDraft}
-            onClose={() => setReporting(false)}
-          />
-        )}
       </>
     ),
   };
+  // Outside the bar: the flights keep a bar of their own, hidden, behind the safety section.
+  const dialog = reporting && (
+    <SubmitReportDialog
+      client={new LedgerClient(rest.apiUrl, rest.token, appFetch)}
+      draft={reportDraft}
+      onDraft={setReportDraft}
+      onClose={() => setReporting(false)}
+    />
+  );
   const [program, setProgram] = React.useState<Program | null>(null);
   const [failed, setFailed] = React.useState(false);
-  // The safety section, opened from the flights at a destination; the flights stay open behind it.
-  const [safety, setSafety] = React.useState<{ key: number; destination: SafetyDestination } | null>(null);
-  const [flightRequest, setFlightRequest] = React.useState<FlightRequest | undefined>();
-  const sequence = React.useRef(0);
+  const { place } = usePlace();
+  // Where this person was in each section is theirs alone: forgotten when they leave.
+  React.useEffect(() => forgetPlaces, []);
   React.useEffect(() => {
     let stopped = false;
     const client = new LedgerClient(props.apiUrl, props.token, appFetch);
@@ -245,60 +247,33 @@ function Workspace({ account, ...rest }: AppProps & { confirmIdentity?: ConfirmI
       stopped = true;
     };
   }, [props.apiUrl, props.token]);
-  const openSafety = React.useCallback(
-    (destination: SafetyDestination) => setSafety({ key: ++sequence.current, destination }),
-    [],
-  );
+  const openSafety = React.useCallback((destination: SafetyDestination) => {
+    const { place: shown, extras } = safetyDestinationPlace(destination);
+    goTo(shown, { extras });
+  }, []);
   const openRecord = React.useCallback((record: string) => openSafety({ view: 'record', id: record }), [openSafety]);
   const links = React.useMemo<FlightLinks>(
     () => ({
-      onFlight: (finding) => {
-        setSafety(null);
-        if (finding) setFlightRequest({ kind: 'finding', ...finding, sequence: ++sequence.current });
-      },
-      onDemoMission: (flight, demo) => {
-        setSafety(null);
-        setFlightRequest({ kind: 'demo-mission', flight, demo, sequence: ++sequence.current });
-      },
+      onFlight: (finding) =>
+        goTo(
+          finding
+            ? { section: 'flights', flightId: finding.flightId, findingId: finding.findingId }
+            : { section: 'flights' },
+        ),
+      onDemoMission: (flight, demo) =>
+        goTo({ section: 'flights', flightId: flight.id, mission: true }, { extras: { flight, demo } }),
     }),
     [],
   );
-  const destination = safety?.destination;
-  const from =
-    destination?.view === 'finding'
-      ? destination.finding
-      : destination?.view === 'record'
-        ? destination.from
-        : undefined;
-  const flights = (
-    <SafetyRecordLink.Provider value={openRecord}>
-      <div style={{ display: safety ? 'none' : 'contents' }}>
-        <App {...props} onOpenSafety={openSafety} request={flightRequest} />
-      </div>
-      {safety && (
-        <SmsApp
-          key={safety.key}
-          {...props}
-          initial={safety.destination}
-          flights={links}
-          account={
-            <>
-              <Button
-                onClick={() =>
-                  links.onFlight(from?.flightId ? { flightId: from.flightId, findingId: from.findingId } : undefined)
-                }
-              >
-                {from?.flightId ? `Return to ${from.flightLabel}` : 'Return to flights'}
-              </Button>
-              {props.account}
-            </>
-          }
-        />
-      )}
-    </SafetyRecordLink.Provider>
-  );
-  if (failed) return flights;
-  if (program === null)
+  const known = failed || program !== null;
+  // Keep the rule that picks the first screen: flights for an organization that records them, else its safety home.
+  const opensOnFlights = failed || (program !== null && (program.flights ?? !program.active));
+  React.useEffect(() => {
+    if (!known) return;
+    if (place.section === 'start' || (place.section === 'flights' && !opensOnFlights))
+      goTo(opensOnFlights ? { section: 'flights' } : { section: 'safety', view: 'home' }, { replace: true });
+  }, [known, opensOnFlights, place.section]);
+  if (!known)
     return props.local && localAllowed ? (
       <Gate>
         <Spinner label="Opening your organization" />
@@ -308,8 +283,23 @@ function Workspace({ account, ...rest }: AppProps & { confirmIdentity?: ConfirmI
         <Spinner label="Opening your organization" />
       </DeploymentGate>
     );
-  const opensOnFlights = program.flights ?? !program.active;
-  return opensOnFlights ? flights : <SmsApp {...props} />;
+  if (!opensOnFlights)
+    return (
+      <>
+        <SmsApp {...props} />
+        {dialog}
+      </>
+    );
+  const inSafety = place.section === 'safety';
+  return (
+    <SafetyRecordLink.Provider value={openRecord}>
+      {dialog}
+      <div style={{ display: inSafety ? 'none' : 'contents' }}>
+        <App {...props} onOpenSafety={openSafety} />
+      </div>
+      {inSafety && <SmsApp {...props} flights={links} />}
+    </SafetyRecordLink.Provider>
+  );
 }
 
 /**
@@ -457,7 +447,17 @@ function LocalSession() {
           apiUrl={apiUrl}
           token={active}
           local
-          account={<Button onClick={() => setActive(null)}>Switch operator</Button>}
+          account={
+            <Button
+              onClick={() => {
+                // Another person starts at the first screen, not at a place this one opened.
+                goTo({ section: 'start' }, { replace: true });
+                setActive(null);
+              }}
+            >
+              Switch operator
+            </Button>
+          }
         />
         {guide}
       </>

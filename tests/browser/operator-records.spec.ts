@@ -15,7 +15,7 @@ test('a dispatcher imports aircraft time records, then enters a training record 
   await page.goto('/');
   await page.getByRole('radio', { name: 'Alpha Dispatch', exact: true }).check();
   await page.getByRole('button', { name: 'Open operations' }).click();
-  await page.getByRole('button', { name: 'Records', exact: true }).click();
+  await page.getByRole('link', { name: 'Records', exact: true }).click();
   const area = page.getByRole('main', { name: 'Operator records' });
   await area.getByLabel('Record type', { exact: true }).selectOption({ label: 'Aircraft time in service' });
 
@@ -91,6 +91,6 @@ test('a dispatcher imports aircraft time records, then enters a training record 
   );
 
   // Closing Records returns to the operation screen as it was.
-  await page.getByRole('button', { name: 'Close records' }).click();
+  await page.getByRole('link', { name: 'Flights', exact: true }).click();
   await expect(page.getByRole('complementary', { name: 'Flight monitor' })).toBeVisible();
 });

@@ -79,6 +79,19 @@
   color: var(--muted);
   font-size: 12px;
 }
+.topbar-sections {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.topbar-sections a {
+  text-decoration: none;
+}
+.topbar-sections a[aria-current='page'] {
+  border-color: var(--line-2);
+  background: var(--side);
+  color: var(--ink);
+}
 
 .simulation {
   position: relative;

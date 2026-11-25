@@ -11,7 +11,7 @@ test('a person ticks the purposes a document serves, and the next revision keeps
   await page.getByRole('radio', { name: 'Alpha Dispatch', exact: true }).check();
   await page.getByRole('button', { name: 'Open operations' }).click();
 
-  await page.getByRole('button', { name: 'Rules', exact: true }).click();
+  await page.getByRole('link', { name: 'Rules', exact: true }).click();
   const area = page.getByRole('main', { name: 'Rules and findings' });
   const adopted = area.getByTestId('adoption').filter({ hasText: 'Part 108 NPRM checks (shadow only) · version 3' });
   if (!(await adopted.count())) {
@@ -29,9 +29,9 @@ test('a person ticks the purposes a document serves, and the next revision keeps
     await form.getByRole('button', { name: 'Adopt in shadow', exact: true }).click();
     await expect(adopted.getByText('In effect', { exact: true })).toBeVisible({ timeout: 60_000 });
   }
-  await page.getByRole('button', { name: 'Close rules', exact: true }).click();
+  await page.getByRole('link', { name: 'Flights', exact: true }).click();
 
-  await page.getByRole('button', { name: /^Safety/ }).click();
+  await page.getByRole('link', { name: 'Safety', exact: true }).click();
   await page.getByRole('button', { name: /^Documents/ }).click();
   const startDraft = page.getByRole('button', { name: 'Record a document', exact: true });
   const draft = page.getByRole('form', { name: 'Record a document' });

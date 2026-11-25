@@ -23,7 +23,7 @@ async function signInAs(page: Page, person: string) {
 }
 
 async function openSafety(page: Page) {
-  await page.getByRole('button', { name: 'Safety', exact: true }).click();
+  await page.getByRole('link', { name: 'Safety', exact: true }).click();
   await expect(page.getByRole('heading', { name: 'What needs attention' })).toBeVisible();
 }
 
@@ -41,7 +41,7 @@ async function sign(page: Page, rationale: string, person: string, button: strin
 
 /** Ticks boxes for a person on the People screen and saves. */
 async function grant(page: Page, name: string, labels: string[], tick = true) {
-  await page.getByRole('button', { name: /^People$|^Close people$/ }).click();
+  await page.getByRole('link', { name: 'People', exact: true }).click();
   const area = page.getByRole('main', { name: 'People' });
   await area
     .getByRole('complementary', { name: 'People list' })
@@ -51,7 +51,7 @@ async function grant(page: Page, name: string, labels: string[], tick = true) {
   for (const label of labels) await person.getByLabel(label, { exact: true }).setChecked(tick);
   await person.getByRole('button', { name: 'Save what they may do' }).click();
   await expect(area.getByText(`What ${name} may do was changed. The change is recorded.`)).toBeVisible();
-  await page.getByRole('button', { name: 'Close people', exact: true }).click();
+  await page.getByRole('link', { name: 'Flights', exact: true }).click();
 }
 
 test.skip(!issuer, 'Set LEDGER_BROWSER_TEST_ISSUER to run against a stack configured with the test issuer');
@@ -69,10 +69,10 @@ test('a new organization drafts and adopts its matrix, accepts a risk, issues it
   await expect(onFile.getByTestId('first-step-matrix')).toContainText('Not on file');
   await expect(onFile.getByTestId('first-step-reports')).toContainText('No one is cleared to read safety reports');
   await expect(page.locator('body')).not.toContainText(/Valley Power|Alpha Dispatch|Beta Inspection|fictional/i);
-  await page.getByRole('button', { name: 'Return to flights', exact: true }).click();
+  await page.getByRole('link', { name: 'Flights', exact: true }).click();
 
   // People: another person to read the policy, and the administrator's own risk and report authority.
-  await page.getByRole('button', { name: 'People', exact: true }).click();
+  await page.getByRole('link', { name: 'People', exact: true }).click();
   const area = page.getByRole('main', { name: 'People' });
   const add = area.getByRole('form', { name: 'Add a person' });
   await add.getByLabel('Name', { exact: true }).fill('Test Person');
@@ -80,7 +80,7 @@ test('a new organization drafts and adopts its matrix, accepts a risk, issues it
   await add.getByLabel('Sign-in account (subject)').fill('test-person');
   await add.getByRole('button', { name: 'Add person' }).click();
   await expect(area.getByText('Test Person was added. The addition is recorded.')).toBeVisible();
-  await page.getByRole('button', { name: 'Close people', exact: true }).click();
+  await page.getByRole('link', { name: 'Flights', exact: true }).click();
   await grant(page, 'Test Administrator', ['Accept high risk', 'Read safety reports, including who reported']);
 
   // The matrix: from the standard form, renamed and edited, saved as a draft and signed.

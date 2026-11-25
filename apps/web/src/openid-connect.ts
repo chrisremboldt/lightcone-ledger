@@ -71,6 +71,8 @@ export async function confirmAccountTied(
 }
 
 const TRANSACTION_KEY = 'ledger.sign-in.transaction';
+/** The address a person was on when they began to sign in, to return to once signed in. */
+const RETURN_KEY = 'ledger.sign-in.return';
 /** The window name a confirmation opens, so the page that loads in it relays the answer instead of signing in. */
 export const CONFIRM_WINDOW = 'ledger-confirm-sign-in';
 const CALLBACK_MESSAGE = 'ledger-sign-in-callback';
@@ -138,6 +140,16 @@ export function withoutCallback(href: string): string {
   const url = new URL(href);
   for (const name of CALLBACK_PARAMETERS) url.searchParams.delete(name);
   return url.toString();
+}
+
+/**
+ * Where a completed sign-in lands: the place the person opened before signing in, such as a link to a finding, when
+ * it is a path on this site; otherwise the address the provider returned to, without its answer.
+ */
+export function returnAddress(returned: string, saved: string | null): string {
+  if (!saved || !saved.startsWith('/') || saved.startsWith('//') || saved.startsWith('/\\')) return returned;
+  const url = new URL(returned);
+  return new URL(saved, url.origin).toString();
 }
 
 /** Reads the provider's answer, refusing one that does not belong to this transaction. */
@@ -394,6 +406,7 @@ export async function beginSignIn(entry: IssuerEntry): Promise<void> {
   );
   const url = await authorizationUrl(entry, transaction);
   saveTransaction(window.sessionStorage, transaction);
+  window.sessionStorage.setItem(RETURN_KEY, `${window.location.pathname}${window.location.search}`);
   window.location.assign(url);
 }
 
@@ -405,7 +418,9 @@ export async function completeSignIn(
   const href = window.location.href;
   if (!isCallback(href)) return null;
   const transaction = takeTransaction(window.sessionStorage);
-  window.history.replaceState(window.history.state, '', withoutCallback(href));
+  const returnTo = window.sessionStorage.getItem(RETURN_KEY);
+  window.sessionStorage.removeItem(RETURN_KEY);
+  window.history.replaceState(window.history.state, '', returnAddress(withoutCallback(href), returnTo));
   const { code } = parseCallback(href, transaction);
   const entry = configuration.issuers.find(
     (candidate) => candidate.issuer === transaction!.issuer && candidate.clientId === transaction!.clientId,

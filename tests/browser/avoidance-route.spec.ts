@@ -904,7 +904,7 @@ test('an avoidance area accepted on a safety-record hazard is named on the revie
     // Its hazard opens on the safety record, and flights stay open behind it.
     await summary.getByRole('button', { name: hazardTitle }).click();
     await expect(page.getByTestId('sms-record').getByRole('heading', { name: hazardTitle })).toBeVisible();
-    await page.getByRole('button', { name: 'Return to flights' }).click();
+    await page.getByRole('link', { name: 'Flights', exact: true }).click();
     await expect(workspace.getByRole('heading', { name: controlTitle })).toBeVisible();
   } finally {
     if (sourceGranted) {

@@ -16,16 +16,9 @@ import { coverageResultLabels } from './rule-coverage.js';
 import { plainError, saveBytes } from './sms-labels.js';
 import { subjectLabel } from './subject-label.js';
 
-/** The kinds of subject the Records area lists, in the order people look for them. */
-export const recordSubjectKinds = [
-  ['person', 'People'],
-  ['aircraft', 'Aircraft'],
-  ['flight', 'Flights'],
-  ['site', 'Sites'],
-  ['component', 'Components'],
-  ['organization', 'Your organization'],
-] as const;
-export type RecordSubjectKind = (typeof recordSubjectKinds)[number][0];
+import { recordSubjectKinds, type RecordSubjectKind } from './record-subject-kinds.js';
+
+export { recordSubjectKinds, type RecordSubjectKind };
 
 export interface ChosenSubject {
   kind: RecordSubjectKind;

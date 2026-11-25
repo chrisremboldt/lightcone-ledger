@@ -46,7 +46,7 @@ test('a dispatcher finds an open finding in the list, takes it, records an actio
   await page.goto('/');
   await page.getByRole('radio', { name: 'Alpha Dispatch', exact: true }).check();
   await page.getByRole('button', { name: 'Open operations' }).click();
-  await page.getByRole('button', { name: 'Rules', exact: true }).click();
+  await page.getByRole('link', { name: 'Rules', exact: true }).click();
   const rules = page.getByRole('main', { name: 'Rules and findings' });
   await rules
     .getByRole('navigation', { name: 'Rules views' })
@@ -156,7 +156,7 @@ test('a dispatcher reads the open findings by rule and takes and closes every fi
   await page.goto('/');
   await page.getByRole('radio', { name: 'Alpha Dispatch', exact: true }).check();
   await page.getByRole('button', { name: 'Open operations' }).click();
-  await page.getByRole('button', { name: 'Rules', exact: true }).click();
+  await page.getByRole('link', { name: 'Rules', exact: true }).click();
   const rules = page.getByRole('main', { name: 'Rules and findings' });
   await rules
     .getByRole('navigation', { name: 'Rules views' })
@@ -264,11 +264,11 @@ test('an organization without an order source opens on its flights on record, ea
   await expect(page.getByText(/Unlinked evidence/).filter({ visible: true })).toHaveCount(0);
   await expect(page.getByText(/flights on this page/).filter({ visible: true })).toHaveCount(0);
 
-  await page.getByRole('button', { name: 'Records', exact: true }).click();
+  await page.getByRole('link', { name: 'Records', exact: true }).click();
   const area = page.getByRole('main', { name: 'Operator records' });
   await importFile(area, 'Flight plan', 'flight.plan.csv', run, 3);
   await importFile(area, 'Role assignment', 'operation.role-assignment.csv', run, 3);
-  await page.getByRole('button', { name: 'Close records', exact: true }).click();
+  await page.getByRole('link', { name: 'Flights', exact: true }).click();
 
   // The fixture plans two flights in November 2026 and one on 2026-12-01, upcoming until that day passes. The
   // November ones are recent, the later window first.

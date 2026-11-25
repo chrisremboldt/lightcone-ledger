@@ -15,7 +15,7 @@ import { FailureNotice, IdentifyHazardForm, useCommand } from './SmsForms.js';
 import { originLabels, type FlightFinding, type FlightLinks } from './safety-navigation.js';
 import { LandingReports } from './LandingReports.js';
 import { RegisterMore, RegisterTools, useRegisterList } from './SmsRegisterTools.js';
-import { narrowed, registerCount, unnarrowed } from './sms-register-query.js';
+import { narrowed, registerCount, useRegisterQuery } from './sms-register-query.js';
 
 const findingStatusLabels: Record<SmsFindingPromotionResponse['findingStatus'], string> = {
   open: 'Needs an owner',
@@ -90,7 +90,7 @@ export function HazardRegister({
   onOpen: (record: Pick<SmsRecordSummary, 'id' | 'kind'>) => void;
   onChanged: () => void;
 }) {
-  const [query, setQuery] = useState(unnarrowed);
+  const [query, setQuery] = useRegisterQuery();
   const list = useRegisterList(client, 'hazard', register, query);
   const records = list.records ?? [];
   return (

@@ -7,7 +7,7 @@ test('a dispatcher reviews adopted packs, sees proposed text offered in shadow o
   await page.goto('/');
   await page.getByRole('radio', { name: 'Alpha Dispatch', exact: true }).check();
   await page.getByRole('button', { name: 'Open operations' }).click();
-  await page.getByRole('button', { name: 'Rules', exact: true }).click();
+  await page.getByRole('link', { name: 'Rules', exact: true }).click();
   const area = page.getByRole('main', { name: 'Rules and findings' });
 
   // The seeded procedures are adopted as active.
@@ -52,7 +52,7 @@ test('a dispatcher reviews adopted packs, sees proposed text offered in shadow o
     .click();
   await expect(area.getByTestId('proposed-findings')).toContainText('Proposed rule: recorded, not counted');
 
-  await page.getByRole('button', { name: 'Close rules' }).click();
+  await page.getByRole('link', { name: 'Flights', exact: true }).click();
   await expect(page.getByRole('main', { name: 'Rules and findings' })).toHaveCount(0);
 });
 
@@ -62,7 +62,7 @@ test('the Rules screen lists an adopted pack’s rules under its sections, each 
   await page.goto('/');
   await page.getByRole('radio', { name: 'Alpha Dispatch', exact: true }).check();
   await page.getByRole('button', { name: 'Open operations' }).click();
-  await page.getByRole('button', { name: 'Rules', exact: true }).click();
+  await page.getByRole('link', { name: 'Rules', exact: true }).click();
   const area = page.getByRole('main', { name: 'Rules and findings' });
   const adopted = area.getByTestId('adoption').filter({ hasText: 'Part 108 NPRM checks (shadow only) · version 3' });
   if (!(await adopted.count())) {
@@ -106,5 +106,5 @@ test('the Rules screen lists an adopted pack’s rules under its sections, each 
   await expect(approval.getByTestId('rule-paragraph')).toHaveText('§ 108.165(a)');
   await expect(approval.getByRole('rowheader')).toContainText('Each current operating area names its approval');
 
-  await page.getByRole('button', { name: 'Close rules', exact: true }).click();
+  await page.getByRole('link', { name: 'Flights', exact: true }).click();
 });

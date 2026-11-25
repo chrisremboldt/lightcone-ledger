@@ -8,7 +8,7 @@ test('an administrator issues a source a credential, sees its secret once, and r
   await page.goto('/');
   await page.getByRole('radio', { name: 'Alpha Dispatch', exact: true }).check();
   await page.getByRole('button', { name: 'Open operations' }).click();
-  await page.getByRole('button', { name: 'People', exact: true }).click();
+  await page.getByRole('link', { name: 'People', exact: true }).click();
   const area = page.getByRole('main', { name: 'People' });
 
   const add = area.getByRole('form', { name: 'Add a person' });

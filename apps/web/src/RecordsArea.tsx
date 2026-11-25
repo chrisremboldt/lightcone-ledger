@@ -34,8 +34,9 @@ import {
 } from './operator-records.js';
 import { time, timeRange, timeZoneLabel } from './format.js';
 import { plainError, saveBytes } from './sms-labels.js';
+import { goTo, usePlace, type Place } from './place.js';
 
-type Pane = 'subjects' | 'browse' | 'import' | 'enter' | 'produce' | 'produced' | 'required';
+type RecordsPlace = Extract<Place, { section: 'records' }>;
 
 /** A record's subject as a person reads it: the operator's own id, or their own organization. */
 function subjectText(subject: { kind: string; id: string; scope: string }): string {
@@ -49,24 +50,6 @@ function ownId(subject: { id: string; scope: string } | undefined): string {
   return subject?.scope === 'source' ? subject.id : '';
 }
 
-/** The shell's one way into the Records area. Shown to people who can read evidence. */
-export function RecordsToggle({
-  principal,
-  open,
-  onToggle,
-}: {
-  principal: Principal | null;
-  open: boolean;
-  onToggle: () => void;
-}) {
-  if (!principal?.capabilities.includes('evidence:read')) return null;
-  return (
-    <Button kind="quiet" className="records-toggle" aria-pressed={open} onClick={onToggle}>
-      {open ? 'Close records' : 'Records'}
-    </Button>
-  );
-}
-
 /**
  * Operator records: the organization's people, aircraft, flights and other subjects with each one's file, records by
  * record type, import, entry and correction, and producing records on request. Nothing here is requested until the
@@ -76,21 +59,50 @@ export function RecordsArea({
   client,
   principal,
   onOpenDocument,
-  initialSubject,
+  place,
 }: {
   client: LedgerClient;
   principal: Principal | null;
   /** Opens a controlled document under Safety, such as a recordkeeping plan just started here. */
   onOpenDocument?: (id: string) => void;
-  /** A subject whose file the area opens on, as when the home opens a flight. */
-  initialSubject?: ChosenSubject;
+  /** The pane, and the subject whose file or the record type it shows. */
+  place: RecordsPlace;
 }) {
+  const { extras } = usePlace();
   const [catalog, setCatalog] = useState<OperatorRecordTypesResponse | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [chosen, setChosen] = useState('');
-  const [pane, setPane] = useState<Pane>('subjects');
-  const [subjectKind, setSubjectKind] = useState<RecordSubjectKind>(initialSubject?.kind ?? 'person');
-  const [opened, setOpened] = useState<ChosenSubject | null>(initialSubject ?? null);
+  const [picked, setChosen] = useState('');
+  const pane = place.pane;
+  const placedType = 'type' in place ? place.type : undefined;
+  const chosen = placedType ?? picked;
+  const subjectKind: RecordSubjectKind = (place.pane === 'subjects' && place.kind) || 'person';
+  const opened: ChosenSubject | null =
+    place.pane === 'subjects' && place.kind && place.id
+      ? { kind: place.kind, id: place.id, name: typeof extras.name === 'string' ? extras.name : '' }
+      : null;
+  const setPane = (next: RecordsPlace['pane'], type = chosen) =>
+    goTo(
+      next === 'browse' || next === 'import' || next === 'enter'
+        ? { section: 'records', pane: next, ...(type ? { type } : {}) }
+        : next === 'subjects'
+          ? { section: 'records', pane: next, kind: subjectKind }
+          : { section: 'records', pane: next },
+    );
+  const choose = (type: string) => {
+    setChosen(type);
+    if (placedType !== undefined && type !== placedType) goTo({ ...place, type } as RecordsPlace);
+  };
+  const setOpened = (subject: ChosenSubject | null) =>
+    goTo(
+      {
+        section: 'records',
+        pane: 'subjects',
+        kind: subject?.kind ?? subjectKind,
+        ...(subject ? { id: subject.id } : {}),
+      },
+      { extras: subject?.name ? { name: subject.name } : {} },
+    );
+  const setSubjectKind = (kind: RecordSubjectKind) => goTo({ section: 'records', pane: 'subjects', kind });
   const [producing, setProducing] = useState<ChosenSubject[]>([]);
   const [subject, setSubject] = useState('');
   const [shownSubject, setShownSubject] = useState('');
@@ -126,13 +138,7 @@ export function RecordsArea({
             shown beside the names their records give them.
           </p>
           <nav className="sms-nav-links records-panes" aria-label="Records lists">
-            <button
-              aria-current={pane === 'subjects' ? 'page' : undefined}
-              onClick={() => {
-                setOpened(null);
-                setPane('subjects');
-              }}
-            >
+            <button aria-current={pane === 'subjects' ? 'page' : undefined} onClick={() => setOpened(null)}>
               People, aircraft and flights
             </button>
             <button
@@ -158,7 +164,7 @@ export function RecordsArea({
             id="records-type"
             value={chosen}
             onChange={(event) => {
-              setChosen(event.target.value);
+              choose(event.target.value);
               setShownSubject('');
               setSubject('');
             }}
@@ -192,6 +198,11 @@ export function RecordsArea({
             </Notice>
           )}
           {!catalog && !error && <Spinner label="Loading record types" />}
+          {catalog && placedType && !type && (
+            <Notice tone="neutral" title="No such record type">
+              Your organization keeps no record type {placedType}. Choose one from the list beside this page.
+            </Notice>
+          )}
           {catalog && pane === 'subjects' && !opened && (
             <SubjectLists
               client={client}
@@ -216,7 +227,7 @@ export function RecordsArea({
                 setChosen(key);
                 setSubject(subjectId);
                 setShownSubject(subjectId);
-                setPane('browse');
+                setPane('browse', key);
               }}
             />
           )}

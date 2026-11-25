@@ -1,5 +1,6 @@
 import type { FlightSummary, SmsRecordKind, SmsRecordSummary } from '@ledger/contracts';
 import type { AvoidanceDemoMission } from './avoidance-demo.js';
+import type { Place } from './place.js';
 
 /**
  * A finding as the screen showed it when someone opened the safety workspace from it: on a flight (flightId), or about
@@ -39,8 +40,33 @@ export const originLabels: Record<NonNullable<SmsRecordSummary['origin']>['kind'
   manual: 'Identified directly',
 };
 
-/** What the safety section asks of the flight screens, numbered so the same request can be made twice. */
-export type FlightRequest = { sequence: number } & (
-  | { kind: 'finding'; flightId: string; findingId: string }
-  | { kind: 'demo-mission'; flight: FlightSummary; demo: AvoidanceDemoMission }
-);
+/**
+ * The place a destination is, and what the move keeps that the address does not hold: the finding a record or a new
+ * hazard was opened from, with the flight's label.
+ */
+export function safetyDestinationPlace(destination: SafetyDestination): {
+  place: Place;
+  extras: Record<string, unknown>;
+} {
+  switch (destination.view) {
+    case 'home':
+      return { place: { section: 'safety', view: 'home' }, extras: {} };
+    case 'register':
+      return { place: { section: 'safety', view: 'hazards' }, extras: {} };
+    case 'record':
+      return {
+        place: { section: 'safety', view: 'record', kind: destination.kind ?? 'hazard', id: destination.id },
+        extras: destination.from ? { from: destination.from } : {},
+      };
+    case 'finding':
+      return {
+        place: {
+          section: 'safety',
+          view: 'finding',
+          findingId: destination.finding.findingId,
+          ...(destination.finding.flightId ? { flightId: destination.finding.flightId } : {}),
+        },
+        extras: { flightLabel: destination.finding.flightLabel },
+      };
+  }
+}

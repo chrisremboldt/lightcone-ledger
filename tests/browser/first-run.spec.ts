@@ -67,7 +67,7 @@ test('the adopt form offers the latest version of each pack and takes the adopti
   await page.goto('/');
   await page.getByRole('radio', { name: 'Alpha Dispatch', exact: true }).check();
   await page.getByRole('button', { name: 'Open operations', exact: true }).click();
-  await page.getByRole('button', { name: 'Rules', exact: true }).click();
+  await page.getByRole('link', { name: 'Rules', exact: true }).click();
   const form = page.getByRole('main', { name: 'Rules and findings' }).getByTestId('adopt-pack');
 
   const latest = form.getByLabel('Rule pack', { exact: true });

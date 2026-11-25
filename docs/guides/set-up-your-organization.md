@@ -22,6 +22,8 @@ If a coding agent is doing the setup for you from the command line, give it [Set
 
 Steps 1, 2 and 9 are the installer's. Steps 3 to 8 are the organization's own, in a browser, with one exception: your own rules (step 6) are written in a text file and loaded by whoever runs the server, because a rule pack is fixed once built and Ledger reads the pack folder only when it starts.
 
+The bar at the top of every screen lists the sections each person may open: **Flights** (for an organization that records flights), **Safety**, **Records**, **Rules** and **People**, with the one open marked, then **Report a safety concern**. An organization that records no flights opens on its safety home. Every screen, and each thing opened on it (a flight, a finding, a hazard, a document revision, a pilot's or an aircraft's file, a pack's coverage), has its own address: copy it from the browser to send a colleague a link, and back, forward and refresh keep the place. A link opened by someone who may not read what it points at says so. An address holds ids, never a safety report's content or anything typed into a search.
+
 ## 1. Start Ledger
 
 To try all of this on one computer first, you need Node 24, pnpm 11.19.0 and Docker:

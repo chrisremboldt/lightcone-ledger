@@ -26,7 +26,7 @@ async function signInAs(page: Page, person: string) {
 }
 
 async function openSafety(page: Page) {
-  await page.getByRole('button', { name: 'Safety', exact: true }).click();
+  await page.getByRole('link', { name: 'Safety', exact: true }).click();
   await expect(page.getByRole('heading', { name: 'What needs attention' })).toBeVisible();
 }
 
@@ -57,7 +57,7 @@ test('a new organization records an audit and a review, closes an action, opens 
   await signInAs(page, 'Test Administrator');
 
   // The proposed Part 108 pack in shadow, adopted first: it counts what goes on file from its start.
-  await page.getByRole('button', { name: 'Rules', exact: true }).click();
+  await page.getByRole('link', { name: 'Rules', exact: true }).click();
   const area = page.getByRole('main', { name: 'Rules and findings' });
   const adopted = area.getByTestId('adoption').filter({ hasText: 'Part 108 NPRM checks (shadow only) · version 3' });
   const adopt = area.getByTestId('adopt-pack');
@@ -77,7 +77,7 @@ test('a new organization records an audit and a review, closes an action, opens 
   await adopt.getByLabel('Reason, kept with the adoption', { exact: true }).fill('See what is on file for Part 108.');
   await adopt.getByRole('button', { name: 'Adopt in shadow', exact: true }).click();
   await expect(adopted.getByText('In effect', { exact: true })).toBeVisible({ timeout: 60_000 });
-  await page.getByRole('button', { name: 'Close rules', exact: true }).click();
+  await page.getByRole('link', { name: 'Flights', exact: true }).click();
 
   await openSafety(page);
   // Nothing fictional is on file for a new organization.
@@ -170,9 +170,9 @@ test('a new organization records an audit and a review, closes an action, opens 
   await page.getByRole('button', { name: 'Review and sign', exact: true }).click();
   await sign(page, 'The review as it was held.', 'Test Administrator');
   await expect(record.getByTestId('assurance-facts')).toContainText('Version 1 signed');
-  await page.getByRole('button', { name: 'Return to flights', exact: true }).click();
+  await page.getByRole('link', { name: 'Flights', exact: true }).click();
 
-  await page.getByRole('button', { name: 'Rules', exact: true }).click();
+  await page.getByRole('link', { name: 'Rules', exact: true }).click();
   const row = await ruleRow(area, 'ledger.nprm.108.560.a.safety-assurance');
   await row.getByRole('button', { name: '1 · Supported by the record', exact: true }).click({ timeout: 60_000 });
   const subjects = area.getByTestId('rule-subjects');

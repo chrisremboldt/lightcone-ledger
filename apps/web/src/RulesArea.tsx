@@ -42,8 +42,10 @@ import {
 import { RuleCoverageTable, SubjectPicker } from './RuleCoverage.js';
 import { OpenFindings } from './OpenFindings.js';
 import { checkedByLabels, leafCheckedBy } from './rule-coverage.js';
+import { goTo, type Place } from './place.js';
+import { PlaceLink } from './TopBar.js';
 
-export type RulesPane = 'coverage' | 'findings' | 'open';
+type RulesPlace = Extract<Place, { section: 'rules' }>;
 const stateLabels: Record<PackAdoptionRecord['state'], string> = {
   pending: 'Being recorded',
   scheduled: 'Starts later',
@@ -53,38 +55,19 @@ const stateLabels: Record<PackAdoptionRecord['state'], string> = {
   succeeded: 'Ended: a later version took over',
 };
 
-/** The shell's one way into the Rules area. Shown to people who can read evidence. */
-export function RulesToggle({
-  principal,
-  open,
-  onToggle,
-}: {
-  principal: Principal | null;
-  open: boolean;
-  onToggle: () => void;
-}) {
-  if (!principal?.capabilities.includes('evidence:read')) return null;
-  return (
-    <Button kind="quiet" className="records-toggle" aria-pressed={open} onClick={onToggle}>
-      {open ? 'Close rules' : 'Rules'}
-    </Button>
-  );
-}
-
 /** Adopted rule packs and their modes, and the findings recorded about any subject. */
 export function RulesArea({
   client,
   principal,
-  initialPane = 'coverage',
-  initialOwner,
+  place,
 }: {
   client: LedgerClient;
   principal: Principal | null;
-  initialPane?: RulesPane;
-  /** Opens the open findings list at the ones nobody owns. */
-  initialOwner?: 'none';
+  /** The pane, and the pack or the finding's subject it shows. */
+  place: RulesPlace;
 }) {
-  const [pane, setPane] = useState<RulesPane>(initialPane);
+  const pane = place.pane;
+  const setPane = (next: RulesPlace['pane']) => goTo({ section: 'rules', pane: next });
   return (
     <main className="records-area" aria-label="Rules and findings">
       <aside className="roster records-nav" aria-label="Rules navigation">
@@ -101,7 +84,7 @@ export function RulesArea({
             <button aria-current={pane === 'open' ? 'page' : undefined} onClick={() => setPane('open')}>
               Open findings
             </button>
-            <button aria-current={pane === 'findings' ? 'page' : undefined} onClick={() => setPane('findings')}>
+            <button aria-current={pane === 'subjects' ? 'page' : undefined} onClick={() => setPane('subjects')}>
               Findings by subject
             </button>
           </nav>
@@ -110,9 +93,19 @@ export function RulesArea({
       <section className="thread-workspace" aria-label="Rules workspace">
         <div className="thread-main">
           {pane === 'coverage' ? (
-            <CoveragePane client={client} principal={principal} />
-          ) : pane === 'open' ? (
-            <OpenFindings client={client} principal={principal} initialOwner={initialOwner} />
+            <CoveragePane
+              client={client}
+              principal={principal}
+              packId={place.pane === 'coverage' ? place.packId : undefined}
+            />
+          ) : place.pane === 'open' ? (
+            <OpenFindings
+              key={place.owner ?? 'any'}
+              client={client}
+              principal={principal}
+              initialOwner={place.owner}
+              subject={place.subject}
+            />
           ) : (
             <FindingsPane client={client} />
           )}
@@ -122,7 +115,16 @@ export function RulesArea({
   );
 }
 
-function CoveragePane({ client, principal }: { client: LedgerClient; principal: Principal | null }) {
+function CoveragePane({
+  client,
+  principal,
+  packId,
+}: {
+  client: LedgerClient;
+  principal: Principal | null;
+  /** Shows only this pack's adoptions, as a link to one pack's coverage does. */
+  packId?: string;
+}) {
   const [shown, setShown] = useState<OrganizationCoverageResponse | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [reload, setReload] = useState(0);
@@ -178,6 +180,31 @@ function CoveragePane({ client, principal }: { client: LedgerClient; principal: 
     </Notice>
   );
   if (!shown) return unavailable || <Spinner label="Reading adopted rule packs" />;
+  const adoptions = packId ? shown.adoptions.filter((adoption) => adoption.pack.packId === packId) : shown.adoptions;
+  if (packId)
+    return (
+      <section aria-label="Adopted rule packs" data-testid="organization-coverage">
+        {unavailable}
+        <PlaceLink className="button button--quiet" place={{ section: 'rules', pane: 'coverage' }}>
+          All adopted rule packs
+        </PlaceLink>
+        <h2>
+          {adoptions[0]?.pack.title ?? packId} · {shown.organization.label}
+        </h2>
+        {adoptions.length === 0 && <p className="rail-muted">Your organization has not adopted rule pack {packId}.</p>}
+        {adoptions.map((adoption) => (
+          <AdoptionCard
+            key={adoption.id}
+            client={client}
+            shown={shown}
+            adoption={adoption}
+            canAdopt={canAdopt}
+            newer={newerVersion(adoption, catalog)}
+            onRecorded={refresh}
+          />
+        ))}
+      </section>
+    );
   return (
     <section aria-label="Adopted rule packs" data-testid="organization-coverage">
       {unavailable}
@@ -237,7 +264,10 @@ function AdoptionCard({
         <span>{stateLabels[adoption.state]}</span>
       </div>
       <h4>
-        {adoption.pack.title} · version {adoption.pack.version}
+        <PlaceLink place={{ section: 'rules', pane: 'coverage', packId: adoption.pack.packId }}>
+          {adoption.pack.title}
+        </PlaceLink>{' '}
+        · version {adoption.pack.version}
       </h4>
       <p className="rail-muted">
         {timeRange(adoption.effectiveInterval.start, adoption.effectiveInterval.end)} · adopted by {adoption.actor.name}{' '}

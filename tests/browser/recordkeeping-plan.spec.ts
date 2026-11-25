@@ -16,7 +16,7 @@ test('a dispatcher reads the required records, starts a recordkeeping plan, fill
   await page.getByRole('radio', { name: 'Alpha Dispatch', exact: true }).check();
   await page.getByRole('button', { name: 'Open operations' }).click();
 
-  await page.getByRole('button', { name: 'Rules', exact: true }).click();
+  await page.getByRole('link', { name: 'Rules', exact: true }).click();
   const rules = page.getByRole('main', { name: 'Rules and findings' });
   const adopted = rules.getByTestId('adoption').filter({ hasText: 'Part 108 NPRM checks (shadow only) · version 3' });
   if (!(await adopted.count())) {
@@ -38,10 +38,10 @@ test('a dispatcher reads the required records, starts a recordkeeping plan, fill
     await form.getByRole('button', { name: 'Adopt in shadow', exact: true }).click();
     await expect(adopted.getByText('In effect', { exact: true })).toBeVisible({ timeout: 60_000 });
   }
-  await page.getByRole('button', { name: 'Close rules', exact: true }).click();
+  await page.getByRole('link', { name: 'Flights', exact: true }).click();
 
   // What the adopted rules require, in their own words, with what is on file and how long the text says.
-  await page.getByRole('button', { name: 'Records', exact: true }).click();
+  await page.getByRole('link', { name: 'Records', exact: true }).click();
   const area = page.getByRole('main', { name: 'Operator records' });
   await area
     .getByRole('navigation', { name: 'Records lists' })
@@ -114,8 +114,7 @@ test('a dispatcher reads the required records, starts a recordkeeping plan, fill
   await expect(page.getByTestId('sms-issued-document')).toBeVisible();
 
   // The recordkeeping-plan rule reads it as on file once the worker has evaluated it.
-  await page.getByRole('button', { name: 'Return to flights', exact: true }).click();
-  await page.getByRole('button', { name: 'Rules', exact: true }).click();
+  await page.getByRole('link', { name: 'Rules', exact: true }).click();
   const row = await ruleRow(rules, PLAN_RULE);
   await expect(row).toContainText('Supported by the record', { timeout: 60_000 });
 });

@@ -13,6 +13,7 @@ import {
   UntiedAccountError,
   type IssuerEntry,
 } from './openid-connect.js';
+import { goTo } from './place.js';
 
 export interface SignedIn {
   token: () => Promise<string | null>;
@@ -235,7 +236,17 @@ export function OpenIdSignIn({
       token: async () => token,
       sessionKey: `development-${sessions.current}`,
       local: true,
-      account: <Button onClick={() => setDevelopmentToken(null)}>Sign out</Button>,
+      account: (
+        <Button
+          onClick={() => {
+            // The next person to sign in starts at the first screen, not at a place this one opened.
+            goTo({ section: 'start' }, { replace: true });
+            setDevelopmentToken(null);
+          }}
+        >
+          Sign out
+        </Button>
+      ),
     });
   }
   if (session)
@@ -247,6 +258,7 @@ export function OpenIdSignIn({
         <Button
           onClick={() => {
             const ending = session;
+            goTo({ section: 'start' }, { replace: true });
             setSession(null);
             endSession(ending.entry, ending.idToken);
           }}

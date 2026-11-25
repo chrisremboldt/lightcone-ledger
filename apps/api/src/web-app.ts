@@ -55,14 +55,16 @@ async function regularFile(path: string | undefined): Promise<string | undefined
 
 /**
  * Serves the built web app from the API's own origin, so the image runs both in one process and the web app calls
- * the API with relative URLs. A path without a file extension is a screen of the single-page app: it gets index.html.
+ * the API with relative URLs. A path that names no file type served here is a screen of the single-page app, even with a
+ * dot in an id such as a rule pack's: it gets index.html.
  */
 export function registerWebApp(app: FastifyInstance, directory: string): void {
   const index = resolve(directory, 'index.html');
   async function send(request: FastifyRequest, reply: FastifyReply) {
     const path = request.url.split('?')[0]!;
     const file =
-      (await regularFile(webAppFile(directory, request.url))) ?? (extname(path) ? undefined : await regularFile(index));
+      (await regularFile(webAppFile(directory, request.url))) ??
+      (contentTypes[extname(path).toLowerCase()] ? undefined : await regularFile(index));
     if (!file)
       return reply.code(404).send({ error: { code: 'not_found', message: 'Not found' }, requestId: request.id });
     const hashed = file.startsWith(resolve(directory, 'assets') + sep);

@@ -111,7 +111,7 @@ test('an organization that flies keeps its hazard register and matrix in a Safet
   await page.getByRole('button', { name: 'Open operations' }).click();
   await expect(page.getByRole('searchbox', { name: 'Find flight' })).toBeVisible();
 
-  await page.getByRole('button', { name: 'Safety', exact: true }).click();
+  await page.getByRole('link', { name: 'Safety', exact: true }).click();
   await expect(page.getByRole('heading', { name: 'What needs attention' })).toBeVisible();
   await expect(page.locator('.sms-program')).toContainText('Program safety risk matrix');
   // Documents appear once the organization records one; the adopted matrix lives in the program card.
@@ -130,7 +130,7 @@ test('an organization that flies keeps its hazard register and matrix in a Safet
   await page.getByRole('button', { name: 'Hazard register', exact: false }).first().click();
   await expect(page.locator('[data-testid^="sms-row-"]').first()).toContainText(title);
 
-  await page.getByRole('button', { name: 'Return to flights', exact: true }).click();
+  await page.getByRole('link', { name: 'Flights', exact: true }).click();
   await expect(page.getByRole('searchbox', { name: 'Find flight' })).toBeVisible();
 });
 

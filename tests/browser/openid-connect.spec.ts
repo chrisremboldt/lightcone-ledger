@@ -29,7 +29,7 @@ test.skip(!issuer, 'Set LEDGER_BROWSER_TEST_ISSUER to run against a stack config
 test('an administrator signs in through the provider, adds a person, and that person signs in', async ({ page }) => {
   const name = `Fictional Person ${randomUUID().slice(0, 6).toUpperCase()}`;
   await signInAs(page, 'Test Administrator');
-  await page.getByRole('button', { name: 'People', exact: true }).click();
+  await page.getByRole('link', { name: 'People', exact: true }).click();
   const area = page.getByRole('main', { name: 'People' });
   const add = area.getByRole('form', { name: 'Add a person' });
   await add.getByLabel('Name', { exact: true }).fill(name);
@@ -43,5 +43,5 @@ test('an administrator signs in through the provider, adds a person, and that pe
 
   await page.getByRole('button', { name: 'Sign out' }).click();
   await signInAs(page, 'Test Person');
-  await expect(page.getByRole('button', { name: 'People', exact: true })).toHaveCount(0);
+  await expect(page.getByRole('link', { name: 'People', exact: true })).toHaveCount(0);
 });

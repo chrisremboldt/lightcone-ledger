@@ -15,6 +15,7 @@ import { FindingSetActions } from './FindingSetActions.js';
 import { subjectLabel } from './subject-label.js';
 import { SubjectFindings } from './SubjectFindings.js';
 import type { CitedSubject } from './evaluation-reads.js';
+import { goTo, usePlace, type FindingSubject } from './place.js';
 
 const kindLabels: Record<string, string> = {
   person: 'People',
@@ -45,10 +46,13 @@ export function OpenFindings({
   client,
   principal = null,
   initialOwner,
+  subject,
 }: {
   client: LedgerClient;
   principal?: Principal | null;
   initialOwner?: 'none';
+  /** The subject of the finding opened from the list, whose findings are shown instead of the list. */
+  subject?: FindingSubject;
 }) {
   const [shown, setShown] = useState<Shown>('counted');
   const [view, setView] = useState<View>(initialOwner ? 'every' : 'rules');
@@ -64,7 +68,31 @@ export function OpenFindings({
   const [pages, setPages] = useState<OpenFindingsResponse[] | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [reload, setReload] = useState(0);
-  const [opened, setOpened] = useState<OpenFinding | null>(null);
+  const { extras } = usePlace();
+  const opened = subject ? { ...subject, name: typeof extras.name === 'string' ? extras.name : undefined } : null;
+  const openedKey = subject ? `${subject.sourceId ?? ''}/${subject.kind}/${subject.id}` : null;
+  const [listedAt, setListedAt] = useState(openedKey);
+  // Back on the list from a finding, the list is read again: the finding may have changed.
+  if (listedAt !== openedKey) {
+    setListedAt(openedKey);
+    if (!openedKey) setReload((value) => value + 1);
+  }
+  const setOpened = (finding: OpenFinding | null) => {
+    if (!finding) return goTo({ section: 'rules', pane: 'open', ...(initialOwner ? { owner: initialOwner } : {}) });
+    const cited = finding.subject as CitedSubject;
+    goTo(
+      {
+        section: 'rules',
+        pane: 'open',
+        subject: {
+          kind: cited.kind,
+          id: cited.id,
+          ...(cited.scope === 'source' && cited.sourceId ? { sourceId: cited.sourceId } : {}),
+        },
+      },
+      { extras: finding.subject.name ? { name: finding.subject.name } : {} },
+    );
+  };
 
   const narrowing = {
     ...(subjectKind ? { subjectKind: subjectKind as OpenFindingsQuery['subjectKind'] } : {}),
@@ -116,20 +144,23 @@ export function OpenFindings({
   if (opened)
     return (
       <section aria-label="Finding" data-testid="open-finding-detail">
-        <Button
-          kind="quiet"
-          onClick={() => {
-            setOpened(null);
-            setReload((value) => value + 1);
-          }}
-        >
+        <Button kind="quiet" onClick={() => setOpened(null)}>
           Back to open findings
         </Button>
-        <h2>{subjectLabel(opened.subject)}</h2>
+        <h2>{subjectLabel(opened)}</h2>
         <p className="records-item-meta">
-          {opened.subject.kind} · your id {opened.subject.id}
+          {opened.kind} · your id {opened.id}
         </p>
-        <SubjectFindings client={client} subject={opened.subject as CitedSubject} />
+        <SubjectFindings
+          client={client}
+          subject={{
+            kind: opened.kind as CitedSubject['kind'],
+            id: opened.id,
+            ...(opened.sourceId
+              ? { scope: 'source' as const, sourceId: opened.sourceId }
+              : { scope: 'ledger' as const }),
+          }}
+        />
       </section>
     );
 

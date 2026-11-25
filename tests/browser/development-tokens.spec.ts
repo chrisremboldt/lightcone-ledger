@@ -10,7 +10,7 @@ test('an administrator issues a person a development token, shown once, and a ne
   await page.goto('/');
   await page.getByRole('radio', { name: 'Alpha Dispatch', exact: true }).check();
   await page.getByRole('button', { name: 'Open operations', exact: true }).click();
-  await page.getByRole('button', { name: 'People', exact: true }).click();
+  await page.getByRole('link', { name: 'People', exact: true }).click();
   const area = page.getByRole('main', { name: 'People' });
 
   const add = area.getByRole('form', { name: 'Add a person' });
@@ -52,7 +52,7 @@ test('an administrator issues a person a development token, shown once, and a ne
     await theirs.getByRole('button', { name: 'Open with this token', exact: true }).click();
     await expect(theirs.getByRole('button', { name: 'Switch operator', exact: true })).toBeVisible();
     // A pilot does not manage people, so the People screen is not offered.
-    await expect(theirs.getByRole('button', { name: 'People', exact: true })).toHaveCount(0);
+    await expect(theirs.getByRole('link', { name: 'People', exact: true })).toHaveCount(0);
   } finally {
     await context.close();
   }

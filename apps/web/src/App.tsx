@@ -12,17 +12,15 @@ import type {
   SourceCapability,
 } from '@ledger/contracts';
 import { Button, Mark, Notice, Spinner } from '@ledger/ui';
-import { age, errorMessage, setTimeZone, shortId, time, timeZone, timeZoneLabel } from './format.js';
+import { age, errorMessage, setTimeZone, shortId, time, timeZoneLabel } from './format.js';
 import {
   activityPresentation,
   aircraftLabel,
   attentionOwner,
   attentionReasons,
-  organizationLabel,
   seededOrganization,
   ownershipLine,
   picturePhrase,
-  roleLabel,
   rosterGroup,
   rosterGroups,
   type RosterGroup,
@@ -31,7 +29,7 @@ import { FlightThread } from './FlightThread.js';
 import { FleetMap } from './FleetMap.js';
 import { AwaitingOrders } from './AwaitingOrders.js';
 import { OperationOverview } from './OperationOverview.js';
-import type { FlightRequest, SafetyDestination } from './safety-navigation.js';
+import type { SafetyDestination } from './safety-navigation.js';
 import { MissionWorkspace, type MissionRequest } from './MissionWorkspace.js';
 import type { AvoidanceDemoMission } from './avoidance-demo.js';
 import { useDecisionPacketRequests } from './decision-packet-requests.js';
@@ -39,13 +37,12 @@ import { retainFlight } from './flightSelection.js';
 import { operationDisplay, operationViews, type OperationView } from './operation-display.js';
 import { useHistoricalAttention } from './historical-attention.js';
 import { predeparturePresentation } from './predeparture.js';
-import { RecordsArea, RecordsToggle } from './RecordsArea.js';
-import { RulesArea, RulesToggle, type RulesPane } from './RulesArea.js';
 import { RecordsHome } from './RecordsHome.js';
 import { FindingWorkContext, type FindingWorkLinks } from './finding-work-context.js';
-import type { ChosenSubject } from './RecordSubjects.js';
-import { PeopleArea, PeopleToggle } from './PeopleArea.js';
 import { readFailureOutcome } from './read-failure.js';
+import { barSection, goTo, placePath, placeTitle, usePlace, type Place } from './place.js';
+import { offeredSections, PlaceLink, TopBar } from './TopBar.js';
+import { SectionArea, sharedSection } from './SectionArea.js';
 
 type FeedState = {
   view: OperationView;
@@ -72,22 +69,25 @@ export interface AppProps {
   local?: boolean;
   /** Opens the safety section, beside the flights, at a destination. */
   onOpenSafety?: (destination: SafetyDestination) => void;
-  /** A flight finding, or a demo flight's mission, the safety section asked to show. */
-  request?: FlightRequest;
 }
 
-export function App({ apiUrl, token, account, local = false, onOpenSafety, request }: AppProps) {
+/** A flight an address named that could not be opened, and why. */
+interface UnavailableFlight {
+  flightId: string;
+  accessLost: boolean;
+  message: string;
+}
+
+export function App({ apiUrl, token, account, local = false, onOpenSafety }: AppProps) {
   const client = useMemo(() => new LedgerClient(apiUrl, token, appFetch), [apiUrl, token]);
   const [principal, setPrincipal] = useState<Principal | null>(null);
   const [organizationName, setOrganizationName] = useState<string | null>(null);
-  const [recordsOpen, setRecordsOpen] = useState(false);
-  const [rulesOpen, setRulesOpen] = useState(false);
-  // Where a link from the home opens the Records and Rules areas, numbered so the same link can be followed twice.
-  const [recordsAt, setRecordsAt] = useState<{ subject?: ChosenSubject; sequence: number }>({ sequence: 0 });
-  const [rulesAt, setRulesAt] = useState<{ pane?: RulesPane; owner?: 'none'; sequence: number }>({ sequence: 0 });
+  const { place, extras } = usePlace();
+  const [unavailable, setUnavailable] = useState<UnavailableFlight | null>(null);
+  // The finding a move to a flight asked to show, kept so the address names it while that flight stays open.
+  const [shownFinding, setShownFinding] = useState<{ flightId: string; findingId: string } | null>(null);
   const [recordsHome, setRecordsHome] = useState<{ scope: string; home: FlightsOnRecordResponse } | null>(null);
   const [recordsHomeError, setRecordsHomeError] = useState<string | null>(null);
-  const [peopleOpen, setPeopleOpen] = useState(false);
   const [feed, setFeed] = useState<FeedState | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [selectedId, setSelectedId] = useState<string | null>(null);
@@ -147,6 +147,7 @@ export function App({ apiUrl, token, account, local = false, onOpenSafety, reque
   }
 
   const canSafety = Boolean(onOpenSafety && principal?.capabilities.includes('sms:read'));
+  const offered = offeredSections(principal, true).filter((section) => section !== 'safety' || canSafety);
   const findingWork = useMemo<FindingWorkLinks>(
     () => ({
       principal,
@@ -169,7 +170,7 @@ export function App({ apiUrl, token, account, local = false, onOpenSafety, reque
     [principal, canSafety, onOpenSafety],
   );
   // An organization with no order source on record opens on its flights on record; one with a source, on the operation.
-  const areaOpen = recordsOpen || rulesOpen || peopleOpen;
+  const areaOpen = sharedSection(place);
   useEffect(() => {
     if (!principalScope || !principal?.capabilities.includes('evidence:read') || areaOpen) return;
     let current = true;
@@ -188,14 +189,109 @@ export function App({ apiUrl, token, account, local = false, onOpenSafety, reque
   const shownRecordsHome = recordsHome?.scope === principalScope ? recordsHome.home : null;
   const recordsOnly = shownRecordsHome?.orderSource === false;
 
-  const handledRequest = useRef<number | null>(null);
+  // The address and the screen follow each other: a move on the screen is a new address, and a new address (a link,
+  // back or forward) moves the screen. Each remembers which of the two it last followed.
+  const statePlace: Place =
+    missionActive && mission
+      ? { section: 'flights', flightId: mission.request.flight.id, mission: true }
+      : !showOverview && selectedId
+        ? {
+            section: 'flights',
+            flightId: selectedId,
+            ...(shownFinding?.flightId === selectedId ? { findingId: shownFinding.findingId } : {}),
+          }
+        : { section: 'flights' };
+  const placeKey = placePath(place);
+  const stateKey = placePath(statePlace);
+  const followedPlace = useRef<string | null>(null);
+  const shownState = useRef<string | null>(null);
+  // Hidden behind another section, the flights keep their state; on return, the address says where they open.
+  const shownSection = useRef(false);
   useEffect(() => {
-    if (!request || !principalScope || handledRequest.current === request.sequence) return;
-    handledRequest.current = request.sequence;
-    if (request.kind === 'demo-mission')
-      openMission(request.flight, undefined, undefined, navigation.current, request.demo);
-    else void inspectSafetyFlight(request.flightId, request.findingId, navigation.current);
-  }, [request, principalScope]);
+    if (!principalScope) return;
+    if (place.section !== 'flights') {
+      shownSection.current = false;
+      return;
+    }
+    const returned = !shownSection.current;
+    shownSection.current = true;
+    if (placeKey === stateKey) {
+      followedPlace.current = placeKey;
+      shownState.current = stateKey;
+    } else if (returned || placeKey !== followedPlace.current) {
+      followedPlace.current = placeKey;
+      shownState.current = stateKey;
+      followPlace(place, extras);
+    } else if (stateKey !== shownState.current) {
+      shownState.current = stateKey;
+      followedPlace.current = stateKey;
+      goTo(statePlace);
+    }
+  }, [placeKey, stateKey, principalScope, place.section]);
+  useEffect(() => {
+    if (place.section === 'safety') return;
+    const label =
+      place.section === 'flights' && place.flightId === selected?.flight.id ? selected?.flight.label : undefined;
+    document.title = placeTitle(place, label);
+  });
+
+  function followPlace(target: Place, kept: Record<string, unknown>) {
+    if (target.section !== 'flights') return;
+    setUnavailable(null);
+    if (!target.flightId) {
+      navigation.current += 1;
+      setShownFinding(null);
+      setShowOverview(true);
+      setShowMission(false);
+      setShowUnresolved(false);
+      return;
+    }
+    void openFlight(target.flightId, {
+      ...(target.findingId ? { findingId: target.findingId } : {}),
+      ...(target.mission ? { mission: true } : {}),
+      ...(kept.flight ? { flight: kept.flight as FlightSummary } : {}),
+      ...(kept.demo ? { demo: kept.demo as AvoidanceDemoMission } : {}),
+    });
+  }
+
+  /** Opens a flight an address names, at a finding or its mission review; reads it when no list on screen holds it. */
+  async function openFlight(
+    id: string,
+    options: { findingId?: string; mission?: boolean; flight?: FlightSummary; demo?: AvoidanceDemoMission },
+  ) {
+    const destination = ++navigation.current;
+    const scope = authority.current;
+    let flight =
+      (options.flight?.id === id ? options.flight : undefined) ??
+      feed?.list.flights.find((candidate) => candidate.id === id) ??
+      (selection.current?.id === id ? selection.current : undefined);
+    if (!flight) {
+      try {
+        flight = (await client.timeline(id)).flight;
+      } catch (failure) {
+        if (authority.current !== scope || navigation.current !== destination) return;
+        setUnavailable({
+          flightId: id,
+          accessLost: readFailureOutcome(failure, true) === 'access_lost',
+          message: errorMessage(failure),
+        });
+        // What was on screen stays, with a notice that says why the flight did not open.
+        return;
+      }
+      if (authority.current !== scope || navigation.current !== destination) return;
+    }
+    if (options.mission) {
+      openMission(flight, undefined, undefined, navigation.current, options.demo);
+      return;
+    }
+    selection.current = flight;
+    setSelectedId(id);
+    setShownFinding(options.findingId ? { flightId: id, findingId: options.findingId } : null);
+    if (options.findingId)
+      setFocusedFinding((previous) => ({ id: options.findingId!, sequence: (previous?.sequence ?? 0) + 1 }));
+    setShowUnresolved(false);
+    returnToFlight();
+  }
 
   function returnToFlight() {
     const destination = ++navigation.current;
@@ -260,28 +356,6 @@ export function App({ apiUrl, token, account, local = false, onOpenSafety, reque
   function openSafetyRecord(id: string, kind: 'hazard' | 'control', expectedNavigation: number) {
     if (!onOpenSafety || expectedNavigation !== navigation.current) return;
     onOpenSafety({ view: 'record', id, kind });
-  }
-
-  async function inspectSafetyFlight(id: string, findingId: string, expectedNavigation: number) {
-    if (expectedNavigation !== navigation.current) return;
-    const destination = ++navigation.current;
-    if (id === selection.current?.id) {
-      setFocusedFinding((previous) => ({ id: findingId, sequence: (previous?.sequence ?? 0) + 1 }));
-      returnToFlight();
-      return;
-    }
-    const scope = authority.current;
-    try {
-      const result = await client.timeline(id);
-      if (authority.current !== scope || navigation.current !== destination) return;
-      selection.current = result.flight;
-      setSelectedId(id);
-      setFocusedFinding((previous) => ({ id: findingId, sequence: (previous?.sequence ?? 0) + 1 }));
-      setShowUnresolved(false);
-      returnToFlight();
-    } catch (failure) {
-      if (authority.current === scope && navigation.current === destination) setError(errorMessage(failure));
-    }
   }
 
   useEffect(() => {
@@ -468,115 +542,44 @@ export function App({ apiUrl, token, account, local = false, onOpenSafety, reque
 
   return (
     <div className="workspace">
-      <header className="topbar">
-        <a className="brand" href="/" aria-label="Ledger operations">
-          <Mark />
-          <span>LEDGER</span>
-        </a>
-        <span className="topbar-divider" />
-        <span className="topbar-operator">
-          <span className="topbar-label">Operator</span>
-          <strong>{principal ? organizationLabel(principal.tenantId, organizationName) : 'Loading operator'}</strong>
-        </span>
-        {/* Only the seeded fictional organizations are a simulation; an organization of its own is shown as itself. */}
-        {principal && seededOrganization(principal.tenantId) && (
-          <SimulationPill local={local} connected={!error && Boolean(refreshedAt)} />
-        )}
-        <span className="topbar-spacer" />
-        <Clock />
-        <span className="topbar-divider" />
-        {principal && (
-          <span className="topbar-user">
-            <span className="avatar" aria-hidden="true">
-              {initials(principal.name)}
-            </span>
-            <span>
-              {principal.name} <small>· {roleLabel(principal.id)}</small>
-            </span>
-          </span>
-        )}
-        {canSafety && <Button onClick={() => onOpenSafety!({ view: 'home' })}>Safety</Button>}
-        <RecordsToggle
-          principal={principal}
-          open={recordsOpen}
-          onToggle={() => {
-            setRulesOpen(false);
-            setPeopleOpen(false);
-            setRecordsOpen((open) => !open);
-          }}
-        />
-        <RulesToggle
-          principal={principal}
-          open={rulesOpen}
-          onToggle={() => {
-            setRecordsOpen(false);
-            setPeopleOpen(false);
-            setRulesOpen((open) => !open);
-          }}
-        />
-        <PeopleToggle
-          principal={principal}
-          open={peopleOpen}
-          onToggle={() => {
-            setRecordsOpen(false);
-            setRulesOpen(false);
-            setPeopleOpen((open) => !open);
-          }}
-        />
-        {account}
-      </header>
+      <TopBar
+        principal={principal}
+        organizationName={organizationName}
+        section={barSection(place)}
+        offered={offered}
+        account={account}
+        status={
+          // Only the seeded fictional organizations are a simulation; an organization of its own is shown as itself.
+          principal &&
+          seededOrganization(principal.tenantId) && (
+            <SimulationPill local={local} connected={!error && Boolean(refreshedAt)} />
+          )
+        }
+      />
       <FindingWorkContext.Provider value={findingWork}>
-        {recordsOpen && (
-          <RecordsArea
-            key={recordsAt.sequence}
+        {areaOpen && (
+          <SectionArea
+            place={place}
             client={client}
             principal={principal}
-            initialSubject={recordsAt.subject}
-            onOpenDocument={
-              canSafety
-                ? (id) => {
-                    setRecordsOpen(false);
-                    onOpenSafety!({ view: 'record', id, kind: 'document' });
-                  }
-                : undefined
-            }
+            offered={offered}
+            onOpenDocument={canSafety ? (id) => onOpenSafety!({ view: 'record', id, kind: 'document' }) : undefined}
           />
         )}
-        {rulesOpen && (
-          <RulesArea
-            key={rulesAt.sequence}
-            client={client}
-            principal={principal}
-            initialPane={rulesAt.pane}
-            initialOwner={rulesAt.owner}
-          />
-        )}
-        {peopleOpen && <PeopleArea client={client} principal={principal} />}
         {recordsOnly && !areaOpen && (
           <RecordsHome
             home={shownRecordsHome}
             error={recordsHomeError}
-            onOpenFlight={(flight) => {
-              setRecordsAt((previous) => ({
-                subject: { kind: 'flight', id: flight.id, name: flight.name },
-                sequence: previous.sequence + 1,
-              }));
-              setRulesOpen(false);
-              setPeopleOpen(false);
-              setRecordsOpen(true);
-            }}
-            onOpenFindings={(owner) => {
-              setRulesAt((previous) => ({ pane: 'open', owner, sequence: previous.sequence + 1 }));
-              setRecordsOpen(false);
-              setPeopleOpen(false);
-              setRulesOpen(true);
-            }}
-            onOpenRecords={() => {
-              setRecordsAt((previous) => ({ sequence: previous.sequence + 1 }));
-              setRulesOpen(false);
-              setPeopleOpen(false);
-              setRecordsOpen(true);
-            }}
+            onOpenFlight={(flight) =>
+              goTo(
+                { section: 'records', pane: 'subjects', kind: 'flight', id: flight.id },
+                { extras: { name: flight.name } },
+              )
+            }
+            onOpenFindings={(owner) =>
+              goTo({ section: 'rules', pane: 'open', ...(owner === 'none' ? { owner: 'none' as const } : {}) })
+            }
+            onOpenRecords={() => goTo({ section: 'records', pane: 'subjects' })}
           />
         )}
         <main className="operations" hidden={areaOpen || recordsOnly}>
@@ -724,6 +727,8 @@ export function App({ apiUrl, token, account, local = false, onOpenSafety, reque
                             selected={entry.flight.id === visibleSelection}
                             onSelect={() => {
                               navigation.current += 1;
+                              setShownFinding(null);
+                              setUnavailable(null);
                               setShowOverview(false);
                               selection.current = entry.flight;
                               setSelectedId(entry.flight.id);
@@ -811,6 +816,8 @@ export function App({ apiUrl, token, account, local = false, onOpenSafety, reque
                   const flight = flights.find((flight) => flight.id === id);
                   if (!flight) return;
                   navigation.current += 1;
+                  setShownFinding(null);
+                  setUnavailable(null);
                   setShowOverview(false);
                   selection.current = flight;
                   setSelectedId(id);
@@ -818,6 +825,14 @@ export function App({ apiUrl, token, account, local = false, onOpenSafety, reque
                   setShowMission(false);
                 }}
               />
+            )}
+            {unavailable && place.section === 'flights' && place.flightId === unavailable.flightId && (
+              <Notice tone="neutral" title="Flight unavailable">
+                {unavailable.accessLost
+                  ? 'This flight is not on record for your organization, or your role cannot read it.'
+                  : `This flight could not be read: ${unavailable.message}`}{' '}
+                <PlaceLink place={{ section: 'flights' }}>Show the flights</PlaceLink>
+              </Notice>
             )}
             {error && (
               <Notice
@@ -954,29 +969,6 @@ function restoreWorkspaceFocus(trigger: HTMLElement | null, fallback: string) {
       ? trigger
       : [...document.querySelectorAll<HTMLElement>(fallback)].find((element) => !element.closest('[hidden]'));
   target?.focus({ preventScroll: true });
-}
-
-function initials(name: string) {
-  return name
-    .split(/\s+/)
-    .map((part) => part[0] ?? '')
-    .join('')
-    .slice(0, 2)
-    .toUpperCase();
-}
-
-function Clock() {
-  const [now, setNow] = useState(() => new Date().toISOString());
-  useEffect(() => {
-    const timer = setInterval(() => setNow(new Date().toISOString()), 1000);
-    return () => clearInterval(timer);
-  }, []);
-  return (
-    <span className="clock" aria-label={`Time in ${timeZone()}`}>
-      {time(now)}
-      <small>{timeZoneLabel()}</small>
-    </span>
-  );
 }
 
 function SimulationPill({ local, connected }: { local: boolean; connected: boolean }) {

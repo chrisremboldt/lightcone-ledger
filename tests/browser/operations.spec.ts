@@ -644,9 +644,10 @@ test('operational polling keeps completed records in searchable history without 
   await expect(historicalAttention).toHaveAttribute('data-attention', 'present');
   await views.getByRole('button', { name: 'Hazards', exact: true }).click();
   await expect(page.getByRole('heading', { name: 'Hazard register', exact: true })).toBeVisible();
-  await expect(page.getByRole('button', { name: 'Return to flights', exact: true })).toBeVisible();
-  await expect(page.getByRole('button', { name: `Return to ${olderFlight.label}`, exact: true })).toHaveCount(0);
-  await page.getByRole('button', { name: 'Return to flights', exact: true }).click();
+  await expect(page).toHaveURL(/\/safety\/hazards$/);
+  await expect(page.getByRole('link', { name: 'Safety', exact: true })).toHaveAttribute('aria-current', 'page');
+  // Flights in the bar returns to the flights as they were left: the overview, not an earlier flight.
+  await page.getByRole('link', { name: 'Flights', exact: true }).click();
   await expectOverview('Current operation');
 
   await openRegisteredHazard();

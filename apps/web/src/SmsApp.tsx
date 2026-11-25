@@ -10,9 +10,9 @@ import type {
   SmsRegisterResponse,
   CurrentPrincipalResponse,
 } from '@ledger/contracts';
-import { Badge, Button, Mark, Notice, Spinner } from '@ledger/ui';
-import { setTimeZone, time, timeZoneLabel } from './format.js';
-import { organizationLabel, roleLabel, seededOrganization } from './labels.js';
+import { Badge, Button, Notice, Spinner } from '@ledger/ui';
+import { setTimeZone, shortId, time, timeZoneLabel } from './format.js';
+import { seededOrganization } from './labels.js';
 import { authorityLabels, plainError } from './sms-labels.js';
 import { PeriodExportForm } from './SmsExport.js';
 import { DraftDocumentForm, IdentifyHazardForm } from './SmsForms.js';
@@ -20,15 +20,17 @@ import { SmsRecordView } from './SmsRecord.js';
 import { DocumentReviewsDue, MyDocumentReading, OrganizationReading } from './SmsDocumentControl.js';
 import { DocumentLibrary } from './SmsDocumentLibrary.js';
 import { RegisterMore } from './SmsRegisterTools.js';
-import { RecordsArea, RecordsToggle } from './RecordsArea.js';
 import { FindingHazard, HazardRegister, RecordRow } from './SmsHazards.js';
 import { FirstSteps } from './FirstSteps.js';
 import type { FirstStepTarget } from './first-steps.js';
 import { RiskMatrixForm } from './RiskMatrixForm.js';
 import { mayRecordReports, ReportsRegister } from './SmsReports.js';
 import { AssuranceActionsDue, AssuranceRegister } from './SmsAssurance.js';
-import type { FlightFinding, FlightLinks, SafetyDestination } from './safety-navigation.js';
+import type { FlightFinding, FlightLinks } from './safety-navigation.js';
 import { readFailureOutcome } from './read-failure.js';
+import { barSection, goTo, placeTitle, usePlace, type Place } from './place.js';
+import { offeredSections, TopBar } from './TopBar.js';
+import { SectionArea, SectionUnavailable } from './SectionArea.js';
 
 /** A new sign-in at the identity provider, which a signature needs; returns when it happened. */
 export type ConfirmIdentity = () => Promise<{ authenticatedAt: string }>;
@@ -38,12 +40,10 @@ export interface SmsAppProps {
   account?: ReactNode;
   local?: boolean;
   confirmIdentity?: ConfirmIdentity;
-  /** Where to open, such as a flight finding's hazard or the hazard of an area control a flight screen named. */
-  initial?: SafetyDestination;
   /** Present when the safety section sits beside the flights, in one organization that flies. */
   flights?: FlightLinks;
 }
-type Screen =
+export type Screen =
   | { view: 'home' }
   | { view: 'register' }
   | { view: 'documents'; drafting?: boolean }
@@ -61,17 +61,99 @@ type Screen =
       from?: FlightFinding;
     };
 
-function firstScreen(initial?: SafetyDestination): Screen {
-  if (!initial || initial.view === 'home') return { view: 'home' };
-  if (initial.view === 'record') return { ...initial, kind: initial.kind ?? 'hazard' };
-  return initial;
+/** The screen a safety place shows, with what the move to it kept: the finding a hazard came from, a signature to start. */
+function screenOf(place: Place, extras: Record<string, unknown>): Screen {
+  if (place.section !== 'safety') return { view: 'home' };
+  const from = extras.from as FlightFinding | undefined;
+  switch (place.view) {
+    case 'hazards':
+      return { view: 'register' };
+    case 'documents':
+      return { view: 'documents', ...(extras.drafting ? { drafting: true } : {}) };
+    case 'new-risk-matrix':
+      return { view: 'new-matrix' };
+    case 'finding':
+      return {
+        view: 'finding',
+        finding: {
+          findingId: place.findingId,
+          ...(place.flightId ? { flightId: place.flightId } : {}),
+          flightLabel:
+            typeof extras.flightLabel === 'string'
+              ? extras.flightLabel
+              : place.flightId
+                ? `flight ${shortId(place.flightId)}`
+                : 'the finding',
+        },
+      };
+    case 'record':
+      return {
+        view: 'record',
+        id: place.id,
+        kind: place.kind,
+        ...(place.issueId ? { issueId: place.issueId } : {}),
+        ...(extras.sign ? { sign: true } : {}),
+        ...(extras.read ? { read: true } : {}),
+        ...(from ? { from } : {}),
+      };
+    default:
+      return { view: place.view };
+  }
 }
 
-export function SmsApp({ apiUrl, token, account, local = false, confirmIdentity, initial, flights }: SmsAppProps) {
+/** The place a safety screen has, and what the move to it keeps that the address does not hold. */
+export function safetyPlace(screen: Screen): { place: Place; extras: Record<string, unknown> } {
+  switch (screen.view) {
+    case 'register':
+      return { place: { section: 'safety', view: 'hazards' }, extras: {} };
+    case 'documents':
+      return { place: { section: 'safety', view: 'documents' }, extras: screen.drafting ? { drafting: true } : {} };
+    case 'new-matrix':
+      return { place: { section: 'safety', view: 'new-risk-matrix' }, extras: {} };
+    case 'finding':
+      return {
+        place: {
+          section: 'safety',
+          view: 'finding',
+          findingId: screen.finding.findingId,
+          ...(screen.finding.flightId ? { flightId: screen.finding.flightId } : {}),
+        },
+        extras: { flightLabel: screen.finding.flightLabel },
+      };
+    case 'record':
+      return {
+        place: {
+          section: 'safety',
+          view: 'record',
+          kind: screen.kind,
+          id: screen.id,
+          ...(screen.issueId ? { issueId: screen.issueId } : {}),
+        },
+        extras: {
+          ...(screen.sign ? { sign: true } : {}),
+          ...(screen.read ? { read: true } : {}),
+          ...(screen.from ? { from: screen.from } : {}),
+        },
+      };
+    default:
+      return { place: { section: 'safety', view: screen.view }, extras: {} };
+  }
+}
+
+export function SmsApp({ apiUrl, token, account, local = false, confirmIdentity, flights }: SmsAppProps) {
   const client = useMemo(() => new LedgerClient(apiUrl, token, appFetch), [apiUrl, token]);
   const [principal, setPrincipal] = useState<Principal | null>(null);
   const [organizationName, setOrganizationName] = useState<string | null>(null);
-  const [recordsOpen, setRecordsOpen] = useState(false);
+  const { place, extras } = usePlace();
+  const screen = screenOf(place, extras);
+  const setScreen = (next: Screen) => {
+    const { place: shown, extras: kept } = safetyPlace(next);
+    goTo(shown, { extras: kept });
+  };
+  const inSafety = place.section === 'safety';
+  useEffect(() => {
+    document.title = placeTitle(place);
+  }, [place]);
   const [home, setHome] = useState<SmsHomeResponse | null>(null);
   const [register, setRegister] = useState<SmsRegisterResponse | null>(null);
   const [documents, setDocuments] = useState<SmsRecordSummary[] | null>(null);
@@ -81,7 +163,6 @@ export function SmsApp({ apiUrl, token, account, local = false, confirmIdentity,
   const [reportRegister, setReportRegister] = useState<SmsRegisterResponse | null>(null);
   const [assuranceRegister, setAssuranceRegister] = useState<SmsRegisterResponse | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [screen, setScreen] = useState<Screen>(() => firstScreen(initial));
   const [ownDocuments, setOwnDocuments] = useState(0);
   // Where the documents and risk matrices read so far end, for the documents register to read further.
   const [documentsAfter, setDocumentsAfter] = useState<DocumentPages>([]);
@@ -170,6 +251,7 @@ export function SmsApp({ apiUrl, token, account, local = false, confirmIdentity,
   const showAssurance =
     Boolean(principal?.capabilities.includes('sms:write')) || (assurance?.length ?? 0) > 0 || onAssurance;
   const seeded = Boolean(principal && seededOrganization(principal.tenantId));
+  const offered = offeredSections(principal, Boolean(flights));
   const attentionCount = home
     ? new Set(
         [...home.attention.waitingOnMe, ...home.attention.needsAssessment, ...home.attention.overdue]
@@ -187,56 +269,37 @@ export function SmsApp({ apiUrl, token, account, local = false, confirmIdentity,
 
   return (
     <div className="workspace sms-workspace">
-      <header className="topbar">
-        <a className="brand" href="/" aria-label="Ledger safety">
-          <Mark />
-          <span>LEDGER</span>
-        </a>
-        <span className="topbar-divider" />
-        <span className="topbar-operator">
-          <span className="topbar-label">Organization</span>
-          <strong>
-            {principal ? organizationLabel(principal.tenantId, organizationName) : 'Loading organization'}
-          </strong>
-        </span>
-        {local && (
-          <span className="simulation-pill">
-            {demonstration ? 'Recorded demonstration' : 'Local development'}
-            {principal && seededOrganization(principal.tenantId)
-              ? ` · fictional ${flightReader ? 'operators' : 'utility'}`
-              : ''}
-          </span>
-        )}
-        <span className="topbar-spacer" />
-        {principal && (
-          <span className="topbar-user">
-            <span className="avatar" aria-hidden="true">
-              {principal.name
-                .split(/\s+/)
-                .map((part) => part[0])
-                .join('')
-                .slice(0, 2)}
+      <TopBar
+        principal={principal}
+        organizationName={organizationName}
+        section={barSection(place)}
+        offered={offered}
+        account={account}
+        status={
+          local && (
+            <span className="simulation-pill">
+              {demonstration ? 'Recorded demonstration' : 'Local development'}
+              {principal && seededOrganization(principal.tenantId)
+                ? ` · fictional ${flightReader ? 'operators' : 'utility'}`
+                : ''}
             </span>
-            <span>
-              {principal.name} <small>· {roleLabel(principal.id)}</small>
-            </span>
-          </span>
-        )}
-        <RecordsToggle principal={principal} open={recordsOpen} onToggle={() => setRecordsOpen((open) => !open)} />
-        {account}
-      </header>
-      {recordsOpen && (
-        <RecordsArea
+          )
+        }
+      />
+      {!inSafety && (
+        <SectionArea
+          place={place}
           client={client}
           principal={principal}
+          offered={offered}
           onOpenDocument={(id) => {
-            setRecordsOpen(false);
             setScreen({ view: 'record', id, kind: 'document' });
             refresh();
           }}
         />
       )}
-      <main className="operations" hidden={recordsOpen}>
+      {inSafety && principal && !offered.includes('safety') && <SectionUnavailable section="safety" />}
+      <main className="operations" hidden={!inSafety || Boolean(principal && !offered.includes('safety'))}>
         <aside className="roster sms-nav" aria-label="Safety navigation">
           <div className="roster-head">
             <h1>Safety management</h1>
