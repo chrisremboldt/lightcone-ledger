@@ -1,0 +1,192 @@
+{
+  "note": "Fetched 2026-11-25T19:16:11.000Z from the Aviation Weather Center data API (aviationweather.gov), GET /api/data/metar?ids=KORD,KDEN,KJFK,KSEA,KBOS,KSFO,KATL,KMSP,KLAX,KDFW,PANC,KMIA,KDTW,KSLC,KPHX,KLAS&format=json&hours=6: this report's object, cut from the response as sent. A published government weather observation, kept as reference data.",
+  "case": "valid",
+  "message": {
+    "contentType": "application/json",
+    "transport": {
+      "method": "GET",
+      "path": "/api/data/metar"
+    },
+    "capturedAt": "2026-11-25T19:16:11.000Z",
+    "bodyText": "{\"icaoId\":\"KLAX\",\"receiptTime\":\"2026-11-25T16:58:16.598Z\",\"obsTime\":1795625580,\"reportTime\":\"2026-11-25T17:00:00.000Z\",\"temp\":18.3,\"dewp\":1.1,\"wdir\":\"VRB\",\"wspd\":3,\"visib\":\"10+\",\"altim\":1019,\"slp\":1018.8,\"qcField\":13,\"metarType\":\"METAR\",\"rawOb\":\"METAR KLAX 251653Z COR VRB03KT 10SM FEW140 SCT190 BKN250 18/01 A3009 RMK AO2 SLP188 T01830011 $\",\"lat\":33.9382,\"lon\":-118.3866,\"elev\":30,\"name\":\"Los Angeles Intl, CA, US\",\"cover\":\"BKN\",\"clouds\":[{\"cover\":\"FEW\",\"base\":14000},{\"cover\":\"SCT\",\"base\":19000},{\"cover\":\"BKN\",\"base\":25000}],\"fltCat\":\"VFR\"}"
+  },
+  "expect": {
+    "observations": [
+      {
+        "type": "weather.wind",
+        "version": 1,
+        "subject": {
+          "kind": "site",
+          "id": "RIDGE-SITE-3",
+          "scope": "source"
+        },
+        "occurredAt": "2026-11-25T16:53:00.000Z",
+        "sourceEventId": "KLAX 2026-11-25T16:53:00.000Z METAR COR for RIDGE-SITE-3",
+        "position": {
+          "latitudeDegrees": 33.9382,
+          "longitudeDegrees": -118.3866
+        },
+        "originalLocator": {
+          "kind": "json_pointer",
+          "value": "/rawOb"
+        },
+        "values": {
+          "method": "measured",
+          "speedMetersPerSecond": 1.5433333333333332,
+          "directionVariable": true
+        },
+        "extraLimitations": [
+          "Reported by station KLAX for the site RIDGE-SITE-3; the distance from the station to the site is not on record.",
+          "The report is a correction (COR) of an earlier report for the same time."
+        ]
+      },
+      {
+        "type": "weather.visibility",
+        "version": 1,
+        "subject": {
+          "kind": "site",
+          "id": "RIDGE-SITE-3",
+          "scope": "source"
+        },
+        "occurredAt": "2026-11-25T16:53:00.000Z",
+        "sourceEventId": "KLAX 2026-11-25T16:53:00.000Z METAR COR for RIDGE-SITE-3",
+        "position": {
+          "latitudeDegrees": 33.9382,
+          "longitudeDegrees": -118.3866
+        },
+        "originalLocator": {
+          "kind": "json_pointer",
+          "value": "/rawOb"
+        },
+        "values": {
+          "method": "observed",
+          "visibilityMeters": 16093.44,
+          "bound": "stated"
+        },
+        "extraLimitations": [
+          "Reported by station KLAX for the site RIDGE-SITE-3; the distance from the station to the site is not on record.",
+          "The report is a correction (COR) of an earlier report for the same time."
+        ]
+      }
+    ],
+    "rejections": [],
+    "unmapped": [
+      {
+        "kind": "json_pointer",
+        "value": "/altim"
+      },
+      {
+        "kind": "json_pointer",
+        "value": "/clouds"
+      },
+      {
+        "kind": "json_pointer",
+        "value": "/cover"
+      },
+      {
+        "kind": "json_pointer",
+        "value": "/dewp"
+      },
+      {
+        "kind": "json_pointer",
+        "value": "/elev"
+      },
+      {
+        "kind": "json_pointer",
+        "value": "/fltCat"
+      },
+      {
+        "kind": "json_pointer",
+        "value": "/metarType"
+      },
+      {
+        "kind": "json_pointer",
+        "value": "/name"
+      },
+      {
+        "kind": "json_pointer",
+        "value": "/obsTime"
+      },
+      {
+        "kind": "json_pointer",
+        "value": "/qcField"
+      },
+      {
+        "kind": "json_pointer",
+        "value": "/receiptTime"
+      },
+      {
+        "kind": "json_pointer",
+        "value": "/reportTime"
+      },
+      {
+        "kind": "json_pointer",
+        "value": "/slp"
+      },
+      {
+        "kind": "json_pointer",
+        "value": "/temp"
+      },
+      {
+        "kind": "json_pointer",
+        "value": "/visib"
+      },
+      {
+        "kind": "json_pointer",
+        "value": "/wdir"
+      },
+      {
+        "kind": "json_pointer",
+        "value": "/wspd"
+      }
+    ],
+    "conversions": [
+      {
+        "observation": 0,
+        "field": "/values/speedMetersPerSecond",
+        "vendorUnit": "kn",
+        "vendorValue": 3,
+        "expected": 1.5433333333333332
+      },
+      {
+        "observation": 0,
+        "field": "/position/latitudeDegrees",
+        "vendorField": "/lat",
+        "vendorUnit": "deg",
+        "vendorValue": 33.9382,
+        "expected": 33.9382
+      },
+      {
+        "observation": 0,
+        "field": "/position/longitudeDegrees",
+        "vendorField": "/lon",
+        "vendorUnit": "deg",
+        "vendorValue": -118.3866,
+        "expected": -118.3866
+      },
+      {
+        "observation": 1,
+        "field": "/values/visibilityMeters",
+        "vendorUnit": "mi",
+        "vendorValue": 10,
+        "expected": 16093.44
+      },
+      {
+        "observation": 1,
+        "field": "/position/latitudeDegrees",
+        "vendorField": "/lat",
+        "vendorUnit": "deg",
+        "vendorValue": 33.9382,
+        "expected": 33.9382
+      },
+      {
+        "observation": 1,
+        "field": "/position/longitudeDegrees",
+        "vendorField": "/lon",
+        "vendorUnit": "deg",
+        "vendorValue": -118.3866,
+        "expected": -118.3866
+      }
+    ]
+  }
+}

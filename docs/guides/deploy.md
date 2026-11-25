@@ -675,7 +675,7 @@ Restore drills belong on a schedule.
 
 ## 10. Connect a source: run an adapter
 
-An adapter turns a source's messages into observations, the facts the rules read: an aircraft's reported positions, a dock's measured wind, the airspace service's authorizations. The adapter process runs one adapter for one source. It receives the source's messages over the source's own transport (a subscription to the message broker for the aircraft and dock adapters, reading the service on an interval for the airspace authorization adapter), translates each one with the adapter exactly as it is registered in `packages/adapters`, and submits it through the public API with its original bytes, signed in with the credential an administrator issued for that source. It writes nothing to the database and is given no database setting. The production start never runs one unless you ask (`tests/unit/production-start.test.ts` checks this).
+An adapter turns a source's messages into observations, the facts the rules read: an aircraft's reported positions, a dock's measured wind, the airspace service's authorizations, a weather station's published reports. The adapter process runs one adapter for one source. It receives the source's messages over the source's own transport (a subscription to the message broker for the aircraft and dock adapters, reading the service on an interval for the airspace authorization and weather report adapters), translates each one with the adapter exactly as it is registered in `packages/adapters`, and submits it through the public API with its original bytes, signed in with the credential an administrator issued for that source. It writes nothing to the database and is given no database setting. The production start never runs one unless you ask (`tests/unit/production-start.test.ts` checks this).
 
 Run one process per source and adapter: an aircraft whose positions and battery you both want is two processes.
 
@@ -685,12 +685,13 @@ Run one process per source and adapter: an aircraft whose positions and battery 
 | `dji-cloud-api-osd-battery` | the same message | `battery.state` | `--device`, `--gateway` |
 | `dji-cloud-api-dock-wind` | the dock's periodic property message on `thing/product/<dock serial>/osd` | `weather.wind` | `--dock`, `--site`, `--dock-model` |
 | `airspace-link-laanc-authorization` | `GET /v1/operations/<operation>/laanc` on the airspace service | `airspace.authorization` | `--operation`, `--flight` |
+| `published-metar-observations` | `GET /api/data/metar?ids=<stations>&format=json` on the Aviation Weather Center data API, a public service | `weather.wind`, `weather.visibility` | `--stations` |
 
-`pnpm adapter:run --help`, or any mistake in its settings, prints every flag and the environment variable that can give it instead (listed in `.env.example`). Secrets come from the environment only: `LEDGER_API_CREDENTIAL`, `ADAPTER_BROKER_PASSWORD`, `ADAPTER_SERVICE_TOKEN` and `ADAPTER_SERVICE_API_KEY`. A flag that looks like one is refused.
+`pnpm adapter:run --help`, or any mistake in its settings, prints every flag and the environment variable that can give it instead (listed in `.env.example`). Secrets come from the environment only: `LEDGER_API_CREDENTIAL`, `ADAPTER_BROKER_PASSWORD`, `ADAPTER_SERVICE_TOKEN` and `ADAPTER_SERVICE_API_KEY`. A flag that looks like one is refused. The weather report service is public: it takes no secret, and the process sends it only the station ids and a user agent naming the program (`ledger-adapter-host`), nothing about the organization.
 
 ### How far each adapter has been checked
 
-Every shipped adapter is at fidelity `synthetic_contract`: built from the source's documentation and run against the emulators in `apps/emulators` only. None has read a message from a real aircraft, dock or airspace service. The process prints this, the adapter's version and its limitations when it starts, and every observation carries them. Before you rely on one, check it against your own equipment:
+Every shipped adapter but one is at fidelity `synthetic_contract`: built from the source's documentation and run against the emulators in `apps/emulators` only. None of those has read a message from a real aircraft, dock or airspace service. The weather report adapter is at `captured_source_replay`: its golden files hold reports fetched from the live service, and it was built against them. The process prints the fidelity, the adapter's version and its limitations when it starts, and every observation carries them. Before you rely on one, check it against your own equipment:
 
 **Aircraft position** (`dji-cloud-api-osd-position`)
 
@@ -718,6 +719,22 @@ Every shipped adapter is at fidelity `synthetic_contract`: built from the source
 - `--operation` is the service's operation id; `--flight` the Ledger flight it was requested for. Each change of the operation's authorizations becomes one observation per authorization; reading the same response again changes nothing.
 - The ceiling is the record's altitude, stated in feet above ground level and converted; a polygon with holes keeps only its outer boundary. Compare one authorization in Ledger with the service's own screen.
 - Read no more often than the service's rate limits allow (`--poll-seconds`, default 60).
+
+**Published weather reports** (`published-metar-observations`)
+
+- **What was checked.** On 2026-11-25 the service's OpenAPI document (version v4.0, pinned by digest in the adapter's descriptor) was read, and three requests fetched the current and recent reports of 28 large public airports in the United States, Europe and Asia, 210 reports in all. The adapter was built against those bytes: its golden files in `packages/adapters/src/golden/published-metar-observations/` are 13 of those reports exactly as the service sent them (wind in knots and in meters per second, gusts, calm, a variable direction and a direction range, AUTO and COR reports, a SPECI, visibility in whole and mixed-fraction statute miles, in metres, 9999 and CAVOK), and 6 constructed cases for forms the fetch did not contain (NIL, a missing wind, `M1/4SM`) and for refusals. The emulator serves 68 of the fetched reports in the service's shape at `/api/data/metar` on port 4002. The same report fetched twice, 80 seconds apart, came back byte for byte the same.
+- **What was not checked.** A poll running for hours or days; the service's rate limit (100 requests a minute, by its documentation) or what it answers when a client exceeds it; an outage, a 5xx answer or a slow answer; a report from a station outside those 28; the forms the fetch did not contain, which only unit tests and constructed cases exercise (`KMH`, `P6SM`, `0000`, `NDV`, a missing visibility, NIL, `M1/4SM`). Forecasts (TAF), notices and temporary flight restrictions are not read.
+- `--stations` maps each station to the organization's sites: `KORD=<site>@14.2km;KMDW=<site>`. The station is not the site: every observation names the station and the distance you give, or says that no distance is on record. Nothing picks the nearest station or interpolates between two. A report from a station you did not name is refused.
+- The values are the report text's: the service's own decoded fields beside it are not read, and they differ from the text for reports in meters per second, which the service converts to knots. The time is the report's day, hour and minute, with month and year from the fetch.
+- Visibility is the prevailing visibility, a bound for `9999`, CAVOK, `M` and `P`. A report from the United States states 10 statute miles at most. No rule shipped today reads a `weather.visibility` observation: the visibility rules read what a preflight assessment or the flight record states.
+- It reads every five minutes by default (`--poll-seconds`): stations report about once an hour, and specially between. Each answer is cut into its reports, and only the reports the previous answer did not hold are handed over, so a report is submitted once; a restart submits the current reports again under the same idempotency keys, which changes nothing.
+- Each report becomes one `weather.wind` and one `weather.visibility` observation per configured site, about that site, with the station's position. Give the source's credential a grant for both types.
+
+  ```sh
+  pnpm adapter:run published-metar-observations --api-url https://ledger.example.org \
+    --credential-label "Weather reports on the hangar host" \
+    --service-url https://aviationweather.gov --stations "KORD=RIDGE-SITE-1@14.2km"
+  ```
 
 ### Add the source, its credential and its broker account
 
@@ -767,10 +784,10 @@ One JSON line per event on standard output, each with `at`, `adapter`, `event` a
 {"event":"summary","message":"Received 60, submitted 60 (60 observations), translation refused 0, Ledger refused 0, dropped 0, queued 0."}
 ```
 
-A summary follows every minute. The airspace adapter shows `polling` in place of `broker_subscribed`. No line carries a secret or a message's content. The other events:
+A summary follows every minute. The airspace and weather report adapters show `polling` in place of `broker_subscribed`. No line carries a secret or a message's content. The other events:
 
 - `ledger_unreachable`, `submission_failed_retrying`, `broker_disconnected`, `poll_failed_retrying`: it cannot reach Ledger, the broker or the service, and tries again, waiting longer each time up to a minute, with jitter. A payload is submitted again under the same idempotency keys, so a retry or a restart never records it twice.
-- `queue_full_dropping_oldest`, then `queue_recovered` with the count: Ledger was unreachable long enough to fill the queue (`--queue-limit`, 10,000 messages). For positions, battery and wind the oldest are dropped and counted. The airspace adapter drops nothing: it stops reading the service until there is room.
+- `queue_full_dropping_oldest`, then `queue_recovered` with the count: Ledger was unreachable long enough to fill the queue (`--queue-limit`, 10,000 messages). For positions, battery, wind and weather reports the oldest are dropped and counted. The airspace adapter drops nothing: it stops reading the service until there is room.
 - `message_rejected`: the adapter will not translate a message (for example one naming another gateway), with the reason; logged once per reason per minute and counted in the summary.
 - `payload_refused`: Ledger refused a payload as it is (its status and error code); it is not sent again.
 - `cannot_start` or `stopping_on_refusal`: Ledger refused the credential (naming its label), the credential lacks a grant, the broker refused the account, or the service refused its token. The process exits with code 1: fix the cause and start it again. A restart loop will not.

@@ -1,0 +1,22 @@
+{
+  "note": "Fetched 2026-11-25T19:16:11.000Z from the Aviation Weather Center data API (aviationweather.gov), GET /api/data/metar?ids=KORD,KDEN,KJFK,KSEA,KBOS,KSFO,KATL,KMSP,KLAX,KDFW,PANC,KMIA,KDTW,KSLC,KPHX,KLAS&format=json&hours=6: this report's object, cut from the response as sent. A published government weather observation, kept as reference data.",
+  "case": "rejected",
+  "message": {
+    "contentType": "application/json",
+    "transport": {
+      "method": "GET",
+      "path": "/api/data/metar"
+    },
+    "capturedAt": "2026-11-25T19:16:11.000Z",
+    "bodyText": "{\"icaoId\":\"KDEN\",\"receiptTime\":\"2026-11-25T18:57:04.240Z\",\"obsTime\":1795632780,\"reportTime\":\"2026-11-25T19:00:00.000Z\",\"temp\":7.2,\"dewp\":-10,\"wdir\":50,\"wspd\":5,\"visib\":\"10+\",\"altim\":1026.2,\"slp\":1026.3,\"qcField\":4,\"metarType\":\"METAR\",\"rawOb\":\"METAR KDEN 251853Z 05005KT 10SM SCT220 07/M10 A3030 RMK AO2 SLP263 T00721100\",\"lat\":39.8466,\"lon\":-104.6562,\"elev\":1656,\"name\":\"Denver Intl, CO, US\",\"cover\":\"SCT\",\"clouds\":[{\"cover\":\"SCT\",\"base\":22000}],\"fltCat\":\"VFR\"}"
+  },
+  "expect": {
+    "observations": [],
+    "rejections": [
+      {
+        "reasonIncludes": "Station KDEN is not configured to report for any site"
+      }
+    ],
+    "unmapped": []
+  }
+}

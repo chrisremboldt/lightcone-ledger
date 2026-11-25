@@ -83,6 +83,15 @@ const examples: Record<string, ObservationV1> = {
     ...provenance,
     values: { method: 'estimated', speedMetersPerSecond: 6.5 },
   },
+  'weather.visibility': {
+    type: 'weather.visibility',
+    version: 1,
+    subject: { kind: 'site', id: 'site-ridge-1', scope: 'source' },
+    occurredAt: '2026-10-15T13:56:00Z',
+    position: { latitudeDegrees: 40.0101, longitudeDegrees: -105.2702 },
+    ...provenance,
+    values: { method: 'observed', visibilityMeters: 4023.36, bound: 'stated' },
+  },
   'airspace.authorization': {
     type: 'airspace.authorization',
     version: 1,
@@ -183,6 +192,7 @@ const breaks: Record<string, (observation: Record<string, any>) => void> = {
   'battery.state': (o) => delete o.values.totalRemainingPercent,
   'position.fix': (o) => delete o.position,
   'weather.wind': (o) => delete o.values.method,
+  'weather.visibility': (o) => (o.values.bound = 'about'),
   'airspace.authorization': (o) => delete o.values.authorizationId,
   'flight.report': (o) => (o.values = {}),
   'traffic.alert': (o) => (o.values.level = 'severe'),
@@ -213,6 +223,7 @@ describe('observation vocabulary v1', () => {
       'organization.record-in-force@1',
       'position.fix@1',
       'traffic.alert@1',
+      'weather.visibility@1',
       'weather.wind@1',
     ]);
   });
@@ -288,6 +299,10 @@ describe('observation vocabulary v1', () => {
       ['battery.state', (o) => (o.values.totalRemaining = 41)],
       ['weather.wind', (o) => (o.values.speedMetersPerSecond = -1)],
       ['weather.wind', (o) => (o.values.speedKnots = 12)],
+      ['weather.wind', (o) => (o.values.directionVariable = false)],
+      ['weather.wind', (o) => (o.values.directionVariesFromDegrees = 360)],
+      ['weather.visibility', (o) => (o.values.visibilityMeters = -1)],
+      ['weather.visibility', (o) => (o.values.visibilityStatuteMiles = 3)],
       ['position.fix', (o) => (o.position.altitude = { meters: 100 })],
       ['position.fix', (o) => (o.position.latitudeDegrees = 91)],
       ['position.fix', (o) => (o.position.latitude = 40)],
@@ -305,6 +320,21 @@ describe('observation vocabulary v1', () => {
     const unknownDatum = clone(examples['position.fix']!) as Record<string, any>;
     unknownDatum.position.altitude = { meters: 100, datum: 'unknown' };
     expect(check(unknownDatum).valid).toBe(true);
+  });
+
+  it('carries a wind reported as variable, and the range a wind varied over', () => {
+    const variable = clone(examples['weather.wind']!) as Record<string, any>;
+    variable.values = { method: 'measured', speedMetersPerSecond: 3.09, directionVariable: true };
+    expect(check(variable).valid).toBe(true);
+    const ranged = clone(examples['weather.wind']!) as Record<string, any>;
+    ranged.values = {
+      method: 'measured',
+      speedMetersPerSecond: 3.6,
+      directionFromDegrees: 50,
+      directionVariesFromDegrees: 10,
+      directionVariesToDegrees: 80,
+    };
+    expect(check(ranged).valid).toBe(true);
   });
 
   it('accepts the published minimum for battery state: total percentage only, no voltage or temperature', () => {
@@ -512,5 +542,6 @@ const PUBLISHED_DIGESTS: Record<string, string> = {
   'organization.record-in-force@1': '017efe903689e3dc85c79b5538a84d9bc3aa94f79b5310387f118990fd7403c0',
   'position.fix@1': 'e6f4abbd6356af9d5482048bdd0c36c6d956ba3c071cb97b19558ef41fd4da8d',
   'traffic.alert@1': '7f0111c64faf3f7336dcd2362aed12ef33e8cad1b86da21d7a5fde236ac94bde',
-  'weather.wind@1': '3cb56a1677c28023e49b600771586bad0ac7c6bacfb46466d53b3c346aa1a3dc',
+  'weather.visibility@1': '2a620848dfc3bbae59b06cae2597be1f18ef722b709e97d3f03689c1daede8dc',
+  'weather.wind@1': 'd36e744d34ef5e883f9e962cb6990cdf29a14b9ea0c15ac538dfe0fa83f847fd',
 };

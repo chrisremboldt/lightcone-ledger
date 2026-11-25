@@ -4,13 +4,16 @@ import {
   djiDockWindAdapter,
   djiOsdBatteryAdapter,
   djiOsdPositionAdapter,
+  jsonArrayElements,
+  parseMetarStations,
+  publishedMetarAdapter,
   type DeliveryKind,
   type ObservationAdapter,
   type SubjectNaming,
 } from '@ledger/adapters';
 
 /** The source settings an adapter is bound by, given as flags or environment variables. */
-export type BindingOption = 'device' | 'gateway' | 'dock' | 'site' | 'dockModel' | 'operation' | 'flight';
+export type BindingOption = 'device' | 'gateway' | 'dock' | 'site' | 'dockModel' | 'operation' | 'flight' | 'stations';
 export type BindingValues = Readonly<Partial<Record<BindingOption, string>>>;
 
 interface Common {
@@ -27,8 +30,13 @@ export interface BrokerAdapter extends Common {
 }
 export interface PollAdapter extends Common {
   readonly transport: 'poll';
+  /** The path, and query when the service takes one, read on each poll. */
   path(values: BindingValues): string;
   readonly defaultPollSeconds: number;
+  /** bearer: the service takes an access token (ADAPTER_SERVICE_TOKEN). none: it is public and takes none. */
+  readonly serviceCredential: 'bearer' | 'none';
+  /** Cuts a response into the messages it holds; each poll then hands over only those not in the previous one. */
+  readonly split?: (bytes: Uint8Array) => Uint8Array[] | undefined;
 }
 export type RunnableAdapter = BrokerAdapter | PollAdapter;
 
@@ -85,6 +93,24 @@ export const runnableAdapters: Readonly<Record<string, RunnableAdapter>> = {
     }),
     path: (values) => `/v1/operations/${encodeURIComponent(value(values, 'operation'))}/laanc`,
     defaultPollSeconds: 60,
+    serviceCredential: 'bearer',
+  },
+  [publishedMetarAdapter.descriptor.id]: {
+    adapter: publishedMetarAdapter as ObservationAdapter<never>,
+    transport: 'poll',
+    // A station's newer report supersedes its older one.
+    delivery: 'latest',
+    bindingOptions: ['stations'],
+    binding: (values) => parseMetarStations(value(values, 'stations')),
+    subjects: () => sourceNames,
+    path: (values) =>
+      `/api/data/metar?ids=${Object.keys(parseMetarStations(value(values, 'stations')).stations)
+        .sort()
+        .join(',')}&format=json`,
+    // Stations report about once an hour, and specially between; the service asks clients to poll sparingly.
+    defaultPollSeconds: 300,
+    serviceCredential: 'none',
+    split: jsonArrayElements,
   },
 };
 
@@ -92,6 +118,13 @@ const IDENTIFIER = /^[A-Za-z0-9_-]{1,128}$/;
 
 /** Why a binding value cannot be used, or undefined. */
 export function bindingProblem(name: BindingOption, given: string): string | undefined {
+  if (name === 'stations')
+    try {
+      parseMetarStations(given);
+      return undefined;
+    } catch (error) {
+      return (error as Error).message;
+    }
   // The adapter refuses the first-generation dock's wind; a process bound to one would submit nothing.
   if (name === 'dockModel')
     return djiDockModels.filter((model) => model !== 'dock1').includes(given as never)

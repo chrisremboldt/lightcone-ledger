@@ -273,6 +273,28 @@ export const WindObservationV1Schema = Type.Object(
             description: 'True direction the wind blows from.',
           }),
         ),
+        directionVariable: Type.Optional(
+          Type.Literal(true, {
+            description: 'The source reported the direction as variable: it states no single direction.',
+          }),
+        ),
+        directionVariesFromDegrees: Type.Optional(
+          Type.Number({
+            minimum: 0,
+            exclusiveMaximum: 360,
+            title: 'Direction varying from (degrees)',
+            description:
+              'With directionVariesToDegrees, the true directions between which the source reported the wind varying, clockwise from this one.',
+          }),
+        ),
+        directionVariesToDegrees: Type.Optional(
+          Type.Number({
+            minimum: 0,
+            exclusiveMaximum: 360,
+            title: 'Direction varying to (degrees)',
+            description: 'The clockwise end of the range that starts at directionVariesFromDegrees.',
+          }),
+        ),
         heightAboveGroundMeters: Type.Optional(
           Type.Number({ minimum: 0, maximum: 10_000, title: 'Measured height above ground (m)' }),
         ),
@@ -299,8 +321,63 @@ export const windV1: ObservationTypeDefinition = {
     'Wind estimated by an aircraft applies at the aircraft, not at ground level or at the site.',
     'Absent gust speed is not evidence of no gusts.',
     'Absence of wind observations is not evidence of calm.',
+    'Absent direction is not a calm or a variable wind; only directionVariable says the source reported a variable direction.',
+    'A direction range says only between which directions the source reported the wind varying, not how often it blew from each.',
   ],
   schema: WindObservationV1Schema,
+};
+
+// weather.visibility v1 ----------------------------------------------------------------------------------------
+const visibilitySubjects = ['flight', 'aircraft', 'site'] as const;
+export const VisibilityObservationV1Schema = Type.Object(
+  {
+    ...observationHeader('weather.visibility', 1),
+    subject: subjectOf(visibilitySubjects),
+    secondarySubject: Type.Optional(subjectOf(visibilitySubjects)),
+    ...at,
+    ...optionalPosition,
+    ...observationProvenance,
+    values: Type.Object(
+      {
+        method: oneOf(
+          ['observed', 'forecast'],
+          'observed: reported as seen at occurredAt, by a sensor or by a person. forecast: predicted.',
+        ),
+        visibilityMeters: Type.Number({ minimum: 0, maximum: 100_000, title: 'Visibility (m)' }),
+        bound: oneOf(
+          ['stated', 'at_least', 'less_than'],
+          'stated: the source stated this value. at_least: the source said the visibility was this value or more. less_than: the source said it was below this value.',
+        ),
+      },
+      Closed,
+    ),
+  },
+  {
+    ...Closed,
+    description: 'Reported horizontal visibility at one instant, stating whether it was observed or forecast.',
+  },
+);
+export type VisibilityObservationV1 = Static<typeof VisibilityObservationV1Schema>;
+export const visibilityV1: ObservationTypeDefinition = {
+  type: 'weather.visibility',
+  version: 1,
+  title: 'Visibility reading',
+  timing: 'instant',
+  intervalRequired: false,
+  subjectKinds: visibilitySubjects,
+  secondarySubjectKinds: visibilitySubjects,
+  description: 'Reported horizontal visibility at one instant, with how it was obtained and whether it is a bound.',
+  mayInfer: [
+    'The source reported this visibility, obtained by the stated method, at occurredAt.',
+    'A value with bound at_least is at least that value; one with bound less_than is below it.',
+  ],
+  mayNotInfer: [
+    'A forecast is not an observation of what happened.',
+    'A value with bound at_least or less_than is not the visibility itself; it is a bound on it.',
+    'Visibility reported for a place is not the visibility from a control station or along a flight path.',
+    'Absence of visibility observations is not evidence of good visibility.',
+  ],
+  schema: VisibilityObservationV1Schema,
 };
 
 // airspace.authorization v1 ------------------------------------------------------------------------------------
@@ -778,6 +855,7 @@ export const observationTypesV1 = [
   batteryStateV1,
   positionFixV1,
   windV1,
+  visibilityV1,
   airspaceAuthorizationV1,
   flightReportV1,
   trafficAlertV1,
@@ -792,6 +870,7 @@ export type ObservationV1 =
   | BatteryStateObservationV1
   | PositionFixObservationV1
   | WindObservationV1
+  | VisibilityObservationV1
   | AirspaceAuthorizationObservationV1
   | FlightReportObservationV1
   | TrafficAlertObservationV1

@@ -1,0 +1,211 @@
+{
+  "note": "Fetched 2026-11-25T19:17:31.000Z from the Aviation Weather Center data API (aviationweather.gov), GET /api/data/metar?ids=KORD,KMIA,KLAX,EGLL,UUEE&format=json: this report's object, cut from the response as sent. A published government weather observation, kept as reference data.",
+  "case": "valid",
+  "message": {
+    "contentType": "application/json",
+    "transport": {
+      "method": "GET",
+      "path": "/api/data/metar"
+    },
+    "capturedAt": "2026-11-25T19:17:31.000Z",
+    "bodyText": "{\"icaoId\":\"EGLL\",\"receiptTime\":\"2026-11-25T18:56:16.538Z\",\"obsTime\":1795632600,\"reportTime\":\"2026-11-25T19:00:00.000Z\",\"temp\":6,\"dewp\":2,\"wdir\":50,\"wspd\":7,\"visib\":\"6+\",\"altim\":1014,\"qcField\":2,\"metarType\":\"METAR\",\"rawOb\":\"METAR EGLL 251850Z AUTO 05007KT 010V080 9999 OVC017 06/02 Q1014 TEMPO BKN014\",\"lat\":51.477,\"lon\":-0.461,\"elev\":26,\"name\":\"London/Heathrow Intl, EN, GB\",\"cover\":\"OVC\",\"clouds\":[{\"cover\":\"OVC\",\"base\":1700}],\"fltCat\":\"MVFR\"}"
+  },
+  "expect": {
+    "observations": [
+      {
+        "type": "weather.wind",
+        "version": 1,
+        "subject": {
+          "kind": "site",
+          "id": "RIDGE-SITE-6",
+          "scope": "source"
+        },
+        "occurredAt": "2026-11-25T18:50:00.000Z",
+        "sourceEventId": "EGLL 2026-11-25T18:50:00.000Z METAR for RIDGE-SITE-6",
+        "position": {
+          "latitudeDegrees": 51.477,
+          "longitudeDegrees": -0.461
+        },
+        "originalLocator": {
+          "kind": "json_pointer",
+          "value": "/rawOb"
+        },
+        "values": {
+          "method": "measured",
+          "speedMetersPerSecond": 3.601111111111111,
+          "directionFromDegrees": 50,
+          "directionVariesFromDegrees": 10,
+          "directionVariesToDegrees": 80
+        },
+        "extraLimitations": [
+          "Reported by station EGLL for the site RIDGE-SITE-6; the distance from the station to the site is not on record.",
+          "The report is automated (AUTO): no person observed it."
+        ]
+      },
+      {
+        "type": "weather.visibility",
+        "version": 1,
+        "subject": {
+          "kind": "site",
+          "id": "RIDGE-SITE-6",
+          "scope": "source"
+        },
+        "occurredAt": "2026-11-25T18:50:00.000Z",
+        "sourceEventId": "EGLL 2026-11-25T18:50:00.000Z METAR for RIDGE-SITE-6",
+        "position": {
+          "latitudeDegrees": 51.477,
+          "longitudeDegrees": -0.461
+        },
+        "originalLocator": {
+          "kind": "json_pointer",
+          "value": "/rawOb"
+        },
+        "values": {
+          "method": "observed",
+          "visibilityMeters": 10000,
+          "bound": "at_least"
+        },
+        "extraLimitations": [
+          "Reported by station EGLL for the site RIDGE-SITE-6; the distance from the station to the site is not on record.",
+          "The report is automated (AUTO): no person observed it."
+        ]
+      }
+    ],
+    "rejections": [],
+    "unmapped": [
+      {
+        "kind": "json_pointer",
+        "value": "/altim"
+      },
+      {
+        "kind": "json_pointer",
+        "value": "/clouds"
+      },
+      {
+        "kind": "json_pointer",
+        "value": "/cover"
+      },
+      {
+        "kind": "json_pointer",
+        "value": "/dewp"
+      },
+      {
+        "kind": "json_pointer",
+        "value": "/elev"
+      },
+      {
+        "kind": "json_pointer",
+        "value": "/fltCat"
+      },
+      {
+        "kind": "json_pointer",
+        "value": "/metarType"
+      },
+      {
+        "kind": "json_pointer",
+        "value": "/name"
+      },
+      {
+        "kind": "json_pointer",
+        "value": "/obsTime"
+      },
+      {
+        "kind": "json_pointer",
+        "value": "/qcField"
+      },
+      {
+        "kind": "json_pointer",
+        "value": "/receiptTime"
+      },
+      {
+        "kind": "json_pointer",
+        "value": "/reportTime"
+      },
+      {
+        "kind": "json_pointer",
+        "value": "/temp"
+      },
+      {
+        "kind": "json_pointer",
+        "value": "/visib"
+      },
+      {
+        "kind": "json_pointer",
+        "value": "/wdir"
+      },
+      {
+        "kind": "json_pointer",
+        "value": "/wspd"
+      }
+    ],
+    "conversions": [
+      {
+        "observation": 0,
+        "field": "/values/speedMetersPerSecond",
+        "vendorUnit": "kn",
+        "vendorValue": 7,
+        "expected": 3.601111111111111
+      },
+      {
+        "observation": 0,
+        "field": "/values/directionFromDegrees",
+        "vendorUnit": "deg",
+        "vendorValue": 50,
+        "expected": 50
+      },
+      {
+        "observation": 0,
+        "field": "/values/directionVariesFromDegrees",
+        "vendorUnit": "deg",
+        "vendorValue": 10,
+        "expected": 10
+      },
+      {
+        "observation": 0,
+        "field": "/values/directionVariesToDegrees",
+        "vendorUnit": "deg",
+        "vendorValue": 80,
+        "expected": 80
+      },
+      {
+        "observation": 0,
+        "field": "/position/latitudeDegrees",
+        "vendorField": "/lat",
+        "vendorUnit": "deg",
+        "vendorValue": 51.477,
+        "expected": 51.477
+      },
+      {
+        "observation": 0,
+        "field": "/position/longitudeDegrees",
+        "vendorField": "/lon",
+        "vendorUnit": "deg",
+        "vendorValue": -0.461,
+        "expected": -0.461
+      },
+      {
+        "observation": 1,
+        "field": "/values/visibilityMeters",
+        "vendorUnit": "m",
+        "vendorValue": 10000,
+        "expected": 10000
+      },
+      {
+        "observation": 1,
+        "field": "/position/latitudeDegrees",
+        "vendorField": "/lat",
+        "vendorUnit": "deg",
+        "vendorValue": 51.477,
+        "expected": 51.477
+      },
+      {
+        "observation": 1,
+        "field": "/position/longitudeDegrees",
+        "vendorField": "/lon",
+        "vendorUnit": "deg",
+        "vendorValue": -0.461,
+        "expected": -0.461
+      }
+    ]
+  }
+}

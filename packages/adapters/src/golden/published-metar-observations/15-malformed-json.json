@@ -1,0 +1,22 @@
+{
+  "note": "Constructed for this test, not fetched: a trailing comma.",
+  "case": "malformed",
+  "message": {
+    "contentType": "application/json",
+    "transport": {
+      "method": "GET",
+      "path": "/api/data/metar"
+    },
+    "capturedAt": "2026-11-25T19:17:31.000Z",
+    "bodyText": "{\"icaoId\":\"ZZZZ\",\"rawOb\":\"METAR ZZZZ 251855Z 27010KT 10SM\",}"
+  },
+  "expect": {
+    "observations": [],
+    "rejections": [
+      {
+        "reasonIncludes": "Invalid or ambiguous JSON: Invalid or ambiguous JSON text"
+      }
+    ],
+    "unmapped": []
+  }
+}

@@ -218,13 +218,14 @@ export async function runAdapterHost(
         headers: service.headers,
         intervalMs: service.pollMs,
         log,
+        ...(runnable.split ? { split: runnable.split } : {}),
         ...(dependencies.fetcher ? { fetcher: dependencies.fetcher } : {}),
       },
       receive,
     );
     log({
       event: 'polling',
-      message: `Reading ${new URL(service.url).pathname} every ${service.pollMs / 1000} s.`,
+      message: `Reading ${new URL(service.url).pathname}${new URL(service.url).search} every ${service.pollMs / 1000} s.`,
     });
     transport = poll;
     transportFailed = poll.start();

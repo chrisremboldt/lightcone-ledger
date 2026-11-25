@@ -1,0 +1,209 @@
+{
+  "note": "Fetched 2026-11-25T19:16:22.000Z from the Aviation Weather Center data API (aviationweather.gov), GET /api/data/metar?ids=EGLL,EDDF,LFPG,ZBAA,UUEE,RJTT,YSSY,EHAM,LEMD,CYYZ,ZSPD,UUDD&format=json&hours=4: this report's object, cut from the response as sent. A published government weather observation, kept as reference data.",
+  "case": "valid",
+  "message": {
+    "contentType": "application/json",
+    "transport": {
+      "method": "GET",
+      "path": "/api/data/metar"
+    },
+    "capturedAt": "2026-11-25T19:16:22.000Z",
+    "bodyText": "{\"icaoId\":\"LFPG\",\"receiptTime\":\"2026-11-25T15:32:13.465Z\",\"obsTime\":1795620600,\"reportTime\":\"2026-11-25T15:30:00.000Z\",\"temp\":5,\"dewp\":4,\"wdir\":30,\"wspd\":7,\"visib\":1.12,\"altim\":1008,\"qcField\":16,\"wxString\":\"-RA -DZ\",\"metarType\":\"METAR\",\"rawOb\":\"METAR LFPG 251530Z 03007KT 010V080 1800 -RADZ OVC003 05/04 Q1008 NOSIG\",\"lat\":49.015,\"lon\":2.534,\"elev\":107,\"name\":\"Paris/De Gaulle Arpt, ID, FR\",\"cover\":\"OVC\",\"clouds\":[{\"cover\":\"OVC\",\"base\":300}],\"fltCat\":\"LIFR\"}"
+  },
+  "expect": {
+    "observations": [
+      {
+        "type": "weather.wind",
+        "version": 1,
+        "subject": {
+          "kind": "site",
+          "id": "RIDGE-SITE-7",
+          "scope": "source"
+        },
+        "occurredAt": "2026-11-25T15:30:00.000Z",
+        "sourceEventId": "LFPG 2026-11-25T15:30:00.000Z METAR for RIDGE-SITE-7",
+        "position": {
+          "latitudeDegrees": 49.015,
+          "longitudeDegrees": 2.534
+        },
+        "originalLocator": {
+          "kind": "json_pointer",
+          "value": "/rawOb"
+        },
+        "values": {
+          "method": "measured",
+          "speedMetersPerSecond": 3.601111111111111,
+          "directionFromDegrees": 30,
+          "directionVariesFromDegrees": 10,
+          "directionVariesToDegrees": 80
+        },
+        "extraLimitations": ["Reported by station LFPG for the site RIDGE-SITE-7, 5 km from the site as configured."]
+      },
+      {
+        "type": "weather.visibility",
+        "version": 1,
+        "subject": {
+          "kind": "site",
+          "id": "RIDGE-SITE-7",
+          "scope": "source"
+        },
+        "occurredAt": "2026-11-25T15:30:00.000Z",
+        "sourceEventId": "LFPG 2026-11-25T15:30:00.000Z METAR for RIDGE-SITE-7",
+        "position": {
+          "latitudeDegrees": 49.015,
+          "longitudeDegrees": 2.534
+        },
+        "originalLocator": {
+          "kind": "json_pointer",
+          "value": "/rawOb"
+        },
+        "values": {
+          "method": "observed",
+          "visibilityMeters": 1800,
+          "bound": "stated"
+        },
+        "extraLimitations": ["Reported by station LFPG for the site RIDGE-SITE-7, 5 km from the site as configured."]
+      }
+    ],
+    "rejections": [],
+    "unmapped": [
+      {
+        "kind": "json_pointer",
+        "value": "/altim"
+      },
+      {
+        "kind": "json_pointer",
+        "value": "/clouds"
+      },
+      {
+        "kind": "json_pointer",
+        "value": "/cover"
+      },
+      {
+        "kind": "json_pointer",
+        "value": "/dewp"
+      },
+      {
+        "kind": "json_pointer",
+        "value": "/elev"
+      },
+      {
+        "kind": "json_pointer",
+        "value": "/fltCat"
+      },
+      {
+        "kind": "json_pointer",
+        "value": "/metarType"
+      },
+      {
+        "kind": "json_pointer",
+        "value": "/name"
+      },
+      {
+        "kind": "json_pointer",
+        "value": "/obsTime"
+      },
+      {
+        "kind": "json_pointer",
+        "value": "/qcField"
+      },
+      {
+        "kind": "json_pointer",
+        "value": "/receiptTime"
+      },
+      {
+        "kind": "json_pointer",
+        "value": "/reportTime"
+      },
+      {
+        "kind": "json_pointer",
+        "value": "/temp"
+      },
+      {
+        "kind": "json_pointer",
+        "value": "/visib"
+      },
+      {
+        "kind": "json_pointer",
+        "value": "/wdir"
+      },
+      {
+        "kind": "json_pointer",
+        "value": "/wspd"
+      },
+      {
+        "kind": "json_pointer",
+        "value": "/wxString"
+      }
+    ],
+    "conversions": [
+      {
+        "observation": 0,
+        "field": "/values/speedMetersPerSecond",
+        "vendorUnit": "kn",
+        "vendorValue": 7,
+        "expected": 3.601111111111111
+      },
+      {
+        "observation": 0,
+        "field": "/values/directionFromDegrees",
+        "vendorUnit": "deg",
+        "vendorValue": 30,
+        "expected": 30
+      },
+      {
+        "observation": 0,
+        "field": "/values/directionVariesFromDegrees",
+        "vendorUnit": "deg",
+        "vendorValue": 10,
+        "expected": 10
+      },
+      {
+        "observation": 0,
+        "field": "/values/directionVariesToDegrees",
+        "vendorUnit": "deg",
+        "vendorValue": 80,
+        "expected": 80
+      },
+      {
+        "observation": 0,
+        "field": "/position/latitudeDegrees",
+        "vendorField": "/lat",
+        "vendorUnit": "deg",
+        "vendorValue": 49.015,
+        "expected": 49.015
+      },
+      {
+        "observation": 0,
+        "field": "/position/longitudeDegrees",
+        "vendorField": "/lon",
+        "vendorUnit": "deg",
+        "vendorValue": 2.534,
+        "expected": 2.534
+      },
+      {
+        "observation": 1,
+        "field": "/values/visibilityMeters",
+        "vendorUnit": "m",
+        "vendorValue": 1800,
+        "expected": 1800
+      },
+      {
+        "observation": 1,
+        "field": "/position/latitudeDegrees",
+        "vendorField": "/lat",
+        "vendorUnit": "deg",
+        "vendorValue": 49.015,
+        "expected": 49.015
+      },
+      {
+        "observation": 1,
+        "field": "/position/longitudeDegrees",
+        "vendorField": "/lon",
+        "vendorUnit": "deg",
+        "vendorValue": 2.534,
+        "expected": 2.534
+      }
+    ]
+  }
+}

@@ -44,7 +44,7 @@ The existing `Fidelity` values, from weakest to strongest:
 | `validated_sandbox` | Checked against the vendor's sandbox. |
 | `validated_live` | Checked against the vendor's live system. |
 
-Claim only what you have done. Every adapter in this repository is `synthetic_contract` today.
+Claim only what you have done. Every adapter in this repository is `synthetic_contract` today, except the published weather report adapter (`published-metar.ts`), at `captured_source_replay`: most of its golden files are reports fetched from the live service, each noting when and with which request.
 
 ### Translate
 

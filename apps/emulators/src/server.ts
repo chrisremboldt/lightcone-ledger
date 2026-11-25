@@ -1,6 +1,7 @@
 import { createServer, type IncomingMessage, type Server, type ServerResponse } from 'node:http';
 import { createHash, createHmac, randomUUID } from 'node:crypto';
 import { endpointSchemas, missingAirspaceSchemas, validatePayload } from './schema.js';
+import { answerMetarRequest, recordedMetarReports } from './metar.js';
 import {
   djiFaultScripts,
   planScriptedFlight,
@@ -70,6 +71,8 @@ export interface EmulatorState {
   codes: Map<string, CodeGrant>;
   callbackAttempts: Array<{ authorizationId: string; status: string; code: number; deliveredAt: string }>;
   sourceClock?: string;
+  /** Published weather reports, each the exact text of one report object; the recorded ones until replaced. */
+  metarReports: string[];
 }
 const statuses = new Set([
   'STATUS_UNSPECIFIED',
@@ -136,6 +139,7 @@ export function createEmulator(
     grants: new Map(),
     codes: new Map(),
     callbackAttempts: [],
+    metarReports: recordedMetarReports(),
   };
   let controlLease: { id: string; owner: 'scenario' | 'trickle'; expires: number } | undefined;
   let scriptedFlight: ScriptedFlight | undefined;
@@ -312,6 +316,7 @@ export function createEmulator(
           state.codes.clear();
           state.callbackAttempts = [];
           state.sourceClock = undefined;
+          state.metarReports = recordedMetarReports();
           scriptedFlight?.stop();
           scriptedFlight = undefined;
           return send(response, 200, { reset: true });
@@ -322,6 +327,25 @@ export function createEmulator(
             throw new HttpError(400, 'Expected source clock timestamp');
           state.sourceClock = new Date(body.now).toISOString();
           return send(response, 200, { sourceTime: state.sourceClock, ledgerClockChanged: false });
+        }
+        if (path === '/_simulation/metar/reports' && request.method === 'PUT') {
+          const value = JSON.parse(Buffer.from(await readBytes(request)).toString()) as { reports?: unknown };
+          const reports = value.reports;
+          if (
+            !Array.isArray(reports) ||
+            reports.length > 5000 ||
+            reports.some(
+              (report) =>
+                !report ||
+                typeof report !== 'object' ||
+                typeof (report as Json).icaoId !== 'string' ||
+                typeof (report as Json).rawOb !== 'string' ||
+                !Number.isSafeInteger((report as Json).obsTime),
+            )
+          )
+            throw new HttpError(400, 'Expected reports: report objects with icaoId, rawOb and obsTime');
+          state.metarReports = reports.map((report) => JSON.stringify(report));
+          return send(response, 200, { reports: state.metarReports.length });
         }
         if (path === '/_simulation/partner/orders' && request.method === 'PUT') {
           const value = JSON.parse(Buffer.from(await readBytes(request)).toString()) as { orders?: Json[] };
@@ -517,6 +541,15 @@ export function createEmulator(
           message: 'success',
           statusCode: 200,
         });
+      }
+      if (path === '/api/data/metar' && request.method === 'GET') {
+        const answer = answerMetarRequest(state.metarReports, url.searchParams, sourceTime());
+        response.writeHead(answer.status, {
+          ...(answer.status === 204 ? {} : { 'content-type': 'application/json; charset=utf-8' }),
+          'cache-control': 'no-store',
+          'x-ledger-simulation': 'recorded-weather-reports',
+        });
+        return response.end(answer.body);
       }
       if (path.startsWith('/partner/')) {
         if (request.headers['x-partner-key'] !== config.partnerKey)

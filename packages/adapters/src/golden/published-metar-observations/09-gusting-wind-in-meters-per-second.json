@@ -1,0 +1,209 @@
+{
+  "note": "Fetched 2026-11-25T19:17:31.000Z from the Aviation Weather Center data API (aviationweather.gov), GET /api/data/metar?ids=KORD,KMIA,KLAX,EGLL,UUEE&format=json: this report's object, cut from the response as sent. A published government weather observation, kept as reference data.",
+  "case": "valid",
+  "message": {
+    "contentType": "application/json",
+    "transport": {
+      "method": "GET",
+      "path": "/api/data/metar"
+    },
+    "capturedAt": "2026-11-25T19:17:31.000Z",
+    "bodyText": "{\"icaoId\":\"UUEE\",\"receiptTime\":\"2026-11-25T19:06:11.320Z\",\"obsTime\":1795633200,\"reportTime\":\"2026-11-25T19:00:00.000Z\",\"temp\":-3,\"dewp\":-5,\"wdir\":330,\"wspd\":14,\"wgst\":29,\"visib\":\"6+\",\"altim\":1007,\"qcField\":16,\"wxString\":\"-SN\",\"metarType\":\"METAR\",\"rawOb\":\"METAR UUEE 251900Z 33007G15MPS 9999 -SN OVC010 M03/M05 Q1007 R06R/590340 R06C/590340 NOSIG\",\"lat\":55.973,\"lon\":37.415,\"elev\":186,\"name\":\"Moscow/Sheremetyevo Intl, MO, RU\",\"cover\":\"OVC\",\"clouds\":[{\"cover\":\"OVC\",\"base\":1000}],\"fltCat\":\"MVFR\"}"
+  },
+  "expect": {
+    "observations": [
+      {
+        "type": "weather.wind",
+        "version": 1,
+        "subject": {
+          "kind": "site",
+          "id": "RIDGE-SITE-8",
+          "scope": "source"
+        },
+        "occurredAt": "2026-11-25T19:00:00.000Z",
+        "sourceEventId": "UUEE 2026-11-25T19:00:00.000Z METAR for RIDGE-SITE-8",
+        "position": {
+          "latitudeDegrees": 55.973,
+          "longitudeDegrees": 37.415
+        },
+        "originalLocator": {
+          "kind": "json_pointer",
+          "value": "/rawOb"
+        },
+        "values": {
+          "method": "measured",
+          "speedMetersPerSecond": 7,
+          "gustSpeedMetersPerSecond": 15,
+          "directionFromDegrees": 330
+        },
+        "extraLimitations": [
+          "Reported by station UUEE for the site RIDGE-SITE-8; the distance from the station to the site is not on record."
+        ]
+      },
+      {
+        "type": "weather.visibility",
+        "version": 1,
+        "subject": {
+          "kind": "site",
+          "id": "RIDGE-SITE-8",
+          "scope": "source"
+        },
+        "occurredAt": "2026-11-25T19:00:00.000Z",
+        "sourceEventId": "UUEE 2026-11-25T19:00:00.000Z METAR for RIDGE-SITE-8",
+        "position": {
+          "latitudeDegrees": 55.973,
+          "longitudeDegrees": 37.415
+        },
+        "originalLocator": {
+          "kind": "json_pointer",
+          "value": "/rawOb"
+        },
+        "values": {
+          "method": "observed",
+          "visibilityMeters": 10000,
+          "bound": "at_least"
+        },
+        "extraLimitations": [
+          "Reported by station UUEE for the site RIDGE-SITE-8; the distance from the station to the site is not on record."
+        ]
+      }
+    ],
+    "rejections": [],
+    "unmapped": [
+      {
+        "kind": "json_pointer",
+        "value": "/altim"
+      },
+      {
+        "kind": "json_pointer",
+        "value": "/clouds"
+      },
+      {
+        "kind": "json_pointer",
+        "value": "/cover"
+      },
+      {
+        "kind": "json_pointer",
+        "value": "/dewp"
+      },
+      {
+        "kind": "json_pointer",
+        "value": "/elev"
+      },
+      {
+        "kind": "json_pointer",
+        "value": "/fltCat"
+      },
+      {
+        "kind": "json_pointer",
+        "value": "/metarType"
+      },
+      {
+        "kind": "json_pointer",
+        "value": "/name"
+      },
+      {
+        "kind": "json_pointer",
+        "value": "/obsTime"
+      },
+      {
+        "kind": "json_pointer",
+        "value": "/qcField"
+      },
+      {
+        "kind": "json_pointer",
+        "value": "/receiptTime"
+      },
+      {
+        "kind": "json_pointer",
+        "value": "/reportTime"
+      },
+      {
+        "kind": "json_pointer",
+        "value": "/temp"
+      },
+      {
+        "kind": "json_pointer",
+        "value": "/visib"
+      },
+      {
+        "kind": "json_pointer",
+        "value": "/wdir"
+      },
+      {
+        "kind": "json_pointer",
+        "value": "/wgst"
+      },
+      {
+        "kind": "json_pointer",
+        "value": "/wspd"
+      },
+      {
+        "kind": "json_pointer",
+        "value": "/wxString"
+      }
+    ],
+    "conversions": [
+      {
+        "observation": 0,
+        "field": "/values/speedMetersPerSecond",
+        "vendorUnit": "m/s",
+        "vendorValue": 7,
+        "expected": 7
+      },
+      {
+        "observation": 0,
+        "field": "/values/gustSpeedMetersPerSecond",
+        "vendorUnit": "m/s",
+        "vendorValue": 15,
+        "expected": 15
+      },
+      {
+        "observation": 0,
+        "field": "/values/directionFromDegrees",
+        "vendorUnit": "deg",
+        "vendorValue": 330,
+        "expected": 330
+      },
+      {
+        "observation": 0,
+        "field": "/position/latitudeDegrees",
+        "vendorField": "/lat",
+        "vendorUnit": "deg",
+        "vendorValue": 55.973,
+        "expected": 55.973
+      },
+      {
+        "observation": 0,
+        "field": "/position/longitudeDegrees",
+        "vendorField": "/lon",
+        "vendorUnit": "deg",
+        "vendorValue": 37.415,
+        "expected": 37.415
+      },
+      {
+        "observation": 1,
+        "field": "/values/visibilityMeters",
+        "vendorUnit": "m",
+        "vendorValue": 10000,
+        "expected": 10000
+      },
+      {
+        "observation": 1,
+        "field": "/position/latitudeDegrees",
+        "vendorField": "/lat",
+        "vendorUnit": "deg",
+        "vendorValue": 55.973,
+        "expected": 55.973
+      },
+      {
+        "observation": 1,
+        "field": "/position/longitudeDegrees",
+        "vendorField": "/lon",
+        "vendorUnit": "deg",
+        "vendorValue": 37.415,
+        "expected": 37.415
+      }
+    ]
+  }
+}

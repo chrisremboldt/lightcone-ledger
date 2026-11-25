@@ -1,0 +1,22 @@
+{
+  "note": "Constructed for this test, not fetched: a report time two hours after the fetch.",
+  "case": "rejected",
+  "message": {
+    "contentType": "application/json",
+    "transport": {
+      "method": "GET",
+      "path": "/api/data/metar"
+    },
+    "capturedAt": "2026-11-25T19:17:31.000Z",
+    "bodyText": "{\"icaoId\":\"ZZZZ\",\"rawOb\":\"METAR ZZZZ 252100Z 27010KT 10SM\"}"
+  },
+  "expect": {
+    "observations": [],
+    "rejections": [
+      {
+        "reasonIncludes": "The report time group 252100Z is more than an hour after the report was fetched"
+      }
+    ],
+    "unmapped": []
+  }
+}

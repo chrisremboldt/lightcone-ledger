@@ -1,0 +1,22 @@
+{
+  "note": "Constructed for this test, not fetched: the report text given twice.",
+  "case": "ambiguous",
+  "message": {
+    "contentType": "application/json",
+    "transport": {
+      "method": "GET",
+      "path": "/api/data/metar"
+    },
+    "capturedAt": "2026-11-25T19:17:31.000Z",
+    "bodyText": "{\"icaoId\":\"ZZZZ\",\"rawOb\":\"METAR ZZZZ 251855Z 27010KT 10SM\",\"rawOb\":\"METAR ZZZZ 251855Z 27030KT 1SM\"}"
+  },
+  "expect": {
+    "observations": [],
+    "rejections": [
+      {
+        "reasonIncludes": "Invalid or ambiguous JSON: JSON object contains a duplicate key"
+      }
+    ],
+    "unmapped": []
+  }
+}

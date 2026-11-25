@@ -1,0 +1,185 @@
+{
+  "note": "Fetched 2026-11-25T19:16:11.000Z from the Aviation Weather Center data API (aviationweather.gov), GET /api/data/metar?ids=KORD,KDEN,KJFK,KSEA,KBOS,KSFO,KATL,KMSP,KLAX,KDFW,PANC,KMIA,KDTW,KSLC,KPHX,KLAS&format=json&hours=6: this report's object, cut from the response as sent. A published government weather observation, kept as reference data.",
+  "case": "valid",
+  "message": {
+    "contentType": "application/json",
+    "transport": {
+      "method": "GET",
+      "path": "/api/data/metar"
+    },
+    "capturedAt": "2026-11-25T19:16:11.000Z",
+    "bodyText": "{\"icaoId\":\"KLAS\",\"receiptTime\":\"2026-11-25T19:00:34.798Z\",\"obsTime\":1795632960,\"reportTime\":\"2026-11-25T19:00:00.000Z\",\"temp\":13.9,\"dewp\":-2.2,\"wdir\":0,\"wspd\":0,\"visib\":\"10+\",\"altim\":1023.5,\"slp\":1023,\"qcField\":4,\"metarType\":\"METAR\",\"rawOb\":\"METAR KLAS 251856Z 00000KT 10SM BKN200 OVC250 14/M02 A3022 RMK AO2 SLP230 T01391022\",\"lat\":36.0719,\"lon\":-115.1634,\"elev\":662,\"name\":\"Las Vegas/Reid Intl, NV, US\",\"cover\":\"OVC\",\"clouds\":[{\"cover\":\"BKN\",\"base\":20000},{\"cover\":\"OVC\",\"base\":25000}],\"fltCat\":\"VFR\"}"
+  },
+  "expect": {
+    "observations": [
+      {
+        "type": "weather.wind",
+        "version": 1,
+        "subject": {
+          "kind": "site",
+          "id": "RIDGE-SITE-4",
+          "scope": "source"
+        },
+        "occurredAt": "2026-11-25T18:56:00.000Z",
+        "sourceEventId": "KLAS 2026-11-25T18:56:00.000Z METAR for RIDGE-SITE-4",
+        "position": {
+          "latitudeDegrees": 36.0719,
+          "longitudeDegrees": -115.1634
+        },
+        "originalLocator": {
+          "kind": "json_pointer",
+          "value": "/rawOb"
+        },
+        "values": {
+          "method": "measured",
+          "speedMetersPerSecond": 0
+        },
+        "extraLimitations": ["Reported by station KLAS for the site RIDGE-SITE-4, 800 m from the site as configured."]
+      },
+      {
+        "type": "weather.visibility",
+        "version": 1,
+        "subject": {
+          "kind": "site",
+          "id": "RIDGE-SITE-4",
+          "scope": "source"
+        },
+        "occurredAt": "2026-11-25T18:56:00.000Z",
+        "sourceEventId": "KLAS 2026-11-25T18:56:00.000Z METAR for RIDGE-SITE-4",
+        "position": {
+          "latitudeDegrees": 36.0719,
+          "longitudeDegrees": -115.1634
+        },
+        "originalLocator": {
+          "kind": "json_pointer",
+          "value": "/rawOb"
+        },
+        "values": {
+          "method": "observed",
+          "visibilityMeters": 16093.44,
+          "bound": "stated"
+        },
+        "extraLimitations": ["Reported by station KLAS for the site RIDGE-SITE-4, 800 m from the site as configured."]
+      }
+    ],
+    "rejections": [],
+    "unmapped": [
+      {
+        "kind": "json_pointer",
+        "value": "/altim"
+      },
+      {
+        "kind": "json_pointer",
+        "value": "/clouds"
+      },
+      {
+        "kind": "json_pointer",
+        "value": "/cover"
+      },
+      {
+        "kind": "json_pointer",
+        "value": "/dewp"
+      },
+      {
+        "kind": "json_pointer",
+        "value": "/elev"
+      },
+      {
+        "kind": "json_pointer",
+        "value": "/fltCat"
+      },
+      {
+        "kind": "json_pointer",
+        "value": "/metarType"
+      },
+      {
+        "kind": "json_pointer",
+        "value": "/name"
+      },
+      {
+        "kind": "json_pointer",
+        "value": "/obsTime"
+      },
+      {
+        "kind": "json_pointer",
+        "value": "/qcField"
+      },
+      {
+        "kind": "json_pointer",
+        "value": "/receiptTime"
+      },
+      {
+        "kind": "json_pointer",
+        "value": "/reportTime"
+      },
+      {
+        "kind": "json_pointer",
+        "value": "/slp"
+      },
+      {
+        "kind": "json_pointer",
+        "value": "/temp"
+      },
+      {
+        "kind": "json_pointer",
+        "value": "/visib"
+      },
+      {
+        "kind": "json_pointer",
+        "value": "/wdir"
+      },
+      {
+        "kind": "json_pointer",
+        "value": "/wspd"
+      }
+    ],
+    "conversions": [
+      {
+        "observation": 0,
+        "field": "/values/speedMetersPerSecond",
+        "vendorUnit": "kn",
+        "vendorValue": 0,
+        "expected": 0
+      },
+      {
+        "observation": 0,
+        "field": "/position/latitudeDegrees",
+        "vendorField": "/lat",
+        "vendorUnit": "deg",
+        "vendorValue": 36.0719,
+        "expected": 36.0719
+      },
+      {
+        "observation": 0,
+        "field": "/position/longitudeDegrees",
+        "vendorField": "/lon",
+        "vendorUnit": "deg",
+        "vendorValue": -115.1634,
+        "expected": -115.1634
+      },
+      {
+        "observation": 1,
+        "field": "/values/visibilityMeters",
+        "vendorUnit": "mi",
+        "vendorValue": 10,
+        "expected": 16093.44
+      },
+      {
+        "observation": 1,
+        "field": "/position/latitudeDegrees",
+        "vendorField": "/lat",
+        "vendorUnit": "deg",
+        "vendorValue": 36.0719,
+        "expected": 36.0719
+      },
+      {
+        "observation": 1,
+        "field": "/position/longitudeDegrees",
+        "vendorField": "/lon",
+        "vendorUnit": "deg",
+        "vendorValue": -115.1634,
+        "expected": -115.1634
+      }
+    ]
+  }
+}

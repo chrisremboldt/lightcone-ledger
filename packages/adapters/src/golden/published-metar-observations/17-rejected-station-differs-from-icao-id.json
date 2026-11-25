@@ -1,0 +1,22 @@
+{
+  "note": "Constructed for this test, not fetched: the identifier beside the text names another station.",
+  "case": "rejected",
+  "message": {
+    "contentType": "application/json",
+    "transport": {
+      "method": "GET",
+      "path": "/api/data/metar"
+    },
+    "capturedAt": "2026-11-25T19:17:31.000Z",
+    "bodyText": "{\"icaoId\":\"KORD\",\"rawOb\":\"METAR ZZZZ 251855Z 27010KT 10SM\"}"
+  },
+  "expect": {
+    "observations": [],
+    "rejections": [
+      {
+        "reasonIncludes": "icaoId does not name the station the report text names (ZZZZ)"
+      }
+    ],
+    "unmapped": []
+  }
+}

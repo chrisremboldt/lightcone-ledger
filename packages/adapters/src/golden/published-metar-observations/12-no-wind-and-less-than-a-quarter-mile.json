@@ -1,0 +1,56 @@
+{
+  "note": "Constructed for this test, not fetched: a report from an invented station with the wind missing and visibility below a quarter mile.",
+  "case": "valid",
+  "message": {
+    "contentType": "application/json",
+    "transport": {
+      "method": "GET",
+      "path": "/api/data/metar"
+    },
+    "capturedAt": "2026-11-25T19:17:31.000Z",
+    "bodyText": "{\"icaoId\":\"ZZZZ\",\"rawOb\":\"METAR ZZZZ 251855Z AUTO /////KT M1/4SM FG VV001 01/01 A3001\"}"
+  },
+  "expect": {
+    "observations": [
+      {
+        "type": "weather.visibility",
+        "version": 1,
+        "subject": {
+          "kind": "site",
+          "id": "RIDGE-SITE-10",
+          "scope": "source"
+        },
+        "occurredAt": "2026-11-25T18:55:00.000Z",
+        "sourceEventId": "ZZZZ 2026-11-25T18:55:00.000Z METAR for RIDGE-SITE-10",
+        "originalLocator": {
+          "kind": "json_pointer",
+          "value": "/rawOb"
+        },
+        "values": {
+          "method": "observed",
+          "visibilityMeters": 402.336,
+          "bound": "less_than"
+        },
+        "extraLimitations": [
+          "Reported by station ZZZZ for the site RIDGE-SITE-10; the distance from the station to the site is not on record.",
+          "The report is automated (AUTO): no person observed it."
+        ]
+      }
+    ],
+    "rejections": [
+      {
+        "reasonIncludes": "The station reported no wind (/////KT)"
+      }
+    ],
+    "unmapped": [],
+    "conversions": [
+      {
+        "observation": 0,
+        "field": "/values/visibilityMeters",
+        "vendorUnit": "mi",
+        "vendorValue": 0.25,
+        "expected": 402.336
+      }
+    ]
+  }
+}

@@ -1,0 +1,39 @@
+{
+  "note": "Fetched 2026-11-25T19:16:22.000Z from the Aviation Weather Center data API (aviationweather.gov), GET /api/data/metar?ids=EGLL,EDDF,LFPG,ZBAA,UUEE,RJTT,YSSY,EHAM,LEMD,CYYZ,ZSPD,UUDD&format=json&hours=4: this report's object, cut from the response as sent. A published government weather observation, kept as reference data.",
+  "case": "rejected",
+  "message": {
+    "contentType": "application/json",
+    "transport": {
+      "method": "GET",
+      "path": "/api/data/metar"
+    },
+    "capturedAt": "2026-11-25T19:16:22.000Z",
+    "bodyText": "{\"icaoId\":\"EDDF\",\"receiptTime\":\"2026-11-25T18:53:21.692Z\",\"obsTime\":1795632600,\"reportTime\":\"2026-11-25T19:00:00.000Z\",\"temp\":0,\"dewp\":-4,\"wdir\":30,\"wspd\":9,\"visib\":\"6+\",\"altim\":1016,\"qcField\":18,\"metarType\":\"METAR\",\"rawOb\":\"METAR EDDF 251850Z AUTO 03009KT CAVOK 00/M04 Q1016 NOSIG\",\"lat\":50.045,\"lon\":8.598,\"elev\":113,\"name\":\"Frankfurt/Main Arpt, HE, DE\",\"cover\":\"CAVOK\",\"clouds\":[],\"fltCat\":\"VFR\"}"
+  },
+  "context": {
+    "subjects": {
+      "scope": "ledger",
+      "ids": {
+        "site": {}
+      }
+    },
+    "binding": {
+      "stations": {
+        "EDDF": [
+          {
+            "siteId": "RIDGE-SITE-1"
+          }
+        ]
+      }
+    }
+  },
+  "expect": {
+    "observations": [],
+    "rejections": [
+      {
+        "reasonIncludes": "No Ledger site is bound to the configured site RIDGE-SITE-1"
+      }
+    ],
+    "unmapped": []
+  }
+}

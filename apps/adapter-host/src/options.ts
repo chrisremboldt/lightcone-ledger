@@ -37,6 +37,7 @@ const settings = {
   ADAPTER_SERVICE_URL: 'service-url',
   ADAPTER_OPERATION: 'operation',
   ADAPTER_FLIGHT: 'flight',
+  ADAPTER_STATIONS: 'stations',
   ADAPTER_POLL_SECONDS: 'poll-seconds',
   ADAPTER_QUEUE_LIMIT: 'queue-limit',
   ADAPTER_SHUTDOWN_SECONDS: 'shutdown-seconds',
@@ -60,6 +61,7 @@ const bindingVariables: Record<BindingOption, Variable> = {
   dockModel: 'ADAPTER_DOCK_MODEL',
   operation: 'ADAPTER_OPERATION',
   flight: 'ADAPTER_FLIGHT',
+  stations: 'ADAPTER_STATIONS',
 };
 const flagOf = (option: BindingOption): Flag => settings[bindingVariables[option]];
 
@@ -90,10 +92,14 @@ Every flag can be given as the environment variable after it instead; the flag w
   --dock <serial>            ADAPTER_DOCK              The dock's serial number
   --site <id>                ADAPTER_SITE              The site the dock stands at
   --dock-model <model>       ADAPTER_DOCK_MODEL        dock2, dock3 or dock4
-  --service-url <url>        ADAPTER_SERVICE_URL       The airspace service, for example https://service.example.org
-  --operation <id>           ADAPTER_OPERATION         The service's operation id
+  --service-url <url>        ADAPTER_SERVICE_URL       The service, for example https://service.example.org
+  --operation <id>           ADAPTER_OPERATION         The airspace service's operation id
   --flight <id>              ADAPTER_FLIGHT            The Ledger flight the operation was requested for
-  --poll-seconds <n>         ADAPTER_POLL_SECONDS      Seconds between reads of the service (default 60, at least 5)
+  --stations <list>          ADAPTER_STATIONS          Weather stations and the sites each reports for, as
+                                                       STATION=SITE[@DISTANCE] separated by semicolons, the
+                                                       distance in m or km: KORD=RIDGE-SITE-1@14.2km;KORD=RIDGE-SITE-2
+  --poll-seconds <n>         ADAPTER_POLL_SECONDS      Seconds between reads of the service (default 60 for the
+                                                       airspace service, 300 for weather reports; at least 5)
   --queue-limit <n>          ADAPTER_QUEUE_LIMIT       Messages held while Ledger cannot be reached (default 10000)
   --shutdown-seconds <n>     ADAPTER_SHUTDOWN_SECONDS  How long a stop waits to submit what it holds (default 10)
   --private-network          ADAPTER_PRIVATE_NETWORK=1 Allow http:// and mqtt:// to another host on a network you
@@ -103,9 +109,13 @@ Secrets, from the environment only:
   LEDGER_API_CREDENTIAL      The source's API credential, as issued
   ADAPTER_BROKER_PASSWORD    The broker account's password
   ADAPTER_SERVICE_TOKEN      The airspace service's access token, sent as a bearer token
-  ADAPTER_SERVICE_API_KEY    The airspace service's API key, if it asks for one (sent as x-api-key)`;
+  ADAPTER_SERVICE_API_KEY    The airspace service's API key, if it asks for one (sent as x-api-key)
+  The weather report service is public and takes no secret.`;
 
 export class UsageError extends Error {}
+
+/** A public service is sent only a name for this client, which it asks for; nothing about the organization. */
+const PUBLIC_SERVICE_USER_AGENT = 'ledger-adapter-host';
 
 function positiveInteger(text: string, name: string, minimum: number, maximum: number): number {
   const parsed = /^\d+$/.test(text) ? Number(text) : NaN;
@@ -151,6 +161,12 @@ export function parseHostOptions(argv: readonly string[], env: NodeJS.ProcessEnv
     const given = env[variable];
     if (!given) throw new UsageError(`${variable} is required: ${purpose}`);
     return given;
+  };
+  const serviceHeaders = (credential: 'bearer' | 'none'): Record<string, string> => {
+    if (credential === 'none') return { 'user-agent': PUBLIC_SERVICE_USER_AGENT };
+    const token = secret('ADAPTER_SERVICE_TOKEN', 'the service’s access token');
+    const apiKey = env.ADAPTER_SERVICE_API_KEY;
+    return { authorization: `Bearer ${token}`, ...(apiKey ? { 'x-api-key': apiKey } : {}) };
   };
 
   if (parsed.positionals.length > 1) throw new UsageError('Name one adapter');
@@ -205,11 +221,9 @@ export function parseHostOptions(argv: readonly string[], env: NodeJS.ProcessEnv
       { tls: 'https:', plain: 'http:' },
       privateNetwork,
     );
-    const token = secret('ADAPTER_SERVICE_TOKEN', 'the service’s access token');
-    const apiKey = env.ADAPTER_SERVICE_API_KEY;
     service = {
       url: `${base.toString().replace(/\/$/, '')}${runnable.path(binding)}`,
-      headers: { authorization: `Bearer ${token}`, ...(apiKey ? { 'x-api-key': apiKey } : {}) },
+      headers: serviceHeaders(runnable.serviceCredential),
       pollMs:
         positiveInteger(
           setting('ADAPTER_POLL_SECONDS') ?? String(runnable.defaultPollSeconds),

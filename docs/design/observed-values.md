@@ -111,7 +111,7 @@ An operator with no aircraft or site reporting to Ledger keeps wind at launch, v
 | Wind for the whole flight | every measured `weather.wind` at the site from the reported takeoff to the landing | the flight record's wind at takeoff, the one value it holds |
 | Battery at landing | the aircraft's `battery.state` last reported at or before the reported landing | the flight record's `batteryAtLandingPercent` |
 | Battery for the whole flight | every `battery.state` of the aircraft from the reported takeoff to the landing | the flight record's battery at landing, the one value it holds |
-| Visibility at takeoff | (no source reports visibility today) | the flight record's `visibilityAtTakeoffMeters`, then the latest preflight assessment's `visibilityMeters` |
+| Visibility at takeoff | (not read: the weather report adapter reports `weather.visibility` at a station configured for a site, which no rule reads yet) | the flight record's `visibilityAtTakeoffMeters`, then the latest preflight assessment's `visibilityMeters` |
 
 `window.values-within-limit@1` does this for a value over a window. A rule gives it the operator's record as the optional `recorded` input, with the field that holds the value, the field that says when it applies (takeoff or landing), and the record's takeoff and landing fields. When the flight's reports state no window, the window is the record's. When no reported value falls in the window, the recorded value is compared with the limit at the time it applies, and a value outside the limit is one issue, named and timed like a reported run. Details `basis` (`reported` or `recorded`) and `recordedValue` say which was read.
 

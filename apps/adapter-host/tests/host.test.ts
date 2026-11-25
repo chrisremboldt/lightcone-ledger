@@ -1,6 +1,7 @@
 import { createHash } from 'node:crypto';
 import { describe, expect, it } from 'vitest';
 import { parseHostOptions, runAdapterHost, UsageError } from '../src/host.js';
+import { recordedMetarReports } from '../../emulators/src/metar.js';
 
 const secret = 'ledger-service-fictional-secret-value';
 const env = {
@@ -12,6 +13,13 @@ const env = {
 };
 const airspace = ['airspace-link-laanc-authorization', '--service-url', 'http://127.0.0.1:4002'];
 const operation = ['--operation', 'op-1', '--flight', 'flight-fictional-1'];
+const weather = [
+  'published-metar-observations',
+  '--service-url',
+  'http://127.0.0.1:4002',
+  '--stations',
+  'KORD=RIDGE-SITE-1@14.2km;EGLL=RIDGE-SITE-2',
+];
 
 describe('the adapter process settings', () => {
   it('reads settings from flags and the environment, and secrets from the environment only', () => {
@@ -28,6 +36,24 @@ describe('the adapter process settings', () => {
     );
     expect(() => parseHostOptions([...airspace, ...operation], { ...env, LEDGER_API_CREDENTIAL: '' })).toThrow(
       'LEDGER_API_CREDENTIAL is required',
+    );
+  });
+
+  it('reads a public weather service with no secret, naming only this client, for the stations configured', () => {
+    const { ADAPTER_SERVICE_TOKEN: _token, ...withoutToken } = env;
+    const options = parseHostOptions(weather, withoutToken);
+    expect(options).toMatchObject({
+      adapterId: 'published-metar-observations',
+      binding: { stations: 'KORD=RIDGE-SITE-1@14.2km;EGLL=RIDGE-SITE-2' },
+      service: {
+        url: 'http://127.0.0.1:4002/api/data/metar?ids=EGLL,KORD&format=json',
+        headers: { 'user-agent': 'ledger-adapter-host' },
+        pollMs: 300_000,
+      },
+    });
+    expect(Object.keys(options.service!.headers)).toEqual(['user-agent']);
+    expect(() => parseHostOptions([...weather.slice(0, 3), '--stations', 'KORD'], env)).toThrow(
+      '--stations: KORD is not STATION=SITE',
     );
   });
 
@@ -56,7 +82,7 @@ describe('the adapter process settings', () => {
 });
 
 /** The public API and the airspace service, just enough of each. */
-function fakes(options: { refuseCredential?: boolean } = {}) {
+function fakes(options: { refuseCredential?: boolean; weather?: boolean } = {}) {
   const inputs: { key: string | null; body: Record<string, unknown> }[] = [];
   let counter = 0;
   const json = (status: number, body: unknown) =>
@@ -67,6 +93,11 @@ function fakes(options: { refuseCredential?: boolean } = {}) {
     const target = new URL(String(url));
     const method = init.method ?? 'GET';
     const headers = new Headers(init.headers);
+    if (target.port === '4002' && target.pathname === '/api/data/metar') {
+      const ids = target.searchParams.get('ids')!.split(',');
+      const latest = ids.map((id) => recordedMetarReports().findLast((text) => text.includes(`"icaoId":"${id}"`))!);
+      return new Response(`[${latest.join(',')}]`, { status: 200, headers: { 'content-type': 'application/json' } });
+    }
     if (target.port === '4002')
       return json(200, {
         operation: {
@@ -93,7 +124,12 @@ function fakes(options: { refuseCredential?: boolean } = {}) {
           id: 'principal-fictional-airspace',
           name: 'Fictional airspace source',
           capabilities: ['input:write'],
-          observationGrants: [{ sourceId: 'fictional-airspace', observationType: 'airspace.authorization' }],
+          observationGrants: options.weather
+            ? ['weather.wind', 'weather.visibility'].map((observationType) => ({
+                sourceId: 'fictional-weather',
+                observationType,
+              }))
+            : [{ sourceId: 'fictional-airspace', observationType: 'airspace.authorization' }],
         },
         organization: { name: 'Fictional Aerial Survey' },
       });
@@ -151,6 +187,33 @@ describe('the adapter process', () => {
       },
     });
     expect(lines.join('\n')).not.toMatch(/fictional-secret-value|fictional-service-token/);
+  });
+
+  it('cuts the weather service’s answer into reports and submits each one’s observations about its sites', async () => {
+    const { fetcher, inputs } = fakes({ weather: true });
+    const lines: string[] = [];
+    const stop = new AbortController();
+    const running = runAdapterHost(weather, env, { out: (line) => lines.push(line), stop: stop.signal, fetcher });
+    const deadline = Date.now() + 10_000;
+    while (inputs.length < 4 && Date.now() < deadline) await new Promise((resolve) => setTimeout(resolve, 10));
+    stop.abort();
+    expect(await running).toBe(0);
+    const events = lines.map((line) => JSON.parse(line) as { event: string; fidelity?: string; message: string });
+    expect(events[0]).toMatchObject({ event: 'starting', fidelity: 'captured_source_replay' });
+    expect(events.find((event) => event.event === 'polling')!.message).toBe(
+      'Reading /api/data/metar?ids=EGLL,KORD&format=json every 300 s.',
+    );
+    expect(
+      inputs.map((input) => {
+        const payload = input.body.payload as { type: string; subject: { id: string } };
+        return `${payload.type} ${payload.subject.id}`;
+      }),
+    ).toEqual([
+      'weather.wind RIDGE-SITE-2',
+      'weather.visibility RIDGE-SITE-2',
+      'weather.wind RIDGE-SITE-1',
+      'weather.visibility RIDGE-SITE-1',
+    ]);
   });
 
   it('exits non-zero naming the credential’s label, never its secret, when Ledger refuses it', async () => {

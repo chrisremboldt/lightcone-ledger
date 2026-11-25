@@ -41,6 +41,7 @@ export {
   type DjiDockWindStep,
 } from './dji-dock-wind-script.js';
 export { qos1ReconnectFault } from './mqtt-fault.js';
+export { answerMetarRequest, recordedMetarReports, RECORDED_METAR_FILE, type MetarAnswer } from './metar.js';
 
 if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
   const config = emulatorConfig();

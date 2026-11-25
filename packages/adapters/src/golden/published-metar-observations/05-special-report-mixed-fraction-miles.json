@@ -1,0 +1,197 @@
+{
+  "note": "Fetched 2026-11-25T19:16:11.000Z from the Aviation Weather Center data API (aviationweather.gov), GET /api/data/metar?ids=KORD,KDEN,KJFK,KSEA,KBOS,KSFO,KATL,KMSP,KLAX,KDFW,PANC,KMIA,KDTW,KSLC,KPHX,KLAS&format=json&hours=6: this report's object, cut from the response as sent. A published government weather observation, kept as reference data.",
+  "case": "valid",
+  "message": {
+    "contentType": "application/json",
+    "transport": {
+      "method": "GET",
+      "path": "/api/data/metar"
+    },
+    "capturedAt": "2026-11-25T19:16:11.000Z",
+    "bodyText": "{\"icaoId\":\"KMIA\",\"receiptTime\":\"2026-11-25T14:18:05.367Z\",\"obsTime\":1795616040,\"reportTime\":\"2026-11-25T14:14:00.000Z\",\"temp\":21.7,\"dewp\":20.6,\"wdir\":70,\"wspd\":3,\"visib\":2.5,\"altim\":1012.6,\"qcField\":12,\"wxString\":\"RA BR\",\"precip\":0.14,\"metarType\":\"SPECI\",\"rawOb\":\"SPECI KMIA 251414Z 07003KT 2 1/2SM RA BR BKN025 BKN037 OVC060 22/21 A2990 RMK AO2 P0014 T02170206 $\",\"lat\":25.7881,\"lon\":-80.3169,\"elev\":1,\"name\":\"Miami Intl, FL, US\",\"cover\":\"OVC\",\"clouds\":[{\"cover\":\"BKN\",\"base\":2500},{\"cover\":\"BKN\",\"base\":3700},{\"cover\":\"OVC\",\"base\":6000}],\"fltCat\":\"IFR\"}"
+  },
+  "expect": {
+    "observations": [
+      {
+        "type": "weather.wind",
+        "version": 1,
+        "subject": {
+          "kind": "site",
+          "id": "RIDGE-SITE-5",
+          "scope": "source"
+        },
+        "occurredAt": "2026-11-25T14:14:00.000Z",
+        "sourceEventId": "KMIA 2026-11-25T14:14:00.000Z SPECI for RIDGE-SITE-5",
+        "position": {
+          "latitudeDegrees": 25.7881,
+          "longitudeDegrees": -80.3169
+        },
+        "originalLocator": {
+          "kind": "json_pointer",
+          "value": "/rawOb"
+        },
+        "values": {
+          "method": "measured",
+          "speedMetersPerSecond": 1.5433333333333332,
+          "directionFromDegrees": 70
+        },
+        "extraLimitations": ["Reported by station KMIA for the site RIDGE-SITE-5, 9.6 km from the site as configured."]
+      },
+      {
+        "type": "weather.visibility",
+        "version": 1,
+        "subject": {
+          "kind": "site",
+          "id": "RIDGE-SITE-5",
+          "scope": "source"
+        },
+        "occurredAt": "2026-11-25T14:14:00.000Z",
+        "sourceEventId": "KMIA 2026-11-25T14:14:00.000Z SPECI for RIDGE-SITE-5",
+        "position": {
+          "latitudeDegrees": 25.7881,
+          "longitudeDegrees": -80.3169
+        },
+        "originalLocator": {
+          "kind": "json_pointer",
+          "value": "/rawOb"
+        },
+        "values": {
+          "method": "observed",
+          "visibilityMeters": 4023.36,
+          "bound": "stated"
+        },
+        "extraLimitations": ["Reported by station KMIA for the site RIDGE-SITE-5, 9.6 km from the site as configured."]
+      }
+    ],
+    "rejections": [],
+    "unmapped": [
+      {
+        "kind": "json_pointer",
+        "value": "/altim"
+      },
+      {
+        "kind": "json_pointer",
+        "value": "/clouds"
+      },
+      {
+        "kind": "json_pointer",
+        "value": "/cover"
+      },
+      {
+        "kind": "json_pointer",
+        "value": "/dewp"
+      },
+      {
+        "kind": "json_pointer",
+        "value": "/elev"
+      },
+      {
+        "kind": "json_pointer",
+        "value": "/fltCat"
+      },
+      {
+        "kind": "json_pointer",
+        "value": "/metarType"
+      },
+      {
+        "kind": "json_pointer",
+        "value": "/name"
+      },
+      {
+        "kind": "json_pointer",
+        "value": "/obsTime"
+      },
+      {
+        "kind": "json_pointer",
+        "value": "/precip"
+      },
+      {
+        "kind": "json_pointer",
+        "value": "/qcField"
+      },
+      {
+        "kind": "json_pointer",
+        "value": "/receiptTime"
+      },
+      {
+        "kind": "json_pointer",
+        "value": "/reportTime"
+      },
+      {
+        "kind": "json_pointer",
+        "value": "/temp"
+      },
+      {
+        "kind": "json_pointer",
+        "value": "/visib"
+      },
+      {
+        "kind": "json_pointer",
+        "value": "/wdir"
+      },
+      {
+        "kind": "json_pointer",
+        "value": "/wspd"
+      },
+      {
+        "kind": "json_pointer",
+        "value": "/wxString"
+      }
+    ],
+    "conversions": [
+      {
+        "observation": 0,
+        "field": "/values/speedMetersPerSecond",
+        "vendorUnit": "kn",
+        "vendorValue": 3,
+        "expected": 1.5433333333333332
+      },
+      {
+        "observation": 0,
+        "field": "/values/directionFromDegrees",
+        "vendorUnit": "deg",
+        "vendorValue": 70,
+        "expected": 70
+      },
+      {
+        "observation": 0,
+        "field": "/position/latitudeDegrees",
+        "vendorField": "/lat",
+        "vendorUnit": "deg",
+        "vendorValue": 25.7881,
+        "expected": 25.7881
+      },
+      {
+        "observation": 0,
+        "field": "/position/longitudeDegrees",
+        "vendorField": "/lon",
+        "vendorUnit": "deg",
+        "vendorValue": -80.3169,
+        "expected": -80.3169
+      },
+      {
+        "observation": 1,
+        "field": "/values/visibilityMeters",
+        "vendorUnit": "mi",
+        "vendorValue": 2.5,
+        "expected": 4023.36
+      },
+      {
+        "observation": 1,
+        "field": "/position/latitudeDegrees",
+        "vendorField": "/lat",
+        "vendorUnit": "deg",
+        "vendorValue": 25.7881,
+        "expected": 25.7881
+      },
+      {
+        "observation": 1,
+        "field": "/position/longitudeDegrees",
+        "vendorField": "/lon",
+        "vendorUnit": "deg",
+        "vendorValue": -80.3169,
+        "expected": -80.3169
+      }
+    ]
+  }
+}
