@@ -37,6 +37,8 @@ export type ConfirmIdentity = () => Promise<{ authenticatedAt: string }>;
 export interface SmsAppProps {
   apiUrl: string;
   token: string | (() => Promise<string | null>);
+  /** Reporting a safety concern, which the bar keeps one click away. */
+  report?: ReactNode;
   account?: ReactNode;
   local?: boolean;
   confirmIdentity?: ConfirmIdentity;
@@ -140,7 +142,7 @@ export function safetyPlace(screen: Screen): { place: Place; extras: Record<stri
   }
 }
 
-export function SmsApp({ apiUrl, token, account, local = false, confirmIdentity, flights }: SmsAppProps) {
+export function SmsApp({ apiUrl, token, report, account, local = false, confirmIdentity, flights }: SmsAppProps) {
   const client = useMemo(() => new LedgerClient(apiUrl, token, appFetch), [apiUrl, token]);
   const [principal, setPrincipal] = useState<Principal | null>(null);
   const [organizationName, setOrganizationName] = useState<string | null>(null);
@@ -271,6 +273,7 @@ export function SmsApp({ apiUrl, token, account, local = false, confirmIdentity,
         organizationName={organizationName}
         section={barSection(place)}
         offered={offered}
+        report={report}
         account={account}
         status={
           local && (

@@ -154,7 +154,7 @@
   padding: 0;
   border: 0;
   background: none;
-  color: var(--magenta);
+  color: var(--magenta-ink);
   font: inherit;
   text-decoration: underline;
   cursor: pointer;
@@ -257,6 +257,7 @@
 }
 .people-credentials {
   display: grid;
+  grid-template-columns: minmax(0, 1fr);
   gap: 12px;
   margin-top: 24px;
   padding-top: 16px;
@@ -285,6 +286,13 @@
 }
 .people-credential-table .records-help {
   display: block;
+}
+/* On a phone the table of credentials scrolls on its own rather than widening the page. */
+@media (max-width: 719.98px) {
+  .people-credential-table {
+    display: block;
+    overflow-x: auto;
+  }
 }
 .required-record-fields .required-record-wide {
   grid-column: 1 / -1;
@@ -350,7 +358,7 @@
   border-radius: 6px;
   background: var(--sheet);
   list-style: none;
-  box-shadow: 0 6px 18px rgb(0 0 0 / 12%);
+  box-shadow: 0 6px 18px var(--shadow);
 }
 .subject-picker-list[hidden] {
   display: none;

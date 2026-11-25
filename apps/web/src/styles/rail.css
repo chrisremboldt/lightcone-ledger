@@ -28,7 +28,7 @@
 }
 .action-buttons .button {
   width: 100%;
-  min-height: 36px;
+  min-height: max(36px, var(--touch-target));
   font-size: 13px;
 }
 .action-buttons .button--secondary {
@@ -216,7 +216,7 @@
 }
 .landing-source-actions .button {
   flex: 1 1 120px;
-  min-height: 36px;
+  min-height: max(36px, var(--touch-target));
   white-space: normal;
 }
 .landing-time-choice {
@@ -236,7 +236,7 @@
   display: flex;
   align-items: center;
   gap: 8px;
-  min-height: 32px;
+  min-height: max(32px, var(--touch-target));
   margin: 0;
 }
 .landing-time-choice input {
@@ -271,7 +271,7 @@
 }
 .action-form .button--primary {
   margin-top: 6px;
-  min-height: 34px;
+  min-height: max(34px, var(--touch-target));
 }
 .link-action {
   margin-top: 10px;

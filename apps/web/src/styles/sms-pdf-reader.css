@@ -34,7 +34,7 @@
 .sms-pdf-toolbar input,
 .sms-pdf-toolbar select {
   min-width: 0;
-  min-height: 32px;
+  min-height: max(32px, var(--touch-target));
   padding: 5px 7px;
   border: 1px solid var(--line-2);
   border-radius: 4px;
@@ -90,14 +90,14 @@
   inset: 0;
   overflow: auto;
   overscroll-behavior: contain;
-  background: var(--surface, #171b21);
+  background: var(--surface, var(--side));
 }
 .sms-pdf-scroll .pdfViewer {
-  --page-bg-color: #fff;
+  --page-bg-color: var(--pdf-page);
   padding-top: 8px;
 }
 .sms-pdf-scroll .pdfViewer .page {
-  background-color: #fff;
+  background-color: var(--pdf-page);
 }
 @media (max-width: 500px) {
   .sms-pdf-toolbar {

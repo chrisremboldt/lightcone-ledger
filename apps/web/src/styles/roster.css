@@ -180,11 +180,14 @@
   background: color-mix(in srgb, var(--ink) 5%, transparent);
 }
 .flight-row.needs-attention {
-  background: color-mix(in srgb, var(--advisory) 22%, var(--side));
+  background: light-dark(var(--advisory-soft), color-mix(in srgb, var(--advisory) 22%, var(--side)));
   box-shadow: inset 3px 0 0 var(--advisory);
 }
 .flight-row.needs-attention:hover:not(.is-selected) {
-  background: color-mix(in srgb, var(--advisory) 30%, var(--side));
+  background: light-dark(
+    color-mix(in srgb, var(--advisory-line) 18%, var(--sheet)),
+    color-mix(in srgb, var(--advisory) 30%, var(--side))
+  );
 }
 .roster-group--attention .flight-row + .flight-row {
   border-top-color: color-mix(in srgb, var(--paper) 55%, transparent);

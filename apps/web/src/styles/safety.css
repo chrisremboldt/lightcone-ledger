@@ -324,7 +324,7 @@
   color: inherit;
 }
 .safety-report-dialog::backdrop {
-  background: rgb(0 0 0 / 55%);
+  background: var(--scrim);
 }
 .safety-report-dialog .safety-form,
 .safety-report-page .safety-form {
@@ -364,7 +364,7 @@
 /* Both buttons the same height on one line: the form's primary button otherwise sits lower and taller. */
 .action-form .safety-report-actions .button {
   margin-top: 0;
-  min-height: 34px;
+  min-height: max(34px, var(--touch-target));
 }
 .safety-report-code {
   font-family: 'Roboto Mono', monospace;

@@ -1,13 +1,13 @@
 .telemetry-lens {
-  --map-bg: #0d0d0d;
-  --map-ground: #141414;
-  --map-line: #2e2e38;
-  --map-grid: #23232a;
-  --map-text: #f9fafb;
-  --map-muted: #8d8d8d;
-  --map-faint: #535353;
-  --map-point: #f9fafb;
-  --map-track: #0096e0;
+  --map-bg: var(--paper);
+  --map-ground: var(--sheet);
+  --map-line: var(--line);
+  --map-grid: light-dark(#e6e6ea, #23232a);
+  --map-text: var(--ink);
+  --map-muted: var(--muted);
+  --map-faint: var(--faint);
+  --map-point: var(--ink);
+  --map-track: var(--plan);
   --map-late: var(--amber-mid);
   min-width: 0;
 }
@@ -62,7 +62,7 @@
 
 .telemetry-card {
   overflow: hidden;
-  border: 1px solid #0f1114;
+  border: 1px solid var(--map-line);
   border-radius: 10px;
   background: var(--map-bg);
   color: var(--map-text);
@@ -89,11 +89,11 @@
   height: 7px;
   border-radius: 50%;
   background: var(--map-track);
-  box-shadow: 0 0 0 3px rgba(43, 179, 160, 0.2);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--map-track) 20%, transparent);
 }
 .telemetry-transport .connection-dot--error {
   background: var(--map-late);
-  box-shadow: 0 0 0 3px rgba(224, 155, 45, 0.2);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--map-late) 20%, transparent);
 }
 
 .telemetry-map {
@@ -131,7 +131,7 @@
 }
 .telemetry-point.is-selected {
   fill: var(--magenta);
-  stroke: #fff;
+  stroke: var(--map-point-ring);
   stroke-width: 1.5;
 }
 .telemetry-late-ring {
@@ -223,7 +223,7 @@
   margin: 0;
   padding: 9px 14px;
   border-top: 1px solid var(--map-line);
-  background: rgba(224, 155, 45, 0.08);
+  background: color-mix(in srgb, var(--map-late) 8%, transparent);
   color: var(--map-late);
   font-size: 12px;
 }

@@ -1,5 +1,6 @@
 import { test, expect, type Page } from '@playwright/test';
 import { randomUUID } from 'node:crypto';
+import { openAccount } from './account-fixture.js';
 
 /**
  * Signs in through the test issuer instead of a development token. It needs a stack set up for it, so it runs only
@@ -21,7 +22,9 @@ async function signInAs(page: Page, person: string) {
   await page.getByRole('button', { name: `Sign in through ${new URL(issuer!).host}` }).click();
   await expect(page.getByRole('heading', { name: 'Test issuer' })).toBeVisible();
   await page.getByRole('link', { name: person, exact: true }).click();
+  await openAccount(page);
   await expect(page.getByRole('button', { name: 'Sign out' })).toBeVisible();
+  await page.keyboard.press('Escape');
 }
 
 test.skip(!issuer, 'Set LEDGER_BROWSER_TEST_ISSUER to run against a stack configured with the test issuer');
@@ -41,6 +44,7 @@ test('an administrator signs in through the provider, adds a person, and that pe
     'Tied to an identity-provider account',
   );
 
+  await openAccount(page);
   await page.getByRole('button', { name: 'Sign out' }).click();
   await signInAs(page, 'Test Person');
   await expect(page.getByRole('link', { name: 'People', exact: true })).toHaveCount(0);

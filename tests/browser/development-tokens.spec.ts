@@ -1,5 +1,6 @@
 import { test, expect } from '@playwright/test';
 import { randomUUID } from 'node:crypto';
+import { openAccount } from './account-fixture.js';
 
 test('an administrator issues a person a development token, shown once, and a new one replaces it', async ({
   page,
@@ -50,7 +51,9 @@ test('an administrator issues a person a development token, shown once, and a ne
     await theirs.getByText('Use a development token', { exact: true }).click();
     await theirs.getByLabel('Development token', { exact: true }).fill(second);
     await theirs.getByRole('button', { name: 'Open with this token', exact: true }).click();
+    await openAccount(theirs);
     await expect(theirs.getByRole('button', { name: 'Switch operator', exact: true })).toBeVisible();
+    await theirs.keyboard.press('Escape');
     // A pilot does not manage people, so the People screen is not offered.
     await expect(theirs.getByRole('link', { name: 'People', exact: true })).toHaveCount(0);
   } finally {

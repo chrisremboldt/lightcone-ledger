@@ -1,6 +1,6 @@
 import { mode } from '../transport.js';
 import { centralDateTimeInput } from '../sms-document-dates.js';
-import { page } from './locators.js';
+import { Locator, page } from './locators.js';
 import type { Actor, Scene } from './player.js';
 import trainingRecords from '../../../../packages/contracts/fixtures/operator-records/alpha-training-records.csv?raw';
 
@@ -25,10 +25,17 @@ interface Created {
   flight: { id: string };
 }
 
+/** The person's name in the bar, which opens their account. */
+const account = new Locator('the account in the bar', () => [
+  ...document.querySelectorAll('.topbar button.topbar-user'),
+]);
+
 /** Sign in on the local gate, leaving the current person first if someone is signed in. */
 async function signIn(actor: Actor, operator: string, person: string): Promise<void> {
-  if (page.button('Switch operator', { exact: true }).element())
+  if (account.element()) {
+    await actor.click(account);
     await actor.click(page.button('Switch operator', { exact: true }));
+  }
   await actor.tick(page.field(operator, { exact: true }));
   await actor.choose(page.field('Person', { exact: true }), person);
   await actor.click(page.button('Open operations', { exact: true }));

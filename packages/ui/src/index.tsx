@@ -36,7 +36,7 @@ export function Mark({ size = 20 }: { size?: number }) {
   return (
     <svg width={size} height={(size * 18) / 20} viewBox="0 0 20 18" fill="none" aria-hidden="true">
       <path d="M10 1L19 17H1Z" stroke="currentColor" strokeWidth="1.8" strokeLinejoin="round" />
-      <path d="M10 7.5L14 15H6Z" fill="#e2008c" />
+      <path className="mark-accent" d="M10 7.5L14 15H6Z" />
     </svg>
   );
 }

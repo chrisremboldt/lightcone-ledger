@@ -1,5 +1,6 @@
 import { test, expect, type Page } from '@playwright/test';
 import { randomUUID } from 'node:crypto';
+import { openAccount } from './account-fixture.js';
 
 async function openAs(page: Page, person: 'safety' | 'executive') {
   await page.goto('/');
@@ -46,6 +47,7 @@ test('a safety manager identifies and assesses a hazard and the accountable exec
   await expect(record.getByText('High residual risk')).toBeVisible();
   await expect(page.getByTestId('accept-unavailable')).toContainText('Morgan Ellis can accept it');
 
+  await openAccount(page);
   await page.getByRole('button', { name: 'Switch operator' }).click();
   await openAs(page, 'executive');
   const waiting = page.getByRole('region', { name: 'Signatures waiting on you' });

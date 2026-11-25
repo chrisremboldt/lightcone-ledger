@@ -1,39 +1,58 @@
 :root {
-  color-scheme: dark;
-  --paper: #0d0d0d;
-  --sheet: #141414;
-  --side: #1a1a1a;
-  --line: #2e2e38;
-  --line-2: #2e2e38;
-  --ink: #f9fafb;
-  --ink-2: #c6c6c6;
-  --muted: #8d8d8d;
-  --faint: #535353;
+  /*
+   * Two themes from one set of properties: each colour is light-dark(light, dark), resolved by color-scheme. With no
+   * choice stored, color-scheme follows the system; the switch in the bar sets data-theme on the root, and print is
+   * always light. tests/unit/theme-contrast.test.ts holds the text, badge and control pairs and their WCAG ratios.
+   */
+  color-scheme: light dark;
+  --paper: light-dark(#f4f4f2, #0d0d0d);
+  --sheet: light-dark(#ffffff, #141414);
+  --side: light-dark(#ebebe8, #1a1a1a);
+  --line: light-dark(#dadade, #2e2e38);
+  /* The border of a control: 3:1 against the surfaces controls sit on. */
+  --line-2: light-dark(#7e7e88, #6a6a76);
+  --ink: light-dark(#121212, #f9fafb);
+  --ink-2: light-dark(#3a3a3a, #c6c6c6);
+  --muted: light-dark(#5e5e5e, #8d8d8d);
+  --faint: light-dark(#666666, #858585);
   --magenta: #e2008c;
+  /* Magenta as text: the brand colour itself is too dark on the dark sheet and too light on the light one. */
+  --magenta-ink: light-dark(#b0006c, #ff4fae);
   --magenta-hover: color-mix(in srgb, var(--magenta) 84%, var(--paper));
-  --magenta-deep: #390023;
-  --magenta-soft: #390023;
+  --magenta-deep: light-dark(#fbe5f2, #390023);
+  --magenta-soft: light-dark(#fbe5f2, #390023);
+  --on-magenta: #ffffff;
   --button-min-height: 30px;
   --button-action-min-height: 34px;
+  /* The least a control's hit area measures each way: nothing extra with a mouse, 44px on a touch screen. */
+  --touch-target: 0px;
   --button-focus-ring: var(--magenta);
-  --amber: #ffb085;
-  --amber-mid: #ff600a;
-  --amber-soft: #401803;
-  --amber-line: #ff600a;
-  --plan: #0096e0;
-  --plan-soft: #002638;
-  --plan-line: #0096e0;
-  --flight: #e2008c;
-  --flight-soft: #390023;
+  --amber: light-dark(#9a3c00, #ffb085);
+  --amber-mid: light-dark(#e05400, #ff600a);
+  --amber-soft: light-dark(#fff0e6, #401803);
+  --amber-line: light-dark(#ff8a4a, #ff600a);
+  --plan: light-dark(#0069a8, #0096e0);
+  --plan-soft: light-dark(#e3f2fb, #002638);
+  --plan-line: light-dark(#4aa8dc, #0096e0);
+  --flight: light-dark(#b0006c, #ff4fae);
+  --flight-soft: light-dark(#fbe5f2, #390023);
   --flight-line: #e2008c;
-  --evidence: #8d8d8d;
-  --decision: #ffe11f;
-  --advisory: #ffe11f;
-  --advisory-soft: #403808;
-  --advisory-line: #ffe11f;
-  --alert: #e0002a;
-  --alert-soft: #3a0610;
+  --evidence: light-dark(#666666, #8d8d8d);
+  --decision: light-dark(#7a6200, #ffe11f);
+  --advisory: light-dark(#7a6200, #ffe11f);
+  --advisory-soft: light-dark(#fff8d1, #403808);
+  --advisory-line: light-dark(#d9b800, #ffe11f);
+  --alert: light-dark(#c4001f, #ff5a6e);
+  --alert-soft: light-dark(#fde8ec, #3a0610);
   --alert-line: #e0002a;
+  /* A shadow under a raised surface, and a surface laid over the page. */
+  --shadow: light-dark(rgb(20 20 30 / 18%), rgb(0 0 0 / 50%));
+  --scrim: light-dark(rgb(20 20 30 / 40%), rgb(0 0 0 / 55%));
+  --overlay: color-mix(in srgb, var(--sheet) 95%, transparent);
+  --on-plan: light-dark(#ffffff, #0d0d0d);
+  /* A page of a PDF is paper in either theme, and so is the ring around a chosen point on a map. */
+  --pdf-page: #ffffff;
+  --map-point-ring: #ffffff;
   --sans: 'Open Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
   --mono: 'Roboto Mono', ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
   font: 13px/1.45 var(--sans);
@@ -42,6 +61,19 @@
   font-synthesis: none;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
+}
+@media (pointer: coarse) {
+  :root {
+    --touch-target: 44px;
+    --button-min-height: 44px;
+    --button-action-min-height: 44px;
+  }
+}
+:root[data-theme='light'] {
+  color-scheme: light;
+}
+:root[data-theme='dark'] {
+  color-scheme: dark;
 }
 * {
   box-sizing: border-box;
@@ -66,6 +98,21 @@ textarea {
 }
 button {
   cursor: pointer;
+}
+button,
+summary,
+select,
+textarea,
+input:not([type='checkbox'], [type='radio'], [type='hidden']) {
+  min-height: var(--touch-target);
+}
+button,
+summary {
+  min-width: var(--touch-target);
+}
+/* A box to tick is reached through its label, so the label is the hit area. */
+label:has(> input[type='checkbox'], > input[type='radio']) {
+  min-height: var(--touch-target);
 }
 button:disabled {
   cursor: not-allowed;
@@ -94,6 +141,7 @@ a {
   border: 1px solid var(--line-2);
   border-radius: 6px;
   min-height: var(--button-min-height);
+  min-width: var(--touch-target);
   padding: 5px 11px;
   font-size: 12px;
   font-weight: 600;
@@ -114,7 +162,7 @@ a {
 }
 .button--primary {
   background: var(--magenta);
-  color: #fff;
+  color: var(--on-magenta);
   font-weight: 700;
 }
 .button--primary:hover:not(:disabled) {
@@ -210,6 +258,9 @@ a {
 .notice--observed strong,
 .notice--advisory strong {
   color: var(--ink);
+}
+.mark-accent {
+  fill: var(--magenta);
 }
 .arrow--left {
   transform: rotate(180deg);

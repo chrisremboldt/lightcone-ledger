@@ -1,3 +1,4 @@
+import { openAccount } from './account-fixture.js';
 import {
   test,
   expect,
@@ -150,6 +151,7 @@ test('switching operators isolates the flight monitor and direct API access', as
   await expect(page.getByTestId(`flight-row-${betaFlight.id}`)).toHaveCount(0);
   const forbidden = await request.get(`${api}/v1/flights/${alphaFlight.id}`, { headers: authorization(beta) });
   expect(forbidden.status()).toBe(404);
+  await openAccount(page);
   await page.getByRole('button', { name: 'Switch operator' }).click();
   await chooseOperator(page, 'Beta Inspection');
   await selectFlight(page, betaFlight.id);
@@ -886,6 +888,7 @@ test('operational polling keeps completed records in searchable history without 
         response.ok() &&
         response.request().headers().authorization === `Bearer ${beta}`,
     );
+    await openAccount(page);
     await page.getByRole('button', { name: 'Switch operator', exact: true }).click();
     await chooseOperator(page, 'Beta Inspection');
     await betaPresence;
@@ -902,6 +905,7 @@ test('operational polling keeps completed records in searchable history without 
     await Promise.allSettled(heldPresenceReads);
     await page.unroute(presenceRoute, controlledPresence);
   }
+  await openAccount(page);
   await page.getByRole('button', { name: 'Switch operator', exact: true }).click();
   await chooseOperator(page, 'Alpha Dispatch');
   await expect(historicalAttention).toHaveAttribute('data-attention', 'present');

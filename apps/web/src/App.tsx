@@ -65,6 +65,8 @@ interface MissionPanel {
 export interface AppProps {
   apiUrl: string;
   token: string | (() => Promise<string | null>);
+  /** Reporting a safety concern, which the bar keeps one click away. */
+  report?: ReactNode;
   account?: ReactNode;
   local?: boolean;
   /** Opens the safety section, beside the flights, at a destination. */
@@ -78,7 +80,7 @@ interface UnavailableFlight {
   message: string;
 }
 
-export function App({ apiUrl, token, account, local = false, onOpenSafety }: AppProps) {
+export function App({ apiUrl, token, report, account, local = false, onOpenSafety }: AppProps) {
   const client = useMemo(() => new LedgerClient(apiUrl, token, appFetch), [apiUrl, token]);
   const [principal, setPrincipal] = useState<Principal | null>(null);
   const [organizationName, setOrganizationName] = useState<string | null>(null);
@@ -547,6 +549,7 @@ export function App({ apiUrl, token, account, local = false, onOpenSafety }: App
         organizationName={organizationName}
         section={barSection(place)}
         offered={offered}
+        report={report}
         account={account}
         status={
           // Only the seeded fictional organizations are a simulation; an organization of its own is shown as itself.

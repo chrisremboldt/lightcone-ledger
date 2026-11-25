@@ -1,3 +1,4 @@
+import { openAccount } from './account-fixture.js';
 import { test, expect, type APIRequestContext, type Request, type Route } from '@playwright/test';
 import { randomUUID } from 'node:crypto';
 import type {
@@ -459,6 +460,7 @@ test('Dana briefs an exact release and Sam personally reviews its retained conte
     }
     const currentSam = await principal(request, releaseAuthor);
     if (acknowledgementGranted) expect(currentSam.revision).toBeGreaterThan(directorySam.revision);
+    await openAccount(page);
     await page.getByRole('button', { name: 'Switch operator', exact: true }).click();
     await page.getByRole('radio', { name: 'Alpha Dispatch', exact: true }).check();
     await page.getByRole('combobox', { name: 'Person', exact: true }).selectOption('actor');

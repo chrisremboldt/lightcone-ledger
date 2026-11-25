@@ -2,6 +2,7 @@ import { readFile } from 'node:fs/promises';
 import { randomUUID } from 'node:crypto';
 import { expect, test, type Page } from '@playwright/test';
 import { twoPageManualPdf } from './document-fixture.js';
+import { openAccount } from './account-fixture.js';
 
 async function openAs(page: Page, person: 'safety' | 'executive' | 'pilot') {
   await page.goto('/');
@@ -83,6 +84,7 @@ test('a received manual is reviewed, signed, issued and personally acknowledged 
   await review.getByRole('button', { name: 'Record review', exact: true }).click();
   await expect(page.getByTestId('sms-working-document')).toContainText('Reviewed, awaiting signature');
 
+  await openAccount(page);
   await page.getByRole('button', { name: 'Switch operator', exact: true }).click();
   await openAs(page, 'executive');
   await page
@@ -146,6 +148,7 @@ test('a received manual is reviewed, signed, issued and personally acknowledged 
   expect(signingAttempts[1]).toEqual(signingAttempts[0]);
   await page.unroute('**/v1/commands');
 
+  await openAccount(page);
   await page.getByRole('button', { name: 'Switch operator', exact: true }).click();
   await openAs(page, 'safety');
   await page
@@ -254,6 +257,7 @@ test('a received manual is reviewed, signed, issued and personally acknowledged 
   await expect(issued).toContainText('OEM Revision 4 in force');
   await expect(issued).not.toContainText(nextFileLabel);
 
+  await openAccount(page);
   await page.getByRole('button', { name: 'Switch operator', exact: true }).click();
   await page.setViewportSize({ width: 390, height: 844 });
   await openAs(page, 'pilot');
@@ -355,6 +359,7 @@ test('an authored policy with a signed copy is issued and read as searchable tex
   await review.getByRole('button', { name: 'Record review', exact: true }).click();
   await expect(page.getByTestId('sms-working-document')).toContainText('Reviewed, awaiting signature');
 
+  await openAccount(page);
   await page.getByRole('button', { name: 'Switch operator', exact: true }).click();
   await openAs(page, 'executive');
   await page
@@ -369,6 +374,7 @@ test('an authored policy with a signed copy is issued and read as searchable tex
   await sign.getByRole('button', { name: 'Sign and adopt', exact: true }).click();
   await expect(page.getByTestId('sms-working-document')).toContainText('Signed, ready to issue');
 
+  await openAccount(page);
   await page.getByRole('button', { name: 'Switch operator', exact: true }).click();
   await openAs(page, 'safety');
   await page.getByRole('button', { name: /^Documents/ }).click();

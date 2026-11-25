@@ -1,0 +1,161 @@
+/*
+ * A printed page: always light, the bar replaced by a heading of the organization, the place and the time of
+ * printing, without navigation, buttons or forms, and with every pane let out to its full length so nothing is cut
+ * at the first screen. Folded sections are opened just before printing (src/print.ts).
+ */
+@page {
+  margin: 14mm 12mm;
+}
+@media print {
+  :root,
+  :root[data-theme] {
+    color-scheme: light;
+    --shadow: transparent;
+  }
+  html,
+  body,
+  #root {
+    height: auto !important;
+    background: var(--sheet) !important;
+  }
+  :root {
+    font-size: 11.5px;
+  }
+
+  /* Every pane at its full length, in one column. */
+  *,
+  *::before,
+  *::after {
+    overflow: visible !important;
+    max-height: none !important;
+    box-shadow: none !important;
+    animation: none !important;
+    transition: none !important;
+  }
+  .workspace:not([hidden]),
+  .operations:not([hidden]),
+  .thread-layout:not([hidden]),
+  .thread-workspace:not([hidden]),
+  .records-area:not([hidden]),
+  .sms-workspace:not([hidden]),
+  main:not([hidden]) {
+    display: block !important;
+    height: auto !important;
+    min-height: 0 !important;
+  }
+  [style*='position: sticky'],
+  .thread-main,
+  .rail {
+    position: static !important;
+  }
+  .thread-main {
+    padding: 0 !important;
+  }
+
+  /* The bar becomes the heading; the navigation, the controls and the forms are not printed. */
+  .topbar {
+    display: block !important;
+    position: static !important;
+    min-height: 0 !important;
+    margin: 0 0 14px;
+    padding: 0 0 8px !important;
+    border-bottom: 1px solid var(--line-2) !important;
+    background: none !important;
+  }
+  .topbar > :not(.print-heading) {
+    display: none !important;
+  }
+  .print-heading {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 2px 16px;
+    color: var(--ink);
+    font-size: 11px;
+  }
+  .print-heading [data-print]::before {
+    content: attr(data-print);
+  }
+  .print-heading strong {
+    font-size: 13px;
+  }
+  .print-heading span:last-child {
+    margin-left: auto;
+    color: var(--ink-2);
+  }
+  /* What is hidden on screen, such as the flights while another section is open, is not printed either. */
+  [hidden],
+  [style*='display: none'],
+  nav,
+  aside.roster,
+  .ap-bar,
+  .ap-cursor,
+  .wt-card,
+  .button:not([aria-pressed]),
+  .topbar-menu-button,
+  form,
+  input,
+  select,
+  textarea,
+  dialog,
+  .history-navigation,
+  .axis-toggle {
+    display: none !important;
+  }
+  /* A choice that shows a count or a state, such as a rule's results, is printed as its words. */
+  .button[aria-pressed] {
+    min-height: 0;
+    padding: 0 6px 0 0;
+    border: 0;
+    background: none;
+    color: var(--ink);
+    font-weight: 500;
+  }
+  .button[aria-pressed='true'] {
+    font-weight: 700;
+  }
+  /* A disclosure's heading is kept as a heading, without the marker. */
+  summary {
+    list-style: none;
+    font-weight: 700;
+  }
+  summary::-webkit-details-marker {
+    display: none;
+  }
+  details::details-content {
+    content-visibility: visible;
+    height: auto;
+  }
+
+  /* Tables break across pages with their header rows repeated; a row is not split. */
+  table {
+    width: 100% !important;
+  }
+  thead {
+    display: table-header-group;
+  }
+  tr,
+  li,
+  .badge,
+  .notice {
+    break-inside: avoid;
+  }
+  h1,
+  h2,
+  h3,
+  h4 {
+    break-after: avoid;
+  }
+
+  /* A link that leaves Ledger shows where it goes; a link inside Ledger is just text on paper. */
+  a {
+    color: var(--ink) !important;
+  }
+  a[href^='http://']::after,
+  a[href^='https://']::after {
+    content: ' (' attr(href) ')';
+    color: var(--ink-2);
+    font-size: 0.9em;
+    overflow-wrap: anywhere;
+  }
+}

@@ -22,7 +22,7 @@
   padding: 6px 10px;
   font: inherit;
   font-size: 12px;
-  min-height: 34px;
+  min-height: max(34px, var(--touch-target));
 }
 .spatial-toolbar button.is-active {
   border-color: var(--magenta);
@@ -262,7 +262,7 @@
 }
 .detour-request input {
   width: 130px;
-  min-height: 34px;
+  min-height: max(34px, var(--touch-target));
   padding: 5px 8px;
   border: 1px solid var(--line);
   border-radius: 4px;
@@ -323,7 +323,7 @@
 }
 .spatial-map.telemetry-map .telemetry-point.is-selected {
   fill: var(--magenta);
-  stroke: #fff;
+  stroke: var(--map-point-ring);
   stroke-width: 1.5;
 }
 .spatial-map.telemetry-map .telemetry-late-ring {

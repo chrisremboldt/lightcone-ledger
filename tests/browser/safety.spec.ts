@@ -1,3 +1,4 @@
+import { openAccount } from './account-fixture.js';
 import { test, expect, type APIRequestContext, type Locator, type Route } from '@playwright/test';
 import { randomUUID } from 'node:crypto';
 import { isLostLinkEvaluation, linkStatusGrant, linkStatusRevocation, reportLinkStatus } from './mission-fixture.js';
@@ -324,6 +325,7 @@ test('a finding becomes an assessed hazard with an authored accepted control and
     await expect(page.getByTestId('finding-detail')).toContainText(origin.latestEvaluation.title);
 
     // A person granted medium risk acceptance reaches the same record from the same finding and signs.
+    await openAccount(page);
     await page.getByRole('button', { name: 'Switch operator', exact: true }).click();
     await page.getByRole('radio', { name: 'Alpha Dispatch', exact: true }).check();
     await page.getByRole('combobox', { name: 'Person', exact: true }).selectOption('actor');

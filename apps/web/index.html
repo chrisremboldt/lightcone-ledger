@@ -3,10 +3,19 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="theme-color" content="#0d0d0d" />
+    <meta name="color-scheme" content="light dark" />
+    <meta name="theme-color" content="#f4f4f2" media="(prefers-color-scheme: light)" />
+    <meta name="theme-color" content="#0d0d0d" media="(prefers-color-scheme: dark)" />
     <meta name="description" content="Ledger operations — an attributable, changing flight record." />
     <title>Ledger · Operations</title>
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <script>
+      // The theme a person chose in the bar (src/theme.ts), set before the first paint so the page does not flash.
+      try {
+        const theme = localStorage.getItem('ledger-theme');
+        if (theme === 'light' || theme === 'dark') document.documentElement.dataset.theme = theme;
+      } catch {}
+    </script>
   </head>
   <body>
     <div id="root"></div>

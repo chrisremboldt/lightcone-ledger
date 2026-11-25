@@ -17,7 +17,7 @@ const MORGAN = 'Morgan Ellis · Accountable executive';
 const JORDAN = 'Jordan Reyes · Pilot';
 
 function signIn(person: string): string {
-  return `Click Switch operator (top right), choose Fictional Valley Power, pick ${person} and click Open operations.`;
+  return `Click your name (top right), then Switch operator, choose Fictional Valley Power, pick ${person} and click Open operations.`;
 }
 
 const credential = { label: 'Fixture credential', value: CREDENTIAL };

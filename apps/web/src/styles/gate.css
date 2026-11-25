@@ -83,7 +83,7 @@
   border: 1px solid var(--line);
   border-radius: 12px;
   background: var(--sheet);
-  box-shadow: 0 18px 40px -28px rgba(23, 20, 15, 0.4);
+  box-shadow: 0 18px 40px -28px var(--shadow);
 }
 .gate-form {
   display: grid;
@@ -140,7 +140,7 @@
 }
 .local-person-choice select {
   min-width: 0;
-  min-height: 36px;
+  min-height: max(36px, var(--touch-target));
   padding: 8px 10px;
   border: 1px solid var(--line-2);
   border-radius: 6px;
@@ -156,7 +156,7 @@
   color: var(--muted);
 }
 .gate-form .button {
-  min-height: 36px;
+  min-height: max(36px, var(--touch-target));
   font-size: 13px;
 }
 .gate-invite {
@@ -263,7 +263,7 @@
 }
 .local-token-form input {
   min-width: 0;
-  min-height: 36px;
+  min-height: max(36px, var(--touch-target));
   padding: 8px 10px;
   border: 1px solid var(--line-2);
   border-radius: 6px;
@@ -274,7 +274,7 @@
   font-weight: 400;
 }
 .local-token-form .button {
-  min-height: 36px;
+  min-height: max(36px, var(--touch-target));
   font-size: 13px;
 }
 .local-token--lead .local-token-form {
@@ -297,7 +297,7 @@
   gap: 10px;
 }
 .gate-sign-in .button {
-  min-height: 40px;
+  min-height: max(40px, var(--touch-target));
 }
 .gate-account {
   display: grid;

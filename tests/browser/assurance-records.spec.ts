@@ -1,5 +1,6 @@
 import { test, expect, type Page } from '@playwright/test';
 import { ruleRow } from './rule-coverage-fixture.js';
+import { openAccount } from './account-fixture.js';
 
 /**
  * Safety assurance records on the screens (docs/design/assurance-records.md), for a new organization made with
@@ -22,7 +23,9 @@ async function signInAs(page: Page, person: string) {
   await page.getByRole('button', { name: `Sign in through ${new URL(issuer!).host}` }).click();
   await expect(page.getByRole('heading', { name: 'Test issuer' })).toBeVisible();
   await page.getByRole('link', { name: person, exact: true }).click();
+  await openAccount(page);
   await expect(page.getByRole('button', { name: 'Sign out' })).toBeVisible();
+  await page.keyboard.press('Escape');
 }
 
 async function openSafety(page: Page) {

@@ -31,6 +31,7 @@
   min-width: 0;
 }
 .brand {
+  min-height: var(--touch-target);
   display: flex;
   align-items: center;
   gap: 10px;
@@ -81,6 +82,7 @@
 }
 .topbar-sections {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   gap: 4px;
 }
@@ -91,6 +93,136 @@
   border-color: var(--line-2);
   background: var(--side);
   color: var(--ink);
+}
+/* The person's name opens their account and the theme, in a panel below it. */
+.topbar-disclosure {
+  position: relative;
+}
+.button.topbar-user {
+  border-color: transparent;
+  background: transparent;
+  font-weight: 400;
+  font-size: 13px;
+}
+.button.topbar-user[aria-expanded='true'] {
+  border-color: var(--line-2);
+  background: var(--side);
+}
+.topbar-account-panel {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  z-index: 30;
+  display: grid;
+  gap: 10px;
+  min-width: 220px;
+  padding: 12px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--sheet);
+  box-shadow: 0 12px 32px -16px var(--shadow);
+}
+.topbar-account-panel[hidden] {
+  display: none;
+}
+.topbar-account-panel .button {
+  justify-content: flex-start;
+}
+.topbar--narrow .topbar-disclosure {
+  display: contents;
+}
+.theme-switch {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--ink-2);
+  font-size: 12px;
+  white-space: nowrap;
+}
+.theme-switch select {
+  min-height: max(30px, var(--touch-target));
+  border: 1px solid var(--line-2);
+  border-radius: 6px;
+  padding: 0 6px;
+  background: var(--sheet);
+  color: var(--ink);
+  font-size: 12px;
+}
+.print-heading {
+  display: none;
+}
+
+/* The narrow bar: one row of the brand, the current section and the menu button; the menu opens below it. */
+.topbar.topbar--narrow {
+  flex-wrap: nowrap;
+  gap: 12px;
+  min-height: 52px;
+  padding: 4px 14px;
+}
+.topbar-current {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  font-weight: 700;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.topbar-menu-button {
+  flex: none;
+  min-width: max(44px, var(--touch-target));
+  min-height: max(36px, var(--touch-target));
+}
+.topbar-menu-button[aria-expanded='true'] {
+  background: var(--side);
+}
+.topbar-menu {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  left: 0;
+  display: grid;
+  gap: 14px;
+  max-height: calc(100dvh - 52px);
+  overflow-y: auto;
+  padding: 14px 14px 18px;
+  border-bottom: 1px solid var(--line);
+  background: var(--sheet);
+  box-shadow: 0 18px 32px -20px var(--shadow);
+}
+.topbar-menu[hidden] {
+  display: none;
+}
+.topbar-menu .topbar-operator {
+  flex-wrap: wrap;
+  white-space: normal;
+}
+.topbar-menu .topbar-user small {
+  display: inline;
+}
+.topbar-menu .topbar-sections {
+  flex-direction: column;
+  align-items: stretch;
+  gap: 4px;
+  padding-top: 10px;
+  border-top: 1px solid var(--line);
+}
+.topbar-menu .topbar-sections a {
+  justify-content: flex-start;
+  min-height: max(40px, var(--touch-target));
+  font-size: 14px;
+}
+.topbar-account {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  padding-top: 12px;
+  border-top: 1px solid var(--line);
+}
+.topbar-menu .simulation-popover {
+  position: static;
+  width: auto;
+  margin-top: 8px;
 }
 
 .simulation {
@@ -138,7 +270,7 @@
   border: 1px solid var(--line);
   border-radius: 10px;
   background: var(--sheet);
-  box-shadow: 0 12px 32px -16px rgba(23, 20, 15, 0.35);
+  box-shadow: 0 12px 32px -16px var(--shadow);
 }
 .simulation-popover h2 {
   margin: 0 0 6px;
@@ -325,7 +457,7 @@
   font-weight: 600;
 }
 .attention-line + .attention-line {
-  border-top: 1px solid rgba(239, 199, 127, 0.6);
+  border-top: 1px solid color-mix(in srgb, var(--amber-line) 60%, transparent);
 }
 .attention-line i {
   flex: none;
@@ -615,7 +747,7 @@
     padding: 18px 20px 40px;
   }
 }
-/* The top bar holds the organization, the clock, the person and up to six buttons: it tightens before it wraps. */
+/* The top bar holds the organization, the clock, the person and up to seven buttons: it tightens before it wraps. */
 @media (max-width: 1600px) {
   .topbar {
     gap: 12px;

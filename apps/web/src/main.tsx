@@ -20,6 +20,7 @@ import './styles/mission.css';
 import './styles/spatial.css';
 import './styles/sms.css';
 import './styles/records.css';
+import './styles/print.css';
 import { App, type AppProps } from './App.js';
 import { SmsApp, type ConfirmIdentity } from './SmsApp.js';
 import { DeploymentGate, OpenIdSignIn } from './OpenIdSignIn.js';
@@ -41,6 +42,7 @@ import { operators } from './labels.js';
 import { fictionalPeople } from './demo/fictional-organizations.js';
 import { developmentToken, heldOrganizations, offeredOrganizations } from './local-sign-in.js';
 import { appFetch, demonstration, mode } from './transport.js';
+import { openFoldedSectionsForPrint } from './print.js';
 
 const isLoopback = ['localhost', '127.0.0.1', '[::1]'].includes(window.location.hostname);
 // A demonstration build has no API: it shows the fictional people and answers from a recording.
@@ -218,12 +220,8 @@ function Workspace({ account, ...rest }: AppProps & { confirmIdentity?: ConfirmI
   // Any signed-in person can report a safety concern from every screen.
   const props = {
     ...rest,
-    account: (
-      <>
-        <Button onClick={() => setReporting(true)}>Report a safety concern</Button>
-        {account}
-      </>
-    ),
+    report: <Button onClick={() => setReporting(true)}>Report a safety concern</Button>,
+    account,
   };
   // Outside the bar: the flights keep a bar of their own, hidden, behind the safety section.
   const dialog = reporting && (
@@ -630,6 +628,8 @@ function Root() {
     />
   );
 }
+
+openFoldedSectionsForPrint();
 
 createRoot(document.getElementById('root')!).render(
   <React.StrictMode>

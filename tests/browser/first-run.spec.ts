@@ -3,6 +3,7 @@ import { randomUUID } from 'node:crypto';
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import type { OrganizationCoverageResponse } from '@ledger/contracts';
+import { openAccount } from './account-fixture.js';
 
 const api = (process.env.LEDGER_API_URL || 'http://127.0.0.1:4000').replace(/\/$/, '');
 
@@ -35,7 +36,9 @@ test('Enter in the development token field opens that token, not the person chos
   );
   await field.press('Enter');
   await opened;
+  await openAccount(page);
   await expect(page.getByRole('button', { name: 'Switch operator', exact: true })).toBeVisible();
+  await page.keyboard.press('Escape');
 });
 
 test('a database without the fictional organizations leads with the development token', async ({ page }) => {

@@ -1,4 +1,5 @@
 import { test, expect, type Page } from '@playwright/test';
+import { openAccount } from './account-fixture.js';
 
 /**
  * A new organization's first day in the safety area, from `pnpm org:create` alone. Its people sign in through the
@@ -19,7 +20,9 @@ async function signInAs(page: Page, person: string) {
   await page.getByRole('button', { name: `Sign in through ${new URL(issuer!).host}` }).click();
   await expect(page.getByRole('heading', { name: 'Test issuer' })).toBeVisible();
   await page.getByRole('link', { name: person, exact: true }).click();
+  await openAccount(page);
   await expect(page.getByRole('button', { name: 'Sign out' })).toBeVisible();
+  await page.keyboard.press('Escape');
 }
 
 async function openSafety(page: Page) {
@@ -179,6 +182,7 @@ test('a new organization drafts and adopts its matrix, accepts a risk, issues it
   await expect(onFile).not.toContainText(/complete|ready|conform/i);
 
   // The other person acknowledges the policy and cannot see who made the report.
+  await openAccount(page);
   await page.getByRole('button', { name: 'Sign out' }).click();
   await signInAs(page, 'Test Person');
   await openSafety(page);
