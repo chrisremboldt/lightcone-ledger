@@ -2,19 +2,20 @@ import type { ReactNode } from 'react';
 import type { LedgerClient } from '@ledger/contracts/client';
 import type { Principal } from '@ledger/contracts';
 import { Notice } from '@ledger/ui';
+import { FirstDay } from './FirstDay.js';
 import { PeopleArea } from './PeopleArea.js';
 import { RecordsArea } from './RecordsArea.js';
 import { RulesArea } from './RulesArea.js';
 import { PlaceLink } from './TopBar.js';
 import { barSection, sections, type BarSection, type Place } from './place.js';
 
-/** Whether a place is one of the sections every shell shows the same way: Records, Rules, People, or no place. */
+/** Whether a place is one every shell shows the same way: Setup, Records, Rules, People, or no place. */
 export function sharedSection(place: Place): boolean {
-  return ['records', 'rules', 'people', 'unknown'].includes(place.section);
+  return ['setup', 'records', 'rules', 'people', 'unknown'].includes(place.section);
 }
 
 /**
- * Records, Rules and People, which both the flights and the safety shell show under the same bar; an address that
+ * The first-day list, Records, Rules and People, which both the flights and the safety shell show under the same bar; an address that
  * names no place; and a section the person may not open.
  */
 export function SectionArea({
@@ -37,6 +38,7 @@ export function SectionArea({
         Ledger has no screen at this address. The link may be mistyped or cut short.
       </PlaceNotice>
     );
+  if (place.section === 'setup') return <FirstDay />;
   const section = barSection(place);
   if (principal && section && !offered.includes(section)) return <SectionUnavailable section={section} />;
   if (place.section === 'records')

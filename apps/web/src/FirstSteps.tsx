@@ -33,7 +33,7 @@ export function FirstSteps({ onStart, ...input }: FirstStepsInput & { onStart: (
             </span>
             <span className="sms-row-facts">
               <Badge tone={step.onFile ? 'planned' : 'attention'}>{step.onFile ? 'On file' : 'Not on file'}</Badge>
-              {step.action?.mine && step.action.target.kind !== 'people' && (
+              {step.action?.mine && (
                 <Button kind="next" onClick={() => onStart(step.action!.target)}>
                   {step.action.label}
                 </Button>

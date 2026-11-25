@@ -241,7 +241,7 @@ async function importFile(area: Locator, recordTypeTitle: string, name: string, 
   await expect(area.getByText(new RegExp(`^Recorded ${rows} of ${rows} rows\\.$`))).toBeVisible();
 }
 
-test('an organization without an order source opens on its flights on record, each opening its file', async ({
+test('an organization without an order source has its flights on record under Flights, each opening its file', async ({
   page,
 }) => {
   test.skip(!newOrganizationToken, 'Set LEDGER_BROWSER_NEW_ORGANIZATION_TOKEN to a token pnpm org:create printed');
@@ -256,6 +256,9 @@ test('an organization without an order source opens on its flights on record, ea
   if (await disclosure.count()) await disclosure.click();
   await field.fill(newOrganizationToken!);
   await page.getByRole('button', { name: 'Open with this token', exact: true }).click();
+  // Until it adopts a rule pack, the organization opens on its first-day list; Flights opens its flights on record.
+  await expect(page).toHaveURL(/\/(setup|flights)$/);
+  if (page.url().endsWith('/setup')) await page.getByRole('link', { name: 'Flights', exact: true }).click();
 
   const home = page.getByTestId('records-home');
   await expect(home.getByRole('heading', { name: 'Flights on record', exact: true })).toBeVisible();

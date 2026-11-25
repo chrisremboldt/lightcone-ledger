@@ -11,6 +11,7 @@ import { returnAddress } from '../../apps/web/src/openid-connect.js';
 
 const places: Place[] = [
   { section: 'start' },
+  { section: 'setup' },
   { section: 'flights' },
   { section: 'flights', flightId: '6f1d2c4e-0000-4000-8000-000000000001' },
   { section: 'flights', flightId: 'RIDGE-AC-1 morning/2', findingId: 'f-1' },
@@ -101,6 +102,7 @@ describe('places and their addresses', () => {
     '/rules/coverage/a/b',
     '/rules/findings/a/b/c/d',
     '/people/someone/else',
+    '/setup/more',
     '/flights//x',
     '/flights/%E0%A4%A',
   ])('%s goes to the place that says nothing is here', (path) => {
@@ -138,6 +140,7 @@ describe('page titles', () => {
     expect(placeTitle({ section: 'safety', view: 'hazards' })).toBe('Hazard register · Safety · Ledger');
     expect(placeTitle({ section: 'rules', pane: 'open' })).toBe('Open findings · Rules · Ledger');
     expect(placeTitle({ section: 'people' })).toBe('People · Ledger');
+    expect(placeTitle({ section: 'setup' })).toBe('Setup · Ledger');
   });
 
   test('never name a safety report', () => {

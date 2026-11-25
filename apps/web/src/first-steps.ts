@@ -1,5 +1,20 @@
-import type { Principal, RiskAuthority, SmsHomeResponse, SmsRecordSummary } from '@ledger/contracts';
-import { riskAuthorityValues } from '@ledger/contracts';
+import type {
+  AdoptionRuleCoverageResponse,
+  NamedSubject,
+  OrganizationPerson,
+  PackAdoptionRecord,
+  Principal,
+  RecordProduction,
+  RiskAuthority,
+  RulePackSummary,
+  SmsHomeResponse,
+  SmsRecordSummary,
+} from '@ledger/contracts';
+import { ACCEPTED_CONTROL_PACK_ID, OPERATOR_RECORD_SOURCE_ID, riskAuthorityValues } from '@ledger/contracts';
+import { time, timeZoneLabel } from './format.js';
+import { canKeepRecords } from './operator-records.js';
+import type { Place } from './place.js';
+import { subjectLabel } from './subject-label.js';
 
 type Person = SmsHomeResponse['people'][number];
 
@@ -213,4 +228,319 @@ export function firstSteps(input: FirstStepsInput): FirstStep[] {
 /** Whether the safety home carries what the list needs; recordings made before it was added do not. */
 export function firstStepsReadable(home: Pick<SmsHomeResponse, 'people'>): boolean {
   return home.people.every((person) => 'writes' in person && 'readsReports' in person && 'configures' in person);
+}
+
+/** Where an item's action leads, and what the move there keeps: a draft policy opens its form, a draft matrix its signing. */
+export function firstStepPlace(target: FirstStepTarget): { place: Place; extras: Record<string, unknown> } {
+  switch (target.kind) {
+    case 'people':
+      return { place: { section: 'people' }, extras: {} };
+    case 'new_matrix':
+      return { place: { section: 'safety', view: 'new-risk-matrix' }, extras: {} };
+    case 'new_policy':
+      return { place: { section: 'safety', view: 'documents' }, extras: { drafting: true } };
+    case 'new_report':
+      return { place: { section: 'safety', view: 'reports' }, extras: {} };
+    case 'record':
+      return {
+        place: { section: 'safety', view: 'record', kind: target.recordKind, id: target.id },
+        extras: target.recordKind === 'document' ? {} : { sign: true },
+      };
+  }
+}
+
+// The whole first day, in the order of the setup guide.
+
+/** A step's state: on file or not, read (coverage, which says something rather than being ticked), or unreadable. */
+export type FirstDayState = 'on_file' | 'not_on_file' | 'read' | 'unreadable';
+
+export interface FirstDayAction {
+  label: string;
+  who: string;
+  /** The exact place in Ledger where it starts; absent for a step done on a command line. */
+  place?: Place;
+  extras?: Record<string, unknown>;
+  /** For a step done on a command line: the command that starts it and the guide section that walks it. */
+  command?: string;
+  guide?: string;
+  /** Whether the signed-in person may take it here. */
+  mine: boolean;
+}
+
+export interface FirstDayStep {
+  key: 'people' | 'records' | 'pack-file' | 'adoption' | 'coverage' | 'safety' | 'production';
+  number: number;
+  title: string;
+  state: FirstDayState;
+  optional?: true;
+  /** What is on file, in the organization's own words and ids; or what is not. */
+  detail: string;
+  action?: FirstDayAction;
+  /** The safety items of the safety step, each as the safety home lists it. */
+  items?: FirstStep[];
+}
+
+/** What the list reads. A read the person may not make, or that failed, is null. */
+export interface FirstDayInput {
+  principal: Pick<Principal, 'id' | 'name' | 'capabilities' | 'observationGrants'>;
+  /** People who may sign in, the first page of them, and whether more exist. */
+  people: { people: readonly Pick<OrganizationPerson, 'id' | 'name'>[]; more: boolean } | null;
+  /** The first few subjects of each kind on record. */
+  subjects: Record<'aircraft' | 'person' | 'flight', readonly NamedSubject[]> | null;
+  packs: readonly RulePackSummary[] | null;
+  adoptions: readonly PackAdoptionRecord[] | null;
+  /** The coverage of each adoption in effect. */
+  coverage: readonly AdoptionRuleCoverageResponse[] | null;
+  safety: Omit<FirstStepsInput, 'principal'> | null;
+  /** The latest production of records, if any. */
+  productions: { latest: Pick<RecordProduction, 'producedAt' | 'producedBy' | 'requestedBy'> | null } | null;
+}
+
+const ANYONE_READING_RECORDS = 'Anyone who may read records';
+
+function list(values: readonly string[], more = false): string {
+  if (more) return `${values.join(', ')} and more`;
+  if (values.length <= 1) return values.join('');
+  return `${values.slice(0, -1).join(', ')} and ${values[values.length - 1]}`;
+}
+
+function may(principal: FirstDayInput['principal'], capability: string): boolean {
+  return (principal.capabilities as readonly string[]).includes(capability);
+}
+
+function unreadable(step: Omit<FirstDayStep, 'state' | 'detail'>, what: string): FirstDayStep {
+  return { ...step, state: 'unreadable', detail: `Your role does not let you read ${what}, or it could not be read.` };
+}
+
+function peopleStep({ principal, people }: FirstDayInput): FirstDayStep {
+  const action: FirstDayAction = {
+    label: 'Add a person on the People screen',
+    who: ADMINISTRATOR,
+    place: { section: 'people' },
+    mine: may(principal, 'authority:write'),
+  };
+  const step = { key: 'people' as const, number: 1, title: 'The people who sign in' };
+  if (!people) return unreadable({ ...step, action }, 'who may sign in');
+  const named = people.people.map((person) => person.name);
+  if (named.length >= 2) return { ...step, state: 'on_file', detail: `${list(named, people.more)} may sign in.` };
+  // One person is a whole organization for a sole operator: it is on file, and the way to add another stays.
+  if (named.length === 1)
+    return {
+      ...step,
+      state: 'on_file',
+      detail: `Only ${named[0]} may sign in. Add anyone else who will use Ledger.`,
+      action,
+    };
+  return { ...step, state: 'not_on_file', detail: 'No one may sign in.', action };
+}
+
+const subjectKinds = [
+  ['aircraft', 'Aircraft'],
+  ['person', 'Pilots'],
+  ['flight', 'Flights'],
+] as const;
+
+function recordsStep({ principal, subjects }: FirstDayInput): FirstDayStep {
+  const action: FirstDayAction = {
+    label: 'Import or enter records under Records',
+    who: 'A person who keeps your records',
+    place: { section: 'records', pane: 'import' },
+    mine: canKeepRecords(principal, OPERATOR_RECORD_SOURCE_ID),
+  };
+  const step = { key: 'records' as const, number: 2, title: 'An aircraft, a pilot and a flight on record' };
+  if (!subjects) return unreadable({ ...step, action }, 'the records on file');
+  const shown = subjectKinds.map(([kind, label]) => {
+    const found = subjects[kind];
+    return `${label}: ${found.length ? list(found.slice(0, 2).map(subjectLabel), found.length > 2) : 'none on record'}.`;
+  });
+  const onFile = subjectKinds.every(([kind]) => subjects[kind].length > 0);
+  return { ...step, state: onFile ? 'on_file' : 'not_on_file', detail: shown.join(' '), ...(onFile ? {} : { action }) };
+}
+
+function packFileStep({ packs }: FirstDayInput): FirstDayStep {
+  const action: FirstDayAction = {
+    label: 'Write your waiver or procedure as a pack, build it and load the file',
+    who: 'Someone who can edit a text file writes and builds it; whoever runs the Ledger server loads it',
+    command: 'pnpm pack:new <name> --kind waiver',
+    guide: 'Set up Ledger for your organization, section 6, “Bring your own waiver and procedures”',
+    mine: false,
+  };
+  const step = { key: 'pack-file' as const, number: 3, title: 'Your own waiver or procedure, offered as a rule pack' };
+  if (!packs) return unreadable({ ...step, action }, 'the rule packs offered');
+  const own = packs.flatMap((pack) =>
+    pack.origin.kind === 'organization_file'
+      ? [`${pack.title} version ${pack.version}, from the file ${pack.origin.file}`]
+      : [],
+  );
+  if (own.length) return { ...step, state: 'on_file', detail: `${list(own)}.` };
+  return {
+    ...step,
+    state: 'not_on_file',
+    detail: 'No pack file of your own is loaded; only the packs built into Ledger are offered.',
+    action,
+  };
+}
+
+/** The adoptions a person made that are in effect or will be: not the rules Ledger assembles from accepted controls. */
+export function adoptionsInForce(adoptions: readonly PackAdoptionRecord[]): PackAdoptionRecord[] {
+  return adoptions.filter(
+    (adoption) =>
+      adoption.pack.packId !== ACCEPTED_CONTROL_PACK_ID &&
+      ['pending', 'scheduled', 'effective'].includes(adoption.state),
+  );
+}
+
+function rulePackStep({ principal, adoptions }: FirstDayInput): FirstDayStep {
+  const action: FirstDayAction = {
+    label: 'Adopt a rule pack on the Rules screen',
+    who: 'A person who may adopt rule packs',
+    place: { section: 'rules', pane: 'coverage' },
+    mine: may(principal, 'pack:adopt'),
+  };
+  const step = { key: 'adoption' as const, number: 4, title: 'A rule pack adopted' };
+  if (!adoptions) return unreadable({ ...step, action }, 'the adopted rule packs');
+  const inForce = adoptionsInForce(adoptions).map(
+    (adoption) =>
+      `${adoption.pack.title} version ${adoption.pack.version}, ${adoption.mode === 'shadow' ? 'in shadow' : 'active'}`,
+  );
+  if (inForce.length) return { ...step, state: 'on_file', detail: `${list(inForce)}.` };
+  return { ...step, state: 'not_on_file', detail: 'No rule pack is adopted.', action };
+}
+
+/** One line of what an adoption's coverage says: how many rules have a subject needing attention or a record missing. */
+export function coverageLine(coverage: AdoptionRuleCoverageResponse): string {
+  const attention = coverage.sections.reduce((sum, section) => sum + section.needingAttention, 0);
+  const missing = coverage.sections.reduce((sum, section) => sum + section.withNoRecord, 0);
+  const rules = (count: number) => `${count} ${count === 1 ? 'rule' : 'rules'}`;
+  const said =
+    attention || missing
+      ? [
+          attention ? `${rules(attention)} with a subject needing attention` : '',
+          missing ? `${attention ? missing : rules(missing)} with a record not on file` : '',
+        ]
+          .filter(Boolean)
+          .join(', ')
+      : 'no rule with a subject needing attention or a record not on file';
+  return `${coverage.title}${coverage.mode === 'shadow' ? ' (in shadow)' : ''}: ${said}.`;
+}
+
+function coverageStep({ principal, adoptions, coverage }: FirstDayInput): FirstDayStep {
+  const first = adoptions ? adoptionsInForce(adoptions)[0] : undefined;
+  const action: FirstDayAction = {
+    label: 'Read coverage on the Rules screen',
+    who: ANYONE_READING_RECORDS,
+    place: { section: 'rules', pane: 'coverage', ...(first ? { packId: first.pack.packId } : {}) },
+    mine: may(principal, 'evidence:read'),
+  };
+  const step = { key: 'coverage' as const, number: 5, title: 'What coverage says' };
+  if (!coverage) return unreadable({ ...step, action }, 'coverage');
+  if (!coverage.length)
+    return { ...step, state: 'not_on_file', detail: 'Coverage is read once a rule pack is adopted and in effect.' };
+  return { ...step, state: 'read', detail: coverage.map(coverageLine).join(' '), action };
+}
+
+function safetyStep({ principal, safety }: FirstDayInput): FirstDayStep {
+  const step = {
+    key: 'safety' as const,
+    number: 6,
+    title: 'Who may adopt and accept risk, a risk matrix, a safety policy and who receives safety reports',
+  };
+  if (!safety || !firstStepsReadable(safety.home)) return unreadable(step, 'the safety records');
+  const items = firstSteps({ ...safety, principal });
+  const onFile = items.filter((item) => item.onFile).length;
+  return {
+    ...step,
+    state: onFile === items.length ? 'on_file' : 'not_on_file',
+    detail: `${onFile} of ${items.length} on file.`,
+    items,
+  };
+}
+
+function productionStep({ principal, productions }: FirstDayInput): FirstDayStep {
+  const action: FirstDayAction = {
+    label: 'Produce records under Records',
+    who: ANYONE_READING_RECORDS,
+    place: { section: 'records', pane: 'produce' },
+    mine: may(principal, 'evidence:read'),
+  };
+  const step = {
+    key: 'production' as const,
+    number: 7,
+    title: 'Records produced for someone who asks for them',
+    optional: true as const,
+  };
+  if (!productions) return unreadable({ ...step, action }, 'the records produced');
+  const latest = productions.latest;
+  if (latest)
+    return {
+      ...step,
+      state: 'on_file',
+      detail: `Latest produced ${time(latest.producedAt, true)} ${timeZoneLabel()}${latest.producedBy.name ? ` by ${latest.producedBy.name}` : ''}, asked for by ${latest.requestedBy}.`,
+    };
+  return {
+    ...step,
+    state: 'not_on_file',
+    detail: 'No records have been produced. This step is for when an inspector or a customer asks for records.',
+    action,
+  };
+}
+
+/**
+ * The whole first day, in the order of the setup guide: each step with what is on file and what is not, and the one
+ * action that starts it with who may take it. Every state comes from what is on record; it never says the whole is
+ * complete.
+ */
+export function firstDaySteps(input: FirstDayInput): FirstDayStep[] {
+  return [
+    peopleStep(input),
+    recordsStep(input),
+    packFileStep(input),
+    rulePackStep(input),
+    coverageStep(input),
+    safetyStep(input),
+    productionStep(input),
+  ];
+}
+
+/** Whether a person may take one of the steps that open the list: add people, keep records or adopt rule packs. */
+export function mayStartFirstDay(principal: FirstDayInput['principal']): boolean {
+  return (
+    may(principal, 'authority:write') ||
+    may(principal, 'pack:adopt') ||
+    canKeepRecords(principal, OPERATOR_RECORD_SOURCE_ID)
+  );
+}
+
+/** Whether a person can read what steps 1 to 4 need: who signs in, the records on file, the packs and adoptions. */
+function readsFirstDay(principal: FirstDayInput['principal']): boolean {
+  return may(principal, 'flight:read') && may(principal, 'evidence:read');
+}
+
+/**
+ * Whether the workspace opens on the list rather than where it opened before: for a person who reads flights and may
+ * add people, keep records or adopt rule packs, while the organization has adopted no rule pack. Null adoptions (not
+ * read) never open it.
+ */
+export function opensOnFirstDay(
+  principal: FirstDayInput['principal'],
+  adoptions: readonly PackAdoptionRecord[] | null,
+): boolean {
+  return (
+    readsFirstDay(principal) &&
+    mayStartFirstDay(principal) &&
+    adoptions !== null &&
+    adoptionsInForce(adoptions).length === 0
+  );
+}
+
+/**
+ * Whether the bar offers "Setup": to the same people, while one of steps 1 to 4 or 6 is not on file. Coverage is read,
+ * not ticked, and producing records is optional. A step that could not be read hides the entry rather than show it on
+ * a guess.
+ */
+export function offersSetup(principal: FirstDayInput['principal'], steps: readonly FirstDayStep[]): boolean {
+  if (!readsFirstDay(principal) || !mayStartFirstDay(principal)) return false;
+  const counted = steps.filter((step) => step.key !== 'coverage' && step.key !== 'production');
+  if (counted.some((step) => step.state === 'unreadable')) return false;
+  return counted.some((step) => step.state !== 'on_file');
 }

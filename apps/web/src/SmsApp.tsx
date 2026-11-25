@@ -22,7 +22,7 @@ import { DocumentLibrary } from './SmsDocumentLibrary.js';
 import { RegisterMore } from './SmsRegisterTools.js';
 import { FindingHazard, HazardRegister, RecordRow } from './SmsHazards.js';
 import { FirstSteps } from './FirstSteps.js';
-import type { FirstStepTarget } from './first-steps.js';
+import { firstStepPlace, type FirstStepTarget } from './first-steps.js';
 import { RiskMatrixForm } from './RiskMatrixForm.js';
 import { mayRecordReports, ReportsRegister } from './SmsReports.js';
 import { AssuranceActionsDue, AssuranceRegister } from './SmsAssurance.js';
@@ -225,11 +225,8 @@ export function SmsApp({ apiUrl, token, account, local = false, confirmIdentity,
   const open = (record: Pick<SmsRecordSummary, 'id' | 'kind'>, sign = false, issueId?: string, read = false) =>
     setScreen({ view: 'record', id: record.id, kind: record.kind, sign, issueId, read });
   const start = (target: FirstStepTarget) => {
-    if (target.kind === 'new_matrix') setScreen({ view: 'new-matrix' });
-    else if (target.kind === 'new_policy') setScreen({ view: 'documents', drafting: true });
-    else if (target.kind === 'new_report') setScreen({ view: 'reports' });
-    else if (target.kind === 'record')
-      open({ id: target.id, kind: target.recordKind }, target.recordKind !== 'document');
+    const { place: shown, extras: kept } = firstStepPlace(target);
+    goTo(shown, { extras: kept });
   };
   const recordScreen = screen.view === 'record' ? screen : null;
   const onReports = screen.view === 'reports' || recordScreen?.kind === 'report';

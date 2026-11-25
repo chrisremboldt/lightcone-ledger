@@ -25,7 +25,10 @@ export interface RecordDraft {
 export const typeKey = (type: Pick<RecordTypeSummary, 'recordType' | 'recordVersion'>) =>
   `${type.recordType}@${type.recordVersion}`;
 
-export function canKeepRecords(principal: Principal | null, sourceId: string): boolean {
+export function canKeepRecords(
+  principal: Pick<Principal, 'capabilities' | 'observationGrants'> | null,
+  sourceId: string,
+): boolean {
   return Boolean(
     principal?.capabilities.includes('input:write') &&
     principal.observationGrants?.some(

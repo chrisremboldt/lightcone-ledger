@@ -1,9 +1,10 @@
-import { useEffect, useState, type MouseEvent, type ReactNode } from 'react';
+import { useContext, useEffect, useState, type MouseEvent, type ReactNode } from 'react';
 import type { Capability, Principal } from '@ledger/contracts';
 import { Mark } from '@ledger/ui';
 import { time, timeZone, timeZoneLabel } from './format.js';
 import { organizationLabel, roleLabel } from './labels.js';
-import { addressOf, goTo, lastPlaceIn, sections, type BarSection, type Place } from './place.js';
+import { FirstDayContext } from './first-day-context.js';
+import { addressOf, goTo, lastPlaceIn, sections, usePlace, type BarSection, type Place } from './place.js';
 
 /** Where each section of the bar opens. */
 const sectionPlaces: Record<BarSection, Place> = {
@@ -83,6 +84,9 @@ export function TopBar({
   offered: BarSection[];
   account?: ReactNode;
 }) {
+  // "Setup" leads to the first-day list while a step of it is not on file, for a person who may take one.
+  const setup = useContext(FirstDayContext).offersSetup;
+  const onSetup = usePlace().place.section === 'setup';
   return (
     <header className="topbar">
       <PlaceLink className="brand" place={{ section: 'start' }}>
@@ -110,6 +114,11 @@ export function TopBar({
       )}
       {offered.length > 0 && (
         <nav className="topbar-sections" aria-label="Sections">
+          {(setup || onSetup) && (
+            <PlaceLink className="button button--quiet records-toggle" place={{ section: 'setup' }} current={onSetup}>
+              Setup
+            </PlaceLink>
+          )}
           {sections
             .filter(([value]) => offered.includes(value))
             .map(([value, label]) => {

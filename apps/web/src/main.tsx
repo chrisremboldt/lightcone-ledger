@@ -34,6 +34,9 @@ import { SafetyRecordLink } from './area-controls.js';
 import { blankSignedInReport, PublicReportPage, SubmitReportDialog } from './SafetyReportSubmission.js';
 import { safetyDestinationPlace, type FlightLinks, type SafetyDestination } from './safety-navigation.js';
 import { forgetPlaces, goTo, usePlace } from './place.js';
+import { useFirstDay } from './FirstDay.js';
+import { FirstDayContext } from './first-day-context.js';
+import { opensOnFirstDay } from './first-steps.js';
 import { operators } from './labels.js';
 import { fictionalPeople } from './demo/fictional-organizations.js';
 import { developmentToken, heldOrganizations, offeredOrganizations } from './local-sign-in.js';
@@ -234,11 +237,15 @@ function Workspace({ account, ...rest }: AppProps & { confirmIdentity?: ConfirmI
   const [program, setProgram] = React.useState<Program | null>(null);
   const [failed, setFailed] = React.useState(false);
   const { place } = usePlace();
+  const client = React.useMemo(
+    () => new LedgerClient(props.apiUrl, props.token, appFetch),
+    [props.apiUrl, props.token],
+  );
+  const firstDay = useFirstDay(client, place.section);
   // Where this person was in each section is theirs alone: forgotten when they leave.
   React.useEffect(() => forgetPlaces, []);
   React.useEffect(() => {
     let stopped = false;
-    const client = new LedgerClient(props.apiUrl, props.token, appFetch);
     client
       .request<Program>('/v1/sms/program')
       .then((shown) => !stopped && setProgram(shown))
@@ -246,7 +253,7 @@ function Workspace({ account, ...rest }: AppProps & { confirmIdentity?: ConfirmI
     return () => {
       stopped = true;
     };
-  }, [props.apiUrl, props.token]);
+  }, [client]);
   const openSafety = React.useCallback((destination: SafetyDestination) => {
     const { place: shown, extras } = safetyDestinationPlace(destination);
     goTo(shown, { extras });
@@ -265,14 +272,26 @@ function Workspace({ account, ...rest }: AppProps & { confirmIdentity?: ConfirmI
     }),
     [],
   );
-  const known = failed || program !== null;
+  const known = (failed || program !== null) && firstDay.decision !== undefined;
   // Keep the rule that picks the first screen: flights for an organization that records them, else its safety home.
   const opensOnFlights = failed || (program !== null && (program.flights ?? !program.active));
+  // Before the first rule pack is adopted, a person who reads flights and may add people, keep records or adopt packs
+  // opens on the first-day list instead.
+  const opensOnSetup =
+    opensOnFlights &&
+    Boolean(firstDay.decision && opensOnFirstDay(firstDay.decision.principal, firstDay.decision.adoptions));
   React.useEffect(() => {
     if (!known) return;
     if (place.section === 'start' || (place.section === 'flights' && !opensOnFlights))
-      goTo(opensOnFlights ? { section: 'flights' } : { section: 'safety', view: 'home' }, { replace: true });
-  }, [known, opensOnFlights, place.section]);
+      goTo(
+        opensOnSetup
+          ? { section: 'setup' }
+          : opensOnFlights
+            ? { section: 'flights' }
+            : { section: 'safety', view: 'home' },
+        { replace: true },
+      );
+  }, [known, opensOnFlights, opensOnSetup, place.section]);
   if (!known)
     return props.local && localAllowed ? (
       <Gate>
@@ -285,20 +304,22 @@ function Workspace({ account, ...rest }: AppProps & { confirmIdentity?: ConfirmI
     );
   if (!opensOnFlights)
     return (
-      <>
+      <FirstDayContext.Provider value={firstDay.shown}>
         <SmsApp {...props} />
         {dialog}
-      </>
+      </FirstDayContext.Provider>
     );
   const inSafety = place.section === 'safety';
   return (
-    <SafetyRecordLink.Provider value={openRecord}>
-      {dialog}
-      <div style={{ display: inSafety ? 'none' : 'contents' }}>
-        <App {...props} onOpenSafety={openSafety} />
-      </div>
-      {inSafety && <SmsApp {...props} flights={links} />}
-    </SafetyRecordLink.Provider>
+    <FirstDayContext.Provider value={firstDay.shown}>
+      <SafetyRecordLink.Provider value={openRecord}>
+        {dialog}
+        <div style={{ display: inSafety ? 'none' : 'contents' }}>
+          <App {...props} onOpenSafety={openSafety} />
+        </div>
+        {inSafety && <SmsApp {...props} flights={links} />}
+      </SafetyRecordLink.Provider>
+    </FirstDayContext.Provider>
   );
 }
 

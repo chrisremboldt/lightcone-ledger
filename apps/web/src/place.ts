@@ -12,6 +12,8 @@ import { recordSubjectKinds, type RecordSubjectKind } from './record-subject-kin
 export type Place =
   /** The bare address: the workspace opens on the first section the organization uses. */
   | { section: 'start' }
+  /** The organization's first day: each setup step, what is on file for it and the action that starts it. */
+  | { section: 'setup' }
   | { section: 'flights'; flightId?: string; findingId?: string; mission?: boolean }
   | { section: 'safety'; view: SafetyView; choices?: RegisterChoices }
   | { section: 'safety'; view: 'record'; kind: SmsRecordKind; id: string; issueId?: string }
@@ -88,6 +90,8 @@ export function placeAddress(place: Place): { path: string; query: Record<string
   switch (place.section) {
     case 'start':
       return { path: '/', query: {} };
+    case 'setup':
+      return { path: '/setup', query: {} };
     case 'flights':
       if (!place.flightId) return { path: '/flights', query: {} };
       if (place.findingId) return { path: at('flights', place.flightId, 'findings', place.findingId), query: {} };
@@ -164,6 +168,8 @@ export function placeFromAddress(pathname: string, search = ''): Place {
   const query = new URLSearchParams(search);
   const [section, ...rest] = parts;
   switch (section) {
+    case 'setup':
+      return rest.length === 0 ? { section: 'setup' } : unknown;
     case 'flights': {
       if (rest.length === 0) return { section: 'flights' };
       const [flightId, next, findingId] = rest;
@@ -251,9 +257,9 @@ export function samePlace(one: Place, other: Place): boolean {
   return placePath(one) === placePath(other);
 }
 
-/** The section a place belongs to in the bar; the start and an unknown address belong to none. */
+/** The section a place belongs to in the bar; the start, the setup list and an unknown address belong to none. */
 export function barSection(place: Place): BarSection | null {
-  return place.section === 'start' || place.section === 'unknown' ? null : place.section;
+  return place.section === 'start' || place.section === 'setup' || place.section === 'unknown' ? null : place.section;
 }
 
 const recordKindLabels: Record<SmsRecordKind, string> = {
@@ -290,6 +296,8 @@ export function placeTitle(place: Place, thing?: string): string {
   switch (place.section) {
     case 'start':
       return 'Ledger';
+    case 'setup':
+      return title('Setup');
     case 'unknown':
       return title('Not found here');
     case 'flights':
