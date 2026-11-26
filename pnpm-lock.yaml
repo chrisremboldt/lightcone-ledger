@@ -80,6 +80,9 @@ importers:
       '@ledger/standard-packs':
         specifier: workspace:*
         version: link:../../packages/standard-packs
+      '@ledger/workers':
+        specifier: workspace:*
+        version: link:../workers
       '@sinclair/typebox':
         specifier: 0.34.52
         version: 0.34.52

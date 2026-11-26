@@ -1,6 +1,6 @@
 # Deploy Ledger
 
-This guide takes you from an empty server to your own organization in Ledger: its people signed in, its rule packs adopted and its records imported. It covers the container image, PostgreSQL with PostGIS and its database roles, object storage, every environment variable, migrations, creating the organization, sign-in, credentials for sources and services, the message broker, backups, health checks, and what is not hardened.
+This guide takes you from an empty server to your own organization in Ledger: its people signed in, its rule packs adopted and its records imported. It covers the container image, PostgreSQL and its database roles, object storage or files on disk, every environment variable, migrations, creating the organization, sign-in, credentials for sources and services, the message broker, backups, health checks, and what is not hardened. [Ledger Lite](#ledger-lite) is the smallest arrangement: one Ledger container and plain PostgreSQL.
 
 Ledger is pre-release. Read [Status and limits](../README.md#status-and-limits) first. Ledger keeps a record and checks it against the rules your organization adopts; it reports what is on file and what is not. It does not make anyone conform to a regulation.
 
@@ -10,7 +10,7 @@ Commands marked **unverified** were written from the code, the configuration or 
 
 On one computer (Docker 29 with Compose 5.5, arm64), in containers of its own, with `*.localhost` names in place of real ones and certificates from a local certificate authority. [`infra/verify-deployment`](../../infra/verify-deployment/README.md) repeats all of it with one command, `node infra/verify-deployment/verify.mjs all`; run it again before you rely on a new version.
 
-- `infra/compose.production.yaml` with its `database`, `storage`, `proxy` and `keycloak` profiles: the image, PostgreSQL 17 with PostGIS 3.5 (`imresamu/postgis:17-3.5-alpine`), SeaweedFS 4.55, Caddy 2.10.2 and Keycloak 26.4.0 with its own database.
+- `infra/compose.production.yaml` with its `database`, `storage`, `proxy` and `keycloak` profiles: the image, PostgreSQL 17, SeaweedFS 4.55, Caddy 2.10.2 and Keycloak 26.4.0 with its own database. That run used PostgreSQL 17 with PostGIS 3.5, before Ledger stopped needing PostGIS; since then the migrations and the integration tests were run against the official `postgres:17-alpine` image that every Compose file now uses, and `verify.mjs` was not run again.
 - TLS at the proxy for three names, the web app (`ledger.localhost`), the API (`ledger-api.localhost`) and Keycloak (`id.localhost`); the API reading Keycloak's discovery and keys over https through the proxy; the API's answer to a cross-origin request from the web app's origin.
 - Migrations and `create-organization.js` from the image, through `docker compose run` of the `setup` service, the only service given the owner's connection (`ledger-owner.env`); the `ledger` service started without it.
 - Keycloak as in [the example](#example-keycloak-self-hosted): the realm, the public client with PKCE, two people. In a headless Chromium: the administrator signed in at Keycloak, added the second person on the People screen tied to their Keycloak user ID, and signed the safety policy with **Confirm it’s you**, which made Keycloak ask for the password again (the signature records `openid_connect` and the time of that sign-in); the second person then signed in with their own account. Records were imported and the Part 107 pack adopted with the command-line client, using the ID token the web app received.
@@ -20,7 +20,7 @@ On one computer (Docker 29 with Compose 5.5, arm64), in containers of its own, w
 - The API and the workers as two containers, the workers evaluating a new import; `credential:issue`, `broker:files` and the broker profile from the image; the position adapter as its own container (the `adapter` profile), submitting every message an aircraft account published to the broker, and under the image's supervisor, where it signed in and subscribed ([section 10](#10-connect-a-source-run-an-adapter)); the realm import command of the Keycloak example.
 - `infra/compose.try.yaml` with an image built from the checkout (`up --build`; the published image was not pulled, as none had been published): the migrations ran by themselves, the organization was created with the `setup` service, its development token was accepted over HTTP and on the web app's sign-in screen, `/readyz` answered as `ledger_app`, the API logged its development sign-in line, the `client` service ran `me` and imported a records file, whose bytes were kept in the volume, and the records were there after `down` and `up`.
 
-Not run: the nightly schedule line for the backup (the script was run, not from cron), a real host name with certificates the proxy obtains itself (needs a public server), Google Workspace and Microsoft Entra ID (need accounts), and Keycloak's admin console clicked through by hand (the realm was imported from a file with the same settings).
+Not run: `infra/compose.lite.yaml` and its backup with `--files` ([Ledger Lite](#ledger-lite); its one process was run from a checkout, not from the image), the nightly schedule line for the backup (the script was run, not from cron), a real host name with certificates the proxy obtains itself (needs a public server), Google Workspace and Microsoft Entra ID (need accounts), and Keycloak's admin console clicked through by hand (the realm was imported from a file with the same settings).
 
 ## Try Ledger on one computer
 
@@ -54,14 +54,39 @@ docker compose -f infra/compose.try.yaml run --rm client records import aircraft
 
 Each `pnpm ledger <command>` in the guides is `docker compose -f infra/compose.try.yaml run --rm client <command>` here. The credential is read from `LEDGER_TOKEN` in the shell, or from `.ledger/credentials` in the folder the command is typed in (git ignores it in this checkout); a credential is never given as an argument. A coding agent does the same. The client runs as user 1000 in the container: on Linux, a file it writes into the folder belongs to that user. From a checkout with Node 24 and pnpm (as in the [README](../../README.md#from-a-source-checkout), `pnpm install --frozen-lockfile && pnpm build`), `pnpm ledger` reaches the same API at `http://127.0.0.1:4000`, its default; set `LEDGER_API_URL` in `.ledger/credentials` for another `LEDGER_TRY_PORT`.
 
+## Ledger Lite
+
+Ledger Lite is the smallest arrangement of a deployment, for a small operation: the same image and the same code, in fewer pieces. `infra/compose.lite.yaml` runs
+
+- one Ledger container, which runs the API, the web app and the workers in one Node process (the image's `one-process` command);
+- plain PostgreSQL 17 (`postgres:17-alpine`); a managed PostgreSQL 17 serves as well;
+- the original files on a volume (`ledger-lite-files`) instead of in object storage ([Files on disk](#files-on-disk));
+- no broker, no object store, no identity provider of its own.
+
+It is a deployment, not a trial: the image's `LEDGER_ENV=staging`, people sign in through your identity provider ([section 6](#6-sign-in)) and development tokens are refused. Row-level security, the append-only history and the workers' leases are the same as in the split start: the API connects as `ledger_app` and the workers as `ledger_worker`, each with its own connections, and the workers take and fence their leases exactly as in a process of their own ([`docs/design/ledger-lite.md`](../design/ledger-lite.md)). One process means one event loop: a long evaluation delays the API's answers while it runs. Move to `infra/compose.production.yaml` when that matters; the database and the files move with you (copy the files into the bucket with `copy-bucket.mjs upload`).
+
+From the checkout, with `ledger.env` and `ledger-owner.env` at its root as in [The smallest deployment](#the-smallest-deployment) (leave out the `S3_` settings; `OBJECT_STORE` and `OBJECT_STORAGE_DIR` are set by the file):
+
+```sh
+mkdir -p packs
+docker compose --env-file ledger.env --env-file ledger-owner.env -f infra/compose.lite.yaml up -d --wait
+docker compose --env-file ledger.env --env-file ledger-owner.env -f infra/compose.lite.yaml run --rm setup \
+  apps/api/dist/create-organization.js --name "<organization>" --time-zone <IANA zone> --admin "<your name>" \
+  --sign-in-issuer <issuer> --sign-in-subject <your user id there>
+```
+
+`up` runs the migrations (the `setup` service, which exits once they are done, on every start), then starts Ledger and waits until `/readyz` answers. Ledger listens on `127.0.0.1:4000` (`LEDGER_LITE_PORT` moves it): put a TLS proxy in front of it, as in [The smallest deployment](#the-smallest-deployment). The backup is the database and the files volume together ([section 9](#files-on-disk-in-the-backup)). **Unverified**: the file was not brought up for this guide (`node infra/verify-deployment/check-lite.mjs` is the check, and needs the image built); the one process it runs was run from a checkout with `LEDGER_ENV=staging` against plain PostgreSQL, where it answered `/readyz` as `ledger_app`, served the web app, refused a development token, completed leased work and stopped cleanly on `SIGTERM`.
+
+From a checkout without Docker, the same process is `node apps/api/dist/one-process.js`, with the settings of `ledger.env` in its environment and `OBJECT_STORE=disk` and `OBJECT_STORAGE_DIR=<an absolute folder that exists>` for files on disk.
+
 ## What you run
 
 | Part | What it is | How it starts |
 | --- | --- | --- |
 | API and web app | Fastify server: every read and write, including the web app's. In the image it also serves the built web app from its own origin, so browsers reach both at one address. Listens on `PORT` (4000). Connects as the database role `ledger_app`. | The image, or `node apps/api/dist/main.js` |
 | Workers | Leased, fenced background work: projections, rule evaluations, deadlines. No HTTP port. Connects as the database role `ledger_worker`. | The image, or `node apps/workers/dist/main.js` |
-| PostgreSQL 17 with PostGIS 3.5 | The journal, projections, work queue and outbox. | Your database service |
-| Object storage (S3-compatible) | The original bytes of every upload and import. | Your storage service |
+| PostgreSQL 17 | The journal, projections, work queue and outbox. No extension is needed. | Your database service |
+| Object storage (S3-compatible), or a folder on disk | The original bytes of every upload and import. | Your storage service, or a disk or volume ([Files on disk](#files-on-disk)) |
 | MQTT broker (optional) | Only for sources that report over MQTT, such as DJI Cloud API telemetry. Its accounts come from your sources on record; see [The message broker](#the-message-broker). | Mosquitto, as its own service |
 
 A production start of the image runs the API, the web app and the workers, and nothing else. The emulators of outside systems and the simulator are development tools for the fictional world: they start only when asked, and a deployment needs none of their settings.
@@ -193,9 +218,11 @@ VITE_API_URL=https://ledger-api.example.org pnpm --filter @ledger/web build
 pnpm check:production-build
 ```
 
-## 2. PostgreSQL, PostGIS and the database roles
+## 2. PostgreSQL and the database roles
 
-Use PostgreSQL 17 with PostGIS 3.5; the local stack uses the image `imresamu/postgis:17-3.5-alpine`, the PostGIS project's own image recipe built for both linux/amd64 and linux/arm64 (pinned by digest in `infra/compose.yaml`). Create one database for Ledger.
+Use PostgreSQL 17. Ledger needs no extension, so any PostgreSQL 17 serves, a managed one included; the Compose files use the official image `postgres:17-alpine`, built for both linux/amd64 and linux/arm64 (pinned by digest). Create one database for Ledger.
+
+A database made before Ledger stopped needing PostGIS is recreated, not converted: two of its migrations changed in place, so the migrations refuse it (`no longer matches its immutable checksum`). Drop it and run the migrations into an empty one.
 
 Ledger uses three roles:
 
@@ -209,14 +236,15 @@ The role names `ledger_app` and `ledger_worker` are fixed. On startup the API re
 
 The owner needs, the first time migrations run:
 
-- to create the `postgis` extension. PostGIS is not a trusted extension, so either run the first migration as a superuser or have a superuser run `CREATE EXTENSION postgis;` in the database first;
 - `CREATEROLE`, to create `ledger_app` and `ledger_worker`, unless you create them yourself first with the attributes above. Their passwords come from `DATABASE_APP_PASSWORD` and `DATABASE_WORKER_PASSWORD` and are set only when the role is created; change one later with `ALTER ROLE`.
+
+No superuser is needed: the whole migration set was run for this guide on the official `postgres:17-alpine` image by an owner with only `LOGIN CREATEROLE`, into an empty database it owned, with `LEDGER_ENV=staging`.
 
 Roles are shared by every database in a PostgreSQL cluster. Give Ledger its own cluster, or at least do not reuse these role names for anything else.
 
 ## 3. Object storage
 
-Ledger keeps the original bytes of every upload and import in an S3-compatible bucket, written once and never overwritten. With `LEDGER_ENV=staging` it always uses S3 and refuses to start without `S3_BUCKET`, `S3_ACCESS_KEY_ID` and `S3_SECRET_ACCESS_KEY`.
+Ledger keeps the original bytes of every upload and import written once and never overwritten: in an S3-compatible bucket, or in a folder on disk ([Files on disk](#files-on-disk)). With `LEDGER_ENV=staging` it uses S3 unless the deployment names the disk store, and refuses to start without `S3_BUCKET`, `S3_ACCESS_KEY_ID` and `S3_SECRET_ACCESS_KEY`.
 
 - The store must honour conditional writes (`If-None-Match: *` on `PutObject`); Ledger relies on it so a retried upload never replaces stored bytes. **A store that ignores the header accepts the write and replaces the bytes, and Ledger cannot tell.** Check yours before you rely on it, from a checkout after `pnpm build`, with `S3_ENDPOINT` reachable from where you run it:
 
@@ -228,6 +256,17 @@ Ledger keeps the original bytes of every upload and import in an S3-compatible b
 - Requests use path-style addressing. Set `S3_ENDPOINT` for anything other than Amazon S3, and `S3_REGION` where the provider needs one (`auto` is the default).
 - Give the API and workers one key limited to that bucket: they read and write objects and need nothing else. Ledger creates no bucket: create it first (with the `storage` profile: `docker compose --env-file ledger.env -f infra/compose.production.yaml exec objects sh -c 'echo "s3.bucket.create -name ledger" | weed shell'`).
 - Turning on bucket versioning or object lock adds protection against a deleted object (**unverified** with Ledger: how each is turned on, and what it costs, is the provider's; Ledger never deletes or overwrites an object, so neither changes what it does).
+
+### Files on disk
+
+A deployment may keep the files in a folder instead, for a small operation on one server ([Ledger Lite](#ledger-lite) does). Set `OBJECT_STORE=disk` and `OBJECT_STORAGE_DIR` to the folder, an absolute path:
+
+- The folder must exist and be writable by the process. The API, the workers and the one-process start refuse to start otherwise, and say which folder; Ledger does not create it, because a folder that is not there usually means a disk or volume that was not mounted. Without `OBJECT_STORE=disk` a deployment never uses a folder, so files cannot land unnoticed in a container's own short-lived storage.
+- In the image the folder is `/data/ledger/files`, and nothing else: the image refuses to start with another, or without a volume mounted at `/data`. It creates the folder on that volume, owned by its own user (1000) with mode 700. `infra/compose.lite.yaml` sets both variables and mounts the volume.
+- Each file is written to a temporary name, flushed to disk and linked into place, so a file is either whole or absent; a second write of the same key with other bytes is refused, as with a bucket.
+- Digests are checked exactly as with object storage: every read compares the bytes with the length and SHA-256 the database recorded for them before using them, and refuses them if they differ.
+- The API and the workers must see the same folder. With them in one process, or in one container, that is given; as separate containers, mount the same volume into both.
+- Back the folder up with the database, after it ([Files on disk in the backup](#files-on-disk-in-the-backup)).
 
 ## 4. Environment variables
 
@@ -245,8 +284,9 @@ Set these for the API, the workers, migrations and the setup commands. One env f
 | `DATABASE_APP_PASSWORD` | migrations | The password `ledger_app` is created with. Required with `LEDGER_ENV=staging` (`LEDGER_APP_PASSWORD` is read too). |
 | `DATABASE_WORKER_PASSWORD` | migrations | The password `ledger_worker` is created with. Required with `LEDGER_ENV=staging`. |
 | `DATABASE_POOL_SIZE` | API, workers | Connections per process. Default 10. |
-| `OBJECT_STORE` | API, workers | `s3`. Implied by `LEDGER_ENV=staging`. (`OBJECT_STORAGE_BACKEND=s3` is read too.) |
-| `S3_BUCKET`, `S3_ACCESS_KEY_ID`, `S3_SECRET_ACCESS_KEY` | API, workers | The bucket and its key. Required. |
+| `OBJECT_STORE` | API, workers | `s3` or `disk`. Unset, `s3` with `LEDGER_ENV=staging`. (`OBJECT_STORAGE_BACKEND` is read too.) |
+| `OBJECT_STORAGE_DIR` | API, workers | With `disk`, the folder for the files, an absolute path that exists and is writable; in the image `/data/ledger/files` ([Files on disk](#files-on-disk)). Required with `disk`. |
+| `S3_BUCKET`, `S3_ACCESS_KEY_ID`, `S3_SECRET_ACCESS_KEY` | API, workers | The bucket and its key. Required with `s3`. |
 | `S3_ENDPOINT`, `S3_REGION` | API, workers | The provider's endpoint and region, where it needs them. |
 | `LEDGER_OIDC_ISSUER`, `LEDGER_OIDC_CLIENT_ID`, `LEDGER_OIDC_LABEL`, `LEDGER_OIDC_CHECK_AUTHORIZED_PARTY`, `LEDGER_OIDC_ISSUERS`, `LEDGER_DEPLOYMENT_NAME` | API, `org:create` | Sign-in through OpenID Connect: see [section 6](#environment-variables). An issuer is required with `LEDGER_ENV=staging`. |
 | `CORS_ORIGINS` | API | Comma-separated origins of the web app, for example `https://ledger.example.org`. With the image serving the web app this is the address people open. Browsers from any other origin are refused, and with `LEDGER_OIDC_CHECK_AUTHORIZED_PARTY=true` an ID token's `azp` must name one of these origins or the client id. `WEB_ORIGINS` takes precedence if set. |
@@ -593,7 +633,7 @@ A corrected version is a new file beside the old one (raise `version` in `pack.y
 
 ## 9. Backups and restoring
 
-A backup is Ledger's database and its bucket together, and the identity provider's database if you run one: Keycloak holds the user IDs people are tied to, and a person whose Keycloak user is recreated gets a new ID and can no longer sign in. Everything below was run for this guide against the deployment in [What was run](#what-was-run-for-this-guide), holding an organization, imported records with their original files, an adoption and its evaluations, and a signed and issued document; `node infra/verify-deployment/verify.mjs backup` and `restore` repeat it.
+A backup is Ledger's database and its original files together (the bucket, or the folder of [Files on disk](#files-on-disk)), and the identity provider's database if you run one: Keycloak holds the user IDs people are tied to, and a person whose Keycloak user is recreated gets a new ID and can no longer sign in. Everything below was run for this guide against the deployment in [What was run](#what-was-run-for-this-guide), holding an organization, imported records with their original files, an adoption and its evaluations, and a signed and issued document; `node infra/verify-deployment/verify.mjs backup` and `restore` repeat it. That run used PostgreSQL with PostGIS; it was not repeated with the plain `postgres:17-alpine` image, nor with files on disk.
 
 ### Take a backup
 
@@ -603,7 +643,7 @@ A backup is Ledger's database and its bucket together, and the identity provider
 S3_ENDPOINT=http://127.0.0.1:8333 node --env-file=ledger.env infra/backup.mjs
 ```
 
-It writes a new folder under `backups/`, named by the time it started (`backups/2026-11-24T021500Z`), with Ledger's database (`ledger.dump`), Keycloak's (`keycloak.dump`) and the bucket (`objects/` and `objects.json`), in that order, through `./ledger-compose.sh`. Then it checks what it wrote: each dump's table of contents reads back with `pg_restore --list`, every object's SHA-256 matches the one Ledger stored with it, and every object the dumped database names is in the bucket copy. It prints one line of JSON and writes the same as `backup.json` in the folder: `"status":"complete"`, or `"status":"failed"` with the reason, and exits 1. `--without-keycloak` leaves out Keycloak's database for an identity provider of another kind; `--folder` writes elsewhere; `--compose` names another wrapper of `docker compose`. `node infra/verify-deployment/verify.mjs backup` runs this script and `restore` restores what it wrote.
+It writes a new folder under `backups/`, named by the time it started (`backups/2026-11-24T021500Z`), with Ledger's database (`ledger.dump`), Keycloak's (`keycloak.dump`) and the bucket (`objects/` and `objects.json`), in that order, through `./ledger-compose.sh`. Then it checks what it wrote: each dump's table of contents reads back with `pg_restore --list`, every object's SHA-256 matches the one Ledger stored with it, and every object the dumped database names is in the copy with the SHA-256 the database holds for it. It prints one line of JSON and writes the same as `backup.json` in the folder: `"status":"complete"`, or `"status":"failed"` with the reason, and exits 1. `--without-keycloak` leaves out Keycloak's database for an identity provider of another kind; `--folder` writes elsewhere; `--compose` names another wrapper of `docker compose`. `node infra/verify-deployment/verify.mjs backup` runs this script and `restore` restores what it wrote.
 
 **Every night.** The schedule line, for the server administrator's crontab (`crontab -e`), runs it at 02:15 server time and appends each run's line to `backups/backup.log`; replace `/srv/ledger` with the checkout's path and `/usr/bin/node` with the output of `command -v node`:
 
@@ -628,6 +668,30 @@ With a database of your own, `pg_dump --format=custom --file=ledger.dump "$DATAB
 
 **Why this order.** `pg_dump` reads one consistent snapshot of the database. Ledger stores an upload's bytes before it commits the rows that name them, and never changes or deletes an object, so a bucket copied after the dump holds every object the dump refers to. Copied first, the bucket could miss objects of rows the dump then includes.
 
+### Files on disk in the backup
+
+With the files in a folder ([Files on disk](#files-on-disk)) the backup is the same three things in the same order, the dump first and the folder after it, for the same reason: Ledger writes a file before it commits the rows that name it and never changes or removes one, so a folder copied after the dump holds every file the dump names. Give `infra/backup.mjs` the folder inside the `ledger` service in place of the bucket settings, with a wrapper of `docker compose` for the Lite file, `ledger-lite-compose.sh` at the checkout's root (`chmod 700`):
+
+```sh
+#!/bin/sh
+exec docker compose --env-file ledger.env --env-file ledger-owner.env -f infra/compose.lite.yaml "$@"
+```
+
+```sh
+node infra/backup.mjs --files /data/ledger/files --without-keycloak --compose ./ledger-lite-compose.sh
+```
+
+It dumps the database, copies the folder out of the running `ledger` service with `tar` into `objects/`, lists every file with its SHA-256 in `objects.json`, and checks, as for a bucket, that every object the dump names is there with the SHA-256 the database holds for it. A server without Docker copies the folder itself (`rsync -a` or `cp -a`) after `pg_dump` and keeps the two together. **Unverified**: not run for this guide (the Lite file was not brought up); the check of digests against the dump is the same code as for a bucket.
+
+To restore, restore the dump first as in the steps below, then put the files back into the empty volume before Ledger starts, owned by the image's user:
+
+```sh
+tar -C backups/<date>/objects -cf - . | ./ledger-lite-compose.sh run --rm --no-deps -T --user root --entrypoint sh ledger \
+  -c 'mkdir -p /data/ledger/files && tar -C /data/ledger/files -xf - && chown -R 1000:1000 /data/ledger && chmod 700 /data/ledger /data/ledger/files'
+```
+
+Then start Ledger and check what came back as in step 7 below: records produced with `--originals` verify offline only if every original is back with its digest. **Unverified**, as above.
+
 **Work in flight.** Nothing needs to stop for a backup. What the dump does not hold is lost on restore: anything committed after `pg_dump` began, including uploads a person or a source was told were received. Their bytes may be in the bucket copy, unreferenced, which is harmless. Work the workers had not finished (`work_items` still `pending` or `leased` in the dump) is done again after the restore: a lease lasts at most five minutes and expired leases are taken again. An upload started but not finished expires after 24 hours as it would have. A person signed in keeps their ID token until it expires; restoring Keycloak's database restores their accounts and IDs, not their sessions.
 
 ### Restore into empty containers
@@ -646,8 +710,8 @@ With a database of your own, `pg_dump --format=custom --file=ledger.dump "$DATAB
 
    The last line matters: the migrations make `ledger_worker` a member of `ledger_app`, and a dump does not carry role memberships. Without it the restored Ledger starts and reads, but the workers fail with `permission denied` (`Worker database operation failed { code: '42501' }`) and new work stays pending; the run for this guide found this.
 
-   With a database of your own, first create the owner role, an empty database and, as a superuser, the `postgis` extension.
-3. Restore both dumps, as their owners, each into an empty database. The image creates PostGIS and its schemas in the database it starts with, and the dump creates them again, so drop and create each first:
+   With a database of your own, first create the owner role and an empty database.
+3. Restore both dumps, as their owners, each into an empty database. Drop and create the one each image started with, so nothing in it meets what the dump creates:
 
    ```sh
    ./ledger-compose.sh exec -T postgres psql -U ledger_owner -d postgres -c 'DROP DATABASE ledger' -c 'CREATE DATABASE ledger'

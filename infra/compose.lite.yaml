@@ -1,0 +1,77 @@
+# Ledger Lite: the same image as infra/compose.production.yaml in a smaller arrangement, for a small operation. One
+# Ledger container runs the API, the web app and the workers in one Node process (the image's one-process command),
+# beside plain PostgreSQL 17. Original files are kept on a volume instead of in object storage; there is no broker.
+# People sign in through your identity provider, as in any deployment: development tokens are refused.
+#
+# Run it from the checkout's root with your settings in ledger.env and the database owner's connection in
+# ledger-owner.env, as docs/guides/deploy.md describes ("Ledger Lite"):
+#
+#   docker compose --env-file ledger.env --env-file ledger-owner.env -f infra/compose.lite.yaml up -d --wait
+#
+# The migrations run by themselves before Ledger starts. Then create your organization with the setup service:
+#
+#   docker compose --env-file ledger.env --env-file ledger-owner.env -f infra/compose.lite.yaml \
+#     run --rm setup apps/api/dist/create-organization.js --name "<organization>" ...
+#
+# Put a TLS proxy of your own in front of 127.0.0.1:4000 (LEDGER_LITE_PORT moves it). The backup is the database and
+# the files volume together: infra/backup.mjs --files (docs/guides/deploy.md, section 9). `down` stops it and keeps
+# the records; `down -v` deletes them.
+name: ledger-lite
+services:
+  ledger:
+    image: ${LEDGER_IMAGE:-ghcr.io/chrisremboldt/lightcone-ledger:latest}
+    build:
+      context: ..
+      dockerfile: infra/Dockerfile
+    command: ['one-process']
+    env_file: ../ledger.env
+    environment:
+      # Original files on the ledger-lite-files volume, written once and never replaced. The image keeps them in this
+      # folder only, and refuses to start when no volume is mounted at /data.
+      OBJECT_STORE: disk
+      OBJECT_STORAGE_DIR: /data/ledger/files
+      # The organization's own rule pack files (*.pack.json) from packs/ at the checkout's root.
+      LEDGER_PACKS_DIR: /packs
+    ports: ['127.0.0.1:${LEDGER_LITE_PORT:-4000}:4000']
+    volumes: ['ledger-lite-files:/data', '../packs:/packs:ro']
+    restart: unless-stopped
+    healthcheck:
+      test:
+        - CMD
+        - node
+        - -e
+        - "fetch('http://127.0.0.1:4000/readyz').then((r) => process.exit(r.ok ? 0 : 1), () => process.exit(1))"
+      interval: 5s
+      timeout: 5s
+      retries: 60
+    depends_on:
+      setup: { condition: service_completed_successfully }
+  # Runs the migrations on every start, then exits; and runs the setup commands. The only service given the owner's
+  # connection: `docker compose ... -f infra/compose.lite.yaml run --rm setup <script> [arguments]`.
+  setup:
+    image: ${LEDGER_IMAGE:-ghcr.io/chrisremboldt/lightcone-ledger:latest}
+    env_file: [../ledger.env, ../ledger-owner.env]
+    user: '1000:1000'
+    entrypoint: ['node']
+    command: ['packages/persistence/dist/migrate.js']
+    depends_on:
+      postgres: { condition: service_healthy }
+  postgres:
+    # Plain PostgreSQL 17, the official image for linux/amd64 and linux/arm64. Ledger needs no extension, so a managed
+    # PostgreSQL 17 serves as well: point the connection strings at it and leave this service out.
+    image: postgres:17-alpine@sha256:f9cf3e1f0066f0eb0c48707d864f0ac5941e9ff454a072077d97a4d278d07d73
+    environment:
+      POSTGRES_DB: ledger
+      POSTGRES_USER: ledger_owner
+      POSTGRES_PASSWORD: ${LEDGER_DATABASE_OWNER_PASSWORD:-}
+    volumes: ['ledger-lite-postgres:/var/lib/postgresql/data']
+    healthcheck:
+      # Over TCP: on its first start the image answers on its socket while it is still preparing the database.
+      test: ['CMD-SHELL', 'pg_isready -h 127.0.0.1 -U ledger_owner -d ledger']
+      interval: 2s
+      timeout: 2s
+      retries: 30
+    restart: unless-stopped
+volumes:
+  ledger-lite-postgres:
+  ledger-lite-files:

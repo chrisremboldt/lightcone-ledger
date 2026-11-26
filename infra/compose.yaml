@@ -1,9 +1,9 @@
 name: ledger
 services:
   postgres:
-    # PostgreSQL 17 with PostGIS 3.5, built from the PostGIS project's own image recipe for both linux/amd64 and
-    # linux/arm64, so it runs natively on an Apple Silicon Mac as on an Intel or AMD machine.
-    image: imresamu/postgis:17-3.5-alpine@sha256:cd3e4f2acea6d27e5314c70ca478e6e4d2d97b1a4a594de0a7c71456472c65ef
+    # Plain PostgreSQL 17, the official image, built for both linux/amd64 and linux/arm64, so it runs natively on an
+    # Apple Silicon Mac as on an Intel or AMD machine. Ledger needs no extension.
+    image: postgres:17-alpine@sha256:f9cf3e1f0066f0eb0c48707d864f0ac5941e9ff454a072077d97a4d278d07d73
     environment:
       POSTGRES_DB: ledger
       POSTGRES_USER: ledger_owner
@@ -11,7 +11,7 @@ services:
     ports: ['127.0.0.1:54329:5432']
     volumes: ['ledger-postgres:/var/lib/postgresql/data']
     healthcheck:
-      # Over TCP: on its first start the image answers on its socket before it has created the PostGIS extension.
+      # Over TCP: on its first start the image answers on its socket while it is still preparing the database.
       test: ['CMD-SHELL', 'pg_isready -h 127.0.0.1 -U ledger_owner -d ledger']
       interval: 2s
       timeout: 2s

@@ -123,9 +123,32 @@ export function hostedWorldEnvironment(env = process.env) {
   return world;
 }
 
+/** The folder the image keeps original files in when a deployment names the disk store: on the volume at /data. */
+export const FILES_DIRECTORY = '/data/ledger/files';
+
+/**
+ * Whether the deployment named the disk store. In the image its folder is fixed, on the volume the entrypoint checks is
+ * mounted at /data, so files never land in the container's own short-lived layer.
+ */
+export function diskStoreNamed(env = process.env) {
+  if ((env.OBJECT_STORE || env.OBJECT_STORAGE_BACKEND) !== 'disk') return false;
+  if (env.OBJECT_STORAGE_DIR !== FILES_DIRECTORY)
+    throw new Error(`With OBJECT_STORE=disk the image keeps files in ${FILES_DIRECTORY}, on a volume mounted at /data`);
+  return true;
+}
+
+/**
+ * What the one-process start refuses: anything the supervisor would start beside the API and the workers. An adapter
+ * runs as its own container (the adapter command); the emulators, the simulator and the broker are development tools.
+ */
+export function refusedInOneProcess(env = process.env) {
+  return runtimePlan(env).filter((name) => name !== 'api' && name !== 'workers');
+}
+
 export function runtimeDirectories(env = process.env) {
   const mode = simulatorRuntimeMode(env);
   const directories = [];
+  if (diskStoreNamed(env)) directories.push('/data/ledger', FILES_DIRECTORY);
   if (env.DJI_MQTT_ENABLED === '1') {
     if (env.DJI_CHECKPOINT_DIR !== '/data/ledger/dji-checkpoints' || env.DJI_REPORT_DIR !== '/data/ledger/dji-reports')
       throw new Error('Runtime paths must use the fixed private volume directories');

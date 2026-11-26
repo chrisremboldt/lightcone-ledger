@@ -12,6 +12,7 @@ import { projectEvent, PROJECTOR_VERSION } from '@ledger/projections';
 import { runDueEvaluations } from './evaluations.js';
 import { runDueRuleEvaluations } from './rule-evaluations.js';
 import { runDueRuleSelections } from './rule-selections.js';
+export { startWorkers, type WorkerRuntime, type WorkerRuntimeOptions } from './runtime.js';
 export {
   leaseEvaluations,
   processEvaluationLease,

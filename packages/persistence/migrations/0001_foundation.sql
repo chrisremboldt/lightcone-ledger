@@ -1,4 +1,3 @@
-CREATE EXTENSION IF NOT EXISTS postgis;
 CREATE TABLE IF NOT EXISTS tenants (id text PRIMARY KEY, name text NOT NULL);
 CREATE TABLE IF NOT EXISTS principals (
   id text PRIMARY KEY, tenant_id text NOT NULL REFERENCES tenants(id), name text NOT NULL,

@@ -16,7 +16,7 @@
 #
 # Everything else starts only with its profile, so a deployment that has its own database, storage, proxy or identity
 # provider starts none of these:
-#   database  PostgreSQL 17 with PostGIS 3.5, for Ledger only
+#   database  PostgreSQL 17 (the official image, no extension), for Ledger only
 #   storage   SeaweedFS, an S3-compatible store that honours conditional writes
 #   proxy     Caddy, terminating TLS with certificates it obtains itself; reads Caddyfile at the checkout's root
 #   keycloak  Keycloak with its own database, as the identity provider
@@ -62,14 +62,14 @@ services:
       postgres: { condition: service_healthy, required: false }
   postgres:
     profiles: [database]
-    image: imresamu/postgis:17-3.5-alpine@sha256:cd3e4f2acea6d27e5314c70ca478e6e4d2d97b1a4a594de0a7c71456472c65ef
+    image: postgres:17-alpine@sha256:f9cf3e1f0066f0eb0c48707d864f0ac5941e9ff454a072077d97a4d278d07d73
     environment:
       POSTGRES_DB: ledger
       POSTGRES_USER: ledger_owner
       POSTGRES_PASSWORD: ${LEDGER_DATABASE_OWNER_PASSWORD:-}
     volumes: ['ledger-postgres:/var/lib/postgresql/data']
     healthcheck:
-      # Over TCP: on its first start the image answers on its socket before it has created the PostGIS extension.
+      # Over TCP: on its first start the image answers on its socket while it is still preparing the database.
       test: ['CMD-SHELL', 'pg_isready -h 127.0.0.1 -U ledger_owner -d ledger']
       interval: 2s
       timeout: 2s
@@ -130,7 +130,7 @@ services:
   keycloak-db:
     profiles: [keycloak]
     # Keycloak's own PostgreSQL 17, apart from Ledger's; the same image as the database profile, so one image serves both.
-    image: imresamu/postgis:17-3.5-alpine@sha256:cd3e4f2acea6d27e5314c70ca478e6e4d2d97b1a4a594de0a7c71456472c65ef
+    image: postgres:17-alpine@sha256:f9cf3e1f0066f0eb0c48707d864f0ac5941e9ff454a072077d97a4d278d07d73
     environment:
       POSTGRES_DB: keycloak
       POSTGRES_USER: keycloak

@@ -396,7 +396,7 @@ test('classifies elapsed windows from physical report clocks and never substitut
       );
       for (const sample of segment.samples)
         await client.query(
-          'INSERT INTO telemetry_samples(id,tenant_id,segment_id,session_id,sample_offset,sequence,occurred_at,received_at,sample,original_topic,original_sha256,claim_digest,position) VALUES($1,$2,$3,$4,$5::integer,$5::bigint,$6,$7,$8,$4,$9,$10,ST_SetSRID(ST_MakePoint($11,$12),4326)::geography)',
+          'INSERT INTO telemetry_samples(id,tenant_id,segment_id,session_id,sample_offset,sequence,occurred_at,received_at,sample,original_topic,original_sha256,claim_digest,latitude,longitude) VALUES($1,$2,$3,$4,$5::integer,$5::bigint,$6,$7,$8,$4,$9,$10,$11,$12)',
           [
             randomUUID(),
             who.tenantId,
@@ -408,8 +408,8 @@ test('classifies elapsed windows from physical report clocks and never substitut
             sample,
             sha256(original),
             canonicalDigest(sample),
-            sample.longitude,
             sample.latitude,
+            sample.longitude,
           ],
         );
       async function scoped(view: FlightQuery['view']) {

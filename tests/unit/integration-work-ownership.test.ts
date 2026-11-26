@@ -10,6 +10,10 @@ const EXCEPTIONS = new Map<string, string>([
     'tests/integration/no-fictional-configuration.integration.test.ts',
     'Starts the API and reads public routes; it creates no organization and queues no work.',
   ],
+  [
+    'tests/integration/one-process.integration.test.ts',
+    'Starts the one process and reads /readyz; it creates no organization and queues no work, and every earlier file settled its own.',
+  ],
 ]);
 
 function integrationFiles(): string[] {

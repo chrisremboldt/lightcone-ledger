@@ -272,12 +272,12 @@ describe.runIf(process.env.LEDGER_ENV !== 'staging')('PostgreSQL durable telemet
     expect(retained.headers['x-content-sha256']).toBe(sha256(accepted.raw));
     const data = (
       await admin.query(
-        'SELECT s.name,ST_SRID(t.position::geometry) AS srid,ST_X(t.position::geometry) AS longitude FROM journal_events e JOIN streams s ON s.id=e.stream_id JOIN telemetry_segments g ON g.event_id=e.id JOIN telemetry_samples t ON t.segment_id=g.id WHERE e.id=$1',
+        'SELECT s.name,t.latitude,t.longitude FROM journal_events e JOIN streams s ON s.id=e.stream_id JOIN telemetry_segments g ON g.event_id=e.id JOIN telemetry_samples t ON t.segment_id=g.id WHERE e.id=$1',
         [receipt.eventId],
       )
     ).rows;
     expect(data[0].name.startsWith('telemetry:')).toBe(true);
-    expect(data[0]).toMatchObject({ srid: 4326, longitude: -87.6 });
+    expect(data[0]).toMatchObject({ latitude: 41.8, longitude: -87.6 });
     const thread = (await call('GET', `/v1/flights/${id}/timeline`)).json();
     expect(durable.flightRevision).toBe(thread.flight.revision);
     expect(durable.flightRevision).toBe(pending.flightRevision + 1);

@@ -18,7 +18,7 @@ It needs Docker with Compose 2.24 or later, `openssl` and Node 24. It builds the
 | Service | What it is | Reached from this computer at |
 | --- | --- | --- |
 | `ledger` | The image: the API, the web app and the workers | `https://ledger.localhost:18443` and `https://ledger-api.localhost:18443` |
-| `postgres` | PostgreSQL 17 with PostGIS 3.5 | not published |
+| `postgres` | PostgreSQL 17, the official image | not published |
 | `objects` | SeaweedFS 4.55, S3-compatible, honouring conditional writes | `http://127.0.0.1:18333` |
 | `keycloak`, `keycloak-db` | Keycloak 26.4.0 with its own PostgreSQL, the realm `ledger` imported from `keycloak-realm.json` | `https://id.localhost:18443` |
 | `proxy` | Caddy 2.10.2, terminating TLS for the three names | `127.0.0.1:18443` |
@@ -40,10 +40,20 @@ TLS uses a local certificate authority that `verify.mjs` makes with `openssl` in
 
 Each step prints one JSON line per thing it did. A failure prints `{"step":"failed",...}` and exits 1, and leaves the containers running so you can look: `docker compose -p ledger-verify ... logs` (the full command is in `verify.mjs`, function `compose`).
 
+## Ledger Lite
+
+`check-lite.mjs` is the smallest check of `infra/compose.lite.yaml`: it builds the image as `ledger-lite-check:local` (or uses the one `LEDGER_IMAGE` names), brings the file up under the project `ledger-lite-check` on `127.0.0.1:18400` with throwaway settings in `.local/check-lite`, and checks that `/readyz` answers as `ledger_app`, that a development token is refused, that the container runs the one process and nothing else, and that the files folder on the volume belongs to the image's user. Then it takes the file down with its volumes, whether the checks held or not.
+
+```sh
+node infra/verify-deployment/check-lite.mjs
+```
+
+**Unverified**: written and not yet run. Building the image needs several gigabytes of free disk.
+
 ## The scripts an operator can use on their own deployment
 
 - `check-object-store.mjs`: whether a bucket honours conditional writes. `node --env-file=ledger.env infra/verify-deployment/check-object-store.mjs` with `S3_ENDPOINT` reachable from where it runs.
-- `copy-bucket.mjs download|upload <folder>`: the bucket to a folder and back, checking every object's SHA-256; an upload never replaces an object.
+- `copy-bucket.mjs download|upload <folder>`: the bucket to a folder and back, checking every object's SHA-256; an upload never replaces an object. With files on disk, `infra/backup.mjs --files` copies the folder instead.
 - `journal-chain.mjs`: checks every hash chain in the journal from what `psql` prints, as its header shows.
 
 ## Removing it
@@ -54,4 +64,4 @@ docker image rm ledger-verify:local              # the image it built, if you wa
 rm -rf .local/verify-deployment                  # certificates, backups and read-backs
 ```
 
-The pulled images (`imresamu/postgis`, `chrislusf/seaweedfs`, `quay.io/keycloak/keycloak`, `caddy`) stay until you remove them with `docker image rm`.
+The pulled images (`postgres`, `chrislusf/seaweedfs`, `quay.io/keycloak/keycloak`, `caddy`) stay until you remove them with `docker image rm`.

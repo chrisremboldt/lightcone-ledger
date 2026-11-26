@@ -317,7 +317,7 @@ async function summaries(
       WHERE c.flight_id=f.id AND (c.payload ? 'landingTime' OR c.payload ? 'landedAt') AND ${currentClaim}
     ) conflict ON true
     LEFT JOIN LATERAL (
-      SELECT ST_Y(s.position::geometry) AS latitude,ST_X(s.position::geometry) AS longitude,s.occurred_at,s.received_at
+      SELECT s.latitude,s.longitude,s.occurred_at,s.received_at
       FROM telemetry_samples s
       JOIN telemetry_segments g ON g.tenant_id=s.tenant_id AND g.id=s.segment_id
       JOIN receipts r ON r.tenant_id=g.tenant_id AND r.id=g.receipt_id

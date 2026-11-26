@@ -33,7 +33,7 @@ Third-party material
   downloads them from developers.airspacelink.com and checks them against the
   pins in apps/emulators/vendor/airspace-link/provenance.json.
 
-- The local development stack pulls the PostGIS, Eclipse Mosquitto and Adobe
+- The local development stack pulls the PostgreSQL, Eclipse Mosquitto and Adobe
   S3Mock container images. They run as separate services and are not
   distributed with this program.
 

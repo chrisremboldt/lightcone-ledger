@@ -11,7 +11,7 @@ Worked examples you can follow in your own checkout. Each ends with how to check
 - [Write an adapter](guides/write-an-adapter.md): turning a source's bytes into observations, keeping the original bytes, receipts and idempotency keys, golden files and the emulators.
 - [Write a control type](guides/write-a-control-type.md): parameters, wording, `rules()`, `area()` and the applicability rule; what the type's digest covers; how an accepted control shows on a flight.
 - [Write an indicator](guides/write-an-indicator.md): counting findings, issues or observations against an exposure kind, when a rate may be stated, and how results are recorded and reviewed.
-- [Deploy Ledger](guides/deploy.md): the container image, PostgreSQL with PostGIS and its database roles, object storage, environment variables, migrations, creating your organization with `pnpm org:create`, sign-in, backups, health checks, and what is not hardened.
+- [Deploy Ledger](guides/deploy.md): the container image, PostgreSQL and its database roles, object storage or files on disk, Ledger Lite, environment variables, migrations, creating your organization with `pnpm org:create`, sign-in, backups, health checks, and what is not hardened.
 - [Set up Ledger with a coding agent](guides/set-up-with-a-coding-agent.md): written to an operator's coding agent: `pnpm ledger`, a command-line client over the public API, from the organization's spreadsheets and waiver to coverage, with what stays with a person and where the organization's own files are kept. `examples/first-operator` runs it for an invented operator.
 - [Bring your safety records](guides/bring-your-safety-records.md): for an organization that already keeps a safety program: its risk matrix, policy, hazard register, audits, reviews and reports brought in from files under its own references with `pnpm ledger safety`, and what stays a person's decision.
 - [Verify an export](guides/verify-an-export.md): producing a finding packet and checking it offline with `tools/verifier`, which needs only Node.
@@ -43,6 +43,8 @@ The engineering record, in [design/](design/). The guides agree with these; wher
 - [report-submission.md](design/report-submission.md): how a person submits a safety report, signed in or through a reporting link, exactly what each way keeps and who can read it, and what the deploying organization must configure.
 - [decision-basis.md](design/decision-basis.md): what a person's decision pins as its basis, and what is left out so an unrelated evaluation does not refuse it.
 - [lock-order.md](design/lock-order.md): the one order in which every transaction takes its locks, and the rule a new command, projection, worker job or trigger follows.
+- [ledger-lite.md](design/ledger-lite.md): Ledger on plain PostgreSQL without PostGIS, original files on disk as a deployment's choice and what protects them, and the API and the workers in one process with their own roles and leases.
+- [embedded-database.md](design/embedded-database.md): what Ledger asks of its database, and whether an embedded PostgreSQL could start it for one operator without Docker; looked into, not settled.
 
 ## Elsewhere
 

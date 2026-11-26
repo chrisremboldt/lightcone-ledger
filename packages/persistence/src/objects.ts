@@ -1,6 +1,7 @@
 import { randomUUID } from 'node:crypto';
-import { mkdir, open, link, unlink } from 'node:fs/promises';
-import { dirname, resolve, sep } from 'node:path';
+import { constants } from 'node:fs';
+import { access, mkdir, open, link, stat, unlink } from 'node:fs/promises';
+import { dirname, isAbsolute, resolve, sep } from 'node:path';
 import { S3Client, PutObjectCommand, GetObjectCommand } from '@aws-sdk/client-s3';
 import { sha256 } from '@ledger/integrity';
 
@@ -218,21 +219,58 @@ export class S3ObjectStore implements ObjectStore {
     });
   }
 }
-export function createObjectStore(): ObjectStore {
-  if (
-    process.env.OBJECT_STORAGE_BACKEND === 's3' ||
-    process.env.OBJECT_STORE === 's3' ||
-    process.env.LEDGER_ENV === 'staging'
-  ) {
-    const { S3_BUCKET, S3_ENDPOINT, S3_ACCESS_KEY_ID, S3_SECRET_ACCESS_KEY } = process.env;
+/**
+ * Where this process keeps original bytes. OBJECT_STORE (or its older name OBJECT_STORAGE_BACKEND) names s3 or disk.
+ * Unset, a deployment (LEDGER_ENV=staging) uses S3 and local development a folder. A deployment never falls back to a
+ * folder it was not given: disk is a deployment's choice only when named, with the folder in OBJECT_STORAGE_DIR as an
+ * absolute path, so original bytes never land unnoticed in a container's own short-lived files.
+ */
+export function objectStoreSetting(env: NodeJS.ProcessEnv = process.env): {
+  kind: 's3' | 'disk';
+  directory?: string;
+  named: boolean;
+} {
+  const value = env.OBJECT_STORE || env.OBJECT_STORAGE_BACKEND;
+  if (value && value !== 's3' && value !== 'disk') throw new Error('OBJECT_STORE must be s3 or disk');
+  const kind = (value as 's3' | 'disk' | undefined) ?? (env.LEDGER_ENV === 'staging' ? 's3' : 'disk');
+  if (kind === 's3') return { kind, named: Boolean(value) };
+  const directory = env.OBJECT_STORAGE_DIR?.trim();
+  if (value === 'disk' && !directory)
+    throw new Error('OBJECT_STORE=disk needs OBJECT_STORAGE_DIR, the folder to keep files in');
+  if (value === 'disk' && !isAbsolute(directory!)) throw new Error('OBJECT_STORAGE_DIR must be an absolute path');
+  return { kind, directory: resolve(directory || '.ledger-objects'), named: Boolean(value) };
+}
+
+/**
+ * Refuses a start whose named folder for files is missing, not a folder, or not writable by this process. Ledger does
+ * not create it: a folder that is not there usually means a volume or disk that was not mounted.
+ */
+export async function assertObjectStoreReady(env: NodeJS.ProcessEnv = process.env): Promise<void> {
+  const setting = objectStoreSetting(env);
+  if (setting.kind !== 'disk' || !setting.named) return;
+  const directory = setting.directory!;
+  const found = await stat(directory).catch(() => undefined);
+  if (!found) throw new Error(`The folder for files, ${directory} (OBJECT_STORAGE_DIR), does not exist`);
+  if (!found.isDirectory()) throw new Error(`OBJECT_STORAGE_DIR names ${directory}, which is not a folder`);
+  try {
+    await access(directory, constants.R_OK | constants.W_OK | constants.X_OK);
+  } catch {
+    throw new Error(`The folder for files, ${directory} (OBJECT_STORAGE_DIR), is not writable by this process`);
+  }
+}
+
+export function createObjectStore(env: NodeJS.ProcessEnv = process.env): ObjectStore {
+  const setting = objectStoreSetting(env);
+  if (setting.kind === 's3') {
+    const { S3_BUCKET, S3_ENDPOINT, S3_ACCESS_KEY_ID, S3_SECRET_ACCESS_KEY } = env;
     if (!S3_BUCKET || !S3_ACCESS_KEY_ID || !S3_SECRET_ACCESS_KEY)
       throw new Error('Immutable object storage credentials are required');
     return new S3ObjectStore(S3_BUCKET, {
       endpoint: S3_ENDPOINT,
-      region: process.env.S3_REGION,
+      region: env.S3_REGION,
       accessKeyId: S3_ACCESS_KEY_ID,
       secretAccessKey: S3_SECRET_ACCESS_KEY,
     });
   }
-  return new DiskObjectStore();
+  return new DiskObjectStore(setting.directory);
 }

@@ -145,6 +145,33 @@ describe('a production start', () => {
     expect(waitForReady.mock.calls.map(([url]) => url)).toEqual(['http://127.0.0.1:4000/readyz']);
   });
 
+  it('runs Ledger Lite from the same image in one process, with files on a volume and sign-in as in a deployment', () => {
+    const services = composeServices(read('infra/compose.lite.yaml'));
+    expect([...services.keys()].sort()).toEqual(['ledger', 'postgres', 'setup']);
+    const ledger = services.get('ledger')!;
+    expect(ledger).toContain("command: ['one-process']");
+    expect(ledger).toContain('dockerfile: infra/Dockerfile');
+    expect(ledger).toContain('OBJECT_STORE: disk');
+    expect(ledger).toContain('OBJECT_STORAGE_DIR: /data/ledger/files');
+    expect(ledger).toMatch(/volumes: \['ledger-lite-files:\/data'/);
+    // The image's own LEDGER_ENV=staging and NODE_ENV=production: development tokens are refused.
+    expect(ledger).not.toMatch(/LEDGER_ENV|NODE_ENV|S3_|MQTT|ledger-owner\.env/);
+    expect(services.get('postgres')).toMatch(/image: postgres:17-alpine@sha256:[0-9a-f]{64}/);
+    const entrypoint = read('infra/scripts/runtime-entrypoint.mjs');
+    expect(entrypoint).toContain("mode === 'one-process'");
+    expect(entrypoint).toContain("import('../../apps/api/dist/one-process.js')");
+    // The published image keeps the split start as its default.
+    expect(read('infra/Dockerfile')).toMatch(/^CMD \["supervise"\]$/m);
+  });
+
+  it('uses plain PostgreSQL in every compose file', () => {
+    for (const file of readdirSync(infra).filter((name) => /^compose.*\.ya?ml$/.test(name)))
+      for (const [name, definition] of composeServices(read(`infra/${file}`))) {
+        const image = /^ {4}image: (\S+)/m.exec(definition)?.[1] ?? '';
+        if (/postgres|postgis/i.test(image)) expect(image, `${file}: ${name}`).toMatch(/^postgres:17-alpine@sha256:/);
+      }
+  });
+
   it('keeps every emulator or simulator in a compose file behind a profile', () => {
     const files = readdirSync(infra).filter((name) => /^compose.*\.ya?ml$/.test(name));
     expect(files.length).toBeGreaterThan(0);

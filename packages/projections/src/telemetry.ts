@@ -312,7 +312,7 @@ export async function projectTelemetry(client: PoolClient, event: JournalEvent, 
     const normalized = { ...sample, original: { topic: sample.original.topic } };
     const claimDigest = canonicalDigest({ ...normalized, originalSha256: originalHash });
     await client.query(
-      'INSERT INTO telemetry_samples(id,tenant_id,segment_id,session_id,sample_offset,sequence,occurred_at,received_at,sample,original_topic,original_sha256,claim_digest,position) VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,ST_SetSRID(ST_MakePoint($13,$14),4326)::geography) ON CONFLICT DO NOTHING',
+      'INSERT INTO telemetry_samples(id,tenant_id,segment_id,session_id,sample_offset,sequence,occurred_at,received_at,sample,original_topic,original_sha256,claim_digest,latitude,longitude) VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14) ON CONFLICT DO NOTHING',
       [
         `${segment.id}:${offset}`,
         event.tenant_id,
@@ -326,8 +326,8 @@ export async function projectTelemetry(client: PoolClient, event: JournalEvent, 
         sample.original.topic,
         originalHash,
         claimDigest,
-        sample.longitude,
         sample.latitude,
+        sample.longitude,
       ],
     );
   }

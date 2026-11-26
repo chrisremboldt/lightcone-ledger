@@ -1,5 +1,5 @@
 import { lstat, mkdir, chown, chmod, readFile } from 'node:fs/promises';
-import { adapterEnvironment, runtimeDirectories } from './runtime-config.mjs';
+import { adapterEnvironment, refusedInOneProcess, runtimeDirectories } from './runtime-config.mjs';
 
 async function directory(path) {
   try {
@@ -36,6 +36,16 @@ try {
   if (mode === 'supervise') {
     const { superviseRuntime } = await import('./supervise.mjs');
     process.exitCode = await superviseRuntime();
+  } else if (mode === 'one-process') {
+    // The API, the web app and the workers in this one Node process (infra/compose.lite.yaml).
+    const refused = refusedInOneProcess();
+    if (refused.length) {
+      console.error(JSON.stringify({ event: 'one_process_refused', processes: refused }));
+      process.exitCode = 1;
+    } else {
+      const { runOneProcess } = await import('../../apps/api/dist/one-process.js');
+      process.exitCode = await runOneProcess();
+    }
   } else if (mode === 'verify-mqtt') await import('./verify-mqtt-runtime.mjs');
   else if (mode === 'adapter') {
     // One adapter for one source, as its own container: docker run ... ledger:local adapter <adapter> [flags].

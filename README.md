@@ -75,7 +75,7 @@ imports / adapters         ─┘                          │
                                exports ─▶ offline verifier
 ```
 
-One TypeScript codebase. PostgreSQL holds the journal, projections, work queue and outbox. Object storage holds original bytes.
+One TypeScript codebase. PostgreSQL 17, with no extension, holds the journal, projections, work queue and outbox. Object storage, or a folder on disk, holds original bytes. A deployment runs the API and the workers as two processes of one container, or as separate containers; [Ledger Lite](#ledger-lite) runs them in one process.
 
 | Path                                                                                      | Responsibility                                               |
 | ----------------------------------------------------------------------------------------- | ------------------------------------------------------------ |
@@ -89,7 +89,7 @@ One TypeScript codebase. PostgreSQL holds the journal, projections, work queue a
 | `packages/adapters`                                                                       | Source mappings into Ledger inputs                           |
 | `apps/simulator`, `apps/emulators`, `packages/simulation-models`                          | A simulated flight operation used for development and demos  |
 | `packages/investigator`                                                                   | Placeholder for the investigation-proposal seam              |
-| `infra`                                                                                   | Local Compose stack and a container image                    |
+| `infra`                                                                                   | Local Compose stack, the container image, deployment files   |
 
 Invariants every change keeps:
 
@@ -123,6 +123,16 @@ docker compose -f infra/compose.try.yaml run --rm setup apps/api/dist/create-org
 It prints your development token once. Open [127.0.0.1:4000](http://127.0.0.1:4000), choose **Use a development token** and paste it. From there, [Your own organization](#your-own-organization) below says what comes next; the commands it names with `pnpm` run against this start as [Try Ledger on one computer](docs/guides/deploy.md#try-ledger-on-one-computer) shows.
 
 This start is for one computer and is plainly not a server: it accepts development tokens, says "Local development" on its sign-in screen and in its log, and keeps uploaded files in a Docker volume. `docker compose -f infra/compose.try.yaml down` stops it and keeps your records; `down -v` deletes them. For a server other people use, follow [Deploy Ledger](docs/guides/deploy.md).
+
+### Ledger Lite
+
+For a small operation on one server, `infra/compose.lite.yaml` is the smallest deployment: one Ledger container that runs the API, the web app and the workers in one process, beside plain PostgreSQL 17, with the original files on a volume. No object store, no broker. It is the same image as any deployment, and unlike the start above it is one: people sign in through your identity provider and development tokens are refused.
+
+```sh
+docker compose --env-file ledger.env --env-file ledger-owner.env -f infra/compose.lite.yaml up -d --wait
+```
+
+[Ledger Lite](docs/guides/deploy.md#ledger-lite) in the deployment guide says what goes in the two files, how to create your organization, and how the backup covers the database and the files together.
 
 ### From a source checkout
 
@@ -300,7 +310,7 @@ A pack's digest is pinned in code, so changing a published pack without a new ve
 - The aircraft adapter reads the height the aircraft's documentation describes, above the WGS84 ellipsoid, which is never compared with a limit above ground: a height rule rests on the height the operator's flight record states, or else the planned height, and says which, until a source reports height above ground or above the takeoff point.
 - The Part 108 pack checks what a record or a document on file can show. [docs/design/part-108-coverage.md](docs/design/part-108-coverage.md) lists every paragraph of Subparts A, B, C and E with the rule that reads it or why none does. Which Ledger record holds each record the proposed § 108.40 lists is our reading, set out in [docs/design/required-records.md](docs/design/required-records.md); read it against your own operation before you rely on a recordkeeping plan drafted from it.
 - Submitted safety reports: [docs/design/report-submission.md](docs/design/report-submission.md) states what each way of reporting keeps and who can read it, and what Ledger cannot make true, such as the access log of a proxy in front of it. Those are the deploying organization's to configure.
-- The deployment guide marks each step that was not run. On one computer, with local names and a local certificate authority, the production Compose file was run with PostgreSQL, an S3-compatible store, Keycloak and a TLS proxy; people signed in through Keycloak and signed a document in the browser; and a backup was restored into empty containers and checked. `infra/verify-deployment` repeats it. Not run: a public server with certificates the proxy obtains itself, and Google Workspace or Microsoft Entra ID as the identity provider.
+- The deployment guide marks each step that was not run. On one computer, with local names and a local certificate authority, the production Compose file was run with PostgreSQL, an S3-compatible store, Keycloak and a TLS proxy; people signed in through Keycloak and signed a document in the browser; and a backup was restored into empty containers and checked. `infra/verify-deployment` repeats it. Not run: a public server with certificates the proxy obtains itself, Google Workspace or Microsoft Entra ID as the identity provider, and `infra/compose.lite.yaml` from the image (its one process was run from a checkout against plain PostgreSQL).
 
 ## Open work
 
@@ -317,6 +327,7 @@ Known gaps:
 - **An adoption sent right after another.** While the rules of one adoption are still being queued, a second adoption can be refused as a concurrent change. The command-line client waits and sends it again; the cause on the server is not yet found.
 - **Operating areas as polygons.** An operating area is a circle or a corridor.
 - **Attachments on a submitted safety report.** A person who submits a report cannot send a file or a photo with it.
+- **One command without Docker.** Ledger Lite still needs Docker or a PostgreSQL server. Whether an embedded PostgreSQL could start Ledger for one operator with one command is looked into, not settled, in [docs/design/embedded-database.md](docs/design/embedded-database.md).
 - **Aircraft-estimated wind.** The aircraft adapter does not map the aircraft's own wind estimate, because its unit is not documented.
 
 ## Work with Lightcone Systems

@@ -359,7 +359,7 @@ async function backup() {
 }
 
 function restoreDatabase(service, user, database, dump) {
-  // Into an empty database: the image creates PostGIS and its schemas in the one it starts with, as the dump does.
+  // Into an empty database, made again, so nothing the image created in the one it starts with meets the dump's own.
   for (const sql of [`DROP DATABASE ${database}`, `CREATE DATABASE ${database}`]) psql(service, user, 'postgres', sql);
   compose(['exec', '-T', service, 'pg_restore', '-U', user, '-d', database, '--exit-on-error'], {
     input: readFileSync(dump),
