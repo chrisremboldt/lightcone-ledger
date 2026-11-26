@@ -26,7 +26,7 @@ export function displayLane(item: TimelineItem): DisplayLane {
   return item.lane;
 }
 
-export { operators, seededOrganization } from './demo/fictional-organizations.js';
+export { operators, seededDataLabel, seededOrganization } from './demo/fictional-organizations.js';
 
 /** A seeded fictional organization keeps its display name; any other shows the name it was created with. */
 export function organizationLabel(tenantId: string, name?: string | null) {

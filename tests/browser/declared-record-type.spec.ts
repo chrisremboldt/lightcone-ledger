@@ -28,7 +28,7 @@ test('a dispatcher enters a record of a type the organization’s own pack decla
   await area.getByRole('button', { name: 'Enter a record', exact: true }).click();
   const entry = area.getByRole('form', { name: 'Enter Airframe check' });
   await entry.getByRole('combobox', { name: /^Subject id/ }).fill(aircraft);
-  await entry.getByLabel(/^Checked at/).fill('2026-11-02T08:00:00');
+  await entry.getByLabel(/^Checked at/).fill('2026-11-02T08:00');
   await entry.getByRole('combobox', { name: /^Inspector/ }).fill(`${run}-RIDGE-P-01`);
   await entry.getByLabel(/^Result/).selectOption('serviceable');
   await entry.getByLabel(/^Airframe hours/).fill('112.5');

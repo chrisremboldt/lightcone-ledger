@@ -9,6 +9,12 @@
   background: var(--side);
   scrollbar-width: thin;
 }
+.rail[hidden] {
+  display: none;
+}
+.thread-layout:has(> .rail[hidden]) {
+  grid-template-columns: minmax(0, 1fr);
+}
 .rail h3,
 .actions-card h3 {
   margin: 0 0 8px;

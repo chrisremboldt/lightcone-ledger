@@ -43,6 +43,55 @@
   font-size: 12px;
   font-weight: 600;
 }
+/* A field whose label wraps its name and its control: the name above, the control the width of the field. */
+label.records-field:has(> span) {
+  display: grid;
+  gap: 4px;
+  max-width: 420px;
+  margin-bottom: 10px;
+}
+label.records-field > input,
+label.records-field > select {
+  width: 100%;
+  min-width: 0;
+  padding: 6px 9px;
+  border: 1px solid var(--line-2);
+  border-radius: 6px;
+  background: var(--sheet);
+  color: inherit;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 400;
+}
+.records-table-scroll {
+  overflow-x: auto;
+}
+/* A plain table of rows, such as the notices; on a phone it scrolls sideways within its own box. */
+.records-table {
+  width: 100%;
+  min-width: 640px;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+.records-table th {
+  padding: 6px 8px;
+  border-bottom: 1px solid var(--line-2);
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-align: left;
+  text-transform: uppercase;
+}
+.records-table td {
+  padding: 8px;
+  border-bottom: 1px solid var(--line);
+  text-align: left;
+  vertical-align: top;
+}
+.records-table td a {
+  overflow-wrap: anywhere;
+}
 .records-kinds {
   margin-bottom: 0.75rem;
 }
@@ -393,6 +442,12 @@
 .shared-records-page table {
   display: block;
   overflow-x: auto;
+}
+.shared-records-digest code {
+  display: inline-block;
+  max-width: 16ch;
+  font-size: 11px;
+  overflow-wrap: anywhere;
 }
 .shared-records-reading {
   display: grid;

@@ -12,7 +12,7 @@ import type {
 } from '@ledger/contracts';
 import { Badge, Button, Notice, Spinner } from '@ledger/ui';
 import { setTimeZone, shortId, time, timeZoneLabel } from './format.js';
-import { seededOrganization } from './labels.js';
+import { seededDataLabel, seededOrganization } from './labels.js';
 import { authorityLabels, plainError } from './sms-labels.js';
 import { PeriodExportForm } from './SmsExport.js';
 import { DraftDocumentForm, IdentifyHazardForm } from './SmsForms.js';
@@ -314,9 +314,7 @@ export function SmsApp({ apiUrl, token, report, account, local = false, confirmI
           local && (
             <span className="simulation-pill">
               {demonstration ? 'Recorded demonstration' : 'Local development'}
-              {principal && seededOrganization(principal.tenantId)
-                ? ` · fictional ${flightReader ? 'operators' : 'utility'}`
-                : ''}
+              {principal && seededDataLabel(principal.tenantId) ? ` · ${seededDataLabel(principal.tenantId)}` : ''}
             </span>
           )
         }

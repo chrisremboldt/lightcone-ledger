@@ -71,10 +71,13 @@ test('a reader added from the Reader preset is offered nothing they cannot do', 
 test('a dispatcher makes a link to one produced set, sees it opened, and revokes it at once', async ({ page }) => {
   const run = randomUUID().slice(0, 6).toUpperCase();
   const id = await produceSet(page.request, run);
-  await page.goto('/');
-  await page.getByRole('radio', { name: 'Alpha Dispatch', exact: true }).check();
-  await page.getByRole('button', { name: 'Open operations', exact: true }).click();
-  await page.goto(`/records/produced/${id}`);
+  // Signing in is kept in the page only, so the set's own address is opened first and signed in at.
+  const openSet = async () => {
+    await page.goto(`/records/produced/${id}`);
+    await page.getByRole('radio', { name: 'Alpha Dispatch', exact: true }).check();
+    await page.getByRole('button', { name: 'Open operations', exact: true }).click();
+  };
+  await openSet();
   const set = page.getByTestId('produced-set');
   await expect(set.getByText('No link has been made to this set.', { exact: true })).toBeVisible();
   const form = set.getByRole('form', { name: 'Make a link' });
@@ -89,7 +92,7 @@ test('a dispatcher makes a link to one produced set, sees it opened, and revokes
   const secret = address.split('#')[1]!;
   const opened = await page.request.post('/v1/shared-records', { data: { secret } });
   expect(opened.status()).toBe(200);
-  await page.reload();
+  await openSet();
   const entry = page.getByRole('article', { name: `Link for Inspector, regional office ${run}`, exact: true });
   await expect(entry.getByText('Opens the set', { exact: true })).toBeVisible();
   await expect(

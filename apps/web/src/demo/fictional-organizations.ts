@@ -13,6 +13,13 @@ export function seededOrganization(tenantId: string) {
   return operators.find((operator) => tenantId === `tenant-${operator.key}`);
 }
 
+/** What the bar calls a seeded organization's data: the utility's own, or the flight operators'. Null for any other. */
+export function seededDataLabel(tenantId: string): string | null {
+  const organization = seededOrganization(tenantId);
+  if (!organization) return null;
+  return organization.key === 'utility' ? 'fictional utility' : 'fictional operators';
+}
+
 /**
  * The seeded fictional people the local sign-in screen and the demonstration offer, with their development tokens.
  * Read only behind the development and demonstration build switch, so a production build leaves them out.

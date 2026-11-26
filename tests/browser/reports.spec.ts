@@ -4,8 +4,9 @@ import { expect, test, type Page } from '@playwright/test';
 // number counted by the API, every chart told in a sentence with its numbers in a table, and each page printing
 // without the screen's choices. Runs on the seeded stack.
 
-async function openAs(page: Page, organization: string, person: string) {
-  await page.goto('/');
+// Signing in is kept in the page only: a report's address is opened first and signed in at.
+async function openAs(page: Page, organization: string, person: string, address = '/') {
+  await page.goto(address);
   await page.getByRole('radio', { name: organization, exact: true }).check();
   await page.getByLabel('Person').selectOption(person);
   await page.getByRole('button', { name: 'Open operations' }).click();
@@ -55,7 +56,7 @@ test('a summary of a period counts what is on file, at an address that carries t
     await expect(summary.getByRole('region', { name: part, exact: true })).toBeVisible();
   await expect(summary.getByText(/^Made .+ from the records on file\./)).toBeVisible();
 
-  await page.goto('/reports/summary/2026-01-01/2026-01-31');
+  await openAs(page, 'Alpha Dispatch', 'operator', '/reports/summary/2026-01-01/2026-01-31');
   await expect(page.getByRole('heading', { name: 'Summary of 2026-01-01 to 2026-01-31', exact: true })).toBeVisible();
   await expect(page).toHaveTitle('Summary 2026-01-01 to 2026-01-31 · Reports · Ledger');
   await expect(page.getByTestId('period-summary')).toBeVisible();
@@ -71,8 +72,7 @@ test('a summary of a period counts what is on file, at an address that carries t
 test('findings by month draw a chart told in a sentence, with its numbers in a table that prints open', async ({
   page,
 }) => {
-  await openAs(page, 'Alpha Dispatch', 'operator');
-  await page.goto('/reports');
+  await openAs(page, 'Alpha Dispatch', 'operator', '/reports');
   await reportsNav(page).getByRole('link', { name: 'Findings by month', exact: true }).click();
   await expect(page).toHaveURL(/\/reports\/findings$/);
   const chart = page.getByTestId('monthly-chart');
@@ -87,8 +87,7 @@ test('findings by month draw a chart told in a sentence, with its numbers in a t
 });
 
 test('indicators over time list what is recorded, or say nothing is', async ({ page }) => {
-  await openAs(page, 'Alpha Dispatch', 'operator');
-  await page.goto('/reports/indicators');
+  await openAs(page, 'Alpha Dispatch', 'operator', '/reports/indicators');
   await expect(page.getByRole('heading', { name: 'Indicators over time', exact: true })).toBeVisible();
   const listed = page.getByTestId('report-indicators');
   const none = page.getByText(/^No indicator result is recorded yet\./);
@@ -109,9 +108,8 @@ test('indicators over time list what is recorded, or say nothing is', async ({ p
 
 test('a report at phone width keeps to the screen', async ({ page }) => {
   await page.setViewportSize({ width: 375, height: 800 });
-  await openAs(page, 'Alpha Dispatch', 'operator');
   for (const address of ['/reports', '/reports/summary/2026-01-01/2026-01-31', '/reports/findings']) {
-    await page.goto(address);
+    await openAs(page, 'Alpha Dispatch', 'operator', address);
     await expect(page.getByRole('main', { name: 'Reports', exact: true })).toBeVisible();
     const overflow = await page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth);
     expect(overflow, address).toBeLessThanOrEqual(0);
@@ -133,12 +131,19 @@ test('the Safety home and the Records home lead to the reports', async ({ page }
 });
 
 test('People and browse records take an order', async ({ page }) => {
-  await openAs(page, 'Alpha Dispatch', 'operator');
-  await page.goto('/people');
+  await openAs(page, 'Alpha Dispatch', 'operator', '/people');
   const people = page.getByRole('complementary', { name: 'People list', exact: true });
   await people.getByLabel('Order').selectOption({ label: 'Most recently added first' });
   await expect(people.locator('.people-list li').first()).toBeVisible();
-  await page.goto('/records/browse');
+  await openAs(page, 'Alpha Dispatch', 'operator', '/records/browse');
   const order = page.getByRole('region', { name: /records$/ }).getByLabel('Order');
   await expect(order.locator('option')).toHaveText(['Most recent first', 'By subject id']);
+});
+
+test('one flight’s file opens at its address, and says what is not on file', async ({ page }) => {
+  await openAs(page, 'Alpha Dispatch', 'operator', '/reports/flights/RIDGE-FLIGHT-0000');
+  const rules = page.getByTestId('flight-file-rules');
+  await expect(rules).toBeVisible();
+  await expect(page.getByText('No record about this flight is on file.', { exact: true })).toBeVisible();
+  await expect(page.getByText('This report could not be read', { exact: true })).toHaveCount(0);
 });

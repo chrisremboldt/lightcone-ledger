@@ -1,6 +1,7 @@
 import { useEffect, useState, type FormEvent, type ReactNode } from 'react';
 import {
   OPERATOR_RECORD_SOURCE_ID,
+  SUBJECT_RECORD_PAGE_LIMIT,
   type Capability,
   type FindingsByMonth,
   type IndicatorHistory,
@@ -766,13 +767,19 @@ function RecordFields({ view, catalog }: { view: OperatorRecordView; catalog: Op
   );
 }
 
-function FlightFilePage({ client, flightId }: { client: LedgerClient; flightId: string }) {
-  const query = {
+/** What one flight's file asks for about the flight: its evaluations and findings, as many as one page holds. */
+export function flightFileQuery(flightId: string) {
+  return {
     subjectKind: 'flight' as const,
     subjectId: flightId,
     subjectScope: 'source' as const,
     sourceId: OPERATOR_RECORD_SOURCE_ID,
+    limit: SUBJECT_RECORD_PAGE_LIMIT,
   };
+}
+
+function FlightFilePage({ client, flightId }: { client: LedgerClient; flightId: string }) {
+  const query = flightFileQuery(flightId);
   const loaded = useRead(
     () =>
       Promise.all([
@@ -780,7 +787,7 @@ function FlightFilePage({ client, flightId }: { client: LedgerClient; flightId: 
           `/v1/operator-records/subjects/flight/${encodeURIComponent(flightId)}?${new URLSearchParams({ sourceId: OPERATOR_RECORD_SOURCE_ID })}`,
         ),
         client.request<OperatorRecordTypesResponse>('/v1/operator-records/types'),
-        client.ruleEvaluations({ ...query, limit: 200 }),
+        client.ruleEvaluations(query),
         client.subjectFindings(query),
       ]),
     flightId,

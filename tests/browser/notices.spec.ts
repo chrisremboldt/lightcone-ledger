@@ -20,7 +20,7 @@ test('a person keeps their address and chooses which notices arrive by email, in
   const form = bar.getByRole('form', { name: 'Your email notices' });
   await form.getByLabel('Your email address', { exact: true }).fill(address);
   await form.getByLabel('An action of mine is due within three days', { exact: true }).uncheck();
-  await form.getByLabel('Digest', { exact: true }).selectOption({ label: 'A daily digest' });
+  await form.getByRole('combobox', { name: 'Digest', exact: true }).selectOption({ label: 'A daily digest' });
   await form.getByRole('button', { name: 'Save my notices', exact: true }).click();
   // Saving keeps the account open to show what was saved.
   await expect(form.getByText('Your notices were saved. The change is recorded.', { exact: true })).toBeVisible();
@@ -32,7 +32,7 @@ test('a person keeps their address and chooses which notices arrive by email, in
   await expect(form.getByLabel('Your email address', { exact: true })).toHaveValue(address);
   await expect(form.getByLabel('An action of mine is due within three days', { exact: true })).not.toBeChecked();
   await expect(form.getByLabel('A finding or an action is assigned to me', { exact: true })).toBeChecked();
-  await expect(form.getByLabel('Digest', { exact: true })).toHaveValue('daily');
+  await expect(form.getByRole('combobox', { name: 'Digest', exact: true })).toHaveValue('daily');
 });
 
 test('the People screen says who has no address, and an administrator sets one', async ({ page }) => {
@@ -61,7 +61,7 @@ test('an administrator reads every notice with its state, at an address of its o
   await expect(page).toHaveURL(/\/people\/notices$/);
   const area = page.getByRole('main', { name: 'Notices' });
   await expect(area.getByRole('heading', { name: 'Notices', exact: true })).toBeVisible();
-  await area.getByLabel('State', { exact: true }).selectOption({ label: 'Given up' });
+  await area.getByRole('combobox', { name: 'State', exact: true }).selectOption({ label: 'Given up' });
   await expect(
     area.getByRole('table', { name: 'Notices' }).or(area.getByText('No notice is given up.', { exact: true })),
   ).toBeVisible();

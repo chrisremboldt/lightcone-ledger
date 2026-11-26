@@ -345,6 +345,25 @@ describe.runIf(process.env.LEDGER_ENV !== 'staging')('Credentials for sources an
 
     const zed = await add(org.token, 'Zed Example', 'human');
     const amy = await add(org.token, 'Amy Example', 'human');
+    // Someone put on file without being added, as the seed puts its people, and changed afterwards: the change is not
+    // when they were added.
+    const seeded = `${org.tenantId}-seeded`;
+    await admin.query('INSERT INTO principals(id,tenant_id,name,kind,capabilities) VALUES($1,$2,$3,$4,$5)', [
+      seeded,
+      org.tenantId,
+      'Seeded Example',
+      'human',
+      ['flight:read'],
+    ]);
+    const before = (await call(org.token, 'GET', `/v1/authority/principals/${seeded}`)).json().principal;
+    const changed = await call(org.token, 'POST', '/v1/commands', {
+      kind: 'authority.update',
+      principalId: seeded,
+      expectedRevision: before.revision,
+      capabilities: ['flight:read', 'order:read'],
+      observationGrants: [],
+    });
+    expect(changed.statusCode, changed.body).toBe(201);
     const byName = (await call(org.token, 'GET', '/v1/authority/principals')).json();
     const named = byName.principals.map((entry: { id: string }) => entry.id);
     expect(byName.principals.map((entry: { name: string }) => entry.name).slice(0, 2)).toEqual([
@@ -355,7 +374,8 @@ describe.runIf(process.env.LEDGER_ENV !== 'staging')('Credentials for sources an
     const recent = (await call(org.token, 'GET', '/v1/authority/principals?order=recent')).json();
     const latest = recent.principals.map((entry: { id: string }) => entry.id);
     expect(latest.slice(0, 3)).toEqual([amy, zed, sourceId]);
-    expect(latest.at(-1)).toBe(org.administratorId);
+    expect(latest).toContain(seeded);
+    expect(latest.indexOf(seeded)).toBeGreaterThan(latest.indexOf(org.administratorId));
     expect(await pages('/v1/authority/principals?order=recent', 'principals')).toEqual(latest);
     // A cursor of one order is not one of the other.
     const first = (await call(org.token, 'GET', '/v1/authority/principals?limit=1')).json();

@@ -164,7 +164,8 @@ export function SharedRecordsPage({ apiUrl }: { apiUrl: string }) {
         <div>
           <dt>SHA-256 of manifest.json</dt>
           <dd>
-            <code>{set.manifestSha256}</code> Compare it with the digest the organization gave you by another route.
+            <code>{set.manifestSha256}</code>
+            <span className="records-help">Compare it with the digest the organization gave you by another route.</span>
           </dd>
         </div>
       </dl>
@@ -184,7 +185,7 @@ export function SharedRecordsPage({ apiUrl }: { apiUrl: string }) {
             <th>What it is</th>
             <th>Size</th>
             <th>SHA-256</th>
-            <th>Open</th>
+            <th className="shared-records-open">Open</th>
           </tr>
         </thead>
         <tbody>
@@ -195,8 +196,8 @@ export function SharedRecordsPage({ apiUrl }: { apiUrl: string }) {
               </td>
               <td>{roleLabels[file.role]}</td>
               <td>{file.byteLength} bytes</td>
-              <td>{file.sha256 ? <code>{file.sha256.slice(0, 12)}…</code> : 'See above'}</td>
-              <td>
+              <td className="shared-records-digest">{file.sha256 ? <code>{file.sha256}</code> : 'See above'}</td>
+              <td className="shared-records-open">
                 {readable(file.contentType) && (
                   <>
                     <Button kind="quiet" disabled={busy !== null} onClick={() => void fetchFile(file, true)}>

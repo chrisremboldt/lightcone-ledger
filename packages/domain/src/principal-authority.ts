@@ -297,12 +297,14 @@ function readPrincipalCursor(order: PeopleOrder, cursor: string): [string, strin
 }
 
 /**
- * When Ledger first recorded each principal: the first event of its authority stream, which adding a person writes.
- * Text with microseconds, so a page boundary compares exactly; null for one put on file another way, such as a seed.
+ * When Ledger added each principal: the person.add event of its authority stream. Text with microseconds, so a page
+ * boundary compares exactly; null for one put on file another way, such as a seed or the first administrator, even
+ * after a later change to their authority.
  */
 const ADDED_AT = `(SELECT to_char(e.received_at AT TIME ZONE 'UTC','YYYY-MM-DD"T"HH24:MI:SS.US"Z"')
   FROM streams s JOIN journal_events e ON e.tenant_id=s.tenant_id AND e.stream_id=s.id
-  WHERE s.tenant_id=p.tenant_id AND s.name='authority:'||p.id ORDER BY e.stream_sequence LIMIT 1)`;
+  WHERE s.tenant_id=p.tenant_id AND s.name='authority:'||p.id AND e.event_type='person.add'
+  ORDER BY e.stream_sequence LIMIT 1)`;
 
 /** Where each order resumes after $3 (the name, or when added) and $4 (the id), and the order itself. */
 const peopleOrders: Record<PeopleOrder, { after: string; by: string }> = {

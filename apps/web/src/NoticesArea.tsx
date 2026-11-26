@@ -129,22 +129,24 @@ function NoticeList({ client }: { client: LedgerClient }) {
         </Notice>
       )}
       {list && list.notices.length > 0 && (
-        <table className="records-table" aria-label="Notices">
-          <thead>
-            <tr>
-              <th scope="col">Written</th>
-              <th scope="col">Notice</th>
-              <th scope="col">For</th>
-              <th scope="col">By</th>
-              <th scope="col">State</th>
-            </tr>
-          </thead>
-          <tbody>
-            {list.notices.map((notice) => (
-              <NoticeRow key={notice.id} notice={notice} />
-            ))}
-          </tbody>
-        </table>
+        <div className="records-table-scroll">
+          <table className="records-table" aria-label="Notices">
+            <thead>
+              <tr>
+                <th scope="col">Written</th>
+                <th scope="col">Notice</th>
+                <th scope="col">For</th>
+                <th scope="col">By</th>
+                <th scope="col">State</th>
+              </tr>
+            </thead>
+            <tbody>
+              {list.notices.map((notice) => (
+                <NoticeRow key={notice.id} notice={notice} />
+              ))}
+            </tbody>
+          </table>
+        </div>
       )}
       {list?.hasMore && (
         <Button kind="secondary" disabled={reading} onClick={() => void more()}>

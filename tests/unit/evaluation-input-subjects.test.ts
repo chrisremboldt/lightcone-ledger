@@ -128,4 +128,22 @@ describe('the subject each input of an evaluation read', () => {
       ['site', site.id, 'source', site.sourceId],
     ]);
   });
+
+  it('finds a record entered after the span it is about, as the observations route selects by that span', async () => {
+    // Recorded a week after the flight it describes: the evidence names when it was recorded, the route the span.
+    const record = {
+      ...observation('plan-1', '2026-11-19T10:00:00.000Z'),
+      interval: { start: '2026-11-12T20:10:00.000Z', end: '2026-11-12T20:35:00.000Z' },
+    } as AcceptedObservation;
+    const client = {
+      observations: async (query: ObservationQuery) => {
+        const [from, to] = [Date.parse(query.from), Date.parse(query.to)];
+        const start = Date.parse(record.interval!.start);
+        const selected = start < to && Date.parse(record.interval!.end) > from;
+        return { observations: selected ? [record] : [], page: { nextCursor: null } };
+      },
+    } as unknown as LedgerClient;
+    const own = evaluation([{ name: 'recorded', type: 'operator.record', observationIds: ['plan-1'] }]);
+    expect((await readCitedObservations(client, flight, own)).map((item) => item.id)).toEqual(['plan-1']);
+  });
 });

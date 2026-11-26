@@ -170,16 +170,18 @@ export function PersonNoticeEmail({
           ? `${person.name} gets email notices at ${person.noticeEmail}, as they choose under their name in the bar.`
           : `No email address is kept for ${person.name}, so they get no email notices.`}
       </p>
-      <label className="records-field">
-        <span>Email address</span>
-        <input
-          type="email"
-          value={email}
-          pattern={NOTICE_EMAIL_PATTERN}
-          maxLength={254}
-          onChange={(event) => setEmail(event.target.value)}
-        />
-      </label>
+      <div className="records-form-grid">
+        <label>
+          Email address
+          <input
+            type="email"
+            value={email}
+            pattern={NOTICE_EMAIL_PATTERN}
+            maxLength={254}
+            onChange={(event) => setEmail(event.target.value)}
+          />
+        </label>
+      </div>
       {failure && (
         <Notice tone="alert" title="Nothing was changed">
           {failure}

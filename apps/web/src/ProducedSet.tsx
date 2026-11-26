@@ -267,7 +267,7 @@ function LinkEntry({
         )}
         <div>
           <dt>Opened</dt>
-          <dd>{link.openings.length ? `${link.openings.length} times` : 'Not yet'}</dd>
+          <dd>{openedTimes(link.openings.length)}</dd>
         </div>
       </dl>
       {link.openings.length > 0 && (
@@ -315,4 +315,10 @@ function LinkEntry({
       )}
     </article>
   );
+}
+
+/** How often a link was opened, in words. */
+export function openedTimes(count: number): string {
+  if (count === 0) return 'Not yet';
+  return count === 1 ? 'Once' : `${count} times`;
 }

@@ -172,8 +172,12 @@
   }
   /* The choice of period, order or rule is the screen's; the page says which it shows. */
   .report-period,
-  .records-order {
+  .records-order,
+  .shared-records-open {
     display: none !important;
+  }
+  .shared-records-digest code {
+    max-width: none;
   }
   .report-count {
     color: var(--ink) !important;

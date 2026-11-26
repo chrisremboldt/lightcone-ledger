@@ -284,23 +284,40 @@ export async function readCitedObservations(
   }
   const found = new Map<string, AcceptedObservation>();
   for (const { about, items } of groups.values()) {
-    const times = items.map((item) => Date.parse(item.occurredAt)).filter(Number.isFinite);
-    const response = await client.observations({
-      subjectKind: about.kind,
-      subjectId: about.id,
-      ...(about.scope === 'source' ? { subjectScope: 'source' as const, sourceId: about.sourceId } : {}),
-      type: items[0]!.type,
-      version: items[0]!.version,
-      from: new Date(Math.min(...times)).toISOString(),
-      to: new Date(Math.max(...times) + 1).toISOString(),
-      include: 'all',
-      limit: 500,
-    });
-    for (const observation of response.observations)
-      if (cited.has(observation.id)) found.set(observation.id, observation);
+    // The observations route selects by the span a record is about, not by when it was recorded: a record entered
+    // after the flight it describes lies outside a window around its occurredAt. So every time is read, newest
+    // first, a page at a time, until each cited observation of the group is found.
+    const wanted = new Set(items.map((item) => item.observationId));
+    let cursor: string | undefined;
+    for (let page = 0; page < CITED_READ_PAGES && wanted.size; page++) {
+      const response = await client.observations({
+        subjectKind: about.kind,
+        subjectId: about.id,
+        ...(about.scope === 'source' ? { subjectScope: 'source' as const, sourceId: about.sourceId } : {}),
+        type: items[0]!.type,
+        version: items[0]!.version,
+        from: CITED_READ_FROM,
+        to: CITED_READ_TO,
+        order: 'newest_first',
+        include: 'all',
+        limit: 500,
+        ...(cursor ? { cursor } : {}),
+      });
+      for (const observation of response.observations)
+        if (cited.has(observation.id)) {
+          found.set(observation.id, observation);
+          wanted.delete(observation.id);
+        }
+      if (!response.page?.nextCursor) break;
+      cursor = response.page.nextCursor;
+    }
   }
   return [...found.values()];
 }
+/** The widest window the observations route reads, and how many pages of one subject's records are read at most. */
+const CITED_READ_FROM = '1970-01-01T00:00:00.000Z';
+const CITED_READ_TO = '9999-12-31T00:00:00.000Z';
+const CITED_READ_PAGES = 10;
 
 export function useCitedObservations(
   client: LedgerClient | null,
