@@ -18,7 +18,7 @@ import {
 } from '@ledger/contracts';
 import type { LedgerClient } from '@ledger/contracts/client';
 import { Badge, Button, Notice, Spinner } from '@ledger/ui';
-import { ctDay, time, timeZoneLabel } from './format.js';
+import { counted, ctDay, time, timeZoneLabel } from './format.js';
 import { coverageCells, coverageColumns } from './program-view-table.js';
 import { plainError } from './sms-labels.js';
 
@@ -119,8 +119,10 @@ function ReasonForm({
   }
   return (
     <form className="records-form" aria-label={label} onSubmit={submit}>
-      <label htmlFor={id}>{label}</label>
-      <input id={id} required value={reason} onChange={(event) => setReason(event.target.value)} />
+      <div className="records-form-grid">
+        <label htmlFor={id}>{label}</label>
+        <input id={id} required value={reason} onChange={(event) => setReason(event.target.value)} />
+      </div>
       {error && (
         <Notice tone="alert" title={failedTitle}>
           {error}
@@ -312,7 +314,7 @@ function MakeGrantForm({ client, onMade }: { client: LedgerClient; onMade: (made
               disabled={!productions.includes(set.id) && productions.length >= PROGRAM_GRANT_PRODUCTION_LIMIT}
               onChange={(event) => setProductions(toggle(productions, set.id, event.target.checked))}
             />{' '}
-            {when(set.producedAt)}: {set.reason} ({set.counts.records} records)
+            {when(set.producedAt)}: {set.reason} ({counted(set.counts.records, 'record')})
           </label>
         ))}
       </fieldset>
@@ -414,7 +416,7 @@ function GrantEntry({
               {grant.covers.openFindings && <li>Open findings by rule</li>}
               {grant.covers.productions.map((set) => (
                 <li key={set.id}>
-                  The set produced {when(set.producedAt)} ({set.records} records)
+                  The set produced {when(set.producedAt)} ({counted(set.records, 'record')})
                 </li>
               ))}
             </ul>
@@ -678,41 +680,57 @@ function OperatorAnswer({
           {pack.version === null ? (
             <p className="records-note">Not adopted by the operator now.</p>
           ) : (
-            <Table label={`Subjects in each result for ${pack.title}, ${asOf}`}>
-              <thead>
-                <tr>
-                  <th scope="col">Rule</th>
-                  {coverageColumns(pack).map((column) => (
-                    <th scope="col" key={column.label}>
-                      {column.label}
+            <>
+              <p className="records-note" data-testid="program-coverage-counts">
+                Each number counts subjects, the people, aircraft and flights a rule is about, by the rule’s latest
+                result for each under this adoption. These are not counts of findings: a finding stays open until a
+                person closes it, whatever the latest result.
+              </p>
+              <Table label={`Subjects in each result for ${pack.title}, ${asOf}`}>
+                <thead>
+                  <tr>
+                    <th scope="col" rowSpan={2}>
+                      Rule
                     </th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                {pack.rules.map((rule) => (
-                  <tr key={rule.ruleId}>
-                    <th scope="row">
-                      {rule.title}
-                      {rule.citation && <small>{rule.citation}</small>}
+                    <th scope="colgroup" colSpan={coverageColumns(pack).length}>
+                      Subjects by their latest result
                     </th>
-                    {coverageCells(rule, coverageColumns(pack)).map((cell, index) => (
-                      <td key={index} colSpan={cell.span > 1 ? cell.span : undefined}>
-                        {cell.text}
-                      </td>
+                  </tr>
+                  <tr>
+                    {coverageColumns(pack).map((column) => (
+                      <th scope="col" key={column.label}>
+                        {column.label}
+                      </th>
                     ))}
                   </tr>
-                ))}
-              </tbody>
-            </Table>
+                </thead>
+                <tbody>
+                  {pack.rules.map((rule) => (
+                    <tr key={rule.ruleId}>
+                      <th scope="row">
+                        {rule.title}
+                        {rule.citation && <small>{rule.citation}</small>}
+                      </th>
+                      {coverageCells(rule, coverageColumns(pack)).map((cell, index) => (
+                        <td key={index} colSpan={cell.span > 1 ? cell.span : undefined}>
+                          {cell.text}
+                        </td>
+                      ))}
+                    </tr>
+                  ))}
+                </tbody>
+              </Table>
+            </>
           )}
         </section>
       ))}
       {document.openFindings && (
         <section aria-label="Open findings">
           <h4>Open findings by rule</h4>
-          <p className="records-note">
-            {document.openFindings.total} open, {asOf}.
+          <p className="records-note" data-testid="program-open-findings-total">
+            {counted(document.openFindings.total, 'open finding')} of the rules it adopted to count, {asOf}: what its
+            own list of open findings showed then. Findings of rules adopted to propose only, and findings a waiver
+            relieves, are not counted.
             {document.openFindings.truncated ? ' More are open than one read counts.' : ''}
           </p>
           {document.openFindings.rules.length > 0 && (
@@ -720,7 +738,7 @@ function OperatorAnswer({
               <thead>
                 <tr>
                   <th scope="col">Rule</th>
-                  <th scope="col">Open</th>
+                  <th scope="col">Open findings</th>
                   <th scope="col">Oldest opened</th>
                 </tr>
               </thead>
@@ -733,7 +751,7 @@ function OperatorAnswer({
                     </th>
                     <td>{rule.open}</td>
                     <td>
-                      {ctDay(rule.oldestOpenedAt)}, {rule.oldestAgeDays} days old when read
+                      {ctDay(rule.oldestOpenedAt)}, {counted(rule.oldestAgeDays, 'day')} old when read
                     </td>
                   </tr>
                 ))}
@@ -756,7 +774,7 @@ function OperatorAnswer({
                 >
                   The set produced {when(set.producedAt)}
                 </a>
-                : {set.records} records, open until {when(set.expiresAt)}
+                : {counted(set.records, 'record')}, open until {when(set.expiresAt)}
               </li>
             ))}
           </ul>

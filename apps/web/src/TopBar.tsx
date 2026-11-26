@@ -243,7 +243,11 @@ function Disclosure({
   useEffect(() => setOpen(false), [place]);
   useEffect(() => {
     if (!open) return;
-    panel.current?.querySelector<HTMLElement>('a[href], button, select, summary')?.focus();
+    // The sections come first when the panel has them; the badge above them is not where a person is going.
+    (
+      panel.current?.querySelector<HTMLElement>('nav a[href]') ??
+      panel.current?.querySelector<HTMLElement>('a[href], button, select, summary')
+    )?.focus();
     const away = (event: PointerEvent) => {
       const target = event.target as Node;
       if (!panel.current?.contains(target) && !button.current?.contains(target)) setOpen(false);

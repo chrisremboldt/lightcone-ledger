@@ -46,6 +46,20 @@ Each release has a section here. Its **Upgrading** part says what a deployment d
 - A light and a dark theme, pages that print, a bar that fits a phone, and an account panel under the person's name.
 - A Docker-only start for one computer (`infra/compose.try.yaml`), and an image published to the GitHub Container Registry for each release.
 
+### Fixed
+
+- One flight's file said nothing was on file for a flight Ledger holds by its own id (a flight from an order or a dock), though its records, rule results and findings were there. A flight's file under Records and under Reports, the list of flights under Records and a produced set now read a flight by whichever id names it, Ledger's or the organization's, and a finding about a flight links to its file.
+- The summary of a period counts the findings open now with the open-findings list's own count, and its columns say they count findings opened in the period, closed in the period and open now. A program owner's page says its open findings are what the operator's own list showed when read, and that its coverage numbers count subjects by their latest result, not findings.
+- Operators you follow: a coverage table fits its card on a wide screen and scrolls inside its own box on a phone; the reason to stop following is a styled field.
+- Setup: the badge of the step that lists items sits beside its title like every other step's.
+- A link to a produced set counts one opening per visit, also on `pnpm dev`.
+- Mission review: a control not yet in effect says when it takes effect in the organization's time zone, and its date pill keeps to its width.
+- Counts are singular for one everywhere in the web app ("1 rule", not "1 rules").
+- A time field on record entry names its zone in one pair of brackets.
+- An adoption or a control with no end says it has no end date instead of showing a date in the year 9999.
+- The badge beside the organization's name says the same on every screen.
+- On the shared-records page, the sentence after the manifest's digest has a line of its own.
+
 ## v0.1.0 (2026-11-23)
 
 The first public release.

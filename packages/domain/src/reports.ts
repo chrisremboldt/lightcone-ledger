@@ -13,7 +13,7 @@ import {
 import { canonicalDigest } from '@ledger/integrity';
 import { DomainError, type AuthContext, type PoolClient } from '@ledger/persistence';
 import { findIndicatorDefinition } from './indicators.js';
-import { validDay } from './open-findings.js';
+import { countedOpenByRule, readOpenFindingEntries, validDay } from './open-findings.js';
 import { operatorRecordObservationTypes, RECORD_TYPE_SQL } from './operator-record-reads.js';
 import { getRulePackVersion } from './rule-pack-registry.js';
 import { closedActions, settledActions, signedVersions, type SettledAction } from './sms-assurance.js';
@@ -196,6 +196,10 @@ async function findingCounts(client: PoolClient, tenantId: string, bounds: Bound
     )
   ).rows;
   const packTitle = packTitles();
+  // A period that has not ended counts its open findings as the open-findings list counts them now, with its own
+  // count: the two say the same thing and must never differ. An ended period counts what was open at its end.
+  const openNow =
+    bounds.asOf === bounds.now ? countedOpenByRule((await readOpenFindingEntries(client, tenantId)).entries) : null;
   const rules: ReportRuleCounts[] = rows
     .map((row) => ({
       packId: row.pack_id,
@@ -204,7 +208,7 @@ async function findingCounts(client: PoolClient, tenantId: string, bounds: Bound
       ruleTitle: row.rule_title ?? row.leaf_id,
       opened: Number(row.opened),
       closed: Number(row.closed),
-      openAtEnd: Number(row.open_at_end),
+      openAtEnd: openNow ? (openNow.get(`${row.pack_id} ${row.leaf_id}`) ?? 0) : Number(row.open_at_end),
     }))
     .filter((rule) => rule.opened + rule.closed + rule.openAtEnd > 0);
   const sum = (pick: (row: (typeof rows)[number]) => string) =>

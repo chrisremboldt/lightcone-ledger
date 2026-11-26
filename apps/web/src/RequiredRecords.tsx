@@ -9,7 +9,7 @@ import type {
 } from '@ledger/contracts';
 import { readableQuote } from '@ledger/contracts';
 import { Button, Notice, Spinner } from '@ledger/ui';
-import { ctDay, timeZoneLabel } from './format.js';
+import { counted, ctDay, timeZoneLabel } from './format.js';
 import { plainError } from './sms-labels.js';
 
 /** What is on file for one kind of record, in plain words: a count and the days it covers, never a judgment. */
@@ -113,7 +113,7 @@ export function RequiredRecords({
               <p>
                 It is a draft controlled document under Safety, Documents.
                 {started.blanks.length
-                  ? ` Fill its ${started.blanks.length} blanks, each written [To be filled in: …], then review it, have it signed and issue it. Reviewing or issuing it is refused while a blank remains.`
+                  ? ` Fill its ${counted(started.blanks.length, 'blank')}, each written [To be filled in: …], then review it, have it signed and issue it. Reviewing or issuing it is refused while a blank remains.`
                   : ' Review it, have it signed and issue it.'}
               </p>
               {onOpenDocument && started.id && (

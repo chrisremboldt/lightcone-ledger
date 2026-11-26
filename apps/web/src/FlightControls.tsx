@@ -5,6 +5,7 @@ import { Badge, Notice, Spinner } from '@ledger/ui';
 import { errorMessage } from './format.js';
 import { missionTime } from './missionRelease.js';
 import { NotApplicableControls } from './NotApplicableControls.js';
+import { withLocalTimes } from './wording.js';
 import {
   appliesBecause,
   controlCheckWords,
@@ -49,7 +50,7 @@ function ControlItem({
           <li key={`${result.subjectKey ?? 'control'}:${index}`} data-result={result.result}>
             <Badge tone={controlResultTone(result.result)}>{controlResultWords(result.result)}</Badge>
             {controlResultSubject(result) && <span className="muted"> {controlResultSubject(result)}</span>}
-            <span> {result.summary}</span>
+            <span> {withLocalTimes(result.summary, missionTime)}</span>
             {appliesBecause(result, applicability) && (
               <span className="muted" data-testid="control-applies-because">
                 {' '}

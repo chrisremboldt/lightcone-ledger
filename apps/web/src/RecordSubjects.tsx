@@ -11,7 +11,7 @@ import type {
 } from '@ledger/contracts';
 import { Badge, Button, Notice, Spinner } from '@ledger/ui';
 import { recordHeadline, recordTime } from './operator-records.js';
-import { time, timeZoneLabel } from './format.js';
+import { counted, time, timeZoneLabel } from './format.js';
 import { coverageResultLabels } from './rule-coverage.js';
 import { plainError, saveBytes } from './sms-labels.js';
 import { subjectLabel } from './subject-label.js';
@@ -26,8 +26,6 @@ export interface ChosenSubject {
   id: string;
   name: string;
 }
-
-const plural = (count: number, noun: string) => `${count} ${noun}${count === 1 ? '' : 's'}`;
 
 /** The organization's subjects of one kind, by name and own id, with their record and open finding counts. */
 export function SubjectLists({
@@ -138,12 +136,12 @@ export function SubjectLists({
                   <span className="records-item-head">
                     <strong>{item.named ? item.subject.name : item.subject.id}</strong>
                     {item.openFindings > 0 && (
-                      <Badge tone="attention">{plural(item.openFindings, 'open finding')}</Badge>
+                      <Badge tone="attention">{counted(item.openFindings, 'open finding')}</Badge>
                     )}
                   </span>
                   <span className="records-item-meta">
                     {item.named && kind !== 'organization' ? `${item.subject.id} · ` : ''}
-                    {plural(item.records.about, 'record')}
+                    {counted(item.records.about, 'record')}
                     {item.records.about !== item.records.current
                       ? `, ${item.records.about - item.records.current} replaced`
                       : ''}
@@ -215,7 +213,9 @@ export function SubjectFile({
       </Button>
       <h2>{title}</h2>
       <p className="records-item-meta">
-        {own ? 'Records about your own organization' : `${subject.kind} · your id ${subject.id}`}
+        {own
+          ? 'Records about your own organization'
+          : `${subject.kind} · ${file?.subject.scope === 'ledger' ? 'Ledger’s id' : 'your id'} ${subject.id}`}
         {file && !file.named && !own ? ' · no personnel file, identity or plan names it yet' : ''}
       </p>
       {onProduce && <Button onClick={() => onProduce(subject)}>Produce these records</Button>}
@@ -572,9 +572,9 @@ export function ProductionSummary({ client, production }: { client: LedgerClient
   return (
     <div className="records-origin">
       <p>
-        {plural(production.counts.records, 'record')} of {plural(production.counts.recordTypes, 'record type')}
+        {counted(production.counts.records, 'record')} of {counted(production.counts.recordTypes, 'record type')}
         {production.counts.replaced ? `, ${production.counts.replaced} of them replaced` : ''};{' '}
-        {plural(production.counts.originals, 'original file')} listed, {production.counts.originalsIncluded} included.
+        {counted(production.counts.originals, 'original file')} listed, {production.counts.originalsIncluded} included.
       </p>
       <dl className="records-fields">
         <div>

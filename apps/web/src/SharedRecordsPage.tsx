@@ -41,6 +41,23 @@ async function ask(apiUrl: string, path: string, body: Record<string, string>): 
 }
 
 /**
+ * The set a link opens, asked for once per page: every ask is kept by the organization as an opening, so a second run
+ * of the effect (React runs effects twice in development) reuses the first answer instead of asking again.
+ */
+const opened = new Map<string, Promise<SharedRecords>>();
+function openSet(apiUrl: string, secret: string): Promise<SharedRecords> {
+  const key = `${apiUrl}\u0000${secret}`;
+  let answer = opened.get(key);
+  if (!answer) {
+    answer = ask(apiUrl, '/v1/shared-records', { secret }).then(
+      (response) => response.json() as Promise<SharedRecords>,
+    );
+    opened.set(key, answer);
+  }
+  return answer;
+}
+
+/**
  * The page a link to one produced set opens. It needs no sign-in: the organization's name, what the set is, its files
  * to read or download and the whole .zip. It changes nothing, and each opening is kept by Ledger with its time only.
  */
@@ -55,16 +72,14 @@ export function SharedRecordsPage({ apiUrl }: { apiUrl: string }) {
     document.title = 'Shared records · Ledger';
     if (!secret) return;
     let stopped = false;
-    ask(apiUrl, '/v1/shared-records', { secret })
-      .then((response) => response.json() as Promise<SharedRecords>)
-      .then(
-        (answer) => {
-          if (stopped) return;
-          setTimeZone(answer.organization.timeZone);
-          setShown(answer);
-        },
-        (error: Error) => !stopped && setFailure(error.message),
-      );
+    openSet(apiUrl, secret).then(
+      (answer) => {
+        if (stopped) return;
+        setTimeZone(answer.organization.timeZone);
+        setShown(answer);
+      },
+      (error: Error) => !stopped && setFailure(error.message),
+    );
     return () => {
       stopped = true;
     };
@@ -165,7 +180,7 @@ export function SharedRecordsPage({ apiUrl }: { apiUrl: string }) {
           <dt>SHA-256 of manifest.json</dt>
           <dd>
             <code>{set.manifestSha256}</code>
-            <span className="records-help">Compare it with the digest the organization gave you by another route.</span>
+            <p className="records-help">Compare it with the digest the organization gave you by another route.</p>
           </dd>
         </div>
       </dl>

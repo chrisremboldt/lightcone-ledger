@@ -155,3 +155,31 @@ test('one flight’s file opens at its address, and says what is not on file', a
   await expect(page.getByText('No record about this flight is on file.', { exact: true })).toBeVisible();
   await expect(page.getByText('This report could not be read', { exact: true })).toHaveCount(0);
 });
+
+// After `pnpm scenario`, the seeded flights Ledger holds have findings by Ledger's own id. Without it there is no such
+// finding, and this says so rather than passing on nothing.
+test('a flight’s file opened from one of its findings shows its rule results and findings', async ({ page }) => {
+  await openAs(page, 'Alpha Dispatch', 'operator', '/rules/findings');
+  const list = page.getByTestId('open-findings');
+  await list
+    .getByRole('navigation', { name: 'How findings are shown' })
+    .getByRole('button', { name: 'Every finding, oldest first', exact: true })
+    .click();
+  await list.getByLabel('Subject', { exact: true }).selectOption({ label: 'Flights' });
+  const rows = list.getByRole('button', { name: /^Open the finding about / });
+  await expect(rows.first().or(list.getByText(/^No /).first())).toBeVisible();
+  test.skip(
+    (await rows.count()) === 0,
+    'No flight has an open finding: run `pnpm scenario` on the seeded stack first.',
+  );
+  await rows.first().click();
+  const detail = page.getByTestId('open-finding-detail');
+  await expect(detail.getByText(/^flight · Ledger’s id /)).toBeVisible();
+  await detail.getByRole('link', { name: 'This flight’s file', exact: true }).click();
+  await expect(page).toHaveURL(/\/reports\/flights\/[0-9a-f-]{36}$/);
+  const file = page.getByTestId('flight-file');
+  await expect(file.getByText(/^Ledger’s id [0-9a-f-]{36}\. Read /)).toBeVisible();
+  await expect(file.getByTestId('flight-file-rule').first()).toBeVisible();
+  await expect(file.getByText('No finding about this flight is recorded.', { exact: true })).toHaveCount(0);
+  await expect(file.getByTestId('flight-file-finding').first()).toBeVisible();
+});

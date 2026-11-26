@@ -23,14 +23,14 @@ import {
   operatorRecordDefinitions,
   readRecordRows,
   operatorRecordObservationTypes,
-  recordSubjectOf,
   recordView,
+  resolveRecordSubject,
   referenceFieldsOf,
   requireRecordRead,
   type RecordSubject,
 } from './operator-record-reads.js';
 import { resultOf, standingResult, type LatestResult } from './rule-coverage.js';
-import { findingIdFor } from './rule-evaluations.js';
+import { findingIdFor, organizationIdOf } from './rule-evaluations.js';
 import { organizationTimeZone } from './organization-zone.js';
 
 /**
@@ -80,6 +80,38 @@ export async function recordNamesOf(
     );
     const name = definition && recordSubjectName(definition, row.values.record ?? {}, timeZone);
     if (name) names.set(`${row.subject_kind} ${row.subject_id}`, name);
+  }
+  return names;
+}
+
+/**
+ * `kind id` keys mapped to the names a person knows subjects by: the operator's own organization, a subject Ledger holds
+ * by its label, and a subject named by the operator's own id by its records under the source.
+ */
+async function ledgerAndRecordNames(
+  client: PoolClient,
+  tenantId: string,
+  sourceId: string,
+  subjects: readonly RecordSubject[],
+): Promise<Map<string, string>> {
+  const names = await recordNamesOf(
+    client,
+    tenantId,
+    sourceId,
+    subjects.filter((subject) => subject.scope === 'source'),
+  );
+  const held = subjects.filter((subject) => subject.scope === 'ledger');
+  const organization = organizationIdOf(tenantId);
+  for (const subject of held)
+    if (subject.kind === 'organization' && subject.id === organization)
+      names.set(`${subject.kind} ${subject.id}`, 'Your organization');
+  const others = held.filter((subject) => !(subject.kind === 'organization' && subject.id === organization));
+  if (others.length) {
+    const rows = await client.query<{ kind: string; id: string; label: string }>(
+      'SELECT kind,id,label FROM subjects WHERE tenant_id=$1 AND id=ANY($2::text[])',
+      [tenantId, others.map((subject) => subject.id)],
+    );
+    for (const row of rows.rows) if (row.label.trim()) names.set(`${row.kind} ${row.id}`, row.label.trim());
   }
   return names;
 }
@@ -149,12 +181,7 @@ export async function listRecordSubjects(
   );
   const members = rows.rows.slice(0, bound);
   const subjects = members.map((row): RecordSubject => ({ kind: query.kind, id: row.id, scope: row.scope }));
-  const names = await recordNamesOf(
-    client,
-    principal.tenantId,
-    sourceId,
-    subjects.filter((subject) => subject.scope === 'source'),
-  );
+  const names = await ledgerAndRecordNames(client, principal.tenantId, sourceId, subjects);
   const search = query.search?.trim().toLowerCase();
   const matching = members
     .map((row, index) => ({ row, subject: subjects[index]!, name: names.get(`${query.kind} ${row.id}`) }))
@@ -171,8 +198,8 @@ export async function listRecordSubjects(
     kind: query.kind,
     sourceId,
     subjects: shown.map(({ row, subject, name }, index) => ({
-      subject: namedSubject(subject, sourceId, subject.scope === 'ledger' ? 'Your organization' : name),
-      named: subject.scope === 'ledger' || Boolean(name),
+      subject: namedSubject(subject, sourceId, name),
+      named: Boolean(name),
       records: { about: row.about, current: row.current },
       openFindings: open.get(keys[index]!) ?? 0,
       latestAt: row.latest ? row.latest.toISOString() : null,
@@ -324,7 +351,7 @@ export async function getRecordSubjectFile(
 ): Promise<RecordSubjectFile> {
   requireRecordRead(principal);
   const sourceId = query.sourceId ?? OPERATOR_RECORD_SOURCE_ID;
-  const subject = recordSubjectOf(principal.tenantId, kind, id);
+  const subject = await resolveRecordSubject(client, principal.tenantId, kind, id);
   const rows = await readRecordRows(
     client,
     principal.tenantId,
@@ -345,10 +372,7 @@ export async function getRecordSubjectFile(
     group.records.push(record);
     groups.set(key, group);
   }
-  const name =
-    subject.scope === 'ledger'
-      ? 'Your organization'
-      : (await recordNamesOf(client, principal.tenantId, sourceId, [subject])).get(`${kind} ${id}`);
+  const name = (await ledgerAndRecordNames(client, principal.tenantId, sourceId, [subject])).get(`${kind} ${id}`);
   const key = subjectReferenceKey(referenceOf(subject, sourceId));
   return {
     subject: namedSubject(subject, sourceId, name),

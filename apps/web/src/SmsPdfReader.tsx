@@ -5,6 +5,7 @@ import { Button, Notice, Spinner } from '@ledger/ui';
 import { loadPdf, pdfAssetsUrl } from './sms-pdf.js';
 import 'pdfjs-dist/web/pdf_viewer.css';
 import './styles/sms-pdf-reader.css';
+import { counted } from './format.js';
 
 type Destination = Parameters<PDFLinkService['goToDestination']>[0];
 interface OutlineNode {
@@ -117,7 +118,7 @@ export default function SmsPdfReader({ bytes, label }: { bytes: Uint8Array; labe
           : state === FindState.NOT_FOUND
             ? 'No matches in this document.'
             : matchesCount.total
-              ? `${matchesCount.current} of ${matchesCount.total} matches`
+              ? `${matchesCount.current} of ${counted(matchesCount.total, 'match', 'matches')}`
               : '',
       );
     };

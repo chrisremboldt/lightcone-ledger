@@ -3,6 +3,7 @@ import {
   ctDay,
   ctDayName,
   dayTime,
+  noEndDate,
   setTimeZone,
   time,
   timeRange,
@@ -10,6 +11,7 @@ import {
   timeZoneLabel,
   timeZoneName,
 } from '../../apps/web/src/format.js';
+import { missionTime } from '../../apps/web/src/missionRelease.js';
 import { centralDateTimeInput, fromCentralDateTimeInput } from '../../apps/web/src/sms-document-dates.js';
 
 describe("times in the organization's zone", () => {
@@ -61,6 +63,13 @@ describe("times in the organization's zone", () => {
       'Feb 01, 2025, 12:00:00 to Mar 01, 2025, 12:00:00 CT',
     );
     expect(timeRange('2026-02-01T18:00:00Z', '2026-03-01T18:00:00Z')).toBe('Feb 01, 12:00:00 to Mar 01, 12:00:00 CT');
+    // An interval Ledger records with no end ends in the year 9999, which a person reads as no end date.
+    expect(noEndDate('9999-12-31T00:00:00.000Z')).toBe(true);
+    expect(noEndDate('2036-11-26T10:32:05.674Z')).toBe(false);
+    expect(timeRange('2026-02-01T18:00:00Z', '9999-12-31T00:00:00.000Z')).toBe(
+      'Feb 01, 12:00:00 CT onward, with no end date',
+    );
+    expect(missionTime('9999-12-31T00:00:00.000Z')).toBe('no end date');
     // The same instants fall in different years in another zone.
     setTimeZone('Asia/Tokyo');
     expect(timeRange('2026-12-31T14:30:00Z', '2026-12-31T16:00:00Z')).toBe(

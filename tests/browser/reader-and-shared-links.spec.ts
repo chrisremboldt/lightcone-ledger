@@ -125,9 +125,15 @@ test('the page a link opens needs no sign-in, shows the set and its files, and s
   const visitor = await context.newPage();
   try {
     // The API serves this page with no-store, no-referrer and noindex (tests/unit/web-app.test.ts); pnpm dev does not.
+    // One visit is one opening: the page asks for the set once, also under pnpm dev, which runs effects twice.
+    let asked = 0;
+    visitor.on('request', (sent) => {
+      if (new URL(sent.url()).pathname === '/v1/shared-records') asked += 1;
+    });
     await visitor.goto(`/shared#${secret}`);
     const shared = visitor.getByTestId('shared-records');
     await expect(shared.getByRole('heading', { level: 1 })).toBeVisible();
+    expect(asked).toBe(1);
     await expect(shared).toContainText(`Records asked for at an inspection ${run}`);
     await expect(shared).toContainText('Inspector, regional office');
     await expect(shared.getByRole('button', { name: 'Download the whole .zip', exact: true })).toBeVisible();

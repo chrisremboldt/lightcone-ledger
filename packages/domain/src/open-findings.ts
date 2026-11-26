@@ -40,6 +40,20 @@ function tabOf(entry: OpenFindingEntry): 'counted' | 'proposed' | null {
   return entry.relieved ? null : 'counted';
 }
 
+/**
+ * Open counted findings by pack and rule, keyed `packId ruleId`: the number the open-findings list shows for each rule.
+ * Every read that says how many findings of a rule are open now counts with this, so none can differ from the list.
+ */
+export function countedOpenByRule(entries: readonly OpenFindingEntry[]): Map<string, number> {
+  const counts = new Map<string, number>();
+  for (const entry of entries)
+    if (tabOf(entry) === 'counted') {
+      const key = `${entry.packId} ${entry.ruleId}`;
+      counts.set(key, (counts.get(key) ?? 0) + 1);
+    }
+  return counts;
+}
+
 export function findingAttention(entries: readonly OpenFindingEntry[]): FindingAttention {
   const counted = entries.filter((entry) => tabOf(entry) === 'counted');
   return {

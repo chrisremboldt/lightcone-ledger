@@ -13,7 +13,7 @@ import type {
   TimelineResponse,
 } from '@ledger/contracts';
 import { Badge, Button, Notice } from '@ledger/ui';
-import { age, errorMessage, time, timeZoneLabel } from './format.js';
+import { age, counted, time, timeZoneLabel, errorMessage } from './format.js';
 import {
   activityPresentation,
   aircraftLabel,
@@ -512,7 +512,7 @@ export function FlightThread({
               </span>
             )}
             <span>
-              {visibleData ? `${visibleData.items.length} records · ` : ''}last received{' '}
+              {visibleData ? `${counted(visibleData.items.length, 'record')} · ` : ''}last received{' '}
               <b className="mono">{age(flight.lastReceivedAt)}</b>
             </span>
           </p>
@@ -647,7 +647,7 @@ export function FlightThread({
           {data && (
             <div className="history-navigation" data-testid="timeline-history">
               <p>
-                Latest {data.window.items.returned} records
+                Latest {counted(data.window.items.returned, 'record')}
                 {olderItems ? ` and ${olderItems.items.length} older` : ''}
                 {data.window.items.hasMore || olderItems ? ' · earlier history may be omitted' : ''}
               </p>

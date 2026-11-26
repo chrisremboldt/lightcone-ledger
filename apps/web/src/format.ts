@@ -82,9 +82,16 @@ export function time(value?: string, includeDate = false) {
  * Two times with their dates and the zone. Both show their year when the years differ or neither is this year, so a
  * range a year long never reads as one day.
  */
+/** Whether an interval's end stands for no end: Ledger records an interval with no end date as ending in the year 9999. */
+export function noEndDate(end?: string | null): boolean {
+  const until = instant(end ?? undefined);
+  return Boolean(until && until.getUTCFullYear() >= 9999);
+}
 export function timeRange(start: string, end: string) {
   const from = instant(start);
   const until = instant(end);
+  if (from && noEndDate(end))
+    return `${clock(from, true, !inCurrentYear(from))} ${timeZoneLabel()} onward, with no end date`;
   if (!from || !until) return `${time(start, true)} to ${time(end, true)} ${timeZoneLabel()}`;
   const withYear = yearOf(from) !== yearOf(until) || !inCurrentYear(from);
   return `${clock(from, true, withYear)} to ${clock(until, true, withYear)} ${timeZoneLabel()}`;
@@ -143,4 +150,12 @@ export function cutSize(cut: InputCut) {
 }
 export function json(value: unknown) {
   return JSON.stringify(value, null, 2);
+}
+
+/**
+ * A count with its words, singular for one and plural otherwise: "0 rules", "1 rule", "2 rules"; "1 finding is",
+ * "2 findings are". Every count the app writes beside its noun is written with this.
+ */
+export function counted(count: number, one: string, many = `${one}s`): string {
+  return `${count} ${count === 1 ? one : many}`;
 }

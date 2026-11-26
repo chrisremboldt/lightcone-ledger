@@ -599,6 +599,10 @@
   font-size: 12px;
   overflow-wrap: anywhere;
 }
+/* The period a control is in sits at its own width under the title, not across the card. */
+.flight-control > .badge {
+  justify-self: start;
+}
 .flight-control p,
 .flight-control-results {
   margin: 2px 0;

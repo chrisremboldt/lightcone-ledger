@@ -24,6 +24,7 @@ import { SourcesAndServices } from './SourcesAndServices.js';
 import { goTo } from './place.js';
 import { PersonNoticeEmail } from './NoticeSettings.js';
 import { PlaceLink } from './TopBar.js';
+import { counted } from './format.js';
 
 type Selection = { kind: 'add' } | { kind: 'person'; id: string };
 
@@ -137,7 +138,7 @@ export function PeopleArea({
                   {!person.active && <Badge tone="neutral">Inactive</Badge>}
                 </span>
                 <span className="records-item-meta">
-                  {kindLabels[person.kind]} · {person.capabilities.length} permissions
+                  {kindLabels[person.kind]} · {counted(person.capabilities.length, 'permission')}
                   {person.id === principal?.id ? ' · you' : ''}
                   {person.kind === 'human' && !person.noticeEmail ? ' · no email address: gets no email' : ''}
                 </span>

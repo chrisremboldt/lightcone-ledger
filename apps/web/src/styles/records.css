@@ -443,6 +443,9 @@ label.records-field > select {
   display: block;
   overflow-x: auto;
 }
+.shared-records-page dd .records-help {
+  margin: 4px 0 0;
+}
 .shared-records-digest code {
   display: inline-block;
   max-width: 16ch;

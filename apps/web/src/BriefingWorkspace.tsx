@@ -16,7 +16,7 @@ import { Badge, Button, Notice, Spinner } from '@ledger/ui';
 import { BriefingForm, ReleaseNotApplicable } from './BriefingForm.js';
 import { AcknowledgementForm } from './AcknowledgementForm.js';
 import { briefingStandingWords, currentBriefingStanding, type BriefingContext } from './briefing.js';
-import { errorMessage, json } from './format.js';
+import { counted, json, errorMessage } from './format.js';
 import { aircraftLabel } from './labels.js';
 import { missionTime } from './missionRelease.js';
 import { canonicalDigest } from './safety.js';
@@ -390,8 +390,8 @@ export function BriefingWorkspace({
               )}
               {briefing.controls && (
                 <p className="muted" data-testid="briefing-pinned-controls">
-                  Pinned with this briefing: the {briefing.controls.controls.length} controls in scope its author saw,
-                  with their results at that moment.
+                  Pinned with this briefing: {counted(briefing.controls.controls.length, 'control')} in scope its author
+                  saw, with their results at that moment.
                 </p>
               )}
               <FrozenRecipients briefing={briefing} coverage={coverage} />

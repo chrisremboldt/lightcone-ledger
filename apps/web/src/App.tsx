@@ -18,7 +18,6 @@ import {
   aircraftLabel,
   attentionOwner,
   attentionReasons,
-  seededOrganization,
   ownershipLine,
   picturePhrase,
   rosterGroup,
@@ -41,6 +40,7 @@ import { RecordsHome } from './RecordsHome.js';
 import { FindingWorkContext, type FindingWorkLinks } from './finding-work-context.js';
 import { readFailureOutcome } from './read-failure.js';
 import { barSection, goTo, placePath, placeTitle, usePlace, type Place } from './place.js';
+import { OrganizationBadge } from './OrganizationBadge.js';
 import { offeredSections, PlaceLink, TopBar } from './TopBar.js';
 import { SectionArea, sharedSection } from './SectionArea.js';
 
@@ -552,10 +552,8 @@ export function App({ apiUrl, token, report, account, local = false, onOpenSafet
         report={report}
         account={account}
         status={
-          // Only the seeded fictional organizations are a simulation; an organization of its own is shown as itself.
-          principal &&
-          seededOrganization(principal.tenantId) && (
-            <SimulationPill local={local} connected={!error && Boolean(refreshedAt)} />
+          principal && (
+            <OrganizationBadge tenantId={principal.tenantId} local={local} connected={!error && Boolean(refreshedAt)} />
           )
         }
       />
@@ -972,30 +970,6 @@ function restoreWorkspaceFocus(trigger: HTMLElement | null, fallback: string) {
       ? trigger
       : [...document.querySelectorAll<HTMLElement>(fallback)].find((element) => !element.closest('[hidden]'));
   target?.focus({ preventScroll: true });
-}
-
-function SimulationPill({ local, connected }: { local: boolean; connected: boolean }) {
-  return (
-    <details className="simulation">
-      <summary className="simulation-pill">
-        <i className={`pulse ${connected ? '' : 'pulse--stale'}`} aria-hidden="true" />
-        Simulation · fictional operators
-      </summary>
-      <div className="simulation-popover">
-        <h2>Simulation & limits</h2>
-        <ul>
-          <li>Every operator, aircraft and person is fictional.</li>
-          <li>Vendor systems are emulated.</li>
-          <li>Each source shows a fidelity badge for how closely it matches the real system.</li>
-          <li>
-            Reported activity and position freshness are shown separately. Connection alone does not confirm flight
-            status.
-          </li>
-          <li>{local ? 'Running in local development.' : 'Running in private staging.'}</li>
-        </ul>
-      </div>
-    </details>
-  );
 }
 
 function FlightRow({

@@ -6,7 +6,7 @@ import {
   type OrganizationPerson,
 } from '@ledger/contracts';
 import { Button, Notice, Spinner } from '@ledger/ui';
-import { errorMessage, shortId, time, timeZoneLabel } from './format.js';
+import { counted, time, timeZoneLabel, errorMessage, shortId } from './format.js';
 import { readFailureOutcome } from './read-failure.js';
 
 interface Props {
@@ -274,8 +274,9 @@ export function RecipientPicker({ client, cacheScope, value, onChange, disabled 
             {directory && (
               <>
                 <p className="recipient-picker-page-note">
-                  {directory.page.returned} people on this page{directory.page.hasMore ? ' · more available' : ''} ·
-                  checked {time(directory.meta.computedAt)} {timeZoneLabel()}
+                  {counted(directory.page.returned, 'person', 'people')} on this page
+                  {directory.page.hasMore ? ' · more available' : ''} · checked {time(directory.meta.computedAt)}{' '}
+                  {timeZoneLabel()}
                 </p>
                 {directory.people.length ? (
                   <ul className="recipient-picker-results" aria-label="Available people">

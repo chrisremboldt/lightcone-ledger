@@ -9,7 +9,7 @@ import type {
   SubjectFindingRecord,
 } from '@ledger/contracts';
 import { Button, Notice, Spinner } from '@ledger/ui';
-import { errorMessage, time, timeZone, timeZoneLabel } from './format.js';
+import { counted, time, timeZone, timeZoneLabel, errorMessage } from './format.js';
 import {
   actionSentence,
   clearedSentence,
@@ -183,7 +183,7 @@ export function FindingActions({
                   {treatment.dueOn ? ` · due ${treatment.dueOn}` : ''}
                   {treatment.reason ? ` · ${closingReasonLabels[treatment.reason]}` : ''}
                   {treatment.decision
-                    ? ` · one decision for ${treatment.decision.findingCount} findings of this rule`
+                    ? ` · one decision for ${counted(treatment.decision.findingCount, 'finding')} of this rule`
                     : ''}
                 </span>
                 <p>{treatment.note}</p>

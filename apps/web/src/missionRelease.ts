@@ -9,9 +9,10 @@ import type {
   MissionReleaseRecord,
   MissionRevisionRecord,
 } from '@ledger/contracts';
-import { ctDay, time, timeZoneLabel } from './format.js';
+import { ctDay, noEndDate, time, timeZoneLabel } from './format.js';
 
 export function missionTime(value?: string) {
+  if (noEndDate(value)) return 'no end date';
   return value ? `${ctDay(value)} ${time(value)} ${timeZoneLabel()}` : '—';
 }
 

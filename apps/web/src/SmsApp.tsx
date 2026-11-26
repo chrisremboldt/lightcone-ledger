@@ -12,7 +12,7 @@ import type {
 } from '@ledger/contracts';
 import { Badge, Button, Notice, Spinner } from '@ledger/ui';
 import { setTimeZone, shortId, time, timeZoneLabel } from './format.js';
-import { seededDataLabel, seededOrganization } from './labels.js';
+import { seededOrganization } from './labels.js';
 import { authorityLabels, plainError } from './sms-labels.js';
 import { PeriodExportForm } from './SmsExport.js';
 import { DraftDocumentForm, IdentifyHazardForm } from './SmsForms.js';
@@ -29,6 +29,7 @@ import { AssuranceActionsDue, AssuranceRegister } from './SmsAssurance.js';
 import type { FlightFinding, FlightLinks } from './safety-navigation.js';
 import { readFailureOutcome } from './read-failure.js';
 import { barSection, goTo, placeTitle, usePlace, type Place } from './place.js';
+import { OrganizationBadge } from './OrganizationBadge.js';
 import { offeredSections, PlaceLink, TopBar } from './TopBar.js';
 import { SectionArea, SectionUnavailable } from './SectionArea.js';
 
@@ -310,14 +311,7 @@ export function SmsApp({ apiUrl, token, report, account, local = false, confirmI
         offered={offered}
         report={report}
         account={account}
-        status={
-          local && (
-            <span className="simulation-pill">
-              {demonstration ? 'Recorded demonstration' : 'Local development'}
-              {principal && seededDataLabel(principal.tenantId) ? ` · ${seededDataLabel(principal.tenantId)}` : ''}
-            </span>
-          )
-        }
+        status={principal && <OrganizationBadge tenantId={principal.tenantId} local={local} />}
       />
       {!inSafety && (
         <SectionArea

@@ -48,8 +48,3 @@ export const readingNeeds: Record<string, string> = {
   'evidence:read': 'permission to read records and findings',
   'sms:read': 'permission to read safety records',
 };
-
-/** "1 flight", "2 flights": a count with its noun. */
-export function counted(count: number, one: string, many = `${one}s`): string {
-  return `${count} ${count === 1 ? one : many}`;
-}

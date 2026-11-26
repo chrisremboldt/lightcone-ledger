@@ -6,6 +6,7 @@ import type {
 } from '@ledger/contracts';
 import type { Tone } from '@ledger/ui';
 import type { SpatialOutline } from './SpatialMap.js';
+import { counted } from './format.js';
 
 // How the controls in scope for a flight read to a person. A result is what the evidence shows now; it is never a
 // verdict on the flight and blocks nothing.
@@ -66,15 +67,13 @@ export function controlsToReview(controls: readonly FlightControl[]): number {
   ).length;
 }
 
-const plural = (count: number, one: string, many: string) => (count === 1 ? one : many);
-
 /**
  * Route review's count, telling the controls that apply to the route from those that overlap the mission interval and
  * do not.
  */
 export function applicabilityCountWords(applies: number, doNotApply: number): string {
   if (!applies && !doNotApply) return 'No accepted control overlaps the mission interval';
-  const applying = `${applies} accepted ${plural(applies, 'control applies', 'controls apply')} to this route`;
+  const applying = `${counted(applies, 'accepted control applies', 'accepted controls apply')} to this route`;
   return doNotApply ? `${applying}; ${doNotApply} more overlap the mission interval and do not apply` : applying;
 }
 
@@ -102,8 +101,8 @@ export function briefingOthersWords(count: number): string {
 
 /** Departure progress: how many of the release's controls need a briefing, and how many do not apply. */
 export function departureBriefingWords(needBriefing: number, doNotApply: number): string {
-  const need = `${needBriefing} ${plural(needBriefing, 'control needs', 'controls need')} a briefing.`;
-  return doNotApply ? `${need} ${doNotApply} ${plural(doNotApply, 'does', 'do')} not apply to this route.` : need;
+  const need = `${counted(needBriefing, 'control needs', 'controls need')} a briefing.`;
+  return doNotApply ? `${need} ${counted(doNotApply, 'does', 'do')} not apply to this route.` : need;
 }
 
 /** A long list of controls that do not apply is shown this many at a time. */

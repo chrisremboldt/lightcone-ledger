@@ -2,7 +2,7 @@ import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { LedgerClient } from '@ledger/contracts/client';
 import type { TelemetryResponse, TelemetrySampleView } from '@ledger/contracts';
 import { Badge, Button, Notice, Spinner } from '@ledger/ui';
-import { age, errorMessage, json, time, timeZoneLabel } from './format.js';
+import { age, counted, time, timeZoneLabel, json, errorMessage } from './format.js';
 import { coordinateLabel, fitCoordinates, mapFrame, projectCoordinate, type GeographicView } from './geography.js';
 import { fidelity, sourceLabel } from './labels.js';
 import { SpatialMap } from './SpatialMap.js';
@@ -558,9 +558,9 @@ export function TelemetryLens({ client, flightId, enabled, onInspectReceipt, onS
                 <strong>{sourceLabel(session.sourceId)}</strong>
                 <Badge tone={session.conflictCount || session.gapCount ? 'attention' : 'neutral'}>
                   {session.conflictCount
-                    ? `${session.conflictCount} conflicts`
+                    ? counted(session.conflictCount, 'conflict')
                     : session.gapCount
-                      ? `${session.gapCount} capture gaps`
+                      ? counted(session.gapCount, 'capture gap')
                       : 'No capture gap'}
                 </Badge>
               </div>

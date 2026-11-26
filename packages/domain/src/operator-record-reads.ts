@@ -64,18 +64,52 @@ export function referenceFieldsOf(kind: string | undefined): { types: string[]; 
   return found;
 }
 
-/** A subject records are read about: the operator's own id for it, or the Ledger organization itself. */
+/** A subject records are read about: the operator's own id for it, or a subject Ledger holds by its own id. */
 export interface RecordSubject {
   kind: string;
   id: string;
   scope: 'ledger' | 'source';
 }
 
-/** The Ledger organization is the subject of records about the operator's own organization; any other id is theirs. */
-export function recordSubjectOf(tenantId: string, kind: string, id: string): RecordSubject {
-  return kind === 'organization' && id === organizationIdOf(tenantId)
-    ? { kind, id, scope: 'ledger' }
-    : { kind, id, scope: 'source' };
+/**
+ * The subjects ids name, as records, rule results and findings carry them. An id Ledger gave a subject of that kind (the
+ * organization itself, or a flight Ledger made from an order or a dock) names that Ledger subject; any other id is the
+ * operator's own id for it. A page or a link carries the id alone, so every read of one subject resolves it here.
+ */
+export async function resolveRecordSubjects(
+  client: PoolClient,
+  tenantId: string,
+  wanted: readonly { kind: string; id: string }[],
+): Promise<RecordSubject[]> {
+  const asked = wanted.filter(
+    (subject) => !(subject.kind === 'organization' && subject.id === organizationIdOf(tenantId)),
+  );
+  const held = new Set(
+    asked.length
+      ? (
+          await client.query<{ kind: string; id: string }>(
+            `SELECT kind,id FROM subjects WHERE tenant_id=$1
+             AND (kind,id) IN (SELECT * FROM unnest($2::text[],$3::text[]))`,
+            [tenantId, asked.map((subject) => subject.kind), asked.map((subject) => subject.id)],
+          )
+        ).rows.map((row) => `${row.kind}\u0000${row.id}`)
+      : [],
+  );
+  return wanted.map(({ kind, id }) =>
+    (kind === 'organization' && id === organizationIdOf(tenantId)) || held.has(`${kind}\u0000${id}`)
+      ? { kind, id, scope: 'ledger' }
+      : { kind, id, scope: 'source' },
+  );
+}
+
+/** The subject one id names; see resolveRecordSubjects. */
+export async function resolveRecordSubject(
+  client: PoolClient,
+  tenantId: string,
+  kind: string,
+  id: string,
+): Promise<RecordSubject> {
+  return (await resolveRecordSubjects(client, tenantId, [{ kind, id }]))[0]!;
 }
 
 export interface RecordFilter {
@@ -341,13 +375,14 @@ export async function listOperatorRecords(
   };
   const prior = historyCursor(query.cursor, principal, 'operator-records', filters, true);
   const subjects = query.subjectId
-    ? query.subjectKind
-      ? [{ kind: query.subjectKind, id: query.subjectId, scope: 'source' as const }]
-      : observationSubjectKindValues.map((kind) => ({
+    ? await resolveRecordSubjects(
+        client,
+        principal.tenantId,
+        (query.subjectKind ? [query.subjectKind] : observationSubjectKindValues).map((kind) => ({
           kind,
           id: query.subjectId!,
-          scope: 'source' as const,
-        }))
+        })),
+      )
     : undefined;
   const rows = await readRecordRows(
     client,

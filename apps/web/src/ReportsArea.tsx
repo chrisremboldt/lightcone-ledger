@@ -13,19 +13,20 @@ import {
   type ReportIndicatorList,
   type RuleEvaluationListResponse,
   type SubjectFindingListResponse,
+  type SubjectReference,
 } from '@ledger/contracts';
 import type { LedgerClient } from '@ledger/contracts/client';
 import { Badge, Button, Notice, Spinner } from '@ledger/ui';
 import { EvaluationReads } from './EvaluationReads.js';
 import { explainedEvaluation, summaryText, withReadContext } from './evaluation-reads.js';
 import { findingStatusLabels } from './finding-work.js';
-import { ctDay, errorMessage, time, timeRange, timeZone, timeZoneLabel } from './format.js';
+import { counted, ctDay, errorMessage, time, timeRange, timeZone, timeZoneLabel } from './format.js';
 import { columnFor, displayValue, recordHeadline, recordTime as recordTimeText } from './operator-records.js';
 import { calendarDay, goTo, type Place, type ReportView } from './place.js';
 import { ProgramGrantsPage, ProgramOperatorsPage } from './ProgramView.js';
 import { IndicatorChart, MonthlyChart } from './ReportCharts.js';
 import { monthLabel } from './report-charts.js';
-import { counted, hoursAndMinutes, periodChoices, readingNeeds } from './report-periods.js';
+import { hoursAndMinutes, periodChoices, readingNeeds } from './report-periods.js';
 import { coverageResultLabels } from './rule-coverage.js';
 import { SubjectPicker } from './SubjectPicker.js';
 import { subjectLabel } from './subject-label.js';
@@ -420,45 +421,53 @@ function PeriodSummaryView({ summary, principal }: { summary: PeriodSummary; pri
             {findings.rules.length === 0 ? (
               <p className="records-note">No counted finding opened, closed or was open {atEnd} in the period.</p>
             ) : (
-              <table className="report-numbers">
-                <thead>
-                  <tr>
-                    <th scope="col">Rule</th>
-                    <th scope="col">Opened</th>
-                    <th scope="col">Closed</th>
-                    <th scope="col">Open {atEnd}</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {findings.rules.map((rule) => (
-                    <tr key={`${rule.packId}/${rule.ruleId}`} data-testid="summary-rule">
-                      <th scope="row">
-                        <PlaceLink place={{ section: 'rules', pane: 'coverage', packId: rule.packId }}>
-                          {rule.ruleTitle}
-                        </PlaceLink>
-                        <small>{rule.packTitle}</small>
-                      </th>
-                      <td>{rule.opened}</td>
-                      <td>{rule.closed}</td>
-                      <td>{rule.openAtEnd}</td>
+              <>
+                <p className="records-note" data-testid="summary-findings-counts">
+                  Each number counts findings of rules adopted to count, not the subjects they are about.{' '}
+                  {period.ended
+                    ? 'Open at the end of the period counts the findings opened before its end and not closed by then.'
+                    : 'Open now is the number Rules › Open findings lists for each rule.'}
+                </p>
+                <table className="report-numbers">
+                  <thead>
+                    <tr>
+                      <th scope="col">Rule</th>
+                      <th scope="col">Opened in the period</th>
+                      <th scope="col">Closed in the period</th>
+                      <th scope="col">Open {atEnd}</th>
                     </tr>
-                  ))}
-                </tbody>
-                <tfoot>
-                  <tr>
-                    <th scope="row">Every rule</th>
-                    <td>{findings.total.opened}</td>
-                    <td>{findings.total.closed}</td>
-                    <td>
-                      <CountLink
-                        count={findings.total.openAtEnd}
-                        place={{ section: 'rules', pane: 'open' }}
-                        label={`findings open ${atEnd}`}
-                      />
-                    </td>
-                  </tr>
-                </tfoot>
-              </table>
+                  </thead>
+                  <tbody>
+                    {findings.rules.map((rule) => (
+                      <tr key={`${rule.packId}/${rule.ruleId}`} data-testid="summary-rule">
+                        <th scope="row">
+                          <PlaceLink place={{ section: 'rules', pane: 'coverage', packId: rule.packId }}>
+                            {rule.ruleTitle}
+                          </PlaceLink>
+                          <small>{rule.packTitle}</small>
+                        </th>
+                        <td>{rule.opened}</td>
+                        <td>{rule.closed}</td>
+                        <td>{rule.openAtEnd}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                  <tfoot>
+                    <tr>
+                      <th scope="row">Every rule</th>
+                      <td>{findings.total.opened}</td>
+                      <td>{findings.total.closed}</td>
+                      <td>
+                        <CountLink
+                          count={findings.total.openAtEnd}
+                          place={{ section: 'rules', pane: 'open' }}
+                          label={`findings open ${atEnd}`}
+                        />
+                      </td>
+                    </tr>
+                  </tfoot>
+                </table>
+              </>
             )}
             {(findings.proposed > 0 || findings.relieved > 0) && (
               <p className="records-note">
@@ -798,31 +807,33 @@ function RecordFields({ view, catalog }: { view: OperatorRecordView; catalog: Op
   );
 }
 
-/** What one flight's file asks for about the flight: its evaluations and findings, as many as one page holds. */
-export function flightFileQuery(flightId: string) {
+/**
+ * What one flight's file asks for about the flight: its evaluations and findings, as many as one page holds. The
+ * subject is the one the flight's file resolved the id to: a flight Ledger holds by its own id, or one the operator's
+ * records name by the operator's own id.
+ */
+export function flightFileQuery(subject: SubjectReference) {
   return {
     subjectKind: 'flight' as const,
-    subjectId: flightId,
-    subjectScope: 'source' as const,
-    sourceId: OPERATOR_RECORD_SOURCE_ID,
+    subjectId: subject.id,
+    ...(subject.scope === 'source' ? { subjectScope: 'source' as const, sourceId: subject.sourceId } : {}),
     limit: SUBJECT_RECORD_PAGE_LIMIT,
   };
 }
 
 function FlightFilePage({ client, flightId }: { client: LedgerClient; flightId: string }) {
-  const query = flightFileQuery(flightId);
-  const loaded = useRead(
-    () =>
-      Promise.all([
-        client.request<RecordSubjectFile>(
-          `/v1/operator-records/subjects/flight/${encodeURIComponent(flightId)}?${new URLSearchParams({ sourceId: OPERATOR_RECORD_SOURCE_ID })}`,
-        ),
-        client.request<OperatorRecordTypesResponse>('/v1/operator-records/types'),
-        client.ruleEvaluations(query),
-        client.subjectFindings(query),
-      ]),
-    flightId,
-  );
+  const loaded = useRead(async () => {
+    // The id alone names the flight; the file says which subject it is, and the rest is asked about that subject.
+    const [file, catalog] = await Promise.all([
+      client.request<RecordSubjectFile>(
+        `/v1/operator-records/subjects/flight/${encodeURIComponent(flightId)}?${new URLSearchParams({ sourceId: OPERATOR_RECORD_SOURCE_ID })}`,
+      ),
+      client.request<OperatorRecordTypesResponse>('/v1/operator-records/types'),
+    ]);
+    const query = flightFileQuery(file.subject);
+    const [evaluations, findings] = await Promise.all([client.ruleEvaluations(query), client.subjectFindings(query)]);
+    return [file, catalog, evaluations, findings] as const;
+  }, flightId);
   return (
     <Shown loaded={loaded} label="Reading the flight’s file">
       {([file, catalog, evaluations, findings]) => (
@@ -861,12 +872,7 @@ function FlightFileView({
     .map((group) => ({ ...group, records: group.records.filter((record) => record.about !== 'subject') }))
     .filter((group) => group.records.length);
   const context = { inputSubjects: evaluations.inputSubjects, summaryWording: evaluations.summaryWording };
-  const subject = {
-    scope: 'source' as const,
-    kind: 'flight' as const,
-    id: flightId,
-    sourceId: OPERATOR_RECORD_SOURCE_ID,
-  };
+  const { name: _name, ...subject } = file.subject;
   const recordTime = (record: OperatorRecordView) => recordTimeText(record, { asOf: false });
   const group = (entry: (typeof own)[number]) => {
     const type = catalog.types.find(
@@ -906,8 +912,9 @@ function FlightFileView({
         <PrintButton />
       </div>
       <p className="report-made">
-        Your id {flightId}. Read {time(new Date().toISOString(), true)} {timeZoneLabel()} from the records on file.
-        {file.records.truncated ? ` The newest ${file.records.shown} records are shown.` : ''}{' '}
+        {file.subject.scope === 'ledger' ? 'Ledger’s id' : 'Your id'} {flightId}. Read{' '}
+        {time(new Date().toISOString(), true)} {timeZoneLabel()} from the records on file.
+        {file.records.truncated ? ` The newest ${counted(file.records.shown, 'record')} are shown.` : ''}{' '}
         <PlaceLink place={{ section: 'records', pane: 'subjects', kind: 'flight', id: flightId }}>
           Open the flight under Records
         </PlaceLink>

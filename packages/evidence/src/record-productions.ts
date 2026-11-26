@@ -24,7 +24,7 @@ import {
   operatorRecordObservationTypes,
   readRecordRows,
   recordNamesOf,
-  recordSubjectOf,
+  resolveRecordSubjects,
   requireRecordRead,
   type RecordRow,
   type RecordSubject,
@@ -70,13 +70,18 @@ function selectionOf(input: RecordProductionCreate): RecordProductionSelection {
   };
 }
 
-function subjectsOf(tenantId: string, selection: RecordProductionSelection): RecordSubject[] {
-  return selection.subjects.map((subject) => {
-    if (subject.id) return recordSubjectOf(tenantId, subject.kind, subject.id);
+async function subjectsOf(
+  client: PoolClient,
+  tenantId: string,
+  selection: RecordProductionSelection,
+): Promise<RecordSubject[]> {
+  const named = selection.subjects.map((subject) => {
+    if (subject.id) return { kind: subject.kind, id: subject.id };
     if (subject.kind !== 'organization')
       throw new DomainError(400, 'subject_id_required', `A ${subject.kind} is named by your own id for it`);
-    return { kind: 'organization', id: `organization:${tenantId}`, scope: 'ledger' };
+    return { kind: 'organization', id: `organization:${tenantId}` };
   });
+  return resolveRecordSubjects(client, tenantId, named);
 }
 
 function checkSelection(
@@ -204,7 +209,7 @@ async function loadSources(
   selection: RecordProductionSelection,
   limits: RecordProductionLimits,
 ): Promise<ProductionSources> {
-  const subjects = subjectsOf(principal.tenantId, selection);
+  const subjects = await subjectsOf(client, principal.tenantId, selection);
   const read = (about: readonly RecordSubject[], everyType = false) =>
     readRecordRows(
       client,
@@ -226,8 +231,10 @@ async function loadSources(
     selection.recordTypes.length && people.length ? await read(people, true) : rows,
   );
   if (selection.withFlights && flights.length) {
-    const flightSubjects = [...new Set(flights.map((flight) => flight.flight))].map((id) =>
-      recordSubjectOf(principal.tenantId, 'flight', id),
+    const flightSubjects = await resolveRecordSubjects(
+      client,
+      principal.tenantId,
+      [...new Set(flights.map((flight) => flight.flight))].map((id) => ({ kind: 'flight', id })),
     );
     const seen = new Set(rows.map((row) => row.id));
     rows = [...rows, ...(await read(flightSubjects)).filter((row) => !seen.has(row.id))];

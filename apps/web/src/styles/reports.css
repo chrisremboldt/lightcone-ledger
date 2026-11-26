@@ -289,16 +289,24 @@
   }
 }
 
-/* The operators a program owner follows, side by side. A table scrolls inside its card, never the page. */
+/*
+ * The operators a program owner follows, one card each across the page: a coverage table has a column for each result,
+ * which fits a full-width card on a wide screen. On a narrow one a table scrolls inside its own box, never the page.
+ */
 .program-operators {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(min(100%, 420px), 1fr));
+  grid-template-columns: minmax(0, 1fr);
   gap: 12px;
   margin: 0 0 18px;
 }
-.program-operator {
+.program-operator,
+.program-answer,
+.program-answer > section {
   margin: 0;
   min-width: 0;
+}
+.program-operator > .records-form {
+  margin-top: 8px;
 }
 .program-operator h3 {
   overflow-wrap: anywhere;
@@ -314,6 +322,19 @@
 .program-table {
   max-width: 100%;
   overflow-x: auto;
+}
+.program-table thead tr + tr th,
+.program-table thead th[scope='colgroup'] {
+  text-align: right;
+}
+.program-table th[scope='row'] {
+  min-width: 12em;
+}
+/* On a phone a table keeps columns a person can read and scrolls inside its box rather than squeezing them. */
+@media (max-width: 719.98px) {
+  .program-table table {
+    min-width: 560px;
+  }
 }
 .program-choices {
   display: grid;

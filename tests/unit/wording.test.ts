@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import type { NamedSubject } from '../../packages/contracts/src/index.js';
 import { time } from '../../apps/web/src/format.js';
-import { wordedSummary, wordingValue } from '../../apps/web/src/wording.js';
+import { withLocalTimes, wordedSummary, wordingValue } from '../../apps/web/src/wording.js';
 
 const site: NamedSubject = {
   scope: 'source',
@@ -33,5 +33,16 @@ describe('wording that packs supply, as a person reads it', () => {
     );
     expect(wordedSummary(recorded, undefined, details)).toBe(recorded);
     expect(wordedSummary(recorded, template, { limit: 10 })).toBe(recorded);
+  });
+
+  it('writes each UTC instant of a sentence the API wrote in the organization’s time', () => {
+    const sentence = 'This control takes effect on 2026-12-13T09:40:00.000Z; it is not evaluated before then.';
+    expect(withLocalTimes(sentence)).toBe(
+      `This control takes effect on ${time('2026-12-13T09:40:00.000Z', true)} CT; it is not evaluated before then.`,
+    );
+    expect(withLocalTimes(sentence, () => 'then')).toBe(
+      'This control takes effect on then; it is not evaluated before then.',
+    );
+    expect(withLocalTimes('Due 2026-12-13, nothing else.')).toBe('Due 2026-12-13, nothing else.');
   });
 });

@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { OPERATOR_RECORD_SOURCE_ID } from '@ledger/contracts';
 import type {
   OpenFinding,
   OpenFindingGroup,
@@ -16,6 +17,7 @@ import { subjectLabel } from './subject-label.js';
 import { SubjectFindings } from './SubjectFindings.js';
 import type { CitedSubject } from './evaluation-reads.js';
 import { goTo, usePlace, type FindingSubject } from './place.js';
+import { PlaceLink } from './TopBar.js';
 
 const kindLabels: Record<string, string> = {
   person: 'People',
@@ -149,8 +151,16 @@ export function OpenFindings({
         </Button>
         <h2>{subjectLabel(opened)}</h2>
         <p className="records-item-meta">
-          {opened.kind} · your id {opened.id}
+          {opened.kind} · {opened.sourceId ? 'your id' : 'Ledger’s id'} {opened.id}
         </p>
+        {opened.kind === 'flight' && (!opened.sourceId || opened.sourceId === OPERATOR_RECORD_SOURCE_ID) && (
+          <PlaceLink
+            className="button button--quiet"
+            place={{ section: 'reports', report: 'flight', flightId: opened.id }}
+          >
+            This flight’s file
+          </PlaceLink>
+        )}
         <SubjectFindings
           client={client}
           subject={{

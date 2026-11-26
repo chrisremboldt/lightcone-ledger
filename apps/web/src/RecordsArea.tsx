@@ -37,7 +37,7 @@ import {
   typeKey,
   type RecordTypeSummary,
 } from './operator-records.js';
-import { time, timeZoneLabel } from './format.js';
+import { counted, time, timeZoneLabel } from './format.js';
 import { plainError, saveBytes } from './sms-labels.js';
 import { goTo, usePlace, type Place } from './place.js';
 import { PlaceLink } from './TopBar.js';
@@ -856,7 +856,7 @@ function ImportPanel({
       )}
       {preview && !result && preview.problems.length === 0 && (
         <Notice tone={preview.summary.refused ? 'attention' : 'neutral'} title="Checked; nothing recorded yet">
-          {preview.summary.acceptable} of {preview.summary.rows} rows can be recorded
+          {preview.summary.acceptable} of {counted(preview.summary.rows, 'row')} can be recorded
           {preview.summary.incomplete ? `, ${preview.summary.incomplete} of them incomplete` : ''}.
           {preview.summary.alreadyRecorded
             ? ` ${preview.summary.alreadyRecorded} already recorded from this file.`
@@ -869,7 +869,7 @@ function ImportPanel({
           tone={result.summary.recorded ? 'observed' : 'attention'}
           title={result.summary.recorded ? 'Imported' : 'Nothing recorded'}
         >
-          Recorded {result.summary.recorded} of {result.summary.rows} rows
+          Recorded {result.summary.recorded} of {counted(result.summary.rows, 'row')}
           {result.summary.incomplete ? `, ${result.summary.incomplete} incomplete` : ''}.
           {result.summary.alreadyRecorded ? ` ${result.summary.alreadyRecorded} were already recorded.` : ''}
           {result.summary.refused ? ` ${result.summary.refused} refused.` : ''}
@@ -939,7 +939,7 @@ function ImportPanel({
       <div className="records-actions">
         {preview && !result && preview.summary.acceptable > 0 && (
           <Button kind="primary" onClick={() => void commit()} disabled={pending || !preview.granted}>
-            {pending ? 'Recording…' : `Record ${preview.summary.acceptable} rows`}
+            {pending ? 'Recording…' : `Record ${counted(preview.summary.acceptable, 'row')}`}
           </Button>
         )}
         {result && (

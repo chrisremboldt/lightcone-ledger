@@ -11,7 +11,7 @@ import type {
 import type { LedgerClient } from '@ledger/contracts/client';
 import { Badge, Button, Notice, Spinner } from '@ledger/ui';
 import { coverageReadDelayMs, readsCoverageAgain } from './coverage-read.js';
-import { errorMessage, time, timeRange, timeZone, timeZoneLabel } from './format.js';
+import { counted, errorMessage, noEndDate, time, timeRange, timeZone, timeZoneLabel } from './format.js';
 import {
   activeOnlyReason,
   adoptionCommand,
@@ -439,7 +439,7 @@ function AdoptForm({
       )}
       {pack && (
         <>
-          <p className="rail-muted">{pack.leaves.length} rules</p>
+          <p className="rail-muted">{counted(pack.leaves.length, 'rule')}</p>
           <ul aria-label="Rules in this pack" data-testid="adopt-pack-rules">
             {pack.leaves.map((leaf) => (
               <li key={leaf.id}>
@@ -560,7 +560,7 @@ function ParameterInputs({
               {parameter.title}{' '}
               {question.fields.length > 2 ? (
                 <small title={question.fields.map((field) => field.leafTitle).join('\n')}>
-                  (used by {question.fields.length} rules)
+                  (used by {counted(question.fields.length, 'rule')})
                 </small>
               ) : (
                 <small>({question.fields.map((field) => field.leafTitle).join(' · ')})</small>
@@ -675,7 +675,7 @@ function SuccessorForm({
       <CommandForm
         client={client}
         label={`Adopt version ${version}`}
-        explanation={`Version ${adoption.pack.version} ends now and version ${version} runs until ${time(adoption.effectiveInterval.end, true)} ${timeZoneLabel()}. Both stay in the history, evaluations made under version ${adoption.pack.version} keep it, and the rules of version ${version} are evaluated again for the subjects already on record. Open findings of removed rules stay open until a person resolves them.`}
+        explanation={`Version ${adoption.pack.version} ends now and version ${version} runs ${noEndDate(adoption.effectiveInterval.end) ? 'with no end date' : `until ${time(adoption.effectiveInterval.end, true)} ${timeZoneLabel()}`}. Both stay in the history, evaluations made under version ${adoption.pack.version} keep it, and the rules of version ${version} are evaluated again for the subjects already on record. Open findings of removed rules stay open until a person resolves them.`}
         note={note}
         onNote={setNote}
         disabled={Boolean(values.invalid)}

@@ -1164,9 +1164,10 @@
   padding: 0;
   list-style: none;
 }
+/* A step's badge sits beside its title, however much the step lists below it. */
 .sms-first-steps-list li {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: space-between;
   gap: 12px;
   padding: 8px 10px;
@@ -1175,7 +1176,9 @@
 }
 .sms-first-steps-list li > span:first-child {
   display: grid;
+  flex: 1;
   gap: 2px;
+  min-width: 0;
 }
 .sms-first-steps-list small {
   color: var(--muted);

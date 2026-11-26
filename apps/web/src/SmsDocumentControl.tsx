@@ -14,7 +14,7 @@ import {
   type SmsRecordDetailResponse,
 } from '@ledger/contracts';
 import { Badge, Button, Notice } from '@ledger/ui';
-import { byteSize, timeZoneName } from './format.js';
+import { byteSize, counted, timeZoneName } from './format.js';
 import { plainError } from './sms-labels.js';
 import { AttachmentForm, FailureNotice, LinkForm, ReviseForm, StatusForm, useCommand } from './SmsForms.js';
 import {
@@ -916,7 +916,7 @@ function nextStep(
   const unread = effective.recipients.filter((recipient) => !recipient.acknowledgedAt).length;
   return {
     text: unread
-      ? `${issueLabel(effective)} is in force. ${unread} of ${effective.recipients.length} readers have not acknowledged it yet.`
+      ? `${issueLabel(effective)} is in force. ${unread} of ${counted(effective.recipients.length, 'reader')} ${unread === 1 ? 'has' : 'have'} not acknowledged it yet.`
       : `Nothing is waiting. ${issueLabel(effective)} is in force and every reader has acknowledged it.`,
   };
 }

@@ -9,7 +9,7 @@ import type {
   TimelineLane,
 } from '@ledger/contracts';
 import type { Tone } from '@ledger/ui';
-import { age, byteSize, ctDay, ctDayName, sentence, shortTime } from './format.js';
+import { age, byteSize, counted, ctDay, ctDayName, sentence, shortTime } from './format.js';
 import { seededOrganization } from './demo/fictional-organizations.js';
 
 export type DisplayLane = TimelineLane;
@@ -411,7 +411,7 @@ export function orderSummary(flight: FlightSummary, orders: OrderSummary[]) {
     return order.flightIds.length > 1
       ? `Order ${order.externalId} · ${order.flightIds.length} flights`
       : `Order ${order.externalId}`;
-  return `${flight.orderIds.length} order${flight.orderIds.length === 1 ? '' : 's'}`;
+  return counted(flight.orderIds.length, 'order');
 }
 
 export type RosterGroup = 'attention' | 'airborne' | 'scheduled' | 'done';

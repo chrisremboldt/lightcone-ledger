@@ -11,7 +11,7 @@ import {
   type RecordTypeSummary,
 } from './operator-records.js';
 import { plainError } from './sms-labels.js';
-import { timeZoneName } from './format.js';
+import { timeZoneLabel, timeZoneName } from './format.js';
 import { SubjectPicker } from './SubjectPicker.js';
 import { searchableKinds } from './subject-picker.js';
 import { OutboxSummary, useOutbox } from './DeviceOutbox.js';
@@ -289,7 +289,7 @@ function FieldInput({
   const label = (
     <label htmlFor={id}>
       {field.label}
-      {field.kind === 'date_time' ? ` (${timeZoneName()})` : ''}{' '}
+      {field.kind === 'date_time' ? ` (${timeZoneLabel()})` : ''}{' '}
       <small>{field.required ? 'Required' : 'Optional'}</small>
       {field.help && <small className="records-help">{field.help}</small>}
       {field.replayOnly && <small className="records-help">{explainsRecord}</small>}

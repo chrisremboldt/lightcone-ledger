@@ -1,6 +1,6 @@
 import type { LedgerClient } from '@ledger/contracts/client';
 import { Button, Notice } from '@ledger/ui';
-import { json, time, timeZoneLabel } from './format.js';
+import { counted, time, timeZoneLabel, json } from './format.js';
 import {
   predepartureBriefings,
   predeparturePresentation,
@@ -183,7 +183,7 @@ export function FlightPredeparturePanel({
           {prepareBriefing}
           {compact && briefings.length > 0 ? (
             <details className="predeparture-navigation">
-              <summary>All control briefings · {briefings.length} areas</summary>
+              <summary>All control briefings · {counted(briefings.length, 'area')}</summary>
               {briefingNavigation}
             </details>
           ) : (

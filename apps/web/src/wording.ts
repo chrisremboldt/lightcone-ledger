@@ -24,6 +24,19 @@ export function wordingValue(value: unknown, subjects: readonly NamedSubject[] =
     .join(', ');
 }
 
+const instantInText = /\b\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d{1,9})?Z\b/g;
+
+/**
+ * A sentence the API wrote with UTC instants in it, each instant written as the app writes a time: in the
+ * organization's time zone, by `shown` when the screen has a way of its own.
+ */
+export function withLocalTimes(
+  text: string,
+  shown: (instant: string) => string = (instant) => `${time(instant, true)} ${timeZoneLabel()}`,
+): string {
+  return text.replace(instantInText, (instant) => (Number.isFinite(Date.parse(instant)) ? shown(instant) : instant));
+}
+
 /**
  * A summary to show: the rule's or the check kind's wording filled again from the recorded details, each value read by wordingValue,
  * when the read returned the wording the recorded summary came from; otherwise the recorded summary as it is. The

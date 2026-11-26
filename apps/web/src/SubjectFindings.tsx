@@ -23,7 +23,7 @@ import {
   type CitedSubject,
   type EvaluationReadContext,
 } from './evaluation-reads.js';
-import { errorMessage, time, timeZoneLabel } from './format.js';
+import { counted, time, timeZoneLabel, errorMessage } from './format.js';
 import { findingsByMode, latestRelieved, proposedLabel, relievedLabel } from './rule-adoption.js';
 
 const statusLabels: Record<SubjectFindingRecord['status'], string> = findingStatusLabels;
@@ -343,8 +343,8 @@ function FindingPackets({
       <h5>Finding packets · {records?.length ?? '…'}</h5>
       {records?.map((record) => (
         <p key={record.id} className="rail-muted" data-testid="finding-packet">
-          Issued {time(record.issuedAt, true)} {timeZoneLabel()} · {record.counts.evaluations} evaluations · SHA-256{' '}
-          <span className="mono">{record.packetSha256.slice(0, 12)}…</span>
+          Issued {time(record.issuedAt, true)} {timeZoneLabel()} · {counted(record.counts.evaluations, 'evaluation')} ·
+          SHA-256 <span className="mono">{record.packetSha256.slice(0, 12)}…</span>
         </p>
       ))}
       {error && (

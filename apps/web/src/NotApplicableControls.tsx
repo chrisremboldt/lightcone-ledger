@@ -7,6 +7,8 @@ import {
   NOT_APPLICABLE_PAGE_SIZE,
   type NotApplicableEntry,
 } from './flight-controls.js';
+import { missionTime } from './missionRelease.js';
+import { withLocalTimes } from './wording.js';
 
 /**
  * Controls recorded as not applying to a flight, each with its title, recorded sentence and what decided it, shown a
@@ -34,7 +36,7 @@ export function NotApplicableControls({
             <strong>{entry.title}</strong>
             <p>
               <Badge tone={controlResultTone('not_applicable')}>{controlResultWords('not_applicable')}</Badge>
-              <span> {entry.summary}</span>
+              <span> {withLocalTimes(entry.summary, missionTime)}</span>
             </p>
             {entry.decidedBy && <small className="muted">{entry.decidedBy}</small>}
           </li>
