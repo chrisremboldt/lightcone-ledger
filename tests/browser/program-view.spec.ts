@@ -8,8 +8,9 @@ import { randomUUID } from 'node:crypto';
  * running.
  */
 
-async function openAs(page: Page, organization: string) {
-  await page.goto('/');
+// Signing in is kept in the page only: the address is opened first and signed in at, and the page is never reloaded.
+async function openAs(page: Page, organization: string, address: string) {
+  await page.goto(address);
   await page.getByRole('radio', { name: organization, exact: true }).check();
   await page.getByRole('button', { name: 'Open operations', exact: true }).click();
 }
@@ -20,8 +21,7 @@ test('an operator makes and revokes a grant, and the program owner follows it an
 }) => {
   const run = randomUUID().slice(0, 6).toUpperCase();
   const programOwner = `Beta Inspection program ${run}`;
-  await openAs(page, 'Alpha Dispatch');
-  await page.goto('/reports/grants');
+  await openAs(page, 'Alpha Dispatch', '/reports/grants');
   const report = page.getByRole('region', { name: 'Report', exact: true });
   await expect(report.getByRole('heading', { name: 'Shown to program owners', exact: true })).toBeVisible();
   const form = report.getByRole('form', { name: 'Make a grant' });
@@ -32,6 +32,10 @@ test('an operator makes and revokes a grant, and the program owner follows it an
   const secret = (await report.getByTestId('program-grant-secret').textContent())?.trim() ?? '';
   expect(secret).toMatch(/^ledger-program-[A-Za-z0-9_-]{43}$/);
   const address = (await report.getByTestId('program-grant-address').textContent())?.trim() ?? '';
+  // The secret is shown once on screen and never printed.
+  await page.emulateMedia({ media: 'print' });
+  await expect(report.getByTestId('program-grant-secret')).toBeHidden();
+  await page.emulateMedia({ media: 'screen' });
   await report.getByRole('button', { name: 'Done', exact: true }).click();
   await expect(report.getByTestId('program-grant-secret')).toHaveCount(0);
   const grant = report.getByRole('article', { name: `Grant to ${programOwner}`, exact: true });
@@ -41,8 +45,7 @@ test('an operator makes and revokes a grant, and the program owner follows it an
   const context = await browser.newContext();
   const owner = await context.newPage();
   try {
-    await openAs(owner, 'Beta Inspection');
-    await owner.goto('/reports/operators');
+    await openAs(owner, 'Beta Inspection', '/reports/operators');
     const view = owner.getByRole('region', { name: 'Report', exact: true });
     const follow = view.getByRole('form', { name: 'Follow an operator' });
     const name = `Alpha crews ${run}`;
@@ -57,7 +60,7 @@ test('an operator makes and revokes a grant, and the program owner follows it an
     await expect
       .poll(
         async () => {
-          await owner.reload();
+          await view.getByRole('button', { name: 'Show the latest reads', exact: true }).click();
           return (await row.getByTestId('program-operator-state').textContent()) ?? '';
         },
         { timeout: 30_000 },
@@ -67,7 +70,7 @@ test('an operator makes and revokes a grant, and the program owner follows it an
     await expect(row.getByRole('region', { name: 'Open findings', exact: true })).toBeVisible();
 
     await grant.getByRole('button', { name: 'Revoke this grant', exact: true }).click();
-    await grant.getByLabel('Why it is revoked', { exact: true }).fill('The contract ended');
+    await grant.getByRole('textbox', { name: 'Why it is revoked', exact: true }).fill('The contract ended');
     await grant.getByRole('button', { name: 'Revoke at once', exact: true }).click();
     await expect(grant.getByText('Revoked', { exact: true }).first()).toBeVisible();
     await expect(grant).toContainText('The contract ended');
@@ -76,7 +79,7 @@ test('an operator makes and revokes a grant, and the program owner follows it an
     await expect
       .poll(
         async () => {
-          await owner.reload();
+          await view.getByRole('button', { name: 'Show the latest reads', exact: true }).click();
           return (await row.getByTestId('program-operator-state').textContent()) ?? '';
         },
         { timeout: 30_000 },
@@ -86,6 +89,14 @@ test('an operator makes and revokes a grant, and the program owner follows it an
     // The last answer is still shown, with its date, not as current.
     await expect(row.getByRole('region', { name: 'Open findings', exact: true })).toBeVisible();
     await expect(row.getByTestId('program-operator-state')).toContainText('not as current');
+
+    // The grants page opened afresh lists the grant with its reads.
+    const again = await context.newPage();
+    await openAs(again, 'Alpha Dispatch', '/reports/grants');
+    const listed = again
+      .getByRole('region', { name: 'Report', exact: true })
+      .getByRole('article', { name: `Grant to ${programOwner}`, exact: true });
+    await expect(listed.getByText('Revoked', { exact: true }).first()).toBeVisible();
   } finally {
     await context.close();
   }

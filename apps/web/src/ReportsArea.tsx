@@ -20,7 +20,7 @@ import { EvaluationReads } from './EvaluationReads.js';
 import { explainedEvaluation, summaryText, withReadContext } from './evaluation-reads.js';
 import { findingStatusLabels } from './finding-work.js';
 import { ctDay, errorMessage, time, timeRange, timeZone, timeZoneLabel } from './format.js';
-import { columnFor, displayValue, recordHeadline } from './operator-records.js';
+import { columnFor, displayValue, recordHeadline, recordTime as recordTimeText } from './operator-records.js';
 import { calendarDay, goTo, type Place, type ReportView } from './place.js';
 import { ProgramGrantsPage, ProgramOperatorsPage } from './ProgramView.js';
 import { IndicatorChart, MonthlyChart } from './ReportCharts.js';
@@ -389,25 +389,23 @@ function PeriodSummaryView({ summary, principal }: { summary: PeriodSummary; pri
                 <dt>Their recorded time, takeoff to landing</dt>
                 <dd>{hoursAndMinutes(flights.flightSeconds)}</dd>
               </div>
+              <div>
+                <dt>Flights planned to start in the period with no flight record on file, not counted above</dt>
+                <dd>
+                  <CountLink
+                    count={flights.plannedWithoutRecord}
+                    place={browse('flight.plan@1')}
+                    label="flights planned with no flight record"
+                  />
+                </dd>
+              </div>
             </dl>
-            {(flights.withoutDuration > 0 || flights.plannedWithoutRecord > 0) && (
+            {flights.withoutDuration > 0 && (
               <ul className="records-reasons" aria-label="Flights counted apart">
-                {flights.withoutDuration > 0 && (
-                  <li>
-                    {counted(flights.withoutDuration, 'flight')} with a landing recorded no later than its takeoff: in
-                    the flights, not in the time.
-                  </li>
-                )}
-                {flights.plannedWithoutRecord > 0 && (
-                  <li>
-                    <CountLink
-                      count={flights.plannedWithoutRecord}
-                      place={browse('flight.plan@1')}
-                      label="flights planned with no flight record"
-                    />{' '}
-                    planned to start in the period with no flight record on file: not counted above.
-                  </li>
-                )}
+                <li>
+                  {counted(flights.withoutDuration, 'flight')} with a landing recorded no later than its takeoff: in the
+                  flights, not in the time.
+                </li>
               </ul>
             )}
           </>
@@ -869,10 +867,7 @@ function FlightFileView({
     id: flightId,
     sourceId: OPERATOR_RECORD_SOURCE_ID,
   };
-  const recordTime = (record: OperatorRecordView) =>
-    record.interval?.end
-      ? timeRange(record.interval.start, record.interval.end)
-      : `${time(record.interval?.start ?? record.occurredAt, true)} ${timeZoneLabel()}`;
+  const recordTime = (record: OperatorRecordView) => recordTimeText(record, { asOf: false });
   const group = (entry: (typeof own)[number]) => {
     const type = catalog.types.find(
       (item) => item.recordType === entry.recordType && item.recordVersion === entry.recordVersion,
@@ -887,7 +882,7 @@ function FlightFileView({
         {entry.records.map((record) => (
           <article key={record.observationId} className="report-record">
             <p className="records-item-head">
-              <strong>{type ? recordHeadline(type, record.record) : entry.title}</strong>
+              <strong>{type ? recordHeadline(type, record.record, record.dayOnly) : entry.title}</strong>
               {record.replacedBy && <Badge tone="neutral">Replaced</Badge>}
               {!record.complete && <Badge tone="attention">Incomplete</Badge>}
             </p>

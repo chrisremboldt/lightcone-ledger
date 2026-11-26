@@ -76,7 +76,6 @@ function clearPointInView(route: Coordinate[]): { point: Coordinate; clearance: 
   return best;
 }
 
-// Not run since the count of exact control version reads was added: written without a running stack.
 test('a flight shows the control that applies and explains, on every screen, the controls that do not', async ({
   page,
   request,

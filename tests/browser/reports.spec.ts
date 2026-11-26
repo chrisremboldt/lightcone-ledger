@@ -55,6 +55,14 @@ test('a summary of a period counts what is on file, at an address that carries t
   for (const part of ['Flights', 'Findings by rule', 'Actions', 'Hazards by level', 'What this summary does not count'])
     await expect(summary.getByRole('region', { name: part, exact: true })).toBeVisible();
   await expect(summary.getByText(/^Made .+ from the records on file\./)).toBeVisible();
+  // Flights are counted by their flight record; the flights planned with none stand beside that count, a zero too.
+  const flights = summary.getByRole('region', { name: 'Flights', exact: true });
+  await expect(
+    flights.getByText('Flights planned to start in the period with no flight record on file, not counted above', {
+      exact: true,
+    }),
+  ).toBeVisible();
+  await expect(flights.getByRole('link', { name: /^\d+ flights planned with no flight record$/ })).toBeVisible();
 
   await openAs(page, 'Alpha Dispatch', 'operator', '/reports/summary/2026-01-01/2026-01-31');
   await expect(page.getByRole('heading', { name: 'Summary of 2026-01-01 to 2026-01-31', exact: true })).toBeVisible();

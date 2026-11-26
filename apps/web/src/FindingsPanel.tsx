@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState, type FormEvent } from 'react';
 import { ApiError, LedgerClient } from '@ledger/contracts/client';
+import { findingRoleNote } from './finding-role-note.js';
 import type {
   Command,
   EvaluationRecord,
@@ -360,7 +361,12 @@ export function FindingsPanel({
           </div>
         )}
         {!canWrite && selected.status !== 'resolved' && (
-          <p className="rail-muted">Your role can review this finding. An operator can take responsibility.</p>
+          <p className="rail-muted">
+            {findingRoleNote(principal?.capabilities, {
+              who: 'An operator',
+              otherwise: 'An operator can take responsibility.',
+            })}
+          </p>
         )}
         {onSafety && (
           <div className="finding-safety-action">

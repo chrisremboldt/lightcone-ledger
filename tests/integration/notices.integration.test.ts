@@ -344,6 +344,12 @@ describe('notices of what is someone’s or due', () => {
       ['webhook', 'sent', 1],
       ['email', 'sent', 1],
     ]);
+    // The list names the finding by its rule's title and its subject's own id, and the person it was assigned to.
+    for (const entry of listed.notices) {
+      expect(entry.reference).toContain(people.avery);
+      expect(entry.reference).not.toContain(finding.id);
+      expect(entry.sentence).toBe(`${tenant.actor.name} assigned a finding to ${colleague.name}.`);
+    }
 
     const mail = inbox.mail.find((item) => item.to.includes('avery@example.org'))!;
     expect(text(mail)).toContain('Fictional coverage operator');
@@ -357,6 +363,10 @@ describe('notices of what is someone’s or due', () => {
     expect(call.headers['ledger-signature']).toBe(expected);
     const body = JSON.parse(call.body);
     expect(body).toMatchObject({ kind: 'assigned', assigneeId: colleague.id, record: { id: finding.id } });
+    expect(body.record.reference).toContain(people.avery);
+    expect(body.record.title).toEqual(expect.any(String));
+    expect(listed.notices[0]!.reference).toContain(body.record.title);
+    expect(text(mail)).toContain(`${body.record.reference} · ${body.record.title}`);
     expect(call.body).not.toContain('@');
   });
 

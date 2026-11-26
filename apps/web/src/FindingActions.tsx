@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState, type FormEvent } from 'react';
 import { ApiError, type LedgerClient } from '@ledger/contracts/client';
+import { findingRoleNote } from './finding-role-note.js';
 import type {
   FindingClosingReason,
   FindingTreatment,
@@ -220,7 +221,12 @@ export function FindingActions({
         </div>
       )}
       {!closed && !proposed && !canDecide && (
-        <p className="rail-muted">Your role can review this finding. A person who records decisions can take it.</p>
+        <p className="rail-muted">
+          {findingRoleNote(principal?.capabilities, {
+            who: 'A person who records decisions',
+            otherwise: 'A person who records decisions can take it.',
+          })}
+        </p>
       )}
       {onOpenHazard && !proposed && !closed && (
         <div className="finding-safety-action">

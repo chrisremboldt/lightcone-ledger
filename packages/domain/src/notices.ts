@@ -1,5 +1,7 @@
 import { randomBytes, randomUUID } from 'node:crypto';
 import {
+  subjectReferenceKey,
+  type SubjectReference,
   NOTICE_ATTEMPT_LIMIT,
   NOTICE_EMAIL_PATTERN,
   NOTICE_LIST_LIMIT,
@@ -18,10 +20,13 @@ import { appendEvent, DomainError, type AuthContext, type PoolClient } from '@le
 import {
   noticeKindOf,
   noticeSentence,
+  noticeSubjectReference,
+  recordLine,
   type NoticeContent,
   type NoticeEvent,
   type NoticeRecord,
 } from './notice-content.js';
+import { subjectNames } from './subject-names.js';
 
 /**
  * Notices (docs/design/notices.md). A notice is written to the outbox in the same transaction as what causes it, or by
@@ -145,17 +150,37 @@ export async function findingNoticeRecords(
      WHERE f.tenant_id=$1 AND f.id=ANY($2::text[])`,
     [tenantId, ids],
   );
+  // A finding is named as the open findings list names it: its rule's title and its subject in the organization's own
+  // id. A restricted record's subject is named by its id only, since its name may be the record's title.
+  const subjectOf = (row: (typeof rows.rows)[number]): SubjectReference | null =>
+    row.subject_scope && row.subject_kind && row.subject_id
+      ? ({
+          scope: row.subject_scope,
+          kind: row.subject_kind,
+          id: row.subject_id,
+          ...(row.subject_source_id ? { sourceId: row.subject_source_id } : {}),
+        } as SubjectReference)
+      : null;
+  const names = await subjectNames(
+    client,
+    tenantId,
+    rows.rows.flatMap((row) => {
+      const subject = subjectOf(row);
+      return subject && !row.restricted ? [subject] : [];
+    }),
+  );
   return new Map(
     rows.rows.map((row) => {
+      const subject = subjectOf(row);
+      const reference = subject
+        ? noticeSubjectReference(subject.id, row.restricted ? null : names.get(subjectReferenceKey(subject))?.name)
+        : row.id;
       const path = row.flight_id
         ? noticePath('flights', row.flight_id, 'findings', row.id)
         : row.subject_scope === 'source' && row.subject_source_id
           ? noticePath('rules', 'findings', row.subject_source_id, row.subject_kind ?? '', row.subject_id ?? '')
           : noticePath('rules', 'findings', row.subject_kind ?? '', row.subject_id ?? '');
-      return [
-        row.id,
-        { label: 'Finding', id: row.id, reference: row.id, title: row.restricted ? null : row.title, path },
-      ];
+      return [row.id, { label: 'Finding', id: row.id, reference, title: row.restricted ? null : row.title, path }];
     }),
   );
 }
@@ -601,8 +626,8 @@ export async function listNotices(
     kind: row.kind,
     channel: row.channel,
     recipient: { id: row.recipient_id, name: row.recipient_name },
-    sentence: noticeSentence(row.content, 'organization'),
-    reference: row.content.record ? `${row.content.record.label} ${row.content.record.reference}` : null,
+    sentence: noticeSentence(row.content, 'organization', row.recipient_name),
+    reference: row.content.record ? recordLine(row.content.record) : null,
     path: row.content.record?.path ?? null,
     state: row.outcome === null ? 'waiting' : row.outcome,
     attempts: row.attempt ?? 0,

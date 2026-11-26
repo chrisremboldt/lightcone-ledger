@@ -28,7 +28,7 @@ No notice repeats by itself; the digest is the repeat. A digest with nothing in 
 - `action.due:<item>:<due day>` and `action.overdue:<item>:<due day>`, where the item is `finding:<id>` or `assurance:<record>:<action>`: a second pass, a second worker or a restart writes nothing; a new due day is a new notice.
 - `digest:<daily|weekly>:<day>`.
 
-The notice's content is fixed when it is written: the organization's name and time zone, the event, who did it, the record (label, id, reference, title, path), the action id and the due day or instant. The text of an email and the body of a webhook call are made from it when it is sent, with the deployment's public address in front of the path. A safety report, and a record whose confidentiality is not ordinary, is written with its reference and path only; its title is null and nothing of its content is read. An action's text is not carried.
+The notice's content is fixed when it is written: the organization's name and time zone, the event, who did it, the record (label, id, reference, title, path; a finding's reference is its subject in the organization's own id beside the name its records give it, and its title is its rule's title, as the open findings list names it), the action id and the due day or instant. The text of an email and the body of a webhook call are made from it when it is sent, with the deployment's public address in front of the path. A safety report, and a record whose confidentiality is not ordinary, is written with its reference and path only; its title is null and nothing of its content is read. An action's text is not carried.
 
 Writing a notice never blocks or fails its cause. A person with no address, a person who turned that kind off, an organization without a webhook, or a Ledger without a mail server simply writes no notice. Email notices are written only while the deployment has a mail server, so configuring one later does not send a backlog.
 
@@ -62,6 +62,6 @@ No new lock is taken in a place a command already takes it, so no ordering test 
 
 ## Not done here
 
-- A sent notice is not shown on the history of the record it is about. Each record's history is its own projection (a flight's timeline, a safety record's versions and decisions, a finding's treatments); adding a kind of entry to each is more than a small change. The administrator's list shows every notice with the reference and a link to its record.
+- A sent notice is not shown on the history of the record it is about. Each record's history is its own projection (a flight's timeline, a safety record's versions and decisions, a finding's treatments); adding a kind of entry to each is more than a small change. The administrator's list shows every notice with the person it is for, the reference and title, and a link to its record.
 - No notice is sent when a hazard's or another safety record's owner changes, or for a document review that falls due. They fit the same outbox with a new key each.
 - The mail server is one SMTP server for the whole deployment. There is no per-organization From address.

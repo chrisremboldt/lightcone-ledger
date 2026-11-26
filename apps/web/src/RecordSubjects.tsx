@@ -10,8 +10,8 @@ import type {
   RecordSubjectsResponse,
 } from '@ledger/contracts';
 import { Badge, Button, Notice, Spinner } from '@ledger/ui';
-import { recordHeadline } from './operator-records.js';
-import { time, timeRange, timeZoneLabel } from './format.js';
+import { recordHeadline, recordTime } from './operator-records.js';
+import { time, timeZoneLabel } from './format.js';
 import { coverageResultLabels } from './rule-coverage.js';
 import { plainError, saveBytes } from './sms-labels.js';
 import { subjectLabel } from './subject-label.js';
@@ -169,12 +169,6 @@ export function SubjectLists({
   );
 }
 
-function recordTime(record: OperatorRecordView): string {
-  if (record.interval?.end) return timeRange(record.interval.start, record.interval.end);
-  if (record.interval) return `${time(record.interval.start, true)} ${timeZoneLabel()}, no end recorded`;
-  return `as of ${time(record.occurredAt, true)} ${timeZoneLabel()}`;
-}
-
 const aboutWords: Record<NonNullable<OperatorRecordView['about']>, string> = {
   subject: '',
   related_subject: 'Related',
@@ -274,7 +268,7 @@ export function SubjectFile({
                           }
                         >
                           <span className="records-item-head">
-                            <strong>{type ? recordHeadline(type, record.record) : group.title}</strong>
+                            <strong>{type ? recordHeadline(type, record.record, record.dayOnly) : group.title}</strong>
                             {!record.complete && <Badge tone="attention">Incomplete</Badge>}
                             {record.replacedBy && <Badge tone="neutral">Replaced</Badge>}
                             {record.replaces && <Badge tone="planned">Correction</Badge>}

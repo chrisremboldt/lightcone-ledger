@@ -59,10 +59,26 @@ export async function principal(request: APIRequestContext, token = operator) {
   return (await read<{ principal: Principal }>(request, '/v1/me', token)).principal;
 }
 
+/**
+ * Sends a command. A 409 concurrent_change is PostgreSQL refusing a transaction that raced a worker (a serialization
+ * failure or a deadlock): nothing was recorded, and the API's answer is to retry. It is sent again, as read() reads
+ * again, for at most five seconds; any other refusal fails the test at once.
+ */
 export async function command(request: APIRequestContext, body: Command) {
-  const response = await request.post(`${api}/v1/commands`, { headers: writeHeaders(), data: body });
-  expect(response.status(), await response.text()).toBe(201);
-  return response.json() as Promise<CommandResponse>;
+  const deadline = Date.now() + 5000;
+  while (true) {
+    const response = await request.post(`${api}/v1/commands`, { headers: writeHeaders(), data: body });
+    if (
+      response.status() === 409 &&
+      (await response.json()).error?.code === 'concurrent_change' &&
+      Date.now() < deadline
+    ) {
+      await new Promise((resolve) => setTimeout(resolve, Math.min(100, deadline - Date.now())));
+      continue;
+    }
+    expect(response.status(), await response.text()).toBe(201);
+    return response.json() as Promise<CommandResponse>;
+  }
 }
 
 export async function complete(request: APIRequestContext, receiptId: string) {

@@ -6,7 +6,6 @@ import {
   PROGRAM_GRANT_PRODUCTION_LIMIT,
   RECORD_LINK_PAGE,
   readsOnly,
-  type CoverageResult,
   type OrganizationCoverageResponse,
   type Principal,
   type ProgramGrant,
@@ -20,7 +19,7 @@ import {
 import type { LedgerClient } from '@ledger/contracts/client';
 import { Badge, Button, Notice, Spinner } from '@ledger/ui';
 import { ctDay, time, timeZoneLabel } from './format.js';
-import { coverageResultLabels, coverageResultOrder } from './rule-coverage.js';
+import { coverageCells, coverageColumns } from './program-view-table.js';
 import { plainError } from './sms-labels.js';
 
 /**
@@ -51,7 +50,7 @@ const outcomeLabels: Record<ProgramOperatorAnswer['outcome'], string> = {
   failed: 'Failed',
 };
 
-function useLoaded<T>(read: () => Promise<T>, reload: number) {
+function useLoaded<T>(read: () => Promise<T>, reload: number | string) {
   const [value, setValue] = useState<T | null>(null);
   const [error, setError] = useState<string | null>(null);
   useEffect(() => {
@@ -143,7 +142,11 @@ export function ProgramGrantsPage({ client, principal }: { client: LedgerClient;
   const [reload, setReload] = useState(0);
   const [made, setMade] = useState<ProgramGrantCreated | null>(null);
   const manages = may(principal, 'authority:write');
-  const grants = useLoaded(() => (manages ? client.programGrants() : Promise.resolve({ grants: [] })), reload);
+  // The person's capabilities may arrive after the page opens: the grants are read again once they do.
+  const grants = useLoaded(
+    () => (manages ? client.programGrants() : Promise.resolve({ grants: [] })),
+    `${reload}-${manages}`,
+  );
   return (
     <>
       <p className="thread-crumbs">Reports / Shown to program owners</p>
@@ -340,7 +343,7 @@ function MadeGrant({ made, onDone }: { made: ProgramGrantCreated; onDone: () => 
             <code data-testid="program-grant-address">{address}</code>
           </dd>
         </div>
-        <div>
+        <div className="program-secret">
           <dt>Secret</dt>
           <dd>
             <code data-testid="program-grant-secret">{made.secret}</code>
@@ -419,7 +422,7 @@ function GrantEntry({
         </div>
         <div>
           <dt>Read</dt>
-          <dd>{grant.readCount ? `${grant.readCount} times` : 'Not yet'}</dd>
+          <dd>{grant.readCount ? `${grant.readCount} ${grant.readCount === 1 ? 'time' : 'times'}` : 'Not yet'}</dd>
         </div>
       </dl>
       {grant.reads.length > 0 && (
@@ -482,6 +485,11 @@ export function ProgramOperatorsPage({ client, principal }: { client: LedgerClie
       <p className="overview-purpose">
         What each operator’s own Ledger answered under the grant it gave you, in alphabetical order. Counts of recorded
         things only, each with when it was read. Ledger reads each operator every hour.
+      </p>
+      <p>
+        <Button kind="secondary" onClick={refresh}>
+          Show the latest reads
+        </Button>
       </p>
       {listed.error && (
         <Notice tone="alert" title="The operators could not be read">
@@ -591,7 +599,7 @@ function OperatorCard({
             onClick={() =>
               void client.askProgramRead(operator.id).then(
                 () => {
-                  setAsked('A fresh read is asked for. Reload this page in a minute.');
+                  setAsked('A fresh read is asked for. Show the latest reads in a minute.');
                   onChange();
                 },
                 (failure) => setAsked(plainError(failure).message),
@@ -625,14 +633,6 @@ function OperatorCard({
   );
 }
 
-function shownResults(document: ProgramViewDocument): CoverageResult[] {
-  const present = new Set<CoverageResult>();
-  for (const pack of document.packs ?? [])
-    for (const rule of pack.rules)
-      for (const result of coverageResultOrder) if ((rule.counts?.[result] ?? 0) > 0) present.add(result);
-  return coverageResultOrder.filter((result) => present.has(result));
-}
-
 function Table({ label, children }: { label: string; children: ReactNode }) {
   return (
     <div className="program-table">
@@ -654,12 +654,14 @@ function OperatorAnswer({
   readAt: string;
   current: boolean;
 }) {
-  const results = shownResults(document);
   const asOf = current ? `as read ${when(readAt)}` : `as read ${when(readAt)}, not current`;
   return (
     <div className="program-answer">
       <p className="records-note">
-        Its Ledger names it {document.operator.name}. The grant answers until {when(document.grantExpiresAt)}.
+        Its Ledger names it {document.operator.name}.{' '}
+        {current
+          ? `The grant answers until ${when(document.grantExpiresAt)}.`
+          : `When read, it said the grant would answer until ${when(document.grantExpiresAt)}.`}
       </p>
       {document.packs?.map((pack) => (
         <section key={pack.packId} aria-label={`Coverage of ${pack.title}`}>
@@ -680,9 +682,9 @@ function OperatorAnswer({
               <thead>
                 <tr>
                   <th scope="col">Rule</th>
-                  {results.map((result) => (
-                    <th scope="col" key={result}>
-                      {coverageResultLabels[result]}
+                  {coverageColumns(pack).map((column) => (
+                    <th scope="col" key={column.label}>
+                      {column.label}
                     </th>
                   ))}
                 </tr>
@@ -694,9 +696,11 @@ function OperatorAnswer({
                       {rule.title}
                       {rule.citation && <small>{rule.citation}</small>}
                     </th>
-                    {rule.counts
-                      ? results.map((result) => <td key={result}>{rule.counts![result]}</td>)
-                      : results.length > 0 && <td colSpan={results.length}>Not checked by Ledger</td>}
+                    {coverageCells(rule, coverageColumns(pack)).map((cell, index) => (
+                      <td key={index} colSpan={cell.span > 1 ? cell.span : undefined}>
+                        {cell.text}
+                      </td>
+                    ))}
                   </tr>
                 ))}
               </tbody>

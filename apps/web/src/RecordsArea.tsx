@@ -31,11 +31,13 @@ import {
   displayValue,
   draftFromRecord,
   originalExcerpt,
+  limitationText,
   recordHeadline,
+  recordTime,
   typeKey,
   type RecordTypeSummary,
 } from './operator-records.js';
-import { time, timeRange, timeZoneLabel } from './format.js';
+import { time, timeZoneLabel } from './format.js';
 import { plainError, saveBytes } from './sms-labels.js';
 import { goTo, usePlace, type Place } from './place.js';
 import { PlaceLink } from './TopBar.js';
@@ -523,10 +525,10 @@ function RecordList({
             <button
               className="records-item"
               onClick={() => setOpen(record.observationId)}
-              aria-label={`Open ${type.title} record ${recordHeadline(type, record.record)} for ${subjectText(record.subject)}`}
+              aria-label={`Open ${type.title} record ${recordHeadline(type, record.record, record.dayOnly)} for ${subjectText(record.subject)}`}
             >
               <span className="records-item-head">
-                <strong>{recordHeadline(type, record.record)}</strong>
+                <strong>{recordHeadline(type, record.record, record.dayOnly)}</strong>
                 <Completeness record={record} />
                 {record.replacedBy && <Badge tone="neutral">Replaced</Badge>}
                 {record.replaces && <Badge tone="planned">Correction</Badge>}
@@ -555,12 +557,6 @@ function RecordList({
       )}
     </section>
   );
-}
-
-function recordTime(record: OperatorRecordView): string {
-  if (record.interval?.end) return timeRange(record.interval.start, record.interval.end);
-  if (record.interval) return `${time(record.interval.start, true)} ${timeZoneLabel()}, no end recorded`;
-  return `as of ${time(record.occurredAt, true)} ${timeZoneLabel()}`;
 }
 
 function RecordDetail({
@@ -611,7 +607,7 @@ function RecordDetail({
       <Button kind="quiet" onClick={onBack}>
         Back to records
       </Button>
-      <h2>{recordHeadline(type, record.record)}</h2>
+      <h2>{recordHeadline(type, record.record, record.dayOnly)}</h2>
       <p className="records-item-meta">
         {type.title} · {subjectText(record.subject)} · {recordTime(record)}
       </p>
@@ -649,7 +645,7 @@ function RecordDetail({
       {record.limitations.length > 0 && (
         <ul className="records-reasons">
           {record.limitations.map((limitation) => (
-            <li key={limitation}>{limitation}</li>
+            <li key={limitation}>{limitationText(limitation)}</li>
           ))}
         </ul>
       )}

@@ -8,7 +8,12 @@ import {
   monthlyGeometry,
   monthlySentence,
   monthLabel,
+  monthLabelEvery,
+  monthTickLabels,
+  narrowIndicatorFrame,
+  narrowMonthlyFrame,
   niceStep,
+  timeTickCount,
   timeTicks,
   windowGaps,
   zeroScale,
@@ -156,5 +161,35 @@ describe('findings opened and closed per month', () => {
       'From Jan 2026 to Mar 2026, 8 findings opened and 4 closed. The most opened in one month was 4, in Jan 2026, Mar 2026.',
     );
     expect(monthlySentence(['2026-01'], [0], [0])).toBe('No counted finding opened or closed from Jan 2026.');
+  });
+});
+
+describe('a chart on a phone', () => {
+  // A chart is scaled to its width: on a 375 px screen a 360-unit frame draws its 11-unit labels near 11 px.
+  it('is drawn in a frame near the phone’s width, so its labels keep a readable size', () => {
+    expect(narrowIndicatorFrame.width).toBeLessThanOrEqual(375);
+    expect(narrowMonthlyFrame.width).toBeLessThanOrEqual(375);
+  });
+
+  it('shows fewer ticks rather than smaller text', () => {
+    expect(timeTickCount(indicatorFrame)).toBe(5);
+    expect(timeTickCount(narrowIndicatorFrame)).toBe(3);
+    expect(monthLabelEvery(12, monthlyFrame)).toBe(1);
+    expect(monthLabelEvery(12, narrowMonthlyFrame)).toBe(2);
+    expect(monthLabelEvery(24, monthlyFrame)).toBe(3);
+    expect(monthLabelEvery(24, narrowMonthlyFrame)).toBe(3);
+    const narrow = indicatorGeometry([result('a', 0, 1, '1'), result('b', 30, 31, '2')], null, narrowIndicatorFrame);
+    expect(narrow.xTicks).toHaveLength(3);
+  });
+
+  it('names a year under a labelled month only, so two years never overlap', () => {
+    const months = ['2025-12', '2026-01', '2026-02', '2026-03'];
+    expect(monthTickLabels(months, 2)).toEqual([
+      { month: 'Dec', year: '2025' },
+      {},
+      { month: 'Feb', year: '2026' },
+      {},
+    ]);
+    expect(monthTickLabels(months, 1).map((label) => label.year)).toEqual(['2025', '2026', undefined, undefined]);
   });
 });

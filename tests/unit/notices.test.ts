@@ -5,7 +5,9 @@ import { placeFromAddress } from '../../apps/web/src/place.js';
 import {
   noticeDay,
   noticeSentence,
+  noticeSubjectReference,
   noticeTime,
+  recordLine,
   noticeWebhookBody,
   renderNoticeEmail,
   webhookSignature,
@@ -76,6 +78,10 @@ describe('what a notice says', () => {
     const finding = content({ event: 'finding.assigned' });
     expect(noticeSentence(finding)).toBe('Avery Example assigned a finding to you.');
     expect(noticeSentence(finding, 'organization')).toBe('Avery Example assigned a finding to a person.');
+    // The organization's list of notices names the person the notice is for.
+    expect(noticeSentence(finding, 'organization', 'Jordan Example')).toBe(
+      'Avery Example assigned a finding to Jordan Example.',
+    );
     // A deadline is an instant, shown in the organization's own time zone.
     const acknowledge = content({
       event: 'document.acknowledgement',
@@ -268,5 +274,32 @@ describe('why a send failed', () => {
         'email',
       ),
     ).toBe('The mail server refused it: 550 Mailbox unavailable');
+  });
+});
+
+describe('a finding as a notice names it', () => {
+  it('is its rule’s title and its subject in the organization’s own id, as the open findings list names it', () => {
+    expect(noticeSubjectReference('RIDGE-AC-1', 'Survey quadcopter one')).toBe('Survey quadcopter one (RIDGE-AC-1)');
+    expect(noticeSubjectReference('RIDGE-AC-1', null)).toBe('RIDGE-AC-1');
+    expect(noticeSubjectReference('0d6f1c2e-1b7a-4c1e-9a55-2f0b7c3a9e11', 'Morning survey')).toBe(
+      'Morning survey (0d6f1c2e)',
+    );
+    const finding = {
+      label: 'Finding',
+      id: 'finding:5eca',
+      reference: 'RIDGE-AC-1',
+      title: 'Battery log recorded',
+      path: '/rules/findings/aircraft/RIDGE-AC-1',
+    };
+    expect(recordLine(finding)).toBe('Finding RIDGE-AC-1 · Battery log recorded');
+    const email = renderNoticeEmail(content({ event: 'finding.assigned', record: finding }), null);
+    expect(email.text).toContain('Finding RIDGE-AC-1 · Battery log recorded');
+    expect(email.subject).not.toContain('Battery log recorded');
+    const body = noticeWebhookBody(
+      { id: 'notice-1', createdAt: '2026-11-26T00:00:00.000Z' },
+      content({ event: 'finding.assigned', record: finding }),
+      null,
+    );
+    expect(body.record).toMatchObject({ reference: 'RIDGE-AC-1', title: 'Battery log recorded' });
   });
 });

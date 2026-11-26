@@ -5,7 +5,7 @@ import {
   type OperatorRecordView,
   type Principal,
 } from '@ledger/contracts';
-import { time, timeZone, timeZoneLabel } from './format.js';
+import { time, timeRange, timeZone, timeZoneLabel } from './format.js';
 
 /** Helpers for the Records area. They read only a record type's field metadata, never a record type by name. */
 
@@ -148,13 +148,49 @@ export function displayValue(field: RecordField, value: unknown, unitLabel?: str
   }
 }
 
-/** A short line naming a record: its first two required fields that have values. */
-export function recordHeadline(type: RecordTypeSummary, record: Record<string, unknown>): string {
+/** A short line naming a record: its first two required fields that have values, a date alone shown as that date. */
+export function recordHeadline(
+  type: RecordTypeSummary,
+  record: Record<string, unknown>,
+  dayOnly?: OperatorRecordView['dayOnly'],
+): string {
   const shown = type.fields
     .filter((field) => field.required && record[field.name] !== undefined && field.kind !== 'long_text')
     .slice(0, 2)
-    .map((field) => displayValue(field, record[field.name], columnFor(type, field.name)?.units?.stored));
+    .map((field) =>
+      displayValue(field, record[field.name], columnFor(type, field.name)?.units?.stored, dayOnly?.[field.name]?.day),
+    );
   return shown.join(' · ') || type.title;
+}
+
+type TimedRecord = Pick<OperatorRecordView, 'occurredAt' | 'interval' | 'record' | 'dayOnly'>;
+
+/** The day a record's field gave as a date alone, when that field is what placed the record at this instant. */
+function dayOnlyAt(record: TimedRecord, at: string): string | null {
+  const instant = Date.parse(at);
+  for (const [name, entry] of Object.entries(record.dayOnly ?? {})) {
+    const value = record.record[name];
+    if (typeof value === 'string' && Date.parse(value) === instant) return entry.day;
+  }
+  return null;
+}
+
+/**
+ * When a record is about, in the organization's time zone; a time placed by a date alone is shown as that date, never
+ * as midnight. With `asOf`, a single time reads "as of" and an interval with no end says so.
+ */
+export function recordTime(record: TimedRecord, { asOf = true }: { asOf?: boolean } = {}): string {
+  const shown = (at: string) => {
+    const day = dayOnlyAt(record, at);
+    return day ? `${day} (date only)` : `${time(at, true)} ${timeZoneLabel()}`;
+  };
+  const interval = record.interval;
+  if (interval?.end)
+    return dayOnlyAt(record, interval.start) || dayOnlyAt(record, interval.end)
+      ? `${shown(interval.start)} to ${shown(interval.end)}`
+      : timeRange(interval.start, interval.end);
+  if (interval) return asOf ? `${shown(interval.start)}, no end recorded` : shown(interval.start);
+  return asOf ? `as of ${shown(record.occurredAt)}` : shown(record.occurredAt);
 }
 
 /** The original bytes a record came from, narrowed to its row or JSON record when the locator says where. */
@@ -174,4 +210,16 @@ export function originalExcerpt(bytes: Uint8Array, locator: OperatorRecordView['
   } catch {
     return whole;
   }
+}
+
+/**
+ * A record's limitation as a person reads it: the time a device's clock says the record was written, stated in UTC, is
+ * shown in the organization's time zone like the time Ledger received it. The stored sentence is unchanged, and other
+ * limitations, which may state a UTC time on purpose, are shown as they are.
+ */
+export function limitationText(limitation: string): string {
+  return limitation.replace(
+    /^Written at (\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?Z) by the clock of the device/,
+    (_, instant: string) => `Written at ${time(instant, true)} ${timeZoneLabel()} by the clock of the device`,
+  );
 }

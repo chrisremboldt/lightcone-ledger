@@ -18,6 +18,21 @@ export interface ChartFrame {
 
 export const indicatorFrame: ChartFrame = { width: 720, height: 300, left: 64, right: 20, top: 24, bottom: 48 };
 export const monthlyFrame: ChartFrame = { width: 720, height: 260, left: 44, right: 12, top: 20, bottom: 44 };
+/**
+ * The frames a chart is drawn in on a phone. A chart is scaled to its width, so a narrower frame keeps its labels near
+ * their own size; it shows fewer ticks rather than smaller text.
+ */
+export const narrowIndicatorFrame: ChartFrame = { width: 360, height: 240, left: 52, right: 14, top: 24, bottom: 44 };
+export const narrowMonthlyFrame: ChartFrame = { width: 360, height: 220, left: 36, right: 8, top: 20, bottom: 44 };
+
+/** How many time ticks fit across a frame: one per 90 units of plot, between two and five. */
+export const timeTickCount = (frame: ChartFrame) => Math.max(2, Math.min(5, Math.floor(plotWidth(frame) / 90)));
+
+/** Every how many months a month is labelled, so each label has about 34 units: a short month name at its size. */
+export function monthLabelEvery(months: number, frame: ChartFrame): number {
+  const slot = plotWidth(frame) / Math.max(1, months);
+  return Math.max(months > 12 ? 3 : 1, Math.ceil(34 / slot));
+}
 
 const plotHeight = (frame: ChartFrame) => frame.height - frame.top - frame.bottom;
 const plotWidth = (frame: ChartFrame) => frame.width - frame.left - frame.right;
@@ -110,7 +125,7 @@ export function indicatorGeometry(
   return {
     points,
     yTicks: scale.ticks.map((value) => ({ value, y: y(value) })),
-    xTicks: timeTicks(first, last).map((at) => ({ at: new Date(at).toISOString(), x: x(at) })),
+    xTicks: timeTicks(first, last, timeTickCount(frame)).map((at) => ({ at: new Date(at).toISOString(), x: x(at) })),
     limit: limitValue === null ? null : { value: limitValue, y: y(limitValue) },
     gaps: windowGaps(results).map((gap) => ({
       ...gap,
@@ -186,6 +201,21 @@ export function monthlyGeometry(
     return { month, x: round(centre), width: round(slot), bars };
   });
   return { groups, yTicks: scale.ticks.map((value) => ({ value, y: y(value) })), baseline };
+}
+
+/**
+ * The labels under a monthly chart: every `every`th month's short name, and its year under the first labelled month
+ * and each labelled month whose year differs from the one labelled before it, so two years never overlap.
+ */
+export function monthTickLabels(months: readonly string[], every: number): { month?: string; year?: string }[] {
+  let lastYear: string | null = null;
+  return months.map((month, index) => {
+    if (index % every !== 0) return {};
+    const year = month.slice(0, 4);
+    const shown = year !== lastYear ? year : undefined;
+    lastYear = year;
+    return { month: monthLabel(month).split(' ')[0], ...(shown ? { year: shown } : {}) };
+  });
 }
 
 /** A month's short name in the organization's calendar, as in "Nov 2026". Months have no time zone of their own. */

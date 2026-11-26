@@ -110,27 +110,42 @@ function dueWords(item: Partial<NoticeItem>, timeZone: string): string | null {
   return null;
 }
 
+/**
+ * A subject as a notice names it: the name its records give it beside the organization's own id, or the id alone. An
+ * id Ledger made, a UUID, is shortened to its first eight characters beside a name.
+ */
+export function noticeSubjectReference(id: string, name: string | null | undefined): string {
+  const named = name?.trim();
+  if (!named || named === id) return id;
+  return `${named} (${/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id) ? id.slice(0, 8) : id})`;
+}
+
 /** "Finding F-12 · Battery log missing", or the reference alone for a record whose title is never sent. */
 export function recordLine(record: NoticeRecord): string {
   return `${record.label} ${record.reference}${record.title ? ` · ${record.title}` : ''}`;
 }
 
 /**
- * What happened, in one sentence: to the person it is for ("you"), or to the organization's webhook, which names the
- * person by id beside it.
+ * What happened, in one sentence: to the person it is for ("you"), or to the organization, which names the person by
+ * id beside it in a webhook's body, or by name where the organization's list of notices gives it.
  */
-export function noticeSentence(content: NoticeContent, audience: 'person' | 'organization' = 'person'): string {
+export function noticeSentence(
+  content: NoticeContent,
+  audience: 'person' | 'organization' = 'person',
+  recipientName?: string,
+): string {
   const you = audience === 'person';
+  const person = recipientName ?? 'a person';
   const by = content.by ?? 'Someone';
   const action = content.actionId ? `Action ${content.actionId}` : 'An action';
   const due = dueWords(content, content.organization.timeZone);
   switch (content.event) {
     case 'finding.assigned':
-      return you ? `${by} assigned a finding to you.` : `${by} assigned a finding to a person.`;
+      return you ? `${by} assigned a finding to you.` : `${by} assigned a finding to ${person}.`;
     case 'action.assigned':
       return you
         ? `${by} set an action for you${due ? `, due on ${due}` : ''}.`
-        : `${by} set an action for a person${due ? `, due on ${due}` : ''}.`;
+        : `${by} set an action for ${person}${due ? `, due on ${due}` : ''}.`;
     case 'action.due':
       return you ? `${action} of yours is due on ${due}.` : `${action} is due on ${due}.`;
     case 'action.overdue':
@@ -140,7 +155,7 @@ export function noticeSentence(content: NoticeContent, audience: 'person' | 'org
     case 'document.acknowledgement':
       return you
         ? `${by} issued a document for you to acknowledge${due ? ` by ${due}` : ''}.`
-        : `${by} issued a document for a person to acknowledge${due ? ` by ${due}` : ''}.`;
+        : `${by} issued a document for ${person} to acknowledge${due ? ` by ${due}` : ''}.`;
     case 'digest': {
       const digest = content.digest!;
       return `What is yours in ${content.organization.name} ${digest.period === 'weekly' ? 'this week' : 'today'}, ${noticeDay(digest.day)}.`;

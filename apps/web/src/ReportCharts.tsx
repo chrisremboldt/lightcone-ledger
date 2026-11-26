@@ -1,4 +1,4 @@
-import { useId } from 'react';
+import { useEffect, useId, useState } from 'react';
 import type { IndicatorHistory } from '@ledger/contracts';
 import { ctDay, time, timeRange, timeZoneLabel } from './format.js';
 import {
@@ -6,9 +6,13 @@ import {
   indicatorGeometry,
   indicatorSentence,
   monthLabel,
+  monthLabelEvery,
+  monthTickLabels,
   monthlyFrame,
   monthlyGeometry,
   monthlySentence,
+  narrowIndicatorFrame,
+  narrowMonthlyFrame,
 } from './report-charts.js';
 import { PlaceLink } from './TopBar.js';
 
@@ -17,6 +21,21 @@ import { PlaceLink } from './TopBar.js';
  * it, folded on screen and open in print. Nothing is told by colour alone: results that state no rate are hollow
  * squares on the baseline, closed findings are hatched, and every mark is labelled or listed.
  */
+
+const narrowQuery = '(max-width: 719px)';
+
+/** Whether the screen is a phone's width, followed as it changes. */
+function useNarrow(): boolean {
+  const [narrow, setNarrow] = useState(() => window.matchMedia?.(narrowQuery).matches ?? false);
+  useEffect(() => {
+    const query = window.matchMedia?.(narrowQuery);
+    if (!query) return;
+    const change = () => setNarrow(query.matches);
+    query.addEventListener('change', change);
+    return () => query.removeEventListener('change', change);
+  }, []);
+  return narrow;
+}
 
 export const resultStatusWords: Record<IndicatorHistory['results'][number]['status'], string> = {
   supported: 'Rate stated',
@@ -33,7 +52,7 @@ export function IndicatorChart({
   /** Absent for a person who may not read safety records. */
   onOpenHazard?: boolean;
 }) {
-  const frame = indicatorFrame;
+  const frame = useNarrow() ? narrowIndicatorFrame : indicatorFrame;
   const geometry = indicatorGeometry(history.results, history.definition.limit?.rate ?? null, frame);
   const sentence = indicatorSentence(history);
   const unit = history.definition.unitLabel ?? '';
@@ -210,11 +229,11 @@ export function MonthlyChart({
   /** What the bars count, such as all rules or one rule's title. */
   label: string;
 }) {
-  const frame = monthlyFrame;
+  const frame = useNarrow() ? narrowMonthlyFrame : monthlyFrame;
   const geometry = monthlyGeometry(months, opened, closed, frame);
   const hatch = `report-hatch-${useId().replace(/:/g, '')}`;
   const titleId = useId();
-  const every = months.length > 12 ? 3 : 1;
+  const labels = monthTickLabels(months, monthLabelEvery(months.length, frame));
   return (
     <figure className="report-chart" aria-labelledby={titleId} data-testid="monthly-chart">
       <figcaption id={titleId} className="report-chart-sentence">
@@ -267,14 +286,14 @@ export function MonthlyChart({
                 )}
               </g>
             ))}
-            {index % every === 0 && (
+            {labels[index]?.month && (
               <text className="report-chart-tick" x={group.x} y={geometry.baseline + 18} textAnchor="middle">
-                {monthLabel(group.month).split(' ')[0]}
+                {labels[index]!.month}
               </text>
             )}
-            {(index === 0 || group.month.endsWith('-01')) && (
+            {labels[index]?.year && (
               <text className="report-chart-tick" x={group.x} y={geometry.baseline + 32} textAnchor="middle">
-                {group.month.slice(0, 4)}
+                {labels[index]!.year}
               </text>
             )}
           </g>
