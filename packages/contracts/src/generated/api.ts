@@ -1016,7 +1016,7 @@ export interface paths {
         };
         /**
          * List the record types and their columns
-         * @description Returns the registered operator record types with their field metadata and the import columns generated from it. Needs `evidence:read`.
+         * @description Returns the record types your organization has, with their field metadata and the import columns generated from it: those built into Ledger, and those declared by packs your organization has adopted (in effect or still to come). Needs `evidence:read`.
          */
         get: operations["listOperatorRecordTypes"];
         put?: never;
@@ -16378,6 +16378,81 @@ export interface operations {
                                         through: string;
                                     };
                                 };
+                                /** @description The record types the pack declares, each with its digest; an adoption pins them with the rules. Absent on packs that declare none. */
+                                recordTypes?: {
+                                    /** @description The pack id, a dot and the type’s own name, such as example-ridge-procedures.airframe-check. */
+                                    id: string;
+                                    version: number;
+                                    title: string;
+                                    /** @description One line: what a record of this type is. */
+                                    description: string;
+                                    subjectKinds: ("flight" | "aircraft" | "person" | "site" | "organization" | "component")[];
+                                    /** @description How a record is placed in time: event at a date_time field, as_of (a standing record, optionally at a date_time field), or interval between two. */
+                                    time: {
+                                        /** @constant */
+                                        meaning: "event";
+                                        atField: string;
+                                    } | {
+                                        /** @constant */
+                                        meaning: "as_of";
+                                        atField?: string;
+                                    } | {
+                                        /** @constant */
+                                        meaning: "interval";
+                                        startField: string;
+                                        endField: string;
+                                    };
+                                    fields: ({
+                                        name: string;
+                                        /** @description What the operator calls the field. */
+                                        label: string;
+                                        /** @description One line in the operator’s words: what to write. */
+                                        help?: string;
+                                        /** @description Counts toward completeness. A record without it is still kept, as incomplete. */
+                                        required?: boolean;
+                                        kind: "text" | "long_text" | "boolean" | "date" | "date_time";
+                                    } | {
+                                        name: string;
+                                        /** @description What the operator calls the field. */
+                                        label: string;
+                                        /** @description One line in the operator’s words: what to write. */
+                                        help?: string;
+                                        /** @description Counts toward completeness. A record without it is still kept, as incomplete. */
+                                        required?: boolean;
+                                        /** @constant */
+                                        kind: "number";
+                                        unit: "Hours" | "Meters" | "MetersPerSecond" | "Percent" | "Count";
+                                        minimum?: number;
+                                        maximum?: number;
+                                    } | {
+                                        name: string;
+                                        /** @description What the operator calls the field. */
+                                        label: string;
+                                        /** @description One line in the operator’s words: what to write. */
+                                        help?: string;
+                                        /** @description Counts toward completeness. A record without it is still kept, as incomplete. */
+                                        required?: boolean;
+                                        /** @constant */
+                                        kind: "select";
+                                        options: {
+                                            value: string;
+                                            label: string;
+                                        }[];
+                                    } | {
+                                        name: string;
+                                        /** @description What the operator calls the field. */
+                                        label: string;
+                                        /** @description One line in the operator’s words: what to write. */
+                                        help?: string;
+                                        /** @description Counts toward completeness. A record without it is still kept, as incomplete. */
+                                        required?: boolean;
+                                        /** @constant */
+                                        kind: "reference";
+                                        referenceKind: "person" | "aircraft" | "site" | "component";
+                                    })[];
+                                    /** @description ledger.v6.sha256.jcs.1 over the declaration without its digest. A record names it. */
+                                    digest: string;
+                                }[];
                                 digest: string;
                             };
                             scope: {
@@ -19932,6 +20007,81 @@ export interface operations {
                                     through: string;
                                 };
                             };
+                            /** @description The record types the pack declares, each with its digest; an adoption pins them with the rules. Absent on packs that declare none. */
+                            recordTypes?: {
+                                /** @description The pack id, a dot and the type’s own name, such as example-ridge-procedures.airframe-check. */
+                                id: string;
+                                version: number;
+                                title: string;
+                                /** @description One line: what a record of this type is. */
+                                description: string;
+                                subjectKinds: ("flight" | "aircraft" | "person" | "site" | "organization" | "component")[];
+                                /** @description How a record is placed in time: event at a date_time field, as_of (a standing record, optionally at a date_time field), or interval between two. */
+                                time: {
+                                    /** @constant */
+                                    meaning: "event";
+                                    atField: string;
+                                } | {
+                                    /** @constant */
+                                    meaning: "as_of";
+                                    atField?: string;
+                                } | {
+                                    /** @constant */
+                                    meaning: "interval";
+                                    startField: string;
+                                    endField: string;
+                                };
+                                fields: ({
+                                    name: string;
+                                    /** @description What the operator calls the field. */
+                                    label: string;
+                                    /** @description One line in the operator’s words: what to write. */
+                                    help?: string;
+                                    /** @description Counts toward completeness. A record without it is still kept, as incomplete. */
+                                    required?: boolean;
+                                    kind: "text" | "long_text" | "boolean" | "date" | "date_time";
+                                } | {
+                                    name: string;
+                                    /** @description What the operator calls the field. */
+                                    label: string;
+                                    /** @description One line in the operator’s words: what to write. */
+                                    help?: string;
+                                    /** @description Counts toward completeness. A record without it is still kept, as incomplete. */
+                                    required?: boolean;
+                                    /** @constant */
+                                    kind: "number";
+                                    unit: "Hours" | "Meters" | "MetersPerSecond" | "Percent" | "Count";
+                                    minimum?: number;
+                                    maximum?: number;
+                                } | {
+                                    name: string;
+                                    /** @description What the operator calls the field. */
+                                    label: string;
+                                    /** @description One line in the operator’s words: what to write. */
+                                    help?: string;
+                                    /** @description Counts toward completeness. A record without it is still kept, as incomplete. */
+                                    required?: boolean;
+                                    /** @constant */
+                                    kind: "select";
+                                    options: {
+                                        value: string;
+                                        label: string;
+                                    }[];
+                                } | {
+                                    name: string;
+                                    /** @description What the operator calls the field. */
+                                    label: string;
+                                    /** @description One line in the operator’s words: what to write. */
+                                    help?: string;
+                                    /** @description Counts toward completeness. A record without it is still kept, as incomplete. */
+                                    required?: boolean;
+                                    /** @constant */
+                                    kind: "reference";
+                                    referenceKind: "person" | "aircraft" | "site" | "component";
+                                })[];
+                                /** @description ledger.v6.sha256.jcs.1 over the declaration without its digest. A record names it. */
+                                digest: string;
+                            }[];
                             digest: string;
                         };
                     };
@@ -26945,6 +27095,11 @@ export interface operations {
                             }[];
                             mayInfer: string[];
                             mayNotInfer: string[];
+                            /** @description For a record type a pack declares: the pack, which the organization has adopted, and the digest of the declaration each record names. Absent for a type built into Ledger. */
+                            declaredBy?: {
+                                packId: string;
+                                digest: string;
+                            };
                             /** @description How a rule reads records of this type: the observation type and versions its read takes, the conditions that select this record type (none when the type is recorded as its own observation type), and the path a rule names each field by. */
                             ruleRead: {
                                 /** @description Lowercase dotted domain.noun identifier, for example battery.state. */
@@ -42533,6 +42688,81 @@ export interface operations {
                                         through: string;
                                     };
                                 };
+                                /** @description The record types the pack declares, each with its digest; an adoption pins them with the rules. Absent on packs that declare none. */
+                                recordTypes?: {
+                                    /** @description The pack id, a dot and the type’s own name, such as example-ridge-procedures.airframe-check. */
+                                    id: string;
+                                    version: number;
+                                    title: string;
+                                    /** @description One line: what a record of this type is. */
+                                    description: string;
+                                    subjectKinds: ("flight" | "aircraft" | "person" | "site" | "organization" | "component")[];
+                                    /** @description How a record is placed in time: event at a date_time field, as_of (a standing record, optionally at a date_time field), or interval between two. */
+                                    time: {
+                                        /** @constant */
+                                        meaning: "event";
+                                        atField: string;
+                                    } | {
+                                        /** @constant */
+                                        meaning: "as_of";
+                                        atField?: string;
+                                    } | {
+                                        /** @constant */
+                                        meaning: "interval";
+                                        startField: string;
+                                        endField: string;
+                                    };
+                                    fields: ({
+                                        name: string;
+                                        /** @description What the operator calls the field. */
+                                        label: string;
+                                        /** @description One line in the operator’s words: what to write. */
+                                        help?: string;
+                                        /** @description Counts toward completeness. A record without it is still kept, as incomplete. */
+                                        required?: boolean;
+                                        kind: "text" | "long_text" | "boolean" | "date" | "date_time";
+                                    } | {
+                                        name: string;
+                                        /** @description What the operator calls the field. */
+                                        label: string;
+                                        /** @description One line in the operator’s words: what to write. */
+                                        help?: string;
+                                        /** @description Counts toward completeness. A record without it is still kept, as incomplete. */
+                                        required?: boolean;
+                                        /** @constant */
+                                        kind: "number";
+                                        unit: "Hours" | "Meters" | "MetersPerSecond" | "Percent" | "Count";
+                                        minimum?: number;
+                                        maximum?: number;
+                                    } | {
+                                        name: string;
+                                        /** @description What the operator calls the field. */
+                                        label: string;
+                                        /** @description One line in the operator’s words: what to write. */
+                                        help?: string;
+                                        /** @description Counts toward completeness. A record without it is still kept, as incomplete. */
+                                        required?: boolean;
+                                        /** @constant */
+                                        kind: "select";
+                                        options: {
+                                            value: string;
+                                            label: string;
+                                        }[];
+                                    } | {
+                                        name: string;
+                                        /** @description What the operator calls the field. */
+                                        label: string;
+                                        /** @description One line in the operator’s words: what to write. */
+                                        help?: string;
+                                        /** @description Counts toward completeness. A record without it is still kept, as incomplete. */
+                                        required?: boolean;
+                                        /** @constant */
+                                        kind: "reference";
+                                        referenceKind: "person" | "aircraft" | "site" | "component";
+                                    })[];
+                                    /** @description ledger.v6.sha256.jcs.1 over the declaration without its digest. A record names it. */
+                                    digest: string;
+                                }[];
                                 digest: string;
                             };
                             scope: {

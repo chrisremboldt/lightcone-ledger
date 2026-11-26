@@ -110,6 +110,16 @@ export const OperatorRecordTypeSummarySchema = Type.Object(
     }),
     mayInfer: Type.Array(Type.String()),
     mayNotInfer: Type.Array(Type.String()),
+    declaredBy: Type.Optional(
+      Type.Object(
+        { packId: Type.String(), digest: Type.String({ pattern: '^[a-f0-9]{64}$' }) },
+        {
+          ...Closed,
+          description:
+            'For a record type a pack declares: the pack, which the organization has adopted, and the digest of the declaration each record names. Absent for a type built into Ledger.',
+        },
+      ),
+    ),
     ruleRead: Type.Object(
       {
         type: ObservationTypeIdSchema,

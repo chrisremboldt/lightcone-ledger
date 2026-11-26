@@ -868,7 +868,7 @@ describe('field paths and limits written with units', () => {
       build((description) => {
         description.rules[0].reads[0].where[0].oneOf = ['flight.made-up'];
       }),
-    ).toThrow('this Ledger registers no record type flight.made-up');
+    ).toThrow('neither this Ledger nor this pack declares a record type flight.made-up');
   });
 
   it('keeps a limit written with its unit in the stored unit, with what was written, and states it in that unit', () => {

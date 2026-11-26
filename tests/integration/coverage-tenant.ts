@@ -31,6 +31,8 @@ export interface CoverageTenant {
     headers?: Record<string, string>,
   ) => ReturnType<Awaited<ReturnType<typeof createApp>>['inject']>;
   importRecords: (recordType: string, records: Record<string, unknown>[]) => Promise<string[]>;
+  /** Retains a file as the records principal uploads it, and returns its artifact id. */
+  upload: (bytes: Buffer, contentType?: string) => Promise<string>;
   adopt: (
     pack: RulePackVersion,
     mode: PackAdoptionCommand['mode'],
@@ -69,9 +71,9 @@ export async function coverageTenant(label: string): Promise<CoverageTenant> {
       ...(payload === undefined ? {} : { payload: payload as Record<string, unknown> }),
     });
 
-  async function upload(bytes: Buffer): Promise<string> {
+  async function upload(bytes: Buffer, contentType = 'application/json'): Promise<string> {
     const created = await call(operator, 'POST', '/v1/uploads', {
-      contentType: 'application/json',
+      contentType,
       byteLength: bytes.byteLength,
     });
     expect(created.statusCode, created.body).toBe(201);
@@ -203,6 +205,7 @@ export async function coverageTenant(label: string): Promise<CoverageTenant> {
     admin,
     call,
     importRecords,
+    upload,
     adopt,
     settle,
     async close() {

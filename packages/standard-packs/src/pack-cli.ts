@@ -95,6 +95,19 @@ function recordLines(file: PackFile): string[] {
   ]);
 }
 
+/** The record types the pack declares: each field, as `pnpm ledger records columns` will list it once adopted. */
+function declarationLines(file: PackFile): string[] {
+  return (file.recordTypes ?? []).flatMap((declared) => [
+    `Record type ${declared.id} version ${declared.version}: ${declared.title}, about ${declared.subjectKinds.join(' or ')}`,
+    ...declared.fields.map(
+      (field) =>
+        `  ${field.name} (${field.label}): ${field.kind === 'number' ? `number in ${field.unit}` : field.kind === 'select' ? `one of ${field.options.map((option) => option.value).join(', ')}` : field.kind === 'reference' ? `a ${field.referenceKind} on file` : field.kind.replace('_', ' ')}${field.required ? ', required' : ''}`,
+    ),
+    `  Read by a rule as type operator.record with where values.recordType oneOf [${declared.id}]; fields values.record.<field>`,
+    '',
+  ]);
+}
+
 /** The stored unit a parameter is kept in: the one the rule's check states, else the hours a duration's name says. */
 const unitOf = (rule: PackFileCheckedRule, name: string) =>
   typeof rule.check.params.unit === 'string' ? ` ${rule.check.params.unit}` : /Hours$/u.test(name) ? ' h' : '';
@@ -149,7 +162,11 @@ function coverageCounts(file: PackFile): string {
     .map((coverage) => [coverage, count(coverage)] as const)
     .filter(([, total]) => total > 0)
     .map(([coverage, total]) => `${total} ${coverageWords[coverage].toLowerCase()}`);
-  return `${file.rules.length} rule${file.rules.length === 1 ? '' : 's'} (${parts.join(', ')})`;
+  const declared = file.recordTypes?.length
+    ? `, ${file.recordTypes.length} record type${file.recordTypes.length === 1 ? '' : 's'} declared`
+    : '';
+  if (!file.rules.length) return `no rules${declared}`;
+  return `${file.rules.length} rule${file.rules.length === 1 ? '' : 's'} (${parts.join(', ')})${declared}`;
 }
 
 function scaffold(args: string[]): void {
@@ -190,6 +207,7 @@ function build(args: string[]): void {
       '',
       ...built.reports.map((report) => `${describeReport(report)}\n`),
       ...recordLines(built.file),
+      ...declarationLines(built.file),
       `Wrote ${target}`,
       'Copy it into the folder LEDGER_PACKS_DIR names and restart the API and the workers.',
     ].join('\n'),
@@ -216,6 +234,7 @@ function check(args: string[]): void {
         return `${describeRule(rule, quoted, rule.quote.reference)}\n`;
       }),
       ...recordLines(file),
+      ...declarationLines(file),
     ].join('\n'),
   );
 }

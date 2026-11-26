@@ -277,7 +277,7 @@ export const routeDescriptions: Record<string, { summary: string; description: s
   listOperatorRecordTypes: {
     summary: 'List the record types and their columns',
     description:
-      'Returns the registered operator record types with their field metadata and the import columns generated from it. Needs `evidence:read`.',
+      'Returns the record types your organization has, with their field metadata and the import columns generated from it: those built into Ledger, and those declared by packs your organization has adopted (in effect or still to come). Needs `evidence:read`.',
   },
   operatorRecordTemplate: {
     summary: 'Download an empty import file for one record type',

@@ -538,7 +538,7 @@ const PUBLISHED_DIGESTS: Record<string, string> = {
   'crew.duty-period@1': 'ed612707c16c46053e7095a5c565ba1deef128184d48bbcbb5cf179f3d73bbdb',
   'flight.report@1': 'a4c64c0fe66a1431a690348044a442a3d6a792b330329ff39a54879f65b2337e',
   'link.status@1': '6fd8bde82c73d9d4f8dceeefebfe475c47b721502a1d2a59c780b6eec552086a',
-  'operator.record@1': 'ccd1e34636b736668d199c153d26803f576a55d41c6fa058463582c5eb27af9b',
+  'operator.record@1': '684b8d8f7031c2d5aaacd8d9b3f7d967a66f0fea343668a0dafe28c60ed23d7a',
   'organization.record-in-force@1': '017efe903689e3dc85c79b5538a84d9bc3aa94f79b5310387f118990fd7403c0',
   'position.fix@1': 'e6f4abbd6356af9d5482048bdd0c36c6d956ba3c071cb97b19558ef41fd4da8d',
   'traffic.alert@1': '7f0111c64faf3f7336dcd2362aed12ef33e8cad1b86da21d7a5fde236ac94bde',

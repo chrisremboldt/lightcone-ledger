@@ -92,6 +92,11 @@ export interface OperatorRecordDefinition extends OperatorRecordTypeDefinition {
    * other field is a value of the same name.
    */
   readonly observed?: ObservedRecord;
+  /**
+   * Set on a record type a pack declares (docs/design/declared-record-types.md): the pack and the declaration's
+   * digest, which each record of the type names. Absent on a built-in type.
+   */
+  readonly declaredBy?: { readonly packId: string; readonly digest: string };
 }
 
 export interface ObservedRecord {

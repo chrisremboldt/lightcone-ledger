@@ -1,10 +1,13 @@
 import {
+  DeclaredRecordTypeSchema,
   isPackFileCheckedRule,
   PACK_FILE_FORMAT,
   smsRecordKindValues,
   PackFileIdPattern,
   PackFileCheckedRuleSchema,
   PackFileCoverageRuleSchema,
+  type DeclaredRecordType,
+  type OperatorRecordDefinition,
   type PackFile,
   type PackFilePurpose,
   type PackFileRequiredRecord,
@@ -27,7 +30,7 @@ import { join } from 'node:path';
 import { Ajv } from 'ajv';
 import { parse } from 'yaml';
 import { fieldPathProblems } from './pack-field-paths.js';
-import { PackFileError, packFileVersion, verifiedPackFile } from './pack-files.js';
+import { declaredRecordTypes, PackFileError, packFileVersion, verifiedPackFile } from './pack-files.js';
 import { obligationParametersWithUnits, parametersWithUnits } from './pack-units.js';
 
 /** The id the single source document of a described pack takes in its pack file. */
@@ -214,6 +217,27 @@ interface BuildContext {
   text: string;
   /** What a waiver description states; absent for a procedure. */
   waiver?: RulePackWaiver;
+  /** The record types the description declares, which its rules may read. */
+  declared: OperatorRecordDefinition[];
+}
+
+const validDeclaration = ajv.compile(structuredClone(DeclaredRecordTypeSchema));
+
+/** The record types a description declares, as a pack file writes them: the same shape, checked the same way. */
+function recordTypesOfDescription(value: unknown): DeclaredRecordType[] {
+  return asList(value, 'recordTypes').map((fields, index) => {
+    const where = `recordTypes item ${index + 1}${typeof fields.id === 'string' ? ` (${fields.id})` : ''}`;
+    if (validDeclaration(fields)) return fields as DeclaredRecordType;
+    const error = validDeclaration.errors![0]!;
+    const extra = error.params && 'additionalProperty' in error.params ? ` (${error.params.additionalProperty})` : '';
+    const allowed =
+      error.params && 'allowedValues' in error.params
+        ? `: ${(error.params.allowedValues as unknown[]).join(', ')}`
+        : '';
+    throw new PackFileError(
+      `${where}: ${error.instancePath || 'the declaration'} ${error.message ?? 'is not valid'}${extra}${allowed}`,
+    );
+  });
 }
 
 const normalized = (value: unknown) =>
@@ -620,7 +644,7 @@ function ruleReport(context: BuildContext, fields: Fields, index: number): Built
   const quoted = Buffer.from(context.text, 'utf8').subarray(found.start, found.end).toString('utf8');
   const built = validated(covered, where);
   if (isPackFileCheckedRule(built)) {
-    const problems = fieldPathProblems(built);
+    const problems = fieldPathProblems(built, context.declared);
     if (problems.length) throw new PackFileError(`${where}: ${problems.join(' ')}`);
   }
   if (withUnits?.unmeasured.length) throw new PackFileError(withUnits.unmeasured.join(' '));
@@ -654,16 +678,21 @@ export function buildPackFile(description: unknown, sourceText: string): BuiltPa
       'source needs kind: waiver (a waiver or exemption you hold) or procedure (your own procedure). Only a waiver’s provision may relieve a rule of another pack.',
     );
   const unknown = Object.keys(top).find(
-    (name) => !['pack', 'source', 'waiver', 'sections', 'provisions', 'rules', 'purposes', 'records'].includes(name),
+    (name) =>
+      !['pack', 'source', 'waiver', 'sections', 'provisions', 'rules', 'purposes', 'records', 'recordTypes'].includes(
+        name,
+      ),
   );
   if (unknown)
     throw new PackFileError(
-      `The description has ${unknown}, which is not pack, source, waiver, sections, provisions, rules, purposes or records`,
+      `The description has ${unknown}, which is not pack, source, waiver, sections, provisions, rules, purposes, records or recordTypes`,
     );
   if (sourceKind === 'operator_procedure' && top.waiver !== undefined)
     throw new PackFileError('A procedure has no waiver section; only a description of kind waiver states one');
+  const recordTypes = recordTypesOfDescription(top.recordTypes);
   const context: BuildContext = {
     packId: pack.id as string,
+    declared: declaredRecordTypes(pack.id as string, recordTypes).definitions,
     sections: sectionsOfDescription(top.sections),
     reference: source.reference as string,
     text: sourceText,
@@ -674,7 +703,10 @@ export function buildPackFile(description: unknown, sourceText: string): BuiltPa
     ...asList(top.rules, 'rules').map((fields, index) => ruleReport(context, fields, index)),
   ];
   const rules = reports.map((report) => report.rule);
-  if (rules.length === 0) throw new PackFileError('The description makes no rules: list provisions or rules');
+  if (rules.length === 0 && recordTypes.length === 0)
+    throw new PackFileError(
+      'The description makes no rules and declares no record types: list provisions, rules or recordTypes',
+    );
   // Purposes the description declares come first; a provision's obligation adds the one it looks for once.
   const purposes: PackFilePurpose[] = [];
   for (const purpose of [
@@ -706,6 +738,7 @@ export function buildPackFile(description: unknown, sourceText: string): BuiltPa
     ...(purposes.length ? { purposes } : {}),
     ...(requiredRecords.length ? { requiredRecords } : {}),
     ...(context.waiver ? { waiver: context.waiver } : {}),
+    ...(recordTypes.length ? { recordTypes } : {}),
   };
   const file: PackFile = { ...content, digest: packFileVersion(content).digest };
   // The written file is verified as startup verifies it.

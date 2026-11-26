@@ -149,6 +149,15 @@ function validateCarriedRecord(registry: ObservationRegistry, observation: Recor
   const subjectKind = observation.subject.kind as string;
   if (!(recordType.subjectKinds as readonly string[]).includes(subjectKind))
     invalid(`Record type ${key} does not describe a ${subjectKind}`);
+  const declaration = isOperatorRecordDefinition(recordType) ? recordType.declaredBy : undefined;
+  if (declaration && values.declarationDigest !== declaration.digest)
+    invalid(
+      values.declarationDigest === undefined
+        ? `Record type ${key} is declared by pack ${declaration.packId}: name the declaration the record is written under in values.declarationDigest (${declaration.digest})`
+        : `Record ${key} names declaration ${String(values.declarationDigest)}, but the declaration your organization's adopted pack ${declaration.packId} pins is ${declaration.digest}`,
+    );
+  if (!declaration && values.declarationDigest !== undefined)
+    invalid(`Record type ${key} is built into Ledger; a record of it names no declaration`);
   const validate = validatorFor(recordType.schema);
   if (!validate(values.record)) invalid(`Record ${key}: ${describe(validate.errors, 'record')}`);
   // The body's time fields are the source of truth for the envelope's time.

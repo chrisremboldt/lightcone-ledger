@@ -8,6 +8,7 @@ import {
 } from '@ledger/contracts';
 import { canonicalDigest, sha256 } from '@ledger/integrity';
 import { checkedPackProblem } from './checked-rules.js';
+import { declaredRecordTypesProblem, registerDeclaredRecordTypes } from './organization-record-types.js';
 import { packSectionsProblem } from './rule-pack-sections.js';
 
 export interface RetainedRuleSource {
@@ -124,6 +125,8 @@ function verifiedRegistration(registration: RulePackRegistration) {
         `Rule pack ${registration.packId} version ${version.version} carries labels only the accepted-controls pack carries`,
       );
   const versions = verifiedVersions(registration);
+  const declarations = declaredRecordTypesProblem([...versions.values()]);
+  if (declarations) throw new Error(`Rule pack ${registration.packId}: ${declarations}`);
   verifyReliefs(registration.packId, versions.values());
   const sources = verifiedSources(registration);
   verifyRetainedSpans(versions.values(), sources);
@@ -144,6 +147,7 @@ export function registerRulePack(registration: RulePackRegistration): void {
   if (registry.packs.has(registration.packId))
     throw new Error(`Rule pack ${registration.packId} is already registered`);
   const { versions, sources } = verifiedRegistration(registration);
+  registerDeclaredRecordTypes(registration.packId, [...versions.values()]);
   registry.packs.set(registration.packId, versions);
   for (const source of sources) registry.sources.set(source.sourceId, source);
   for (const version of versions.keys())

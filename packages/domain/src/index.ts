@@ -202,6 +202,14 @@ export {
 } from './rule-pack-registry.js';
 export { listRulePackVersions, rulePackOrigin } from './rule-pack-registry.js';
 export {
+  declaredRecordTypesProblem,
+  intakeRegistry,
+  organizationRecordTypes,
+  recordTypesOfPacks,
+  requireRecordType,
+  type OrganizationRecordTypes,
+} from './organization-record-types.js';
+export {
   evaluateAuthorizationEvidence,
   type AuthorizationEvidenceInput,
   type AuthorizationEvidenceResult,

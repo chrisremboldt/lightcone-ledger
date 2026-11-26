@@ -6,6 +6,7 @@ import {
   RuleParagraphSchema,
   RuleSectionIdSchema,
 } from './checked-rules.js';
+import { RulePackRecordTypeSchema } from './declared-record-types.js';
 import { DocumentPurposeIdSchema, DocumentTypesSchema } from './observations/envelope.js';
 import { smsRecordKindValues } from './sms.js';
 
@@ -386,6 +387,14 @@ export const RulePackVersionSchema = Type.Object(
       }),
     ),
     waiver: Type.Optional(RulePackWaiverSchema),
+    recordTypes: Type.Optional(
+      Type.Array(RulePackRecordTypeSchema, {
+        minItems: 1,
+        maxItems: 50,
+        description:
+          'The record types the pack declares, each with its digest; an adoption pins them with the rules. Absent on packs that declare none.',
+      }),
+    ),
     digest: Digest,
   },
   {

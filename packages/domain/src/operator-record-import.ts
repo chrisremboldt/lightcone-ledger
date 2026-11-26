@@ -4,9 +4,7 @@ import {
   describeConversion,
   describeTimeConversion,
   enteredValues,
-  findOperatorRecordDefinition,
   interpretRecordRow,
-  isOperatorRecordDefinition,
   missingFieldLabel,
   missingRequiredFields,
   mappingLimitation,
@@ -34,7 +32,14 @@ import { readRecordMappingFile } from '@ledger/contracts/record-mapping-file';
 import { sha256 } from '@ledger/integrity';
 import { DomainError, type AuthContext, type ObjectStore, type PoolClient } from '@ledger/persistence';
 import { acceptInput, requireRow } from './index.js';
-import { observationRegistry, validateObservation } from './observation-registry.js';
+import { validateObservation } from './observation-registry.js';
+import {
+  organizationRecordTypes,
+  recordTypesOfPacks,
+  registryWithRecordType,
+  requireRecordType,
+  type OrganizationRecordTypes,
+} from './organization-record-types.js';
 import { lockObservationTargets } from './observations.js';
 import { organizationIdOf } from './rule-evaluations.js';
 import { organizationTimeZone } from './organization-zone.js';
@@ -57,12 +62,11 @@ function sourceEventId(row: number): string {
   return `row-${row}`;
 }
 
-function definitions(): OperatorRecordDefinition[] {
-  return Object.values(observationRegistry().recordTypes).filter(isOperatorRecordDefinition);
-}
-
-export function listOperatorRecordTypes(): OperatorRecordTypeSummary[] {
-  return definitions()
+/** The record types an organization has, as the types read gives them. With none given, the built-in ones. */
+export function listOperatorRecordTypes(
+  types: OrganizationRecordTypes = recordTypesOfPacks([]),
+): OperatorRecordTypeSummary[] {
+  return types.definitions
     .map((definition) => ({
       recordType: definition.recordType,
       recordVersion: definition.recordVersion,
@@ -76,19 +80,19 @@ export function listOperatorRecordTypes(): OperatorRecordTypeSummary[] {
       mayInfer: [...definition.mayInfer],
       mayNotInfer: [...definition.mayNotInfer],
       ruleRead: recordRuleRead(definition),
+      ...(definition.declaredBy ? { declaredBy: { ...definition.declaredBy } } : {}),
     }))
     .sort((left, right) => left.recordType.localeCompare(right.recordType) || left.recordVersion - right.recordVersion);
 }
 
-export function requireOperatorRecordDefinition(recordType: string, recordVersion: number): OperatorRecordDefinition {
-  const definition = findOperatorRecordDefinition(observationRegistry(), recordType, recordVersion);
-  if (!definition)
-    throw new DomainError(
-      404,
-      'record_type_not_found',
-      `Record type ${recordType} version ${recordVersion} is not registered`,
-    );
-  return definition;
+/** One record type the organization has, or a 404 naming it. */
+export async function requireOperatorRecordDefinition(
+  client: PoolClient,
+  tenantId: string,
+  recordType: string,
+  recordVersion: number,
+): Promise<OperatorRecordDefinition> {
+  return requireRecordType(await organizationRecordTypes(client, tenantId), recordType, recordVersion);
 }
 
 interface RetainedFile {
@@ -196,7 +200,8 @@ async function evaluate(
   request: OperatorRecordImportRequest,
   recordedAt: string,
 ): Promise<Evaluation> {
-  const definition = requireOperatorRecordDefinition(request.recordType, request.recordVersion);
+  const types = await organizationRecordTypes(client, principal.tenantId);
+  const definition = requireRecordType(types, request.recordType, request.recordVersion);
   const sourceId = request.sourceId ?? OPERATOR_RECORD_SOURCE_ID;
   const timeZone = await organizationTimeZone(client, principal.tenantId);
   const file = await readRetainedFile(client, store, request.artifactId);
@@ -410,6 +415,7 @@ async function evaluateRow(
           recordType: definition.recordType,
           recordVersion: definition.recordVersion,
           record: reading.record,
+          ...(definition.declaredBy ? { declarationDigest: definition.declaredBy.digest } : {}),
           ...(Object.keys(reading.dayOnly).length ? { dayOnly: reading.dayOnly } : {}),
           ...(reading.conversions.length || reading.timeConversions.length
             ? { entered: enteredValues(reading.conversions, reading.timeConversions) }
@@ -417,7 +423,7 @@ async function evaluateRow(
         },
   };
   try {
-    validateObservation(observationRegistry(), observation);
+    validateObservation(registryWithRecordType(definition), observation);
   } catch (error) {
     if (error instanceof DomainError) return refused(parsed, [error.message], shown);
     throw error;

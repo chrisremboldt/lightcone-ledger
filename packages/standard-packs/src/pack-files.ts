@@ -1,15 +1,21 @@
 import {
   BUILT_IN_PACK_PREFIX,
+  declaredRecordDefinition,
+  declaredRecordTypeProblems,
   isOperatorRecordDefinition,
+  listObservationTypes,
   isPackFileCheckedRule,
   PackFileSchema,
   type CheckedRuleLeaf,
+  type DeclaredRecordType,
+  type OperatorRecordDefinition,
   type PackFile,
   type PackFileCheckedRule,
   type PackFileCoverageRule,
   type PackFileRule,
   type PackFileSource,
   type RulePackLeaf,
+  type RulePackRecordType,
   type RulePackVersion,
 } from '@ledger/contracts';
 import { checkParameterProblem, defineCheckedRule, findCheckKind, observationRegistry } from '@ledger/domain';
@@ -61,7 +67,12 @@ function quotedText(rule: PackFileRule, sources: ReadonlyMap<string, { bytes: Bu
 }
 
 /** Builds one checked rule exactly as a built-in pack builds it, with defineCheckedRule. */
-function checkedLeaf(rule: PackFileCheckedRule, text: string, sourceKind: SourceKind): CheckedRuleLeaf {
+function checkedLeaf(
+  rule: PackFileCheckedRule,
+  text: string,
+  sourceKind: SourceKind,
+  ownTypes: readonly OperatorRecordDefinition[],
+): CheckedRuleLeaf {
   const { quote, check, ...declared } = rule;
   const kind = findCheckKind(check.kind, check.version);
   if (!kind)
@@ -70,7 +81,7 @@ function checkedLeaf(rule: PackFileCheckedRule, text: string, sourceKind: Source
     );
   const written = writtenParameterProblem(check.params, check.written);
   if (written) throw new PackFileError(`Rule ${rule.id}: ${written}`);
-  const paths = fieldPathProblems(rule);
+  const paths = fieldPathProblems(rule, ownTypes);
   if (paths.length) throw new PackFileError(`Rule ${rule.id}: ${paths.join(' ')}`);
   // A rule whose parameters are all fixed can be checked against the kind's parameter schema now, as adoption would.
   if (rule.adoptionParameters.length === 0) {
@@ -122,17 +133,58 @@ function coverageLeaf(rule: PackFileCoverageRule, text: string, sourceKind: Sour
   return { ...content, digest: canonicalDigest(content) };
 }
 
-function ruleLeaf(rule: PackFileRule, text: string, sourceKind: SourceKind): RulePackLeaf {
-  return isPackFileCheckedRule(rule) ? checkedLeaf(rule, text, sourceKind) : coverageLeaf(rule, text, sourceKind);
+function ruleLeaf(
+  rule: PackFileRule,
+  text: string,
+  sourceKind: SourceKind,
+  declared: readonly OperatorRecordDefinition[],
+): RulePackLeaf {
+  return isPackFileCheckedRule(rule)
+    ? checkedLeaf(rule, text, sourceKind, declared)
+    : coverageLeaf(rule, text, sourceKind);
 }
 
-/** The operator record types this Ledger registers, by name. */
-function registeredRecordTypes(): Set<string> {
+/** The operator record types built into this Ledger, by name: those no pack declares. */
+function builtInRecordTypes(): OperatorRecordDefinition[] {
+  return Object.values(observationRegistry().recordTypes)
+    .filter(isOperatorRecordDefinition)
+    .filter((definition) => !definition.declaredBy);
+}
+
+/** The domains of the types this Ledger has without a pack. A pack that declares record types may not take one. */
+export function reservedRecordDomains(): Set<string> {
   return new Set(
-    Object.values(observationRegistry().recordTypes)
-      .filter(isOperatorRecordDefinition)
-      .map((definition) => definition.recordType),
+    [
+      ...listObservationTypes(observationRegistry()).map((type) => type.type),
+      ...builtInRecordTypes().map((definition) => definition.recordType),
+    ].map((id) => id.split('.')[0]!),
   );
+}
+
+/** A declaration with its digest: the digest binds every word of it, as a rule's binds the rule. */
+export function declarationWithDigest(declared: DeclaredRecordType): RulePackRecordType {
+  return { ...structuredClone(declared), digest: canonicalDigest(declared) };
+}
+
+/**
+ * The record types a pack file declares, each with its digest, and the definitions they make. Throws a PackFileError
+ * with every problem a pack author can act on.
+ */
+export function declaredRecordTypes(
+  packId: string,
+  declarations: readonly DeclaredRecordType[] | undefined,
+): { recordTypes: RulePackRecordType[]; definitions: OperatorRecordDefinition[] } {
+  const reserved = reservedRecordDomains();
+  const seen = new Set<string>();
+  const problems: string[] = [];
+  for (const declared of declarations ?? []) {
+    if (seen.has(declared.id)) problems.push(`Record type ${declared.id} is declared twice.`);
+    seen.add(declared.id);
+    problems.push(...declaredRecordTypeProblems(packId, declared, reserved));
+  }
+  if (problems.length) throw new PackFileError([...new Set(problems)].join(' '));
+  const recordTypes = (declarations ?? []).map(declarationWithDigest);
+  return { recordTypes, definitions: recordTypes.map((declared) => declaredRecordDefinition(packId, declared)) };
 }
 
 /** The pack version a file's sources and rules make, without its stated digest. */
@@ -154,13 +206,16 @@ export function packFileVersion(file: Omit<PackFile, 'digest'>): RulePackVersion
     throw new PackFileError(
       `The waiver's stated effective dates end (${file.waiver.effective.through}) before they start (${file.waiver.effective.from})`,
     );
+  const declared = declaredRecordTypes(file.packId, file.recordTypes);
+  if (!file.rules.length && !declared.recordTypes.length)
+    throw new PackFileError('The file has no rules and declares no record types; a pack file has at least one of them');
   const ids = new Set<string>();
   const leaves = file.rules.map((rule) => {
     if (!rule.id.startsWith(`${file.packId}.`))
       throw new PackFileError(`Rule ${rule.id} does not start with its pack id ${file.packId} and a dot`);
     if (ids.has(rule.id)) throw new PackFileError(`Rule ${rule.id} is listed twice`);
     ids.add(rule.id);
-    return ruleLeaf(rule, quotedText(rule, sources), sources.get(rule.quote.source)!.kind);
+    return ruleLeaf(rule, quotedText(rule, sources), sources.get(rule.quote.source)!.kind, declared.definitions);
   });
   const purposeIds = new Set<string>();
   const purposes = (file.purposes ?? []).map((purpose) => {
@@ -186,10 +241,13 @@ export function packFileVersion(file: Omit<PackFile, 'digest'>): RulePackVersion
         quote.reference,
         quotedText({ id: what, quote } as PackFileRule, sources),
       );
+    const holders = new Set(
+      [...builtInRecordTypes(), ...declared.definitions].map((definition) => definition.recordType),
+    );
     for (const holder of record.heldBy)
-      if (holder.kind === 'operator_record' && !registeredRecordTypes().has(holder.recordType))
+      if (holder.kind === 'operator_record' && !holders.has(holder.recordType))
         throw new PackFileError(
-          `Required record ${record.id} is held by ${holder.recordType}, which is not a record type this Ledger has`,
+          `Required record ${record.id} is held by ${holder.recordType}, which is not a record type this Ledger has or this pack declares`,
         );
     return {
       id: record.id,
@@ -215,6 +273,8 @@ export function packFileVersion(file: Omit<PackFile, 'digest'>): RulePackVersion
     ...(purposes.length ? { purposes } : {}),
     ...(requiredRecords.length ? { requiredRecords } : {}),
     ...(file.waiver ? { waiver: structuredClone(file.waiver) } : {}),
+    // An absent section does not enter the digest, so a pack that declares nothing keeps the digest it had.
+    ...(declared.recordTypes.length ? { recordTypes: declared.recordTypes } : {}),
   };
   const version = { ...content, digest: canonicalDigest(content) };
   const problem = rulePackRegistrationProblem({ packId: version.packId, versions: [version] });

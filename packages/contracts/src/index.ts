@@ -673,6 +673,7 @@ export * from './open-findings.js';
 export * from './rule-packs.js';
 export * from './checked-rules.js';
 export * from './pack-files.js';
+export * from './declared-record-types.js';
 export * from './required-records.js';
 export * from './rule-evaluations.js';
 export * from './rule-coverage.js';

@@ -16,6 +16,7 @@ import {
   commitOperatorRecordImport,
   listOperatorRecords,
   listOperatorRecordTypes,
+  organizationRecordTypes,
   previewOperatorRecordImport,
   requireOperatorRecordDefinition,
 } from '@ledger/domain';
@@ -45,7 +46,10 @@ export function registerOperatorRecordRoutes(app: FastifyInstance, options: Oper
     withScope(
       pool,
       principal(request),
-      async () => ({ types: listOperatorRecordTypes(), sourceId: OPERATOR_RECORD_SOURCE_ID }),
+      async (client, who) => ({
+        types: listOperatorRecordTypes(await organizationRecordTypes(client, who.tenantId)),
+        sourceId: OPERATOR_RECORD_SOURCE_ID,
+      }),
       'evidence:read',
     ),
   );
@@ -56,7 +60,13 @@ export function registerOperatorRecordRoutes(app: FastifyInstance, options: Oper
       const definition = await withScope(
         pool,
         principal(request),
-        async () => requireOperatorRecordDefinition(request.params.recordType, Number(request.params.version)),
+        (client, who) =>
+          requireOperatorRecordDefinition(
+            client,
+            who.tenantId,
+            request.params.recordType,
+            Number(request.params.version),
+          ),
         'evidence:read',
       );
       const json = request.query.format === 'json';

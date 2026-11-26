@@ -118,8 +118,17 @@ function resolveInRecord(definition: OperatorRecordDefinition, path: string, ite
 
 const registry = () => observationRegistry();
 
-function recordDefinitions(): OperatorRecordDefinition[] {
-  return Object.values(registry().recordTypes).filter(isOperatorRecordDefinition);
+/**
+ * The record types a pack's rules may read: those built into Ledger and those the pack itself declares. A type
+ * another pack declares is not among them, so an adoption always pins the declarations its rules read.
+ */
+function recordDefinitions(declared: readonly OperatorRecordDefinition[]): OperatorRecordDefinition[] {
+  return [
+    ...Object.values(registry().recordTypes)
+      .filter(isOperatorRecordDefinition)
+      .filter((definition) => !definition.declaredBy),
+    ...declared,
+  ];
 }
 
 /** The single values a list of conditions requires at a field. */
@@ -130,7 +139,11 @@ function required(read: Read, field: string): unknown[] {
 }
 
 /** The record types a read takes: those its conditions or a selection name, else every one registered. */
-function recordTypesOf(read: Read | undefined, item: RuleFieldPath): OperatorRecordDefinition[] | string {
+function recordTypesOf(
+  read: Read | undefined,
+  item: RuleFieldPath,
+  declared: readonly OperatorRecordDefinition[],
+): OperatorRecordDefinition[] | string {
   const named = item.recordType
     ? [item.recordType.recordType]
     : read
@@ -141,11 +154,11 @@ function recordTypesOf(read: Read | undefined, item: RuleFieldPath): OperatorRec
     : read
       ? required(read, 'values.recordVersion').filter((value): value is number => typeof value === 'number')
       : [];
-  const all = recordDefinitions();
+  const all = recordDefinitions(declared);
   if (!named.length) return all;
   const missing = named.filter((type) => !all.some((definition) => definition.recordType === type));
   if (missing.length)
-    return `It reads ${missing.join(' and ')} records, and this Ledger registers no record type ${missing.join(' or ')}.`;
+    return `It reads ${missing.join(' and ')} records, and neither this Ledger nor this pack declares a record type ${missing.join(' or ')}. A rule reads the record types built into Ledger and those its own pack declares.`;
   return all.filter(
     (definition) =>
       named.includes(definition.recordType) && (!versions.length || versions.includes(definition.recordVersion)),
@@ -153,7 +166,11 @@ function recordTypesOf(read: Read | undefined, item: RuleFieldPath): OperatorRec
 }
 
 /** Whether the path reaches a value in what one read takes. */
-function resolveInRead(read: Read | undefined, item: RuleFieldPath): Resolution[] {
+function resolveInRead(
+  read: Read | undefined,
+  item: RuleFieldPath,
+  declared: readonly OperatorRecordDefinition[],
+): Resolution[] {
   const types = read ? read.versions.map((version) => findObservationType(registry(), read.type, version)) : [];
   // Operator records arrive inside one observation type, whose values hold the record type and the record body.
   const recordCarrier =
@@ -166,7 +183,7 @@ function resolveInRead(read: Read | undefined, item: RuleFieldPath): Resolution[
         ),
     );
   if (item.path.startsWith(RECORD_PREFIX) && (recordCarrier || item.recordType)) {
-    const definitions = recordTypesOf(read, item);
+    const definitions = recordTypesOf(read, item, declared);
     if (typeof definitions === 'string') return [{ ok: false, problem: definitions }];
     return definitions.map((definition) => resolveInRecord(definition, item.path, item));
   }
@@ -189,7 +206,7 @@ function resolveInRead(read: Read | undefined, item: RuleFieldPath): Resolution[
  */
 function ownObservationProblems(read: Read): string[] {
   const named = required(read, 'values.recordType').filter((value): value is string => typeof value === 'string');
-  return recordDefinitions()
+  return recordDefinitions([])
     .filter((definition) => definition.observed && named.includes(definition.recordType))
     .map((definition) => {
       const ruleRead = recordRuleRead(definition);
@@ -199,11 +216,15 @@ function ownObservationProblems(read: Read): string[] {
 
 /**
  * The problem with each field path the rule names that reaches nothing in what it reads: a field the record type or
- * observation type does not have, a path into a record type this Ledger does not register, or a reference compared
+ * observation type does not have, a path into a record type neither this Ledger nor the pack (`declared`) has, or a
+ * reference compared
  * without its id. A path counts when it reaches a value in any read it may point into. Paths outside `values` (the
  * observation's own time and subject) are not checked here.
  */
-export function fieldPathProblems(rule: PackFileCheckedRule): string[] {
+export function fieldPathProblems(
+  rule: PackFileCheckedRule,
+  declared: readonly OperatorRecordDefinition[] = [],
+): string[] {
   const reads = new Map(rule.reads.map((read) => [read.name, read]));
   const problems: string[] = rule.reads.flatMap(ownObservationProblems);
   for (const item of ruleFieldPaths(rule)) {
@@ -211,7 +232,7 @@ export function fieldPathProblems(rule: PackFileCheckedRule): string[] {
     const named = item.reads.length ? item.reads : [...reads.keys()];
     // A read the rule does not list, such as the subject-state read, holds what Ledger keeps about the subject.
     if (item.reads.length && !item.reads.some((name) => reads.has(name))) continue;
-    const resolutions = named.flatMap((name) => resolveInRead(reads.get(name), item));
+    const resolutions = named.flatMap((name) => resolveInRead(reads.get(name), item, declared));
     if (!resolutions.length || resolutions.some((resolution) => resolution.ok)) continue;
     const first = resolutions.find((resolution) => !resolution.ok) as { problem: string };
     problems.push(`${item.where} names ${item.path}: ${first.problem}`);

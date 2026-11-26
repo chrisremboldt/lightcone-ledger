@@ -21,6 +21,7 @@ This is early software. Read [Status and limits](#status-and-limits) before rely
 - **Decisions and signatures.** A decision records the view the person saw and the basis validated at commit. A signature binds a re-authenticated person, their authority at that moment and the digest of the exact content.
 - **Findings a person works.** A finding about a flight, a pilot, an aircraft or the organization can be taken or assigned, given an action with a due date, and closed by a person with a reason. A record a person keeps closes it by itself when it answers the finding; a measurement that returns inside its limit does not. One list shows every open finding with its age and owner.
 - **Records for an inspector.** Each pilot, aircraft and flight has a file of everything on record about it. Records are produced on request, by subject, type and date, as one .zip with a readable index, a CSV per record type and a manifest that verifies offline. Each adopted pack lists the records its text requires with the retention the text states, and a recordkeeping plan is drafted from that list as a controlled document.
+- **Record types your own pack declares.** A record no built-in type holds is declared in the organization's pack file, as data: its fields, units, options and what it is about. Once the pack is adopted it has an import file, an entry form, browse, production and checks, as a built-in type does, and other organizations do not see it. [examples/declared-record-type](examples/declared-record-type) is one to copy.
 - **A command line, and a guide for a coding agent.** `pnpm ledger` adds people, imports records, reads coverage and findings, prepares an adoption for a person, drafts safety records from files, produces records and drafts the plan, over the public API. [Set up Ledger with a coding agent](docs/guides/set-up-with-a-coding-agent.md) is written to the agent an operator asks to do the setup.
 - **Evidence.** Exports can be verified offline with `tools/verifier`, which needs only Node and imports no Ledger packages.
 
@@ -330,6 +331,8 @@ Known gaps:
 - **Operating areas as polygons.** An operating area is a circle or a corridor.
 - **Attachments on a submitted safety report.** A person who submits a report cannot send a file or a photo with it.
 - **One command without Docker.** Ledger Lite still needs Docker or a PostgreSQL server. Whether an embedded PostgreSQL could start Ledger for one operator with one command is looked into, not settled, in [docs/design/embedded-database.md](docs/design/embedded-database.md).
+- **Extra fields on a built-in record type.** A pack declares whole record types of its own; it cannot yet add a field to one of Ledger's, such as `aircraft.inspection`. Declare a type of your own about the same aircraft instead. [Record types a pack declares](docs/design/declared-record-types.md) says why.
+- **Packs kept per organization.** Pack files, and the record types they declare, are read from one folder for the whole deployment, and the catalogue shows each to every organization on it. An organization has a declared type, and can record one, only once it adopts the pack.
 - **Aircraft-estimated wind.** The aircraft adapter does not map the aircraft's own wind estimate, because its unit is not documented.
 
 ## Work with Lightcone Systems

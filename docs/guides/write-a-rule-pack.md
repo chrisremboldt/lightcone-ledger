@@ -445,6 +445,47 @@ Without more, a rule is evaluated for a subject only when a record it reads arri
 
 `pnpm pack:build` prints both for each rule (`covers every person on record`, and the sentence a missing record gives), and says so when a rule has no population. The obligation types a waiver's provisions name carry their own population. [rule-coverage.md](../design/rule-coverage.md) has the third form, `designated`, for the subjects a named record points at, such as the people assigned as pilot in command.
 
+### Declare a record type
+
+When your procedure asks for a record no record type in Ledger holds, a field or a whole record, the pack declares it under `recordTypes`. No code changes: once the pack is adopted, the type has an import file and template, `records check`, an entry form and browse on the Records screen, record production, and checks by the check kinds above, as a built-in type does. An organization that wants a type and has no rule for it yet writes a pack with `recordTypes` and no `rules`, and adopts it. The worked example is `examples/declared-record-type/`: its manual asks for an airframe check, and its pack declares one.
+
+```yaml
+pack:
+  id: example-ridge-procedures       # one word: it is the first part of every type the pack declares
+  version: 1
+  title: Example Ridge Survey operations manual, airframe checks (invented)
+
+recordTypes:
+  - id: example-ridge-procedures.airframe-check
+    version: 1
+    title: Airframe check
+    description: A check of an aircraft's airframe under the operator's own manual.
+    subjectKinds: [aircraft]
+    time:
+      meaning: event
+      atField: checkedAt
+    fields:
+      - { name: checkedAt, label: Checked at, kind: date_time, required: true }
+      - { name: inspectorId, label: Inspector, kind: reference, referenceKind: person, required: true }
+      - name: result
+        label: Result
+        kind: select
+        required: true
+        options:
+          - { value: serviceable, label: Serviceable }
+          - { value: repair-needed, label: Repair needed }
+      - { name: airframeHours, label: Airframe hours, kind: number, unit: Hours, required: true }
+```
+
+- **The pack id** of a pack that declares record types is one word: lowercase letters, digits and hyphens, no dots, such as `example-ridge-procedures`. Every type's `id` is that word, a dot and the type's own name. The word may not be one Ledger's own types use (`aircraft`, `person`, `flight` and the others), so your types never sit beside Ledger's.
+- **`subjectKinds`**: what the record is about, from `aircraft`, `person`, `flight`, `site`, `component` and `organization`. A record about your own organization alone asks for no subject id.
+- **`time`**: how the record is placed in time. `event` at a `date_time` field (`atField`), `as_of` for a standing record (with or without an `atField`), or `interval` between a `startField` and an `endField`. That field is required, and takes a date alone when only the day was written down.
+- **`fields`**: each with a `name`, a `label` and optionally a one-line `help`, in your own words, and `required: true` when it counts toward a complete record. At least one is required. The kinds: `text` (one line) and `long_text`; `number` with a `unit` of `Hours`, `Meters`, `MetersPerSecond`, `Percent` or `Count` (a whole number), and optional `minimum` and `maximum`; `date`; `date_time`; `boolean` (yes or no); `select` with its `options`; and `reference` to a `person`, `aircraft`, `site` or `component` on file, by your own id. Names follow the rules Ledger's own types do: a number's name ends in its unit (`airframeHours`), a time's in `At`, a date's in `On`, a reference's in `Id`.
+
+A rule reads a declared type exactly as it reads a built-in one stored inside `operator.record`: `type: operator.record`, `versions: [1]`, `where: values.recordType oneOf [example-ridge-procedures.airframe-check]`, and a field is `values.record.<name>` (`values.record.inspectorId.id` for a reference). A rule reads only the types built into Ledger and those its own pack declares, so an adoption always pins the declarations its rules read. `pnpm pack:build` prints each declared type with its fields and refuses a declaration it cannot take with what to change: a dotted pack id, a number named without its unit, a time field that is not a field, no required field, a rule naming a field the type does not have.
+
+The organization has the type once it adopts the pack, and not before: `pnpm ledger records types`, `columns`, `template` and the Records screen list it from then on. Name the CSV file after the type, as for any other (`example-ridge-procedures.airframe-check.csv`). Each record names the declaration it was written under by its digest. [Record types a pack declares](../design/declared-record-types.md) has the design: identity, pinning, and what becomes of records on file when the declaration changes.
+
 ## 4. Build the pack file
 
 ```sh
@@ -495,7 +536,7 @@ It refuses, naming the provision or rule and what it expected, when:
 
 Copy the pack file into the folder `LEDGER_PACKS_DIR` names, and restart the API and the workers. Give both processes the same absolute path: each reads the folder only at startup, and both must hold the same packs. `pnpm pack:check <file>` verifies a file the way startup will and prints its rules.
 
-At startup a file is refused, and Ledger does not start, when its rules no longer make the digest it states (it was edited after it was built; build it again instead), when its source text changed, when it names a check kind this Ledger does not have, when a rule reads a field path its record type does not have or a limit no longer matches the unit it was written with, or when another file or a built-in pack has the same pack id and version with different content. The message names the file and the reason. The same file twice is not an error.
+At startup a file is refused, and Ledger does not start, when its rules no longer make the digest it states (it was edited after it was built; build it again instead), when its source text changed, when it names a check kind this Ledger does not have, when a rule reads a field path its record type does not have or a limit no longer matches the unit it was written with, when a record type it declares cannot follow the same type in another version of the pack (below), or when another file or a built-in pack has the same pack id and version with different content. The message names the file and the reason. The same file twice is not an error.
 
 The pack is then offered for adoption under **Rules**. The catalogue read (`GET /v1/rule-packs`) gives each pack an `origin`, `built_in` or `organization_file` with the file's name, and the coverage read (`GET /v1/organization/coverage`) does the same for each adopted pack version in `packOrigins`.
 
@@ -511,6 +552,8 @@ A pack version never changes once adopted: an adoption pins its digest. To chang
 ```
 
 A result recorded under either version then names the rule version it ran. When no earlier file is beside it, every rule takes the version the description writes (`version` on a rule, `ruleVersion` on a provision, 1 when left out): keep the earlier file where you build, or write the versions yourself. Then adopt the new version in place of the old: on **Rules**, **Adopt version N** on the adoption; from the command line, the same `pnpm ledger packs adopt <pack>` as before. When an earlier version is adopted over the dates, the client prints that the new version replaces it, which adoption that is, and exactly when the earlier one ends and the new one starts in your organization's time zone: from `--from`, or from now. With `--from` at or before the earlier adoption's first day, the new version replaces it for its whole period: the earlier one is in effect at no time and stays on the record as replaced, the new one covers every day it covered (so an `--until` given with it is at or after the earlier end), and every subject the earlier one covered is evaluated again under the new version. Results recorded under the earlier version keep it. A finding the earlier version opened stays open: where the new version keeps the rule, its result becomes the finding's latest, and when that result is supported by the record the finding shows as cleared, for its owner to close. Keep the old file until no adoption needs it.
+
+**Declared record types.** Records on file are never rewritten. Any change to a declaration, even to a label, is a new `version` of the type in the new pack version. A later version may add fields and options and change wording; it keeps every field an earlier version has, with the same kind, unit and reference kind, every option, every subject kind and the same place in time. The loader refuses a version that does not, naming the file and the field, so removing a field or changing its unit is a new field name or a new type. A rule reads records of every version of the type: a field an older record does not hold is not on file, and the check says so.
 
 To change only the mode, the dates or the values of an adoption, run `pnpm ledger packs adopt <pack>` for the version already adopted with the new `--mode`, `--from`, `--until` or `--set`: the client prints a revision that keeps everything else, and replaces the adoption with it. A version that replaced an earlier one keeps its start, where the earlier one ends. Both are sent only with `--reason` and a person's credential, like any adoption.
 

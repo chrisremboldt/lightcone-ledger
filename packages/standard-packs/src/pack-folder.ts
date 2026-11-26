@@ -7,6 +7,7 @@ import {
   listRulePackVersions,
   registerRulePack,
 } from '@ledger/domain/rule-pack-registry';
+import { declaredRecordTypesProblem } from '@ledger/domain';
 import { PackFileError, verifiedPackFile } from './pack-files.js';
 
 /** One verified pack file: its name in the folder, its content and the pack version it makes. */
@@ -78,7 +79,24 @@ export function readPackFolder(folder: string): LoadedPackFile[] {
     if (collision) throw new PackFileError(`Pack file ${name} was refused. ${collision}`);
     kept.set(key, loaded);
   }
+  declarationChanges([...kept.values()]);
   return [...kept.values()];
+}
+
+/**
+ * Throws, naming the file, when a pack version declares a record type in a way an earlier version of the same pack
+ * cannot be followed by: records on file are never rewritten (docs/design/declared-record-types.md).
+ */
+function declarationChanges(loaded: readonly LoadedPackFile[]): void {
+  const byPack = new Map<string, LoadedPackFile[]>();
+  for (const item of loaded) byPack.set(item.version.packId, [...(byPack.get(item.version.packId) ?? []), item]);
+  for (const files of byPack.values()) {
+    const ordered = [...files].sort((left, right) => left.version.version - right.version.version);
+    for (const [index, file] of ordered.entries()) {
+      const problem = declaredRecordTypesProblem(ordered.slice(0, index + 1).map((item) => item.version));
+      if (problem) throw new PackFileError(`Pack file ${file.name} was refused. ${problem}`);
+    }
+  }
 }
 
 /**

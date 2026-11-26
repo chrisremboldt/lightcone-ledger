@@ -1,0 +1,78 @@
+# A procedure pack that declares a record type of its own (docs/design/declared-record-types.md), and one rule that
+# reads it with a check kind Ledger already has. Everything here is invented: the operator, its manual and its aircraft.
+pack:
+  # A pack that declares record types has an id of one word: it is the first part of every type it declares.
+  id: example-ridge-procedures
+  version: 1
+  title: Example Ridge Survey operations manual, airframe checks (invented)
+
+source:
+  file: source.txt
+  kind: procedure
+  reference: Example Ridge Survey Operations Manual (invented)
+
+# The record types this pack declares. Each one gets an import file, an entry form and browse on the Records screen,
+# record production and checks, as a record type built into Ledger does, once the pack is adopted.
+recordTypes:
+  - id: example-ridge-procedures.airframe-check
+    version: 1
+    title: Airframe check
+    description: A check of an aircraft's airframe under the operator's own manual.
+    subjectKinds: [aircraft]
+    # The record is placed in time by when the check was made.
+    time:
+      meaning: event
+      atField: checkedAt
+    fields:
+      - name: checkedAt
+        label: Checked at
+        kind: date_time
+        required: true
+        help: When the check was made. A date alone is read as that day.
+      - name: inspectorId
+        label: Inspector
+        kind: reference
+        referenceKind: person
+        required: true
+        help: Your own id for the person who made the check.
+      - name: result
+        label: Result
+        kind: select
+        required: true
+        options:
+          - value: serviceable
+            label: Serviceable
+          - value: repair-needed
+            label: Repair needed
+      - name: airframeHours
+        label: Airframe hours
+        kind: number
+        unit: Hours
+        required: true
+        help: The airframe's hours in service at the check, as its logbook states them.
+
+rules:
+  - id: airframe-serviceable
+    title: The latest airframe check found the aircraft serviceable
+    quote: Before an aircraft is flown, its latest recorded airframe check found it serviceable.
+    target:
+      subjectKind: aircraft
+    population:
+      of: on_record
+    reads:
+      - name: subject
+        type: operator.record
+        versions: [1]
+        about: target
+        required: true
+        onFile: airframe check
+        select: latest
+        where:
+          - field: values.recordType
+            oneOf: [example-ridge-procedures.airframe-check]
+    check:
+      kind: value.one-of
+      version: 1
+      params:
+        field: values.record.result
+        expected: [serviceable]

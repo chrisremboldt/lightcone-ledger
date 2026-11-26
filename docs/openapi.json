@@ -66945,6 +66945,413 @@
                                   }
                                 }
                               },
+                              "recordTypes": {
+                                "minItems": 1,
+                                "maxItems": 50,
+                                "description": "The record types the pack declares, each with its digest; an adoption pins them with the rules. Absent on packs that declare none.",
+                                "type": "array",
+                                "items": {
+                                  "additionalProperties": false,
+                                  "description": "A record type the pack version declares, with its digest.",
+                                  "type": "object",
+                                  "required": [
+                                    "id",
+                                    "version",
+                                    "title",
+                                    "description",
+                                    "subjectKinds",
+                                    "time",
+                                    "fields",
+                                    "digest"
+                                  ],
+                                  "properties": {
+                                    "id": {
+                                      "pattern": "^[a-z][a-z0-9]*(?:-[a-z0-9]+)*\\.[a-z][a-z0-9]*(?:-[a-z0-9]+)*$",
+                                      "maxLength": 100,
+                                      "description": "The pack id, a dot and the type’s own name, such as example-ridge-procedures.airframe-check.",
+                                      "type": "string"
+                                    },
+                                    "version": {
+                                      "minimum": 1,
+                                      "maximum": 1000000,
+                                      "type": "integer"
+                                    },
+                                    "title": {
+                                      "minLength": 1,
+                                      "maxLength": 100,
+                                      "pattern": "\\S",
+                                      "type": "string"
+                                    },
+                                    "description": {
+                                      "minLength": 1,
+                                      "maxLength": 500,
+                                      "pattern": "\\S",
+                                      "description": "One line: what a record of this type is.",
+                                      "type": "string"
+                                    },
+                                    "subjectKinds": {
+                                      "minItems": 1,
+                                      "maxItems": 6,
+                                      "uniqueItems": true,
+                                      "type": "array",
+                                      "items": {
+                                        "anyOf": [
+                                          {
+                                            "const": "flight",
+                                            "type": "string"
+                                          },
+                                          {
+                                            "const": "aircraft",
+                                            "type": "string"
+                                          },
+                                          {
+                                            "const": "person",
+                                            "type": "string"
+                                          },
+                                          {
+                                            "const": "site",
+                                            "type": "string"
+                                          },
+                                          {
+                                            "const": "organization",
+                                            "type": "string"
+                                          },
+                                          {
+                                            "const": "component",
+                                            "type": "string"
+                                          }
+                                        ]
+                                      }
+                                    },
+                                    "time": {
+                                      "description": "How a record is placed in time: event at a date_time field, as_of (a standing record, optionally at a date_time field), or interval between two.",
+                                      "anyOf": [
+                                        {
+                                          "additionalProperties": false,
+                                          "type": "object",
+                                          "required": [
+                                            "meaning",
+                                            "atField"
+                                          ],
+                                          "properties": {
+                                            "meaning": {
+                                              "const": "event",
+                                              "type": "string"
+                                            },
+                                            "atField": {
+                                              "pattern": "^[a-z][a-zA-Z0-9]{0,59}$",
+                                              "type": "string"
+                                            }
+                                          }
+                                        },
+                                        {
+                                          "additionalProperties": false,
+                                          "type": "object",
+                                          "required": [
+                                            "meaning"
+                                          ],
+                                          "properties": {
+                                            "meaning": {
+                                              "const": "as_of",
+                                              "type": "string"
+                                            },
+                                            "atField": {
+                                              "pattern": "^[a-z][a-zA-Z0-9]{0,59}$",
+                                              "type": "string"
+                                            }
+                                          }
+                                        },
+                                        {
+                                          "additionalProperties": false,
+                                          "type": "object",
+                                          "required": [
+                                            "meaning",
+                                            "startField",
+                                            "endField"
+                                          ],
+                                          "properties": {
+                                            "meaning": {
+                                              "const": "interval",
+                                              "type": "string"
+                                            },
+                                            "startField": {
+                                              "pattern": "^[a-z][a-zA-Z0-9]{0,59}$",
+                                              "type": "string"
+                                            },
+                                            "endField": {
+                                              "pattern": "^[a-z][a-zA-Z0-9]{0,59}$",
+                                              "type": "string"
+                                            }
+                                          }
+                                        }
+                                      ]
+                                    },
+                                    "fields": {
+                                      "minItems": 1,
+                                      "maxItems": 100,
+                                      "type": "array",
+                                      "items": {
+                                        "anyOf": [
+                                          {
+                                            "additionalProperties": false,
+                                            "type": "object",
+                                            "required": [
+                                              "name",
+                                              "label",
+                                              "kind"
+                                            ],
+                                            "properties": {
+                                              "name": {
+                                                "pattern": "^[a-z][a-zA-Z0-9]{0,59}$",
+                                                "type": "string"
+                                              },
+                                              "label": {
+                                                "minLength": 1,
+                                                "maxLength": 100,
+                                                "pattern": "\\S",
+                                                "description": "What the operator calls the field.",
+                                                "type": "string"
+                                              },
+                                              "help": {
+                                                "minLength": 1,
+                                                "maxLength": 300,
+                                                "pattern": "\\S",
+                                                "description": "One line in the operator’s words: what to write.",
+                                                "type": "string"
+                                              },
+                                              "required": {
+                                                "description": "Counts toward completeness. A record without it is still kept, as incomplete.",
+                                                "type": "boolean"
+                                              },
+                                              "kind": {
+                                                "anyOf": [
+                                                  {
+                                                    "const": "text",
+                                                    "type": "string"
+                                                  },
+                                                  {
+                                                    "const": "long_text",
+                                                    "type": "string"
+                                                  },
+                                                  {
+                                                    "const": "boolean",
+                                                    "type": "string"
+                                                  },
+                                                  {
+                                                    "const": "date",
+                                                    "type": "string"
+                                                  },
+                                                  {
+                                                    "const": "date_time",
+                                                    "type": "string"
+                                                  }
+                                                ]
+                                              }
+                                            }
+                                          },
+                                          {
+                                            "additionalProperties": false,
+                                            "description": "A number in a unit Ledger converts. A whole number is unit Count.",
+                                            "type": "object",
+                                            "required": [
+                                              "name",
+                                              "label",
+                                              "kind",
+                                              "unit"
+                                            ],
+                                            "properties": {
+                                              "name": {
+                                                "pattern": "^[a-z][a-zA-Z0-9]{0,59}$",
+                                                "type": "string"
+                                              },
+                                              "label": {
+                                                "minLength": 1,
+                                                "maxLength": 100,
+                                                "pattern": "\\S",
+                                                "description": "What the operator calls the field.",
+                                                "type": "string"
+                                              },
+                                              "help": {
+                                                "minLength": 1,
+                                                "maxLength": 300,
+                                                "pattern": "\\S",
+                                                "description": "One line in the operator’s words: what to write.",
+                                                "type": "string"
+                                              },
+                                              "required": {
+                                                "description": "Counts toward completeness. A record without it is still kept, as incomplete.",
+                                                "type": "boolean"
+                                              },
+                                              "kind": {
+                                                "const": "number",
+                                                "type": "string"
+                                              },
+                                              "unit": {
+                                                "anyOf": [
+                                                  {
+                                                    "const": "Hours",
+                                                    "type": "string"
+                                                  },
+                                                  {
+                                                    "const": "Meters",
+                                                    "type": "string"
+                                                  },
+                                                  {
+                                                    "const": "MetersPerSecond",
+                                                    "type": "string"
+                                                  },
+                                                  {
+                                                    "const": "Percent",
+                                                    "type": "string"
+                                                  },
+                                                  {
+                                                    "const": "Count",
+                                                    "type": "string"
+                                                  }
+                                                ]
+                                              },
+                                              "minimum": {
+                                                "type": "number"
+                                              },
+                                              "maximum": {
+                                                "type": "number"
+                                              }
+                                            }
+                                          },
+                                          {
+                                            "additionalProperties": false,
+                                            "type": "object",
+                                            "required": [
+                                              "name",
+                                              "label",
+                                              "kind",
+                                              "options"
+                                            ],
+                                            "properties": {
+                                              "name": {
+                                                "pattern": "^[a-z][a-zA-Z0-9]{0,59}$",
+                                                "type": "string"
+                                              },
+                                              "label": {
+                                                "minLength": 1,
+                                                "maxLength": 100,
+                                                "pattern": "\\S",
+                                                "description": "What the operator calls the field.",
+                                                "type": "string"
+                                              },
+                                              "help": {
+                                                "minLength": 1,
+                                                "maxLength": 300,
+                                                "pattern": "\\S",
+                                                "description": "One line in the operator’s words: what to write.",
+                                                "type": "string"
+                                              },
+                                              "required": {
+                                                "description": "Counts toward completeness. A record without it is still kept, as incomplete.",
+                                                "type": "boolean"
+                                              },
+                                              "kind": {
+                                                "const": "select",
+                                                "type": "string"
+                                              },
+                                              "options": {
+                                                "minItems": 1,
+                                                "maxItems": 50,
+                                                "type": "array",
+                                                "items": {
+                                                  "additionalProperties": false,
+                                                  "type": "object",
+                                                  "required": [
+                                                    "value",
+                                                    "label"
+                                                  ],
+                                                  "properties": {
+                                                    "value": {
+                                                      "pattern": "^[a-z0-9]+(?:[-_][a-z0-9]+)*$",
+                                                      "maxLength": 60,
+                                                      "type": "string"
+                                                    },
+                                                    "label": {
+                                                      "minLength": 1,
+                                                      "maxLength": 100,
+                                                      "pattern": "\\S",
+                                                      "type": "string"
+                                                    }
+                                                  }
+                                                }
+                                              }
+                                            }
+                                          },
+                                          {
+                                            "additionalProperties": false,
+                                            "description": "The operator’s own id for a subject on file.",
+                                            "type": "object",
+                                            "required": [
+                                              "name",
+                                              "label",
+                                              "kind",
+                                              "referenceKind"
+                                            ],
+                                            "properties": {
+                                              "name": {
+                                                "pattern": "^[a-z][a-zA-Z0-9]{0,59}$",
+                                                "type": "string"
+                                              },
+                                              "label": {
+                                                "minLength": 1,
+                                                "maxLength": 100,
+                                                "pattern": "\\S",
+                                                "description": "What the operator calls the field.",
+                                                "type": "string"
+                                              },
+                                              "help": {
+                                                "minLength": 1,
+                                                "maxLength": 300,
+                                                "pattern": "\\S",
+                                                "description": "One line in the operator’s words: what to write.",
+                                                "type": "string"
+                                              },
+                                              "required": {
+                                                "description": "Counts toward completeness. A record without it is still kept, as incomplete.",
+                                                "type": "boolean"
+                                              },
+                                              "kind": {
+                                                "const": "reference",
+                                                "type": "string"
+                                              },
+                                              "referenceKind": {
+                                                "anyOf": [
+                                                  {
+                                                    "const": "person",
+                                                    "type": "string"
+                                                  },
+                                                  {
+                                                    "const": "aircraft",
+                                                    "type": "string"
+                                                  },
+                                                  {
+                                                    "const": "site",
+                                                    "type": "string"
+                                                  },
+                                                  {
+                                                    "const": "component",
+                                                    "type": "string"
+                                                  }
+                                                ]
+                                              }
+                                            }
+                                          }
+                                        ]
+                                      }
+                                    },
+                                    "digest": {
+                                      "pattern": "^[a-f0-9]{64}$",
+                                      "type": "string",
+                                      "description": "ledger.v6.sha256.jcs.1 over the declaration without its digest. A record names it."
+                                    }
+                                  }
+                                }
+                              },
                               "digest": {
                                 "pattern": "^[a-f0-9]{64}$",
                                 "type": "string"
@@ -79423,6 +79830,413 @@
                                   "pattern": "^\\d{4}-(0[1-9]|1[0-2])-(0[1-9]|[12]\\d|3[01])$",
                                   "type": "string"
                                 }
+                              }
+                            }
+                          }
+                        },
+                        "recordTypes": {
+                          "minItems": 1,
+                          "maxItems": 50,
+                          "description": "The record types the pack declares, each with its digest; an adoption pins them with the rules. Absent on packs that declare none.",
+                          "type": "array",
+                          "items": {
+                            "additionalProperties": false,
+                            "description": "A record type the pack version declares, with its digest.",
+                            "type": "object",
+                            "required": [
+                              "id",
+                              "version",
+                              "title",
+                              "description",
+                              "subjectKinds",
+                              "time",
+                              "fields",
+                              "digest"
+                            ],
+                            "properties": {
+                              "id": {
+                                "pattern": "^[a-z][a-z0-9]*(?:-[a-z0-9]+)*\\.[a-z][a-z0-9]*(?:-[a-z0-9]+)*$",
+                                "maxLength": 100,
+                                "description": "The pack id, a dot and the type’s own name, such as example-ridge-procedures.airframe-check.",
+                                "type": "string"
+                              },
+                              "version": {
+                                "minimum": 1,
+                                "maximum": 1000000,
+                                "type": "integer"
+                              },
+                              "title": {
+                                "minLength": 1,
+                                "maxLength": 100,
+                                "pattern": "\\S",
+                                "type": "string"
+                              },
+                              "description": {
+                                "minLength": 1,
+                                "maxLength": 500,
+                                "pattern": "\\S",
+                                "description": "One line: what a record of this type is.",
+                                "type": "string"
+                              },
+                              "subjectKinds": {
+                                "minItems": 1,
+                                "maxItems": 6,
+                                "uniqueItems": true,
+                                "type": "array",
+                                "items": {
+                                  "anyOf": [
+                                    {
+                                      "const": "flight",
+                                      "type": "string"
+                                    },
+                                    {
+                                      "const": "aircraft",
+                                      "type": "string"
+                                    },
+                                    {
+                                      "const": "person",
+                                      "type": "string"
+                                    },
+                                    {
+                                      "const": "site",
+                                      "type": "string"
+                                    },
+                                    {
+                                      "const": "organization",
+                                      "type": "string"
+                                    },
+                                    {
+                                      "const": "component",
+                                      "type": "string"
+                                    }
+                                  ]
+                                }
+                              },
+                              "time": {
+                                "description": "How a record is placed in time: event at a date_time field, as_of (a standing record, optionally at a date_time field), or interval between two.",
+                                "anyOf": [
+                                  {
+                                    "additionalProperties": false,
+                                    "type": "object",
+                                    "required": [
+                                      "meaning",
+                                      "atField"
+                                    ],
+                                    "properties": {
+                                      "meaning": {
+                                        "const": "event",
+                                        "type": "string"
+                                      },
+                                      "atField": {
+                                        "pattern": "^[a-z][a-zA-Z0-9]{0,59}$",
+                                        "type": "string"
+                                      }
+                                    }
+                                  },
+                                  {
+                                    "additionalProperties": false,
+                                    "type": "object",
+                                    "required": [
+                                      "meaning"
+                                    ],
+                                    "properties": {
+                                      "meaning": {
+                                        "const": "as_of",
+                                        "type": "string"
+                                      },
+                                      "atField": {
+                                        "pattern": "^[a-z][a-zA-Z0-9]{0,59}$",
+                                        "type": "string"
+                                      }
+                                    }
+                                  },
+                                  {
+                                    "additionalProperties": false,
+                                    "type": "object",
+                                    "required": [
+                                      "meaning",
+                                      "startField",
+                                      "endField"
+                                    ],
+                                    "properties": {
+                                      "meaning": {
+                                        "const": "interval",
+                                        "type": "string"
+                                      },
+                                      "startField": {
+                                        "pattern": "^[a-z][a-zA-Z0-9]{0,59}$",
+                                        "type": "string"
+                                      },
+                                      "endField": {
+                                        "pattern": "^[a-z][a-zA-Z0-9]{0,59}$",
+                                        "type": "string"
+                                      }
+                                    }
+                                  }
+                                ]
+                              },
+                              "fields": {
+                                "minItems": 1,
+                                "maxItems": 100,
+                                "type": "array",
+                                "items": {
+                                  "anyOf": [
+                                    {
+                                      "additionalProperties": false,
+                                      "type": "object",
+                                      "required": [
+                                        "name",
+                                        "label",
+                                        "kind"
+                                      ],
+                                      "properties": {
+                                        "name": {
+                                          "pattern": "^[a-z][a-zA-Z0-9]{0,59}$",
+                                          "type": "string"
+                                        },
+                                        "label": {
+                                          "minLength": 1,
+                                          "maxLength": 100,
+                                          "pattern": "\\S",
+                                          "description": "What the operator calls the field.",
+                                          "type": "string"
+                                        },
+                                        "help": {
+                                          "minLength": 1,
+                                          "maxLength": 300,
+                                          "pattern": "\\S",
+                                          "description": "One line in the operator’s words: what to write.",
+                                          "type": "string"
+                                        },
+                                        "required": {
+                                          "description": "Counts toward completeness. A record without it is still kept, as incomplete.",
+                                          "type": "boolean"
+                                        },
+                                        "kind": {
+                                          "anyOf": [
+                                            {
+                                              "const": "text",
+                                              "type": "string"
+                                            },
+                                            {
+                                              "const": "long_text",
+                                              "type": "string"
+                                            },
+                                            {
+                                              "const": "boolean",
+                                              "type": "string"
+                                            },
+                                            {
+                                              "const": "date",
+                                              "type": "string"
+                                            },
+                                            {
+                                              "const": "date_time",
+                                              "type": "string"
+                                            }
+                                          ]
+                                        }
+                                      }
+                                    },
+                                    {
+                                      "additionalProperties": false,
+                                      "description": "A number in a unit Ledger converts. A whole number is unit Count.",
+                                      "type": "object",
+                                      "required": [
+                                        "name",
+                                        "label",
+                                        "kind",
+                                        "unit"
+                                      ],
+                                      "properties": {
+                                        "name": {
+                                          "pattern": "^[a-z][a-zA-Z0-9]{0,59}$",
+                                          "type": "string"
+                                        },
+                                        "label": {
+                                          "minLength": 1,
+                                          "maxLength": 100,
+                                          "pattern": "\\S",
+                                          "description": "What the operator calls the field.",
+                                          "type": "string"
+                                        },
+                                        "help": {
+                                          "minLength": 1,
+                                          "maxLength": 300,
+                                          "pattern": "\\S",
+                                          "description": "One line in the operator’s words: what to write.",
+                                          "type": "string"
+                                        },
+                                        "required": {
+                                          "description": "Counts toward completeness. A record without it is still kept, as incomplete.",
+                                          "type": "boolean"
+                                        },
+                                        "kind": {
+                                          "const": "number",
+                                          "type": "string"
+                                        },
+                                        "unit": {
+                                          "anyOf": [
+                                            {
+                                              "const": "Hours",
+                                              "type": "string"
+                                            },
+                                            {
+                                              "const": "Meters",
+                                              "type": "string"
+                                            },
+                                            {
+                                              "const": "MetersPerSecond",
+                                              "type": "string"
+                                            },
+                                            {
+                                              "const": "Percent",
+                                              "type": "string"
+                                            },
+                                            {
+                                              "const": "Count",
+                                              "type": "string"
+                                            }
+                                          ]
+                                        },
+                                        "minimum": {
+                                          "type": "number"
+                                        },
+                                        "maximum": {
+                                          "type": "number"
+                                        }
+                                      }
+                                    },
+                                    {
+                                      "additionalProperties": false,
+                                      "type": "object",
+                                      "required": [
+                                        "name",
+                                        "label",
+                                        "kind",
+                                        "options"
+                                      ],
+                                      "properties": {
+                                        "name": {
+                                          "pattern": "^[a-z][a-zA-Z0-9]{0,59}$",
+                                          "type": "string"
+                                        },
+                                        "label": {
+                                          "minLength": 1,
+                                          "maxLength": 100,
+                                          "pattern": "\\S",
+                                          "description": "What the operator calls the field.",
+                                          "type": "string"
+                                        },
+                                        "help": {
+                                          "minLength": 1,
+                                          "maxLength": 300,
+                                          "pattern": "\\S",
+                                          "description": "One line in the operator’s words: what to write.",
+                                          "type": "string"
+                                        },
+                                        "required": {
+                                          "description": "Counts toward completeness. A record without it is still kept, as incomplete.",
+                                          "type": "boolean"
+                                        },
+                                        "kind": {
+                                          "const": "select",
+                                          "type": "string"
+                                        },
+                                        "options": {
+                                          "minItems": 1,
+                                          "maxItems": 50,
+                                          "type": "array",
+                                          "items": {
+                                            "additionalProperties": false,
+                                            "type": "object",
+                                            "required": [
+                                              "value",
+                                              "label"
+                                            ],
+                                            "properties": {
+                                              "value": {
+                                                "pattern": "^[a-z0-9]+(?:[-_][a-z0-9]+)*$",
+                                                "maxLength": 60,
+                                                "type": "string"
+                                              },
+                                              "label": {
+                                                "minLength": 1,
+                                                "maxLength": 100,
+                                                "pattern": "\\S",
+                                                "type": "string"
+                                              }
+                                            }
+                                          }
+                                        }
+                                      }
+                                    },
+                                    {
+                                      "additionalProperties": false,
+                                      "description": "The operator’s own id for a subject on file.",
+                                      "type": "object",
+                                      "required": [
+                                        "name",
+                                        "label",
+                                        "kind",
+                                        "referenceKind"
+                                      ],
+                                      "properties": {
+                                        "name": {
+                                          "pattern": "^[a-z][a-zA-Z0-9]{0,59}$",
+                                          "type": "string"
+                                        },
+                                        "label": {
+                                          "minLength": 1,
+                                          "maxLength": 100,
+                                          "pattern": "\\S",
+                                          "description": "What the operator calls the field.",
+                                          "type": "string"
+                                        },
+                                        "help": {
+                                          "minLength": 1,
+                                          "maxLength": 300,
+                                          "pattern": "\\S",
+                                          "description": "One line in the operator’s words: what to write.",
+                                          "type": "string"
+                                        },
+                                        "required": {
+                                          "description": "Counts toward completeness. A record without it is still kept, as incomplete.",
+                                          "type": "boolean"
+                                        },
+                                        "kind": {
+                                          "const": "reference",
+                                          "type": "string"
+                                        },
+                                        "referenceKind": {
+                                          "anyOf": [
+                                            {
+                                              "const": "person",
+                                              "type": "string"
+                                            },
+                                            {
+                                              "const": "aircraft",
+                                              "type": "string"
+                                            },
+                                            {
+                                              "const": "site",
+                                              "type": "string"
+                                            },
+                                            {
+                                              "const": "component",
+                                              "type": "string"
+                                            }
+                                          ]
+                                        }
+                                      }
+                                    }
+                                  ]
+                                }
+                              },
+                              "digest": {
+                                "pattern": "^[a-f0-9]{64}$",
+                                "type": "string",
+                                "description": "ledger.v6.sha256.jcs.1 over the declaration without its digest. A record names it."
                               }
                             }
                           }
@@ -108169,7 +108983,7 @@
       "get": {
         "operationId": "listOperatorRecordTypes",
         "summary": "List the record types and their columns",
-        "description": "Returns the registered operator record types with their field metadata and the import columns generated from it. Needs `evidence:read`.",
+        "description": "Returns the record types your organization has, with their field metadata and the import columns generated from it: those built into Ledger, and those declared by packs your organization has adopted (in effect or still to come). Needs `evidence:read`.",
         "security": [
           {
             "bearerAuth": []
@@ -108593,6 +109407,24 @@
                             "type": "array",
                             "items": {
                               "type": "string"
+                            }
+                          },
+                          "declaredBy": {
+                            "additionalProperties": false,
+                            "description": "For a record type a pack declares: the pack, which the organization has adopted, and the digest of the declaration each record names. Absent for a type built into Ledger.",
+                            "type": "object",
+                            "required": [
+                              "packId",
+                              "digest"
+                            ],
+                            "properties": {
+                              "packId": {
+                                "type": "string"
+                              },
+                              "digest": {
+                                "pattern": "^[a-f0-9]{64}$",
+                                "type": "string"
+                              }
                             }
                           },
                           "ruleRead": {
@@ -167018,6 +167850,413 @@
                                       "pattern": "^\\d{4}-(0[1-9]|1[0-2])-(0[1-9]|[12]\\d|3[01])$",
                                       "type": "string"
                                     }
+                                  }
+                                }
+                              }
+                            },
+                            "recordTypes": {
+                              "minItems": 1,
+                              "maxItems": 50,
+                              "description": "The record types the pack declares, each with its digest; an adoption pins them with the rules. Absent on packs that declare none.",
+                              "type": "array",
+                              "items": {
+                                "additionalProperties": false,
+                                "description": "A record type the pack version declares, with its digest.",
+                                "type": "object",
+                                "required": [
+                                  "id",
+                                  "version",
+                                  "title",
+                                  "description",
+                                  "subjectKinds",
+                                  "time",
+                                  "fields",
+                                  "digest"
+                                ],
+                                "properties": {
+                                  "id": {
+                                    "pattern": "^[a-z][a-z0-9]*(?:-[a-z0-9]+)*\\.[a-z][a-z0-9]*(?:-[a-z0-9]+)*$",
+                                    "maxLength": 100,
+                                    "description": "The pack id, a dot and the type’s own name, such as example-ridge-procedures.airframe-check.",
+                                    "type": "string"
+                                  },
+                                  "version": {
+                                    "minimum": 1,
+                                    "maximum": 1000000,
+                                    "type": "integer"
+                                  },
+                                  "title": {
+                                    "minLength": 1,
+                                    "maxLength": 100,
+                                    "pattern": "\\S",
+                                    "type": "string"
+                                  },
+                                  "description": {
+                                    "minLength": 1,
+                                    "maxLength": 500,
+                                    "pattern": "\\S",
+                                    "description": "One line: what a record of this type is.",
+                                    "type": "string"
+                                  },
+                                  "subjectKinds": {
+                                    "minItems": 1,
+                                    "maxItems": 6,
+                                    "uniqueItems": true,
+                                    "type": "array",
+                                    "items": {
+                                      "anyOf": [
+                                        {
+                                          "const": "flight",
+                                          "type": "string"
+                                        },
+                                        {
+                                          "const": "aircraft",
+                                          "type": "string"
+                                        },
+                                        {
+                                          "const": "person",
+                                          "type": "string"
+                                        },
+                                        {
+                                          "const": "site",
+                                          "type": "string"
+                                        },
+                                        {
+                                          "const": "organization",
+                                          "type": "string"
+                                        },
+                                        {
+                                          "const": "component",
+                                          "type": "string"
+                                        }
+                                      ]
+                                    }
+                                  },
+                                  "time": {
+                                    "description": "How a record is placed in time: event at a date_time field, as_of (a standing record, optionally at a date_time field), or interval between two.",
+                                    "anyOf": [
+                                      {
+                                        "additionalProperties": false,
+                                        "type": "object",
+                                        "required": [
+                                          "meaning",
+                                          "atField"
+                                        ],
+                                        "properties": {
+                                          "meaning": {
+                                            "const": "event",
+                                            "type": "string"
+                                          },
+                                          "atField": {
+                                            "pattern": "^[a-z][a-zA-Z0-9]{0,59}$",
+                                            "type": "string"
+                                          }
+                                        }
+                                      },
+                                      {
+                                        "additionalProperties": false,
+                                        "type": "object",
+                                        "required": [
+                                          "meaning"
+                                        ],
+                                        "properties": {
+                                          "meaning": {
+                                            "const": "as_of",
+                                            "type": "string"
+                                          },
+                                          "atField": {
+                                            "pattern": "^[a-z][a-zA-Z0-9]{0,59}$",
+                                            "type": "string"
+                                          }
+                                        }
+                                      },
+                                      {
+                                        "additionalProperties": false,
+                                        "type": "object",
+                                        "required": [
+                                          "meaning",
+                                          "startField",
+                                          "endField"
+                                        ],
+                                        "properties": {
+                                          "meaning": {
+                                            "const": "interval",
+                                            "type": "string"
+                                          },
+                                          "startField": {
+                                            "pattern": "^[a-z][a-zA-Z0-9]{0,59}$",
+                                            "type": "string"
+                                          },
+                                          "endField": {
+                                            "pattern": "^[a-z][a-zA-Z0-9]{0,59}$",
+                                            "type": "string"
+                                          }
+                                        }
+                                      }
+                                    ]
+                                  },
+                                  "fields": {
+                                    "minItems": 1,
+                                    "maxItems": 100,
+                                    "type": "array",
+                                    "items": {
+                                      "anyOf": [
+                                        {
+                                          "additionalProperties": false,
+                                          "type": "object",
+                                          "required": [
+                                            "name",
+                                            "label",
+                                            "kind"
+                                          ],
+                                          "properties": {
+                                            "name": {
+                                              "pattern": "^[a-z][a-zA-Z0-9]{0,59}$",
+                                              "type": "string"
+                                            },
+                                            "label": {
+                                              "minLength": 1,
+                                              "maxLength": 100,
+                                              "pattern": "\\S",
+                                              "description": "What the operator calls the field.",
+                                              "type": "string"
+                                            },
+                                            "help": {
+                                              "minLength": 1,
+                                              "maxLength": 300,
+                                              "pattern": "\\S",
+                                              "description": "One line in the operator’s words: what to write.",
+                                              "type": "string"
+                                            },
+                                            "required": {
+                                              "description": "Counts toward completeness. A record without it is still kept, as incomplete.",
+                                              "type": "boolean"
+                                            },
+                                            "kind": {
+                                              "anyOf": [
+                                                {
+                                                  "const": "text",
+                                                  "type": "string"
+                                                },
+                                                {
+                                                  "const": "long_text",
+                                                  "type": "string"
+                                                },
+                                                {
+                                                  "const": "boolean",
+                                                  "type": "string"
+                                                },
+                                                {
+                                                  "const": "date",
+                                                  "type": "string"
+                                                },
+                                                {
+                                                  "const": "date_time",
+                                                  "type": "string"
+                                                }
+                                              ]
+                                            }
+                                          }
+                                        },
+                                        {
+                                          "additionalProperties": false,
+                                          "description": "A number in a unit Ledger converts. A whole number is unit Count.",
+                                          "type": "object",
+                                          "required": [
+                                            "name",
+                                            "label",
+                                            "kind",
+                                            "unit"
+                                          ],
+                                          "properties": {
+                                            "name": {
+                                              "pattern": "^[a-z][a-zA-Z0-9]{0,59}$",
+                                              "type": "string"
+                                            },
+                                            "label": {
+                                              "minLength": 1,
+                                              "maxLength": 100,
+                                              "pattern": "\\S",
+                                              "description": "What the operator calls the field.",
+                                              "type": "string"
+                                            },
+                                            "help": {
+                                              "minLength": 1,
+                                              "maxLength": 300,
+                                              "pattern": "\\S",
+                                              "description": "One line in the operator’s words: what to write.",
+                                              "type": "string"
+                                            },
+                                            "required": {
+                                              "description": "Counts toward completeness. A record without it is still kept, as incomplete.",
+                                              "type": "boolean"
+                                            },
+                                            "kind": {
+                                              "const": "number",
+                                              "type": "string"
+                                            },
+                                            "unit": {
+                                              "anyOf": [
+                                                {
+                                                  "const": "Hours",
+                                                  "type": "string"
+                                                },
+                                                {
+                                                  "const": "Meters",
+                                                  "type": "string"
+                                                },
+                                                {
+                                                  "const": "MetersPerSecond",
+                                                  "type": "string"
+                                                },
+                                                {
+                                                  "const": "Percent",
+                                                  "type": "string"
+                                                },
+                                                {
+                                                  "const": "Count",
+                                                  "type": "string"
+                                                }
+                                              ]
+                                            },
+                                            "minimum": {
+                                              "type": "number"
+                                            },
+                                            "maximum": {
+                                              "type": "number"
+                                            }
+                                          }
+                                        },
+                                        {
+                                          "additionalProperties": false,
+                                          "type": "object",
+                                          "required": [
+                                            "name",
+                                            "label",
+                                            "kind",
+                                            "options"
+                                          ],
+                                          "properties": {
+                                            "name": {
+                                              "pattern": "^[a-z][a-zA-Z0-9]{0,59}$",
+                                              "type": "string"
+                                            },
+                                            "label": {
+                                              "minLength": 1,
+                                              "maxLength": 100,
+                                              "pattern": "\\S",
+                                              "description": "What the operator calls the field.",
+                                              "type": "string"
+                                            },
+                                            "help": {
+                                              "minLength": 1,
+                                              "maxLength": 300,
+                                              "pattern": "\\S",
+                                              "description": "One line in the operator’s words: what to write.",
+                                              "type": "string"
+                                            },
+                                            "required": {
+                                              "description": "Counts toward completeness. A record without it is still kept, as incomplete.",
+                                              "type": "boolean"
+                                            },
+                                            "kind": {
+                                              "const": "select",
+                                              "type": "string"
+                                            },
+                                            "options": {
+                                              "minItems": 1,
+                                              "maxItems": 50,
+                                              "type": "array",
+                                              "items": {
+                                                "additionalProperties": false,
+                                                "type": "object",
+                                                "required": [
+                                                  "value",
+                                                  "label"
+                                                ],
+                                                "properties": {
+                                                  "value": {
+                                                    "pattern": "^[a-z0-9]+(?:[-_][a-z0-9]+)*$",
+                                                    "maxLength": 60,
+                                                    "type": "string"
+                                                  },
+                                                  "label": {
+                                                    "minLength": 1,
+                                                    "maxLength": 100,
+                                                    "pattern": "\\S",
+                                                    "type": "string"
+                                                  }
+                                                }
+                                              }
+                                            }
+                                          }
+                                        },
+                                        {
+                                          "additionalProperties": false,
+                                          "description": "The operator’s own id for a subject on file.",
+                                          "type": "object",
+                                          "required": [
+                                            "name",
+                                            "label",
+                                            "kind",
+                                            "referenceKind"
+                                          ],
+                                          "properties": {
+                                            "name": {
+                                              "pattern": "^[a-z][a-zA-Z0-9]{0,59}$",
+                                              "type": "string"
+                                            },
+                                            "label": {
+                                              "minLength": 1,
+                                              "maxLength": 100,
+                                              "pattern": "\\S",
+                                              "description": "What the operator calls the field.",
+                                              "type": "string"
+                                            },
+                                            "help": {
+                                              "minLength": 1,
+                                              "maxLength": 300,
+                                              "pattern": "\\S",
+                                              "description": "One line in the operator’s words: what to write.",
+                                              "type": "string"
+                                            },
+                                            "required": {
+                                              "description": "Counts toward completeness. A record without it is still kept, as incomplete.",
+                                              "type": "boolean"
+                                            },
+                                            "kind": {
+                                              "const": "reference",
+                                              "type": "string"
+                                            },
+                                            "referenceKind": {
+                                              "anyOf": [
+                                                {
+                                                  "const": "person",
+                                                  "type": "string"
+                                                },
+                                                {
+                                                  "const": "aircraft",
+                                                  "type": "string"
+                                                },
+                                                {
+                                                  "const": "site",
+                                                  "type": "string"
+                                                },
+                                                {
+                                                  "const": "component",
+                                                  "type": "string"
+                                                }
+                                              ]
+                                            }
+                                          }
+                                        }
+                                      ]
+                                    }
+                                  },
+                                  "digest": {
+                                    "pattern": "^[a-f0-9]{64}$",
+                                    "type": "string",
+                                    "description": "ledger.v6.sha256.jcs.1 over the declaration without its digest. A record names it."
                                   }
                                 }
                               }

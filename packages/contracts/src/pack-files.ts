@@ -6,6 +6,7 @@ import {
   RuleParagraphSchema,
   RuleSectionIdSchema,
 } from './checked-rules.js';
+import { DeclaredRecordTypeSchema } from './declared-record-types.js';
 import { DocumentPurposeIdSchema, DocumentTypesSchema } from './observations/envelope.js';
 import {
   RequiredRecordHolderSchema,
@@ -163,7 +164,10 @@ export const PackFileSchema = Type.Object(
     version: Version,
     title: Reference,
     sources: Type.Array(PackFileSourceSchema, { minItems: 1, maxItems: 20 }),
-    rules: Type.Array(PackFileRuleSchema, { minItems: 1, maxItems: 200 }),
+    rules: Type.Array(PackFileRuleSchema, {
+      maxItems: 200,
+      description: 'At least one, unless the file declares record types: a pack may declare types and no rules yet.',
+    }),
     sections: Type.Optional(
       Type.Array(RulePackSectionSchema, {
         minItems: 1,
@@ -174,6 +178,14 @@ export const PackFileSchema = Type.Object(
     purposes: Type.Optional(Type.Array(PackFilePurposeSchema, { maxItems: 100 })),
     requiredRecords: Type.Optional(Type.Array(PackFileRequiredRecordSchema, { maxItems: 100 })),
     waiver: Type.Optional(RulePackWaiverSchema),
+    recordTypes: Type.Optional(
+      Type.Array(DeclaredRecordTypeSchema, {
+        minItems: 1,
+        maxItems: 50,
+        description:
+          'Record types the pack declares (docs/design/declared-record-types.md). Absent: none, and the digest is as it was without this section.',
+      }),
+    ),
     digest: Digest,
   },
   {

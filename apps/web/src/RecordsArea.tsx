@@ -189,6 +189,11 @@ export function RecordsArea({
           </nav>
         </div>
         {type && <p className="records-note records-description">{type.description}</p>}
+        {type?.declaredBy && (
+          <p className="records-note" data-testid="record-type-declared-by">
+            Declared by your pack {type.declaredBy.packId}, which your organization has adopted.
+          </p>
+        )}
       </aside>
       <section className="thread-workspace" aria-label="Records workspace">
         <div className="thread-main">

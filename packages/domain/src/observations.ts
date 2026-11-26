@@ -22,6 +22,7 @@ import { getReceipt } from './index.js';
 import { prepareReplacement, replacedLedgerIds } from './observation-corrections.js';
 import { indexObservationReferences } from './observation-references.js';
 import { observationRegistry, validateObservation } from './observation-registry.js';
+import { intakeRegistry } from './organization-record-types.js';
 
 const CONTENT_VERSION = 'ledger.observation-content.1';
 
@@ -152,7 +153,8 @@ export async function acceptObservationInput(
   inputAuthority: Omit<ObservationAuthority, 'grant'>,
   options: BridgedRecordOptions = {},
 ): Promise<Receipt> {
-  const { definition, observation } = validateObservation(observationRegistry(), input.payload);
+  const registry = await intakeRegistry(client, principal.tenantId, input.payload);
+  const { definition, observation } = validateObservation(registry, input.payload);
   if (input.occurredAt !== observation.occurredAt)
     throw new DomainError(400, 'invalid_observation', 'Input occurredAt must equal the observation occurredAt');
   const grant =

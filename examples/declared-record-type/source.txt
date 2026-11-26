@@ -1,0 +1,7 @@
+EXAMPLE RIDGE SURVEY OPERATIONS MANUAL (INVENTED)
+
+Chapter 6. Airframe checks
+
+6.1 Airframe check. Before an aircraft is flown, its latest recorded airframe check found it serviceable.
+
+6.2 Recording a check. Each airframe check is recorded with the time it was made, the inspector who made it, its result and the airframe hours at the check.

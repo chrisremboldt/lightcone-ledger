@@ -1,0 +1,4 @@
+subjectId,aircraftMakeModel,serialNumber,registrationNumber,registrationExpiresOn,remoteIdentificationMethod
+RIDGE-AC-1,Fictional Survey Quad X8,SN-X8-0001,FA3EXAMPLE01,2028-03-31,standard_broadcast
+RIDGE-AC-2,Fictional Survey Quad X8,SN-X8-0002,FA3EXAMPLE02,2028-03-31,standard_broadcast
+RIDGE-AC-3,Fictional Mapper M2,SN-M2-0107,FA3EXAMPLE03,2027-09-30,broadcast_module

@@ -795,6 +795,13 @@ export const OperatorRecordObservationV1Schema = Type.Object(
             },
           ),
         ),
+        declarationDigest: Type.Optional(
+          Type.String({
+            pattern: '^[a-f0-9]{64}$',
+            description:
+              'For a record type a pack declares: the digest of the declaration the record was written under. Absent for a built-in type.',
+          }),
+        ),
         entered: Type.Optional(
           Type.Record(Type.String({ minLength: 1, maxLength: 200 }), Type.String({ minLength: 1, maxLength: 200 }), {
             description:

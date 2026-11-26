@@ -19,7 +19,8 @@ import {
   historyCursor,
   historyLimit,
   historyPrecise,
-  listOperatorRecordTypes,
+  organizationRecordTypes,
+  type OrganizationRecordTypes,
   operatorRecordObservationTypes,
   readRecordRows,
   recordNamesOf,
@@ -78,7 +79,11 @@ function subjectsOf(tenantId: string, selection: RecordProductionSelection): Rec
   });
 }
 
-function checkSelection(selection: RecordProductionSelection, limits: RecordProductionLimits): void {
+function checkSelection(
+  selection: RecordProductionSelection,
+  limits: RecordProductionLimits,
+  types: OrganizationRecordTypes,
+): void {
   if (selection.from && selection.to && Date.parse(selection.from) >= Date.parse(selection.to))
     throw new DomainError(400, 'invalid_time_range', 'The start of the dates must be before their end');
   if (selection.subjects.length > limits.maxSubjects)
@@ -87,10 +92,14 @@ function checkSelection(selection: RecordProductionSelection, limits: RecordProd
       'too_many_subjects',
       `Produce the records of at most ${limits.maxSubjects} subjects at a time`,
     );
-  const registered = new Set(listOperatorRecordTypes().map((definition) => definition.recordType));
+  const registered = new Set(types.definitions.map((definition) => definition.recordType));
   for (const recordType of selection.recordTypes)
     if (!registered.has(recordType))
-      throw new DomainError(400, 'record_type_not_found', `Record type ${recordType} is not registered`);
+      throw new DomainError(
+        400,
+        'record_type_not_found',
+        `Record type ${recordType} is not one your organization has: it is built into Ledger or declared by a pack your organization has adopted`,
+      );
 }
 
 /** Each journal stream the records' events are in, with the position it stood at when they were read. */
@@ -290,7 +299,7 @@ export async function createRecordProduction(
   requireRecordRead(principal);
   await client.query("SET LOCAL statement_timeout='60s'");
   const selection = selectionOf(input);
-  checkSelection(selection, limits);
+  checkSelection(selection, limits, await organizationRecordTypes(client, principal.tenantId));
   const reused = await client.query('SELECT 1 FROM record_productions WHERE tenant_id=$1 AND idempotency_key=$2', [
     principal.tenantId,
     idempotencyKey,

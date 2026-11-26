@@ -293,11 +293,10 @@ Ledger is built so that these are additions beside the core, each with a guide, 
 | You need | Why it is code | Guide |
 | --- | --- | --- |
 | A question none of the check kinds answers | A check kind is deterministic code, versioned and tested | [Write a rule pack](write-a-rule-pack.md), Part 2 |
-| A record Ledger has no type for, such as a battery cycle log | A record type is a schema; forms, templates and import are generated from it | [operator-records.md](../design/operator-records.md) |
 | A system no shipped adapter reads | An adapter turns one system's messages into Ledger's observations | [Write an adapter](write-an-adapter.md) |
 | A new kind of control or indicator for your safety records | Each is a small definition with its own tests | [Write a control type](write-a-control-type.md), [Write an indicator](write-an-indicator.md) |
 
-Before deciding you need one, check the record types and check kinds that exist: a rule you write in a pack file can combine any record type with any check kind.
+Before deciding you need one, check the record types and check kinds that exist: a rule you write in a pack file can combine any record type with any check kind. A record Ledger has no type for, such as a battery cycle log, needs no code: your pack declares it, with its fields, units and options, and once the pack is adopted it has an import file, a form on the Records screen, production and checks like any other ([Write a rule pack, "Declare a record type"](write-a-rule-pack.md#declare-a-record-type)). Only a new kind of subject, beyond people, aircraft, flights, sites, components and the organization, is core work.
 
 ## What was run for this guide
 
