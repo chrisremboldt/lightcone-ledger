@@ -277,6 +277,12 @@ function ReportContent({ content }: { content: SmsRecordContentResponse }) {
             {body.received.receivedAt ? `, ${documentTime(body.received.receivedAt)}` : ''}
           </dd>
         </div>
+        {body.received.writtenAt && (
+          <div>
+            <dt>Written</dt>
+            <dd>{documentTime(body.received.writtenAt)}, by the clock of the reporter’s device</dd>
+          </div>
+        )}
         {body.occurredAt && (
           <div>
             <dt>Happened</dt>

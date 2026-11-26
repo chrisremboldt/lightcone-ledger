@@ -41,6 +41,8 @@ export interface SubmittedReport {
   occurredAt?: string;
   siteReference?: string;
   contact?: string;
+  /** When the reporter's device says the report was written, by its own clock. */
+  writtenAt?: string;
   /** Present only when a signed-in person chose to put their name on the report. */
   reporterName?: string;
   channel: (typeof submittedReportChannelValues)[number];
@@ -79,7 +81,7 @@ export async function submitSafetyReport(
   channel: AuthContext,
   report: SubmittedReport,
   store?: ObjectStore,
-): Promise<{ code: string }> {
+): Promise<{ code: string; recordId: string }> {
   requireChannel(channel);
   const policy = SMS_KINDS.report;
   const now = (await client.query<{ now: Date }>('SELECT clock_timestamp() AS now')).rows[0]!.now;
@@ -96,7 +98,11 @@ export async function submitSafetyReport(
     narrative: report.narrative,
     ...(report.occurredAt ? { occurredAt: report.occurredAt } : {}),
     ...(report.siteReference ? { siteReference: report.siteReference } : {}),
-    received: { channel: report.channel, receivedAt: now.toISOString() },
+    received: {
+      channel: report.channel,
+      receivedAt: now.toISOString(),
+      ...(report.writtenAt ? { writtenAt: report.writtenAt } : {}),
+    },
     ...reporter,
   };
   const command: SmsRecordOpenCommand = {
@@ -166,7 +172,7 @@ export async function submitSafetyReport(
     channel.tenantId,
     id,
   ]);
-  return { code: shownCode(code) };
+  return { code: shownCode(code), recordId: id };
 }
 
 /** Counts a report against its link's hour, refusing it once the link has taken its limit. */

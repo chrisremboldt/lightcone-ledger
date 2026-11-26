@@ -8,6 +8,9 @@ import { createPool, MemoryObjectStore, withScope } from '../../packages/persist
 import { flightRecordCsv, readUlog } from '../../packages/flight-logs/src/index.js';
 import { px4, px4Definitions, RIDGE, UlogWriter } from '../../packages/flight-logs/tests/encoders.js';
 import { lockWaitStarted, settleOwnedWork } from './worker-queue.js';
+import { LedgerClient } from '../../packages/contracts/src/client.js';
+import { describeWrittenAt } from '../../packages/contracts/src/index.js';
+import { sendEntry, type OutboxEntry } from '../../apps/web/src/outbox.js';
 
 const fixtures = join(import.meta.dirname, '..', '..', 'packages', 'contracts', 'fixtures', 'operator-records');
 
@@ -457,6 +460,85 @@ leaveOut:
     );
     const wrong = await preview('alpha', 'operator', { artifactId: otherSubject, ...training });
     expect(wrong.json().rows[0].reasons[0]).toMatch(/is about person/);
+  });
+
+  it('records an entry a device sends twice under its key once, refuses other bytes under it, and says when it was written', async () => {
+    // The device's own sending path, against this API.
+    const fetcher = (async (input: string, init: RequestInit = {}) => {
+      const url = new URL(input);
+      const body = init.body instanceof Uint8Array ? Buffer.from(init.body) : (init.body as string | undefined);
+      const response = await app.inject({
+        method: (init.method ?? 'GET') as 'GET',
+        url: `${url.pathname}${url.search}`,
+        headers: Object.fromEntries(new Headers(init.headers).entries()),
+        ...(body === undefined ? {} : { payload: body }),
+      });
+      return new Response(response.rawPayload, {
+        status: response.statusCode,
+        headers: { 'content-type': String(response.headers['content-type'] ?? '') },
+      });
+    }) as unknown as typeof fetch;
+    const client = new LedgerClient('http://ledger.test', 'ledger-dev-alpha-operator', fetcher);
+    const subjectId = `${run}-ALPHA-PILOT-09`;
+    const writtenAt = '2026-11-25T14:03:00.000Z';
+    const document = (courseTitle: string) =>
+      JSON.stringify(
+        {
+          ...training,
+          writtenAt,
+          records: [{ subjectId, trainingKind: 'recurrent', courseTitle, completedOn: '2026-09-01' }],
+        },
+        null,
+        2,
+      );
+    const key = `device-entry-${randomUUID()}`;
+    const entry: OutboxEntry = {
+      format: 1,
+      id: key,
+      key,
+      owner: { principalId: 'principal-alpha-operator', tenantId: 'tenant-alpha', name: 'Dana Ortiz' },
+      writtenAt,
+      state: { status: 'waiting' },
+      content: {
+        kind: 'record',
+        title: 'Training',
+        subject: subjectId,
+        ...training,
+        sourceId: 'operator-records',
+        document: document('Recurrent course A'),
+        draft: {
+          subjectId,
+          subjectKind: 'person',
+          secondarySubjectId: '',
+          secondarySubjectKind: '',
+          values: {},
+          units: {},
+        },
+      },
+    };
+    const before = await storedRecordCount('tenant-alpha');
+    const first = await sendEntry(client, entry);
+    expect(first).toMatchObject({ kind: 'acknowledged', recorded: { rows: [{ status: 'recorded' }] } });
+    const second = await sendEntry(client, entry);
+    expect(second).toMatchObject({ kind: 'acknowledged', recorded: { rows: [{ status: 'already_recorded' }] } });
+    const reference = (outcome: typeof first) => (outcome.kind === 'acknowledged' ? outcome.receipt.reference : '');
+    expect(reference(second)).toBe(reference(first));
+    expect(await storedRecordCount('tenant-alpha')).toBe(before + 1);
+
+    // Other bytes under the same key, of the same length and of another: refused, nothing recorded.
+    for (const title of ['Recurrent course B', 'Recurrent course, second sitting']) {
+      const other = await sendEntry(client, {
+        ...entry,
+        content: { ...entry.content, document: document(title) } as typeof entry.content,
+      });
+      expect(other.kind).toBe('refused');
+    }
+    expect(await storedRecordCount('tenant-alpha')).toBe(before + 1);
+
+    const [shown] = await records('alpha', { recordType: training.recordType, subjectId });
+    expect(shown.observationId).toBe(reference(first));
+    expect(shown.limitations).toContain(describeWrittenAt(writtenAt));
+    expect(Date.parse(shown.receivedAt)).toBeGreaterThan(Date.parse(writtenAt));
   });
 
   it('refuses a JSON file of another record type, and reports a refused record without dropping the rest', async () => {

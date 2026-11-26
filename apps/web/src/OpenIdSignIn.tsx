@@ -14,6 +14,7 @@ import {
   type IssuerEntry,
 } from './openid-connect.js';
 import { goTo } from './place.js';
+import { WaitingOnDevice } from './DeviceOutbox.js';
 
 export interface SignedIn {
   token: () => Promise<string | null>;
@@ -45,6 +46,7 @@ export function DeploymentGate({
         <section className="gate-panel">
           {name && <h1 className="gate-deployment-name">{name}</h1>}
           {children}
+          <WaitingOnDevice />
         </section>
       </div>
       <footer className="gate-foot">{local && <span>Local development</span>}</footer>

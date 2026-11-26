@@ -31,8 +31,15 @@ export const SignedInSafetyReportSchema = strict(
     named: Type.Boolean({
       description: 'Whether the signed-in person’s name goes on the report. Without it nothing kept names them.',
     }),
+    writtenAt: Type.Optional(
+      Type.String({
+        format: 'date-time',
+        description:
+          'When the report was written, by the clock of the reporter’s device. Kept in the protected content.',
+      }),
+    ),
   },
-  'A safety report a signed-in person submits.',
+  'A safety report a signed-in person submits. With an Idempotency-Key header, sending it again records nothing new.',
 );
 export type SignedInSafetyReport = Static<typeof SignedInSafetyReportSchema>;
 

@@ -46,7 +46,9 @@ import { fictionalPeople } from './demo/fictional-organizations.js';
 import { developmentToken, heldOrganizations, offeredOrganizations } from './local-sign-in.js';
 import { appFetch, demonstration, mode } from './transport.js';
 import { openFoldedSectionsForPrint } from './print.js';
+import { registerAppShell } from './app-shell.js';
 import { NoticeChoices } from './NoticeSettings.js';
+import { OutboxProvider, WaitingOnDevice } from './DeviceOutbox.js';
 
 const isLoopback = ['localhost', '127.0.0.1', '[::1]'].includes(window.location.hostname);
 // A demonstration build has no API: it shows the fictional people and answers from a recording.
@@ -189,7 +191,10 @@ function Gate({ children, operator }: { children: React.ReactNode; operator?: Op
             ))}
           </ol>
         </section>
-        <section className="gate-panel">{children}</section>
+        <section className="gate-panel">
+          {children}
+          <WaitingOnDevice />
+        </section>
       </div>
       <footer className="gate-foot">
         {fictional ? (
@@ -254,6 +259,12 @@ function Workspace({ account, ...rest }: AppProps & { confirmIdentity?: ConfirmI
     [props.apiUrl, props.token],
   );
   const firstDay = useFirstDay(client, place.section);
+  // The person an entry kept on this device belongs to; it is sent only under their sign-in.
+  const signedIn = firstDay.decision?.principal;
+  const person = React.useMemo(
+    () => (signedIn ? { principalId: signedIn.id, tenantId: signedIn.tenantId, name: signedIn.name } : null),
+    [signedIn],
+  );
   // Where this person was in each section is theirs alone: forgotten when they leave.
   React.useEffect(() => forgetPlaces, []);
   React.useEffect(() => {
@@ -321,22 +332,26 @@ function Workspace({ account, ...rest }: AppProps & { confirmIdentity?: ConfirmI
     );
   if (!opensOnFlights)
     return (
-      <FirstDayContext.Provider value={firstDay.shown}>
-        <SmsApp {...props} />
-        {dialog}
-      </FirstDayContext.Provider>
+      <OutboxProvider client={client} person={person}>
+        <FirstDayContext.Provider value={firstDay.shown}>
+          <SmsApp {...props} />
+          {dialog}
+        </FirstDayContext.Provider>
+      </OutboxProvider>
     );
   const inSafety = place.section === 'safety';
   return (
-    <FirstDayContext.Provider value={firstDay.shown}>
-      <SafetyRecordLink.Provider value={openRecord}>
-        {dialog}
-        <div style={{ display: inSafety ? 'none' : 'contents' }}>
-          <App {...props} onOpenSafety={openSafety} />
-        </div>
-        {inSafety && <SmsApp {...props} flights={links} />}
-      </SafetyRecordLink.Provider>
-    </FirstDayContext.Provider>
+    <OutboxProvider client={client} person={person}>
+      <FirstDayContext.Provider value={firstDay.shown}>
+        <SafetyRecordLink.Provider value={openRecord}>
+          {dialog}
+          <div style={{ display: inSafety ? 'none' : 'contents' }}>
+            <App {...props} onOpenSafety={openSafety} />
+          </div>
+          {inSafety && <SmsApp {...props} flights={links} />}
+        </SafetyRecordLink.Provider>
+      </FirstDayContext.Provider>
+    </OutboxProvider>
   );
 }
 
@@ -651,6 +666,8 @@ function Root() {
 }
 
 openFoldedSectionsForPrint();
+// Written out so a demonstration build registers no service worker: it keeps nothing.
+if (import.meta.env.VITE_LEDGER_ENV !== 'demo') registerAppShell();
 
 createRoot(document.getElementById('root')!).render(
   <React.StrictMode>

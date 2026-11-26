@@ -44,6 +44,8 @@ export const UNATTRIBUTED_PATHS: ReadonlySet<string> = new Set([
   ...UNAUTHENTICATED_REPORT_PATHS,
 ]);
 const AT_ONCE = 4;
+/** The reporter is given the receipt code alone: never the record's id. */
+const codeOnly = async (receipt: Promise<{ code: string }>) => ({ code: (await receipt).code });
 const noStore = { 'Cache-Control': 'private, no-store' };
 
 function submitted(
@@ -81,6 +83,32 @@ export function registerSafetyReportRoutes(
       running--;
     }
   };
+  /**
+   * A report sent with a key the reporter's device made: the key is kept under the reporting channel, never the person,
+   * with a digest of the key and the report together, so the row cannot confirm a guess at what a report says. A repeat
+   * records nothing; the receipt code was shown once and cannot be shown again.
+   */
+  const onceForKey = async (client: PoolClient, channel: AuthContext, sent: string, report: SubmittedReport) => {
+    const accepted = await idempotent(
+      client,
+      channel,
+      '/v1/safety-reports',
+      sent,
+      { key: sent, report },
+      async () => {
+        const receipt = await submitSafetyReport(client, channel, report, store);
+        return { id: receipt.recordId, value: { code: receipt.code } };
+      },
+      async () => {
+        throw new DomainError(
+          409,
+          'safety_report_already_received',
+          'This report was already received. Its receipt code was shown when it was received and cannot be shown again.',
+        );
+      },
+    );
+    return accepted.value;
+  };
   /** Runs as the organization's reporting channel; the person who sent the report is never part of it. */
   const asChannel = <T>(tenantId: string, operation: (client: PoolClient, channel: AuthContext) => Promise<T>) =>
     withScope(pool, { id: reportingChannelId(tenantId), tenantId }, operation);
@@ -94,10 +122,16 @@ export function registerSafetyReportRoutes(
         throw new DomainError(403, 'person_required', 'A safety report is submitted by a person');
       const report: SubmittedReport = {
         ...submitted(request.body, 'submitted_signed_in'),
+        ...(request.body.writtenAt ? { writtenAt: request.body.writtenAt } : {}),
         ...(request.body.named ? { reporterName: person.name } : {}),
       };
+      const sent = key(request);
       const receipt = await bounded(() =>
-        asChannel(person.tenantId, (client, channel) => submitSafetyReport(client, channel, report, store)),
+        asChannel(person.tenantId, (client, channel) =>
+          sent
+            ? onceForKey(client, channel, sent, report)
+            : codeOnly(submitSafetyReport(client, channel, report, store)),
+        ),
       );
       return reply.code(201).headers(noStore).send({ receipt });
     },
@@ -111,7 +145,7 @@ export function registerSafetyReportRoutes(
         const link = await reportLinkForToken(pool, request.body.token);
         return asChannel(link.tenantId, async (client, channel) => {
           await countLinkReport(client, channel, link.linkId);
-          return submitSafetyReport(client, channel, submitted(request.body, 'submitted_link'), store);
+          return codeOnly(submitSafetyReport(client, channel, submitted(request.body, 'submitted_link'), store));
         });
       });
       return reply.code(201).headers(noStore).send({ receipt });

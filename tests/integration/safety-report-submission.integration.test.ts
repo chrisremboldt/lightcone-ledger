@@ -209,6 +209,53 @@ describe.runIf(process.env.LEDGER_ENV !== 'staging')('People submit safety repor
     expect((await call(person.token, 'GET', `/v1/sms/records/${listed.id}/content`)).statusCode).toBe(403);
   });
 
+  it('records a report a device sends twice under its key once, refuses another under it, and keeps no person beside it', async () => {
+    const person = await addPerson(`Rowan Example ${run}`);
+    const key = `device-report-${randomUUID()}`;
+    const narrative = `Battery case latch cracked on RIDGE-AC-1 ${run}`;
+    const writtenAt = '2026-11-25T14:03:00.000Z';
+    const before = await rowsHolding(person.id);
+    const report = { whatWasSeen: narrative, where: 'Ridge pad 2', named: false, writtenAt };
+    const first = await call(person.token, 'POST', '/v1/safety-reports', report, { 'idempotency-key': key });
+    expect(first.statusCode, first.body).toBe(201);
+    expect(first.json()).toEqual({ receipt: { code: expect.stringMatching(/^[0-9A-Z]{4}(-[0-9A-Z]{4}){4}$/) } });
+
+    // The first answer was lost: the device sends the same report under the same key.
+    const again = await call(person.token, 'POST', '/v1/safety-reports', report, { 'idempotency-key': key });
+    expect(again.statusCode, again.body).toBe(409);
+    expect(again.json().error.code).toBe('safety_report_already_received');
+    expect(again.body).not.toContain(first.json().receipt.code);
+    await settleOwnedWork([setup.tenantId], { objectStore: store });
+    expect(await rowsHolding(narrative)).toEqual({ sms_restricted_record_versions: 1 });
+
+    // Another report under the same key is refused and records nothing.
+    const different = `${narrative}, and the strap too`;
+    const other = await call(
+      person.token,
+      'POST',
+      '/v1/safety-reports',
+      { ...report, whatWasSeen: different },
+      {
+        'idempotency-key': key,
+      },
+    );
+    expect(other.statusCode, other.body).toBe(409);
+    expect(other.json().error.code).toBe('idempotency_conflict');
+    expect(await rowsHolding(different)).toEqual({});
+
+    // The key is kept under the reporting channel; nothing kept names the person.
+    const kept = await admin.query<{ principal_id: string; effect_id: string }>(
+      'SELECT principal_id,effect_id FROM idempotency_keys WHERE tenant_id=$1 AND producer_key=$2',
+      [setup.tenantId, key],
+    );
+    expect(kept.rows).toHaveLength(1);
+    expect(kept.rows[0]!.principal_id).toBe(channelId);
+    expect(await rowsHolding(person.id)).toEqual(before);
+    const body = await reportContent(kept.rows[0]!.effect_id);
+    expect(body).toMatchObject({ narrative, received: { channel: 'submitted_signed_in', writtenAt } });
+    expect(Date.parse(body.received.receivedAt!)).toBeGreaterThan(Date.parse(writtenAt));
+  });
+
   it('puts the name of a person who chooses it in the protected content only', async () => {
     const person = await addPerson(`Sage Example ${run}`);
     const before = { id: await rowsHolding(person.id), name: await rowsHolding(person.name) };

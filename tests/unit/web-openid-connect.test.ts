@@ -7,7 +7,10 @@ import {
   exchangeCode,
   isCallback,
   newTransaction,
+  OpenIdSession,
   parseCallback,
+  ProviderUnreachableError,
+  readSignInConfiguration,
   pkceChallenge,
   takeTransaction,
   saveTransaction,
@@ -131,6 +134,50 @@ describe('The web sign-in flow', () => {
       client_id: 'ledger-web',
       code_verifier: transaction.verifier,
     });
+  });
+});
+
+describe('A sign-in without a connection', () => {
+  const expiring = { idToken: 'old', refreshToken: 'refresh-1', expiresAt: Date.now() + 10_000 };
+
+  it('is not ended when the provider cannot be reached to renew it, and is renewed once it can', async () => {
+    const ended: string[] = [];
+    let reachable = false;
+    const fetcher = (async () => {
+      if (!reachable) throw new TypeError('Failed to fetch');
+      const nowSeconds = Math.floor(Date.now() / 1000);
+      return Response.json({
+        id_token: idToken({ iss: entry.issuer, aud: entry.clientId, exp: nowSeconds + 3600, iat: nowSeconds }),
+      });
+    }) as unknown as typeof fetch;
+    const session = new OpenIdSession(entry, expiring, (reason) => ended.push(reason), fetcher);
+    await expect(session.token()).rejects.toBeInstanceOf(ProviderUnreachableError);
+    expect(ended).toEqual([]);
+    reachable = true;
+    expect(await session.token()).not.toBe('old');
+    expect(ended).toEqual([]);
+  });
+
+  it('says Ledger cannot be reached when the app opens with no connection, not that the sign-in failed', async () => {
+    const fetching = globalThis.fetch;
+    globalThis.fetch = (async () => {
+      throw new TypeError('Failed to fetch');
+    }) as unknown as typeof fetch;
+    try {
+      await expect(readSignInConfiguration('')).rejects.toThrow(
+        'Ledger cannot be reached from this device now. Sign in once there is a connection.',
+      );
+    } finally {
+      globalThis.fetch = fetching;
+    }
+  });
+
+  it('is ended when the provider answers and refuses to renew it', async () => {
+    const ended: string[] = [];
+    const fetcher = (async () => Response.json({ error: 'invalid_grant' }, { status: 400 })) as unknown as typeof fetch;
+    const session = new OpenIdSession(entry, expiring, (reason) => ended.push(reason), fetcher);
+    expect(await session.token()).toBeNull();
+    expect(ended).toEqual(['Your sign-in has ended. Sign in again to continue.']);
   });
 });
 

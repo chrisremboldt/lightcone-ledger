@@ -142924,6 +142924,11 @@
                                       "receivedAt": {
                                         "format": "date-time",
                                         "type": "string"
+                                      },
+                                      "writtenAt": {
+                                        "format": "date-time",
+                                        "description": "When the reporter’s device says the report was written, by that device’s clock.",
+                                        "type": "string"
                                       }
                                     }
                                   },
@@ -145157,6 +145162,11 @@
                                       },
                                       "receivedAt": {
                                         "format": "date-time",
+                                        "type": "string"
+                                      },
+                                      "writtenAt": {
+                                        "format": "date-time",
+                                        "description": "When the reporter’s device says the report was written, by that device’s clock.",
                                         "type": "string"
                                       }
                                     }
@@ -158634,7 +158644,7 @@
             "application/json": {
               "schema": {
                 "additionalProperties": false,
-                "description": "A safety report a signed-in person submits.",
+                "description": "A safety report a signed-in person submits. With an Idempotency-Key header, sending it again records nothing new.",
                 "type": "object",
                 "required": [
                   "whatWasSeen",
@@ -158669,6 +158679,11 @@
                   "named": {
                     "description": "Whether the signed-in person’s name goes on the report. Without it nothing kept names them.",
                     "type": "boolean"
+                  },
+                  "writtenAt": {
+                    "format": "date-time",
+                    "description": "When the report was written, by the clock of the reporter’s device. Kept in the protected content.",
+                    "type": "string"
                   }
                 }
               }

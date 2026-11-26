@@ -14,6 +14,8 @@ import { plainError } from './sms-labels.js';
 import { timeZoneName } from './format.js';
 import { SubjectPicker } from './SubjectPicker.js';
 import { searchableKinds } from './subject-picker.js';
+import { OutboxSummary, useOutbox } from './DeviceOutbox.js';
+import type { OutboxEntry } from './outbox.js';
 
 /** What a field that only explains a record is for, said where a person enters it. */
 const explainsRecord = 'Explains the record to a later reader; it never counts toward a complete record.';
@@ -42,17 +44,54 @@ export function RecordForm({
   const [draft, setDraft] = useState<RecordDraft>(() => initial ?? emptyDraft(type));
   const [pending, setPending] = useState(false);
   const [failure, setFailure] = useState<string[] | null>(null);
+  const outbox = useOutbox();
+  // A refused entry kept on this device, being corrected here.
+  const [revising, setRevising] = useState<OutboxEntry | null>(null);
+  const [kept, setKept] = useState<string | null>(null);
+  const replacing = revising?.content.kind === 'record' ? revising.content.replaces : replaces;
   const id = (name: string) => `record-${type.recordType}-${name}`.replaceAll('.', '-');
   const setValue = (name: string, value: string) =>
     setDraft((previous) => ({ ...previous, values: { ...previous.values, [name]: value } }));
+
+  /** Keeps the entry on this device first, then sends it: it reaches Ledger now, or when the connection returns. */
+  async function keepAndSend(entered: RecordDraft, kept: NonNullable<typeof outbox>) {
+    const { entry, outcome } = await kept.save(
+      (writtenAt) => ({
+        kind: 'record',
+        title: type.title,
+        subject: ownOrganization ? 'your organization' : entered.subjectId.trim(),
+        recordType: type.recordType,
+        recordVersion: type.recordVersion,
+        sourceId,
+        document: JSON.stringify(entryDocument(type, entered, replacing, writtenAt), null, 2),
+        draft: entered,
+        ...(replacing ? { replaces: replacing } : {}),
+      }),
+      revising ?? undefined,
+    );
+    if (outcome.kind === 'acknowledged') {
+      setRevising(null);
+      if (outcome.recorded) onRecorded(outcome.recorded);
+    } else if (outcome.kind === 'refused') {
+      // Refused while the person is here: the form still holds what they typed, so the device keeps no copy.
+      if (!revising) await kept.discard(entry.id);
+      setFailure(outcome.reasons);
+    } else {
+      setRevising(null);
+      setDraft(initial ?? emptyDraft(type));
+      setKept(outcome.reason);
+    }
+  }
 
   async function submit(event: FormEvent) {
     event.preventDefault();
     setPending(true);
     setFailure(null);
+    setKept(null);
     try {
       // A record about the operator's own organization names no subject id; it is about the Ledger organization.
       const entered = ownOrganization ? { ...draft, subjectId: '' } : draft;
+      if (outbox) return await keepAndSend(entered, outbox);
       const bytes = new TextEncoder().encode(JSON.stringify(entryDocument(type, entered, replaces), null, 2));
       const { artifact } = await client.upload(bytes, 'application/json', crypto.randomUUID());
       const result = await client.request<OperatorRecordCommitResponse>('/v1/operator-records/imports', {
@@ -186,6 +225,11 @@ export function RecordForm({
           />
         ))}
       </div>
+      {kept && (
+        <Notice tone="neutral" title="Kept on this device">
+          {kept} The entry is kept on this device and sent under your sign-in when Ledger can take it.
+        </Notice>
+      )}
       {failure && (
         <Notice tone="alert" title="Not recorded">
           <ul className="records-reasons">
@@ -205,6 +249,18 @@ export function RecordForm({
           </Button>
         )}
       </div>
+      <OutboxSummary
+        kind="record"
+        onCorrect={(entry) => {
+          if (entry.content.kind !== 'record') return;
+          setKept(null);
+          if (entry.content.recordType !== type.recordType || entry.content.recordVersion !== type.recordVersion)
+            return setFailure([`Choose ${entry.content.title} as the record type to correct this entry.`]);
+          setFailure(entry.state.status === 'refused' ? entry.state.reasons : null);
+          setDraft(entry.content.draft);
+          setRevising(entry);
+        }}
+      />
     </form>
   );
 }

@@ -11,6 +11,9 @@ export default defineConfig({
     trace: 'retain-on-failure',
     screenshot: 'only-on-failure',
     viewport: { width: 1440, height: 960 },
+    // The web app's service worker is allowed only where a spec needs it (offline-entry.spec.ts): requests it
+    // answers are not seen by page.route, which other specs use.
+    serviceWorkers: 'block',
   },
   reporter: [['list'], ['html', { open: 'never' }]],
 });

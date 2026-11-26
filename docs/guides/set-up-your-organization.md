@@ -106,6 +106,20 @@ A flight plan can be imported before the flight. Rules about a plan read it as s
 
 A flight record is your own logbook entry for a flight once it has flown: `takeoffAt` and `landingAt` are needed (in UTC, with an offset, or in your organization's time zone under a heading such as `takeoffAt [local]`), and a record whose landing is not after its takeoff is refused with a sentence saying so. Without a connected aircraft, it is what the rules read for the flight's times and flown height: the Part 108 items of the record of each flight, the height rules, the aircraft's total time in service and flight hours. Where a source also reports a flight's times or heights, the reported values are read first and the result names your record's figure beside them.
 
+### In the field
+
+The record form and **Report a safety concern** work on a phone, and keep working where the signal drops. Open Ledger and sign in while you have a connection, open **Records** once so the form knows your record types, and keep the page open. A preflight assessment, a flight record or any other record you enter, and a safety report you send, are then kept on the phone until Ledger has them:
+
+- With a connection, the entry is sent at once, as before.
+- Without one, the form says **Kept on this device**, and sends it under your sign-in when the connection returns. Where you save a form it says how many of your entries wait; **Show what is kept on this device** lists them, with **Send now** and **Discard**.
+- If Ledger refuses an entry, for example because the flight meanwhile has a record of its own, it stays with Ledger's own words: **Correct** it, or discard it.
+- Each record says when it was written, by the phone's clock, and when Ledger received it. Ledger does not check the phone's clock.
+- Once Ledger has an entry, its content is deleted from the phone. A receipt stays until you remove it: the record's Ledger id, or a safety report's receipt code.
+- An installed app, or the page, opens without a connection, but reloading it signs you out, as it always has: you cannot write new entries until you sign in again, and what waits is sent then. Someone else who signs in on the phone is told only that another person's entries wait; they are never sent under that person's name.
+- What waits is kept in the browser's own storage on the phone. Ledger does not encrypt it: anyone who can open that browser on the phone can read it. Give each person a browser profile of their own on a shared phone.
+
+The public report page, opened by a reporting link without signing in, keeps nothing on the phone and needs a connection to send. [Entering records without a connection](../design/offline-entry.md) gives the details.
+
 ## 5. Adopt the regulations you work under
 
 Open **Rules** and use **Adopt a rule pack**. Ledger ships two regulatory packs:

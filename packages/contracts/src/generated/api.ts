@@ -37693,6 +37693,11 @@ export interface operations {
                                 channel: "in_person" | "phone" | "email" | "paper" | "app" | "submitted_signed_in" | "submitted_link";
                                 /** Format: date-time */
                                 receivedAt?: string;
+                                /**
+                                 * Format: date-time
+                                 * @description When the reporter’s device says the report was written, by that device’s clock.
+                                 */
+                                writtenAt?: string;
                             };
                             /** @description Who reported and how to reach them, as far as they gave either. */
                             reporter?: {
@@ -38095,6 +38100,11 @@ export interface operations {
                                 channel: "in_person" | "phone" | "email" | "paper" | "app" | "submitted_signed_in" | "submitted_link";
                                 /** Format: date-time */
                                 receivedAt?: string;
+                                /**
+                                 * Format: date-time
+                                 * @description When the reporter’s device says the report was written, by that device’s clock.
+                                 */
+                                writtenAt?: string;
                             };
                             /** @description Who reported and how to reach them, as far as they gave either. */
                             reporter?: {
@@ -41053,6 +41063,11 @@ export interface operations {
                     contact?: string;
                     /** @description Whether the signed-in person’s name goes on the report. Without it nothing kept names them. */
                     named: boolean;
+                    /**
+                     * Format: date-time
+                     * @description When the report was written, by the clock of the reporter’s device. Kept in the protected content.
+                     */
+                    writtenAt?: string;
                 };
             };
         };

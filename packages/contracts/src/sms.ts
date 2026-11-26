@@ -296,7 +296,16 @@ export const ReportBodySchema = strict(
     occurredAt: Type.Optional(Time),
     operation: Type.Optional(Text(200)),
     siteReference: Type.Optional(Text(200, { description: 'A site or asset reference. Never coordinates.' })),
-    received: strict({ channel: literals(reportChannelValues), receivedAt: Type.Optional(Time) }),
+    received: strict({
+      channel: literals(reportChannelValues),
+      receivedAt: Type.Optional(Time),
+      writtenAt: Type.Optional(
+        Type.String({
+          format: 'date-time',
+          description: 'When the reporter’s device says the report was written, by that device’s clock.',
+        }),
+      ),
+    }),
     reporter: Type.Optional(
       Type.Object(
         { name: Type.Optional(Text(200)), contact: Type.Optional(Text(200)) },

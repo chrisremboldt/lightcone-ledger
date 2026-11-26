@@ -18,6 +18,8 @@ describe('the web app served from the API origin', () => {
     await mkdir(join(directory, 'assets'));
     await writeFile(join(directory, 'index.html'), '<!doctype html><title>Ledger</title>');
     await writeFile(join(directory, 'assets', 'app-1234.js'), 'console.log(1)');
+    await writeFile(join(directory, 'sw.js'), 'self.addEventListener("fetch", () => {})');
+    await writeFile(join(directory, 'manifest.webmanifest'), '{"name":"Ledger"}');
     app = fastify();
     app.get('/v1/me', async () => ({ ok: true }));
     registerWebApp(app, directory);
@@ -34,6 +36,16 @@ describe('the web app served from the API origin', () => {
     expect(isWebAppRequest('GET', '/v1/flights')).toBe(false);
     expect(isWebAppRequest('GET', '/v1')).toBe(false);
     expect(isWebAppRequest('POST', '/')).toBe(false);
+  });
+
+  it('serves the service worker and the manifest so a new version is noticed on the next load', async () => {
+    const worker = await app.inject({ method: 'GET', url: '/sw.js' });
+    expect(worker.statusCode).toBe(200);
+    expect(worker.headers['content-type']).toBe('text/javascript; charset=utf-8');
+    expect(worker.headers['cache-control']).toBe('no-cache');
+    const manifest = await app.inject({ method: 'GET', url: '/manifest.webmanifest' });
+    expect(manifest.headers['content-type']).toBe('application/manifest+json');
+    expect(manifest.headers['cache-control']).toBe('no-cache');
   });
 
   it('never leaves its folder', () => {

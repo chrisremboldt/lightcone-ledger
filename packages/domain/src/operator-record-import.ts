@@ -3,6 +3,7 @@ import {
   applyRecordMapping,
   describeConversion,
   describeTimeConversion,
+  describeWrittenAt,
   enteredValues,
   interpretRecordRow,
   missingFieldLabel,
@@ -257,7 +258,10 @@ async function evaluate(
           reading,
           recordedAt,
           { replacedInFile, fileRecords, ownIds },
-          original ? readFromLimitation(original, file.artifactId, row.row) : undefined,
+          [
+            ...(original ? [readFromLimitation(original, file.artifactId, row.row)] : []),
+            ...(parsed.writtenAt ? [describeWrittenAt(parsed.writtenAt)] : []),
+          ],
           original,
         );
     rows.push(evaluated);
@@ -307,18 +311,9 @@ async function evaluateMapped(
   const rows: EvaluatedRow[] = [];
   for (const row of mapped.rows)
     rows.push(
-      await evaluateRow(
-        client,
-        principal,
-        definition,
-        file,
-        sourceId,
-        row,
-        row.reading,
-        recordedAt,
-        inFile,
+      await evaluateRow(client, principal, definition, file, sourceId, row, row.reading, recordedAt, inFile, [
         limitation,
-      ),
+      ]),
     );
   return { ...base, problems: [], rows, mapping };
 }
@@ -337,8 +332,8 @@ async function evaluateRow(
     fileRecords: ReadonlyMap<string, EvaluatedRow>;
     ownIds: Map<string, number>;
   },
-  /** Said of every record of the file, such as the mapping that read it. */
-  readWith?: string,
+  /** Said of every record of the file, such as the mapping that read it or when the file says it was written. */
+  readWith: readonly string[] = [],
   /** The retained file the import file was read from, cited as the record's original in its place. */
   original?: string,
 ): Promise<EvaluatedRow> {
@@ -402,7 +397,7 @@ async function evaluateRow(
     sourceEventId: eventId,
     fidelity: FIDELITY,
     limitations: [
-      ...(readWith ? [readWith] : []),
+      ...readWith,
       ...reading.timeConversions.map((conversion) => describeTimeConversion(definition, conversion)),
       ...reading.conversions.map((conversion) => describeConversion(definition, conversion)),
     ],

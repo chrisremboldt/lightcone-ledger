@@ -27,6 +27,8 @@ export interface TokenSet {
 }
 
 export class SignInError extends Error {}
+/** The provider did not answer at all, as with no connection: not a refusal, so a sign-in is not ended by it. */
+export class ProviderUnreachableError extends SignInError {}
 
 /**
  * A sign-in the provider completed for an account tied to no one in Ledger. It carries only the person's own account,
@@ -228,7 +230,7 @@ async function tokenRequest(
       cache: 'no-store',
     });
   } catch {
-    throw new SignInError('The sign-in provider cannot be reached');
+    throw new ProviderUnreachableError('The sign-in provider cannot be reached');
   }
   const answer = (await response.json().catch(() => null)) as {
     id_token?: unknown;
@@ -340,7 +342,9 @@ export class OpenIdSession {
     try {
       this.tokens = await this.refreshing;
       return this.tokens.idToken;
-    } catch {
+    } catch (error) {
+      // Without a connection the renewal is tried again on the next request; entries kept meanwhile stay this person's.
+      if (error instanceof ProviderUnreachableError) throw error;
       return this.end('Your sign-in has ended. Sign in again to continue.');
     }
   };
@@ -440,11 +444,17 @@ export function endSession(entry: IssuerEntry, idToken: string | null): void {
 }
 
 export async function readSignInConfiguration(apiUrl: string): Promise<SignInConfiguration> {
-  const response = await fetch(`${apiUrl.replace(/\/$/, '')}/v1/sign-in`, {
-    headers: { accept: 'application/json' },
-    credentials: 'omit',
-    cache: 'no-store',
-  });
+  let response: Response;
+  try {
+    response = await fetch(`${apiUrl.replace(/\/$/, '')}/v1/sign-in`, {
+      headers: { accept: 'application/json' },
+      credentials: 'omit',
+      cache: 'no-store',
+    });
+  } catch {
+    // No answer at all, as without a connection: the app opened from what this device keeps.
+    throw new SignInError('Ledger cannot be reached from this device now. Sign in once there is a connection.');
+  }
   if (!response.ok) throw new SignInError('Ledger cannot be reached. Try again shortly.');
   return (await response.json()) as SignInConfiguration;
 }

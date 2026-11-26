@@ -9,6 +9,8 @@ import type {
 } from '@ledger/contracts';
 import { Button, Notice } from '@ledger/ui';
 import { plainError } from './sms-labels.js';
+import { OutboxSummary, useOutbox } from './DeviceOutbox.js';
+import type { OutboxEntry } from './outbox.js';
 
 // Submitting a safety report: from any screen when signed in, and from the reporting link's page without signing in.
 // What each keeps is in docs/design/report-submission.md; what the forms say here must stay true to it.
@@ -81,19 +83,28 @@ function ReportFields({
   );
 }
 
-/** The receipt code, shown once. */
-function ReceiptShown({ receipt, onDone }: { receipt: SafetyReportReceipt['receipt']; onDone?: () => void }) {
+/** The receipt code, shown once. A report sent again from this device after its first answer was lost has none. */
+function ReceiptShown({ receipt, onDone }: { receipt: { code?: string }; onDone?: () => void }) {
   return (
     <section className="safety-report-receipt" aria-label="Report received">
       <h3>Your report is received</h3>
-      <p>Your receipt code:</p>
-      <p className="safety-report-code" data-testid="receipt-code">
-        {receipt.code}
-      </p>
-      <p className="safety-form-note">
-        Write it down now: Ledger keeps no copy it can show again. With it, anyone can see only whether this report is
-        received or closed, on the page at /report.
-      </p>
+      {receipt.code ? (
+        <>
+          <p>Your receipt code:</p>
+          <p className="safety-report-code" data-testid="receipt-code">
+            {receipt.code}
+          </p>
+          <p className="safety-form-note">
+            Write it down now: Ledger keeps no copy it can show again. With it, anyone can see only whether this report
+            is received or closed, on the page at /report.
+          </p>
+        </>
+      ) : (
+        <p className="safety-form-note">
+          Ledger already had it: its receipt code was in an answer this device did not get, and Ledger cannot show it
+          again.
+        </p>
+      )}
       {onDone && (
         <Button kind="primary" onClick={onDone}>
           Done
@@ -123,7 +134,11 @@ export function SubmitReportDialog({
   const [resumed] = useState(() => reportDraftStarted(draft));
   const [pending, setPending] = useState(false);
   const [failure, setFailure] = useState<string | null>(null);
-  const [receipt, setReceipt] = useState<SafetyReportReceipt['receipt'] | null>(null);
+  const [receipt, setReceipt] = useState<{ code?: string } | null>(null);
+  const outbox = useOutbox();
+  // A refused report kept on this device, being corrected here.
+  const [revising, setRevising] = useState<OutboxEntry | null>(null);
+  const [kept, setKept] = useState<string | null>(null);
 
   useEffect(() => {
     const element = dialog.current!;
@@ -136,11 +151,38 @@ export function SubmitReportDialog({
     };
   }, []);
 
+  /** Keeps the report on this device first, then sends it: it reaches Ledger now, or when the connection returns. */
+  async function keepAndSend(kept: NonNullable<typeof outbox>) {
+    const typed = { ...draft };
+    const { entry, outcome } = await kept.save(
+      (writtenAt) => ({
+        kind: 'report',
+        report: { ...reportFields(typed), named: typed.named, writtenAt },
+        draft: typed,
+      }),
+      revising ?? undefined,
+    );
+    if (outcome.kind === 'acknowledged') {
+      onDraft(blankSignedInReport());
+      setRevising(null);
+      setReceipt(outcome.receipt.reference ? { code: outcome.receipt.reference } : {});
+    } else if (outcome.kind === 'refused') {
+      // Refused while the person is here: the form still holds what they typed, so the device keeps no copy.
+      if (!revising) await kept.discard(entry.id);
+      setFailure(outcome.reasons.join(' '));
+    } else {
+      onDraft(blankSignedInReport());
+      setRevising(null);
+      setKept(outcome.reason);
+    }
+  }
+
   async function submit(event: FormEvent) {
     event.preventDefault();
     setPending(true);
     setFailure(null);
     try {
+      if (outbox) return await keepAndSend(outbox);
       const body: SignedInSafetyReport = { ...reportFields(draft), named: draft.named };
       const answer = await client.request<SafetyReportReceipt>('/v1/safety-reports', {
         method: 'POST',
@@ -166,6 +208,17 @@ export function SubmitReportDialog({
     >
       {receipt ? (
         <ReceiptShown receipt={receipt} onDone={onClose} />
+      ) : kept ? (
+        <section className="safety-report-receipt" aria-label="Report kept on this device">
+          <h3>Your report is kept on this device</h3>
+          <p className="safety-form-note">
+            {kept} It is sent under your sign-in when Ledger can take it, and deleted from this device as soon as Ledger
+            has it. Its receipt code is then under Show what is kept on this device.
+          </p>
+          <Button kind="primary" onClick={onClose}>
+            Done
+          </Button>
+        </section>
       ) : (
         <form className="action-form safety-form" onSubmit={(event) => void submit(event)}>
           <h3>Report a safety concern</h3>
@@ -174,6 +227,12 @@ export function SubmitReportDialog({
             organization&apos;s safety reporting channel: unless you put your name or a way to reach you on it, nothing
             Ledger keeps says it was you.
           </p>
+          {outbox && (
+            <p className="safety-form-note">
+              Once you send it, it is kept on this device until Ledger has it, even without a connection, and then
+              deleted from the device.
+            </p>
+          )}
           {resumed && (
             <p className="safety-form-note" data-testid="report-draft-kept">
               Your unsent report is as you left it. It is kept only while this page stays open, and nothing is sent
@@ -213,6 +272,15 @@ export function SubmitReportDialog({
             )}
           </div>
           <p className="safety-form-note">Close keeps what you typed while this page stays open; Discard clears it.</p>
+          <OutboxSummary
+            kind="report"
+            onCorrect={(entry) => {
+              if (entry.content.kind !== 'report') return;
+              onDraft({ ...entry.content.draft });
+              setRevising(entry);
+              setFailure(entry.state.status === 'refused' ? entry.state.reasons.join(' ') : null);
+            }}
+          />
         </form>
       )}
     </dialog>,

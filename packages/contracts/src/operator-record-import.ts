@@ -297,6 +297,8 @@ export interface ParsedRecordFile {
   readonly recordVersion?: number;
   /** A CSV file's header row, in order, as written. */
   readonly columns?: readonly string[];
+  /** When a JSON file says it was written, by the clock of the device that wrote it. */
+  readonly writtenAt?: string;
 }
 
 export function recordFileFormat(contentType: string, bytes: Uint8Array): RecordFileFormat {
@@ -421,12 +423,18 @@ function parseJsonRecords(text: string): ParsedRecordFile {
   } catch {
     return { format: 'json', rows: [], problems: ['The file is not valid JSON.'] };
   }
-  const shape = document as { recordType?: unknown; recordVersion?: unknown; records?: unknown };
+  const shape = document as { recordType?: unknown; recordVersion?: unknown; records?: unknown; writtenAt?: unknown };
   if (!document || typeof document !== 'object' || Array.isArray(document) || !Array.isArray(shape.records))
     return {
       format: 'json',
       rows: [],
       problems: ['The file must be a JSON object with recordType, recordVersion and a records array.'],
+    };
+  if (shape.writtenAt !== undefined && !writtenTime(shape.writtenAt))
+    return {
+      format: 'json',
+      rows: [],
+      problems: ['writtenAt must be a time with its offset, such as 2026-11-25T14:03:00Z.'],
     };
   const records = shape.records as unknown[];
   if (records.length > OPERATOR_RECORD_IMPORT_MAX_ROWS)
@@ -446,7 +454,20 @@ function parseJsonRecords(text: string): ParsedRecordFile {
     problems: [],
     ...(typeof shape.recordType === 'string' ? { recordType: shape.recordType } : {}),
     ...(typeof shape.recordVersion === 'number' ? { recordVersion: shape.recordVersion } : {}),
+    ...(shape.writtenAt !== undefined ? { writtenAt: writtenTime(shape.writtenAt) } : {}),
   };
+}
+
+/** A time stated with its offset, as UTC; undefined for anything else. */
+function writtenTime(value: unknown): string | undefined {
+  if (typeof value !== 'string' || !/(?:Z|[+-]\d{2}:\d{2})$/.test(value)) return undefined;
+  const time = Date.parse(value);
+  return Number.isFinite(time) ? new Date(time).toISOString() : undefined;
+}
+
+/** What a record says about the time the file it came from says it was written. */
+export function describeWrittenAt(writtenAt: string): string {
+  return `Written at ${writtenAt} by the clock of the device it was entered on; Ledger does not check that clock.`;
 }
 
 // Interpreting one row -------------------------------------------------------------------------------------------------

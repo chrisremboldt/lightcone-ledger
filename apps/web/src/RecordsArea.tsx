@@ -42,6 +42,9 @@ import { PlaceLink } from './TopBar.js';
 
 type RecordsPlace = Extract<Place, { section: 'records' }>;
 
+/** The record types last read, in this page's memory only, and the sign-in they were read under. */
+let typesRead: { client: LedgerClient; response: OperatorRecordTypesResponse } | null = null;
+
 /** A record's subject as a person reads it: the operator's own id, or their own organization. */
 function subjectText(subject: { kind: string; id: string; scope: string }): string {
   return subject.scope === 'ledger' && subject.kind === 'organization'
@@ -114,14 +117,22 @@ export function RecordsArea({
 
   useEffect(() => {
     let stopped = false;
+    const show = (response: OperatorRecordTypesResponse) => {
+      setCatalog(response);
+      setChosen((previous) => previous || (response.types[0] ? typeKey(response.types[0]) : ''));
+    };
     client
       .request<OperatorRecordTypesResponse>('/v1/operator-records/types')
       .then((response) => {
-        if (stopped) return;
-        setCatalog(response);
-        setChosen((previous) => previous || (response.types[0] ? typeKey(response.types[0]) : ''));
+        typesRead = { client, response };
+        if (!stopped) show(response);
       })
-      .catch((failure) => !stopped && setError(plainError(failure).message));
+      .catch((failure) => {
+        if (stopped) return;
+        // Without a connection, the record types read earlier under this sign-in still offer the form.
+        if (typesRead?.client === client) show(typesRead.response);
+        else setError(plainError(failure).message);
+      });
     return () => {
       stopped = true;
     };
@@ -646,8 +657,8 @@ function RecordDetail({
         <h3>Where it came from</h3>
         <p>
           {record.origin.filename ? `File ${record.origin.filename}` : 'Entered by hand (the submitted record)'} ·
-          recorded by {record.origin.recordedBy.name ?? record.origin.recordedBy.id} on {record.receivedAt.slice(0, 10)}{' '}
-          · Ledger id <code>{record.observationId}</code>
+          recorded by {record.origin.recordedBy.name ?? record.origin.recordedBy.id}, received{' '}
+          {time(record.receivedAt, true)} {timeZoneLabel()} · Ledger id <code>{record.observationId}</code>
         </p>
         {original === null ? (
           <Spinner label="Loading the original" />

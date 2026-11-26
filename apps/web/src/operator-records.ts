@@ -91,8 +91,11 @@ function entryValue(field: RecordField, value: string): unknown {
   return value.trim();
 }
 
-/** The one-record JSON document a form submits; it is retained as the original bytes of the entry. */
-export function entryDocument(type: RecordTypeSummary, draft: RecordDraft, replaces?: string) {
+/**
+ * The one-record JSON document a form submits; it is retained as the original bytes of the entry. An entry kept on the
+ * device states when it was written, by the device's clock.
+ */
+export function entryDocument(type: RecordTypeSummary, draft: RecordDraft, replaces?: string, writtenAt?: string) {
   const record: Record<string, unknown> = { subjectId: draft.subjectId.trim() };
   if (type.subjectKinds.length > 1) record.subjectKind = draft.subjectKind;
   if (draft.secondarySubjectId.trim()) {
@@ -113,7 +116,12 @@ export function entryDocument(type: RecordTypeSummary, draft: RecordDraft, repla
     record[key] = entryValue(field, value);
   }
   if (replaces) record.replaces = replaces;
-  return { recordType: type.recordType, recordVersion: type.recordVersion, records: [record] };
+  return {
+    recordType: type.recordType,
+    recordVersion: type.recordVersion,
+    ...(writtenAt ? { writtenAt } : {}),
+    records: [record],
+  };
 }
 
 const optionLabel = (field: RecordField, value: unknown) =>
