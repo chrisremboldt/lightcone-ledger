@@ -65,6 +65,12 @@ Groups by number from the table above. "Then" is runtime order. Conditional step
 | Make a link to a produced set (`createRecordLink`) | 6 stream → new `record_production_links` row (no other transaction can see it) |
 | Revoke a link to a produced set (`revokeRecordLink`) | 6 `record_production_links` row UPDATE → 6 stream |
 | Open a link to a produced set (`ledger_record_production_link_opened`), no principal | new `record_production_link_openings` row, whose foreign key takes the link's row FOR KEY SHARE |
+| Make a grant to a program owner (`createProgramGrant`) | 6 stream `program-grant:<id>` → new `program_grants` and `record_production_links` rows (no other transaction can see them) |
+| Revoke a grant (`revokeProgramGrant`) | 6 `program_grants` row UPDATE → 6 its links' `record_production_links` rows UPDATE, in id order → 6 stream |
+| Keep a read of a grant (`ledger_program_grant_read`), no principal | 6 the grant's row FOR KEY SHARE (waits for a revocation) → new `program_grant_reads` row |
+| Follow an operator (`addProgramOperator`) | 6 stream `program-operator:<id>` → new `program_operators` and `program_operator_schedules` rows |
+| Stop following an operator (`removeProgramOperator`) | 6 `program_operators` row UPDATE → 6 stream |
+| Ask for a fresh read (`askProgramRead`) | 8 the operator's `program_operator_schedules` row, by UPDATE, and nothing after it: the one command that updates an existing queue row; its holder, the worker below, takes nothing the command holds |
 | Create flight (`createFlight`) | 2 `origination:` → 5 new → 6 stream → 4 org SHARE → 5 new → 8 |
 
 ### Projections (`projectEvent`, packages/projections/src/index.ts)
@@ -101,6 +107,7 @@ Some branches still read or update a record (group 6: a receipt, an order) befor
 | Flight deadlines (`processEvaluationLease`) | 3 → 8 own row → 1 shared → 8 inserts |
 | Notice sending (`sendLeasedNotice`) | reads under the lease, sends outside any transaction, then 8 own `notice_deliveries` row → insert into `notice_attempts` |
 | Dated notices and digests (`processNoticeSchedule`) | 8 own `notice_schedules` row → reads without locks → 8 inserts into `notices` and `notice_deliveries` |
+| Reading a followed operator (`readLeasedProgramOperator`) | reads under the lease, calls outside any transaction, then 8 own `program_operator_schedules` row → insert into `program_operator_answers`, whose foreign key takes the operator's row FOR KEY SHARE |
 | Rule evaluation (`processRuleEvaluationLease`) | 8 own row → 2 `rule-evaluation:` → 3 [flight subject, through the subject kind's `lockSubject`] → 5 org and subject closures SHARE → 6 stream → 5 UPDATE → 6 `finding_views` → [3, 7 for a flight] → 8; a control-boundary row runs `refreshAcceptedControlRules` (4 org UPDATE → 5 → 6 stream → 5 → 8) |
 
 ### Triggers in the current schema

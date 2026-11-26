@@ -202,6 +202,7 @@ import { registerOperatorRecordRoutes } from './operator-records.js';
 import { registerRecordSubjectRoutes } from './operator-record-subjects.js';
 import { registerRequiredRecordRoutes } from './required-records.js';
 import { registerRecordProductionRoutes, SHARED_RECORDS_PATHS } from './record-productions.js';
+import { PROGRAM_VIEW_PATHS, registerProgramViewRoutes } from './program-view-routes.js';
 import { registerReportRoutes } from './report-routes.js';
 import { registerControlWindowRoutes } from './control-windows.js';
 import { registerPeopleRoutes } from './people-routes.js';
@@ -315,15 +316,16 @@ function refuseUnconfiguredIssuer(command: Command, signIn: SignInSettings): voi
 /**
  * What the request log keeps of a request, as Fastify's own line does, except for the requests a person using a
  * reporting link or a link to produced records makes: the safety report routes, the routes the shared records page
- * reads, and the web app's own files when the API serves them (those pages and the files they load). Those keep only
- * the method and path, never an address, port or user agent (docs/design/report-submission.md,
- * docs/design/shared-links.md).
+ * reads, the read a program grant opens, and the web app's own files when the API serves them (those pages and the
+ * files they load). Those keep only the method and path, never an address, port or user agent
+ * (docs/design/report-submission.md, docs/design/shared-links.md, docs/design/program-owner-view.md).
  */
 function requestLogLine(request: FastifyRequest, servesWebApp: boolean) {
   const path = request.url.split('?')[0]!;
   if (
     UNATTRIBUTED_PATHS.has(path) ||
     SHARED_RECORDS_PATHS.includes(path) ||
+    PROGRAM_VIEW_PATHS.includes(path) ||
     (servesWebApp && isWebAppRequest(request.method, request.url))
   )
     return { method: request.method, url: path };
@@ -509,6 +511,7 @@ export async function createApp(options: AppOptions = {}) {
       request.url === '/v1/sign-in' ||
       (request.method === 'POST' && UNAUTHENTICATED_REPORT_PATHS.includes(request.url)) ||
       (request.method === 'POST' && SHARED_RECORDS_PATHS.includes(request.url)) ||
+      (request.method === 'POST' && PROGRAM_VIEW_PATHS.includes(request.url)) ||
       request.method === 'OPTIONS' ||
       (webDir && isWebAppRequest(request.method, request.url))
     )
@@ -619,6 +622,7 @@ export async function createApp(options: AppOptions = {}) {
   registerReportRoutes(app, { pool, principal });
   registerPeopleRoutes(app, { pool, env, principal });
   registerNoticeRoutes(app, { pool, env, principal });
+  registerProgramViewRoutes(app, { pool, env, principal, key });
   registerSafetyReportRoutes(app, { pool, store, principal, key });
   registerFlightPredepartureRoutes(app, { pool, principal, config: flightPredeparture });
   registerSimulationAvoidanceDemoRoutes(app, { pool, principal, config: simulationAvoidanceDemo });

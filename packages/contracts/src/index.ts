@@ -749,6 +749,7 @@ export * from './operator-record-api.js';
 export * from './operator-record-subjects.js';
 export * from './operator-record-production.js';
 export * from './record-production-links.js';
+export * from './program-view.js';
 export * from './indicators.js';
 export * from './control-windows.js';
 export * from './control-indicator-results.js';

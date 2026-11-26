@@ -182,6 +182,21 @@
   .report-count {
     color: var(--ink) !important;
   }
+  /* An operator's row prints whole, without its buttons and forms; a produced set's link never prints its secret. */
+  .program-operator {
+    break-inside: avoid;
+  }
+  .program-actions,
+  .program-operator form,
+  form[aria-label='Follow an operator'] {
+    display: none !important;
+  }
+  .program-table {
+    overflow: visible !important;
+  }
+  a.program-link::after {
+    content: none !important;
+  }
 
   /* A link that leaves Ledger shows where it goes; a link inside Ledger is just text on paper. */
   a {

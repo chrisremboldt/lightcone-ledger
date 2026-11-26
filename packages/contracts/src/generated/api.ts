@@ -1383,6 +1383,154 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/program-grants": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List the grants to program owners
+         * @description Returns every grant, newest first: for whom, what it covers, who made it and when, when it expires, whether it was revoked, by whom and why, and each read with what was read. Never a secret. Needs `authority:write`.
+         */
+        get: operations["listProgramGrants"];
+        put?: never;
+        /**
+         * Make a grant to a program owner
+         * @description Makes a grant whose secret answers with counts only: the coverage of named adopted packs by rule and result, the open findings by rule with the oldest one’s age, and links to named produced sets, made with the grant and ending with it. 90 days unless given, a year at most. The secret is in this response only; Ledger keeps its SHA-256. Recorded with who made it, for whom and what it covers. Needs `authority:write` and an Idempotency-Key.
+         */
+        post: operations["createProgramGrant"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/program-grants/{id}/revoke": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Revoke a grant to a program owner
+         * @description Revokes a grant at once, and the links made with it: it answers nothing from then on. Recorded with who revoked it and why. Needs `authority:write`.
+         */
+        post: operations["revokeProgramGrant"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/program-view": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Read what a grant shows
+         * @description Returns one document of counts for the grant’s secret: the organization’s name, when it was made, the grant’s expiry and the parts granted. Never a subject, a record, a person or a safety report. Each read is kept with its time and the parts read, nothing about who read it. Unknown, expired and revoked secrets all answer 404 program_grant_not_in_use. Answered with Cache-Control no-store, Referrer-Policy no-referrer and X-Robots-Tag noindex. Needs the grant’s secret in the body, and no sign-in.
+         */
+        post: operations["readProgramView"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/program-operators": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List the operators you follow
+         * @description Returns each operator you follow, in alphabetical order of your name for it: when it was last read, what came of it, and the last answer its Ledger gave with when it was read; and the operators no longer followed. Never the secret. Needs `evidence:read`.
+         */
+        get: operations["listProgramOperators"];
+        put?: never;
+        /**
+         * Follow an operator
+         * @description Records your name for an operator, the address of its Ledger (https:// outside a local Ledger) and the secret it gave you, which is kept for the workers and never returned. The workers read it within the hour, and hourly after. Needs `authority:write`.
+         */
+        post: operations["addProgramOperator"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/program-operators/{id}/answers": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List what an operator’s Ledger answered
+         * @description Returns every read of one operator, newest first, at most 200: when, what came of it, the digest of each answer kept and the reason of each failure. Needs `evidence:read`.
+         */
+        get: operations["listProgramOperatorAnswers"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/program-operators/{id}/read": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Ask for a fresh read of an operator
+         * @description Makes the operator’s read due now; a worker makes it as it makes the hourly one. A principal who holds only reads is refused. Needs `evidence:read`.
+         */
+        post: operations["askProgramRead"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/program-operators/{id}/remove": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Stop following an operator
+         * @description The operator is read no more. Its answers are kept and its secret is erased. Recorded with who removed it and why. Needs `authority:write`.
+         */
+        post: operations["removeProgramOperator"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/control-windows": {
         parameters: {
             query?: never;
@@ -30928,6 +31076,1713 @@ export interface operations {
             };
             /** @description Kept bytes differ from their record */
             409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        error: {
+                            code: string;
+                            message: string;
+                            details?: {
+                                [key: string]: unknown;
+                            };
+                        };
+                        requestId: string;
+                    };
+                };
+            };
+        };
+    };
+    listProgramGrants: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Success */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        grants: {
+                            id: string;
+                            programOwner: string;
+                            createdBy: {
+                                id: string;
+                                name: string;
+                            };
+                            /** Format: date-time */
+                            createdAt: string;
+                            /** Format: date-time */
+                            expiresAt: string;
+                            revokedBy: {
+                                id: string;
+                                name: string;
+                            } | null;
+                            revokedAt: string | null;
+                            revokeReason: string | null;
+                            /** @description in_force: the grant answers its secret now. */
+                            state: "in_force" | "expired" | "revoked";
+                            covers: {
+                                packs: {
+                                    packId: string;
+                                    title: string;
+                                }[];
+                                openFindings: boolean;
+                                productions: {
+                                    id: string;
+                                    /** Format: date-time */
+                                    producedAt: string;
+                                    records: number;
+                                    linkId: string;
+                                    reason: string;
+                                }[];
+                            };
+                            readCount: number;
+                            /** @description Newest first, at most 200. */
+                            reads: {
+                                /** Format: date-time */
+                                readAt: string;
+                                /** @description What was read: pack:<pack id>, open_findings, records:<production id>. */
+                                parts: string[];
+                            }[];
+                        }[];
+                    };
+                };
+            };
+            /** @description Invalid request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        error: {
+                            code: string;
+                            message: string;
+                            details?: {
+                                [key: string]: unknown;
+                            };
+                        };
+                        requestId: string;
+                    };
+                };
+            };
+            /** @description Authentication required */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        error: {
+                            code: string;
+                            message: string;
+                            details?: {
+                                [key: string]: unknown;
+                            };
+                        };
+                        requestId: string;
+                    };
+                };
+            };
+            /** @description Missing capability */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        error: {
+                            code: string;
+                            message: string;
+                            details?: {
+                                [key: string]: unknown;
+                            };
+                        };
+                        requestId: string;
+                    };
+                };
+            };
+            /** @description Scoped object unavailable */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        error: {
+                            code: string;
+                            message: string;
+                            details?: {
+                                [key: string]: unknown;
+                            };
+                        };
+                        requestId: string;
+                    };
+                };
+            };
+            /** @description Stale basis or conflicting idempotency content */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        error: {
+                            code: string;
+                            message: string;
+                            details?: {
+                                [key: string]: unknown;
+                            };
+                        };
+                        requestId: string;
+                    };
+                };
+            };
+            /** @description Bounded intake exceeded */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        error: {
+                            code: string;
+                            message: string;
+                            details?: {
+                                [key: string]: unknown;
+                            };
+                        };
+                        requestId: string;
+                    };
+                };
+            };
+        };
+    };
+    createProgramGrant: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    /** @description Who the grant is for: the program owner, in your words. */
+                    programOwner: string;
+                    /** @description How many days the grant answers. 90 unless given; 365 at most. */
+                    expiresInDays?: number;
+                    /** @description Adopted packs whose coverage by rule and result the grant shows. */
+                    packs: string[];
+                    /** @description Whether the grant shows the open findings by rule. */
+                    openFindings: boolean;
+                    /** @description Produced sets the grant gives a link to, made with it and ending with it. */
+                    productions: string[];
+                };
+            };
+        };
+        responses: {
+            /** @description Success */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        grant: {
+                            id: string;
+                            programOwner: string;
+                            createdBy: {
+                                id: string;
+                                name: string;
+                            };
+                            /** Format: date-time */
+                            createdAt: string;
+                            /** Format: date-time */
+                            expiresAt: string;
+                            revokedBy: {
+                                id: string;
+                                name: string;
+                            } | null;
+                            revokedAt: string | null;
+                            revokeReason: string | null;
+                            /** @description in_force: the grant answers its secret now. */
+                            state: "in_force" | "expired" | "revoked";
+                            covers: {
+                                packs: {
+                                    packId: string;
+                                    title: string;
+                                }[];
+                                openFindings: boolean;
+                                productions: {
+                                    id: string;
+                                    /** Format: date-time */
+                                    producedAt: string;
+                                    records: number;
+                                    linkId: string;
+                                    reason: string;
+                                }[];
+                            };
+                            readCount: number;
+                            /** @description Newest first, at most 200. */
+                            reads: {
+                                /** Format: date-time */
+                                readAt: string;
+                                /** @description What was read: pack:<pack id>, open_findings, records:<production id>. */
+                                parts: string[];
+                            }[];
+                        };
+                        /** @description Shown once. Give it, with this Ledger’s address, to the program owner. */
+                        secret: string;
+                    };
+                };
+            };
+            /** @description Invalid request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        error: {
+                            code: string;
+                            message: string;
+                            details?: {
+                                [key: string]: unknown;
+                            };
+                        };
+                        requestId: string;
+                    };
+                };
+            };
+            /** @description Authentication required */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        error: {
+                            code: string;
+                            message: string;
+                            details?: {
+                                [key: string]: unknown;
+                            };
+                        };
+                        requestId: string;
+                    };
+                };
+            };
+            /** @description Missing capability */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        error: {
+                            code: string;
+                            message: string;
+                            details?: {
+                                [key: string]: unknown;
+                            };
+                        };
+                        requestId: string;
+                    };
+                };
+            };
+            /** @description Scoped object unavailable */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        error: {
+                            code: string;
+                            message: string;
+                            details?: {
+                                [key: string]: unknown;
+                            };
+                        };
+                        requestId: string;
+                    };
+                };
+            };
+            /** @description Stale basis or conflicting idempotency content */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        error: {
+                            code: string;
+                            message: string;
+                            details?: {
+                                [key: string]: unknown;
+                            };
+                        };
+                        requestId: string;
+                    };
+                };
+            };
+            /** @description Bounded intake exceeded */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        error: {
+                            code: string;
+                            message: string;
+                            details?: {
+                                [key: string]: unknown;
+                            };
+                        };
+                        requestId: string;
+                    };
+                };
+            };
+        };
+    };
+    revokeProgramGrant: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    /** @description Why the grant is revoked. Kept with the revocation. */
+                    reason: string;
+                };
+            };
+        };
+        responses: {
+            /** @description Success */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        grant: {
+                            id: string;
+                            programOwner: string;
+                            createdBy: {
+                                id: string;
+                                name: string;
+                            };
+                            /** Format: date-time */
+                            createdAt: string;
+                            /** Format: date-time */
+                            expiresAt: string;
+                            revokedBy: {
+                                id: string;
+                                name: string;
+                            } | null;
+                            revokedAt: string | null;
+                            revokeReason: string | null;
+                            /** @description in_force: the grant answers its secret now. */
+                            state: "in_force" | "expired" | "revoked";
+                            covers: {
+                                packs: {
+                                    packId: string;
+                                    title: string;
+                                }[];
+                                openFindings: boolean;
+                                productions: {
+                                    id: string;
+                                    /** Format: date-time */
+                                    producedAt: string;
+                                    records: number;
+                                    linkId: string;
+                                    reason: string;
+                                }[];
+                            };
+                            readCount: number;
+                            /** @description Newest first, at most 200. */
+                            reads: {
+                                /** Format: date-time */
+                                readAt: string;
+                                /** @description What was read: pack:<pack id>, open_findings, records:<production id>. */
+                                parts: string[];
+                            }[];
+                        };
+                    };
+                };
+            };
+            /** @description Invalid request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        error: {
+                            code: string;
+                            message: string;
+                            details?: {
+                                [key: string]: unknown;
+                            };
+                        };
+                        requestId: string;
+                    };
+                };
+            };
+            /** @description Authentication required */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        error: {
+                            code: string;
+                            message: string;
+                            details?: {
+                                [key: string]: unknown;
+                            };
+                        };
+                        requestId: string;
+                    };
+                };
+            };
+            /** @description Missing capability */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        error: {
+                            code: string;
+                            message: string;
+                            details?: {
+                                [key: string]: unknown;
+                            };
+                        };
+                        requestId: string;
+                    };
+                };
+            };
+            /** @description Scoped object unavailable */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        error: {
+                            code: string;
+                            message: string;
+                            details?: {
+                                [key: string]: unknown;
+                            };
+                        };
+                        requestId: string;
+                    };
+                };
+            };
+            /** @description Stale basis or conflicting idempotency content */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        error: {
+                            code: string;
+                            message: string;
+                            details?: {
+                                [key: string]: unknown;
+                            };
+                        };
+                        requestId: string;
+                    };
+                };
+            };
+            /** @description Bounded intake exceeded */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        error: {
+                            code: string;
+                            message: string;
+                            details?: {
+                                [key: string]: unknown;
+                            };
+                        };
+                        requestId: string;
+                    };
+                };
+            };
+        };
+    };
+    readProgramView: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    /** @description The grant’s secret. */
+                    secret: string;
+                };
+            };
+        };
+        responses: {
+            /** @description Success */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @constant */
+                        version: "ledger.program-view.1";
+                        operator: {
+                            name: string;
+                        };
+                        madeAt: string;
+                        grantExpiresAt: string;
+                        packs?: {
+                            packId: string;
+                            title: string;
+                            /** @description The adopted version read; null when the organization has no adoption of the pack that stands now. */
+                            version: number | null;
+                            mode: "active" | "shadow" | null;
+                            rules: {
+                                ruleId: string;
+                                title: string;
+                                /** @description The paragraph the rule reads, as the pack cites it. */
+                                citation: string | null;
+                                checkedBy: "automatic" | "person" | "not_supported";
+                                /** @description How many subjects are in each result; null for a rule nothing checks. */
+                                counts: {
+                                    supported: number;
+                                    attention: number;
+                                    no_record: number;
+                                    pending: number;
+                                    not_applicable: number;
+                                    relieved: number;
+                                    other: number;
+                                    not_evaluated: number;
+                                } | null;
+                                /** @description Every subject the rule covers is counted. */
+                                complete: boolean;
+                            }[];
+                        }[];
+                        /** @description Counted open findings by rule: active adoptions, nothing a waiver relieves. */
+                        openFindings?: {
+                            total: number;
+                            /** @description More findings are open than one read counts. */
+                            truncated: boolean;
+                            rules: {
+                                packId: string;
+                                packTitle: string;
+                                ruleId: string;
+                                ruleTitle: string;
+                                citation: string;
+                                open: number;
+                                oldestOpenedAt: string;
+                                oldestAgeDays: number;
+                            }[];
+                        };
+                        records?: {
+                            producedAt: string;
+                            records: number;
+                            expiresAt: string;
+                            /** @description The link to the set: /shared# and this, on the operator’s Ledger. */
+                            secret: string;
+                        }[];
+                    };
+                };
+            };
+            /** @description Invalid request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        error: {
+                            code: string;
+                            message: string;
+                            details?: {
+                                [key: string]: unknown;
+                            };
+                        };
+                        requestId: string;
+                    };
+                };
+            };
+            /** @description Authentication required */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        error: {
+                            code: string;
+                            message: string;
+                            details?: {
+                                [key: string]: unknown;
+                            };
+                        };
+                        requestId: string;
+                    };
+                };
+            };
+            /** @description Missing capability */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        error: {
+                            code: string;
+                            message: string;
+                            details?: {
+                                [key: string]: unknown;
+                            };
+                        };
+                        requestId: string;
+                    };
+                };
+            };
+            /** @description Scoped object unavailable */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        error: {
+                            code: string;
+                            message: string;
+                            details?: {
+                                [key: string]: unknown;
+                            };
+                        };
+                        requestId: string;
+                    };
+                };
+            };
+            /** @description Stale basis or conflicting idempotency content */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        error: {
+                            code: string;
+                            message: string;
+                            details?: {
+                                [key: string]: unknown;
+                            };
+                        };
+                        requestId: string;
+                    };
+                };
+            };
+            /** @description Bounded intake exceeded */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        error: {
+                            code: string;
+                            message: string;
+                            details?: {
+                                [key: string]: unknown;
+                            };
+                        };
+                        requestId: string;
+                    };
+                };
+            };
+        };
+    };
+    listProgramOperators: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Success */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** Format: date-time */
+                        asOf: string;
+                        /** @description In alphabetical order of their names. */
+                        operators: {
+                            id: string;
+                            name: string;
+                            address: string;
+                            addedBy: {
+                                id: string;
+                                name: string;
+                            };
+                            /** Format: date-time */
+                            addedAt: string;
+                            nextReadAt: string | null;
+                            /** @description read: the last read answered and the grant is in force. late: the last answer is more than two hours old. failed: the last read failed. ended: the grant opens nothing any more. not_read: not read yet. */
+                            state: "read" | "late" | "failed" | "ended" | "not_read";
+                            lastRead: {
+                                id: string;
+                                /** Format: date-time */
+                                readAt: string;
+                                /** @description answered: the document was kept. not_in_use: the operator’s Ledger answered that the grant opens nothing. failed: no answer was kept. */
+                                outcome: "answered" | "not_in_use" | "failed";
+                                reason: string | null;
+                                /** @description Of the answer’s bytes as received. */
+                                sha256: string | null;
+                                byteLength: number | null;
+                            } | null;
+                            lastAnswer: {
+                                /** Format: date-time */
+                                readAt: string;
+                                sha256: string;
+                                /** @description What a grant shows: counts of recorded things only, never a subject, a record, a person or a safety report. Parts the grant does not cover are absent. */
+                                document: {
+                                    /** @constant */
+                                    version: "ledger.program-view.1";
+                                    operator: {
+                                        name: string;
+                                    };
+                                    madeAt: string;
+                                    grantExpiresAt: string;
+                                    packs?: {
+                                        packId: string;
+                                        title: string;
+                                        /** @description The adopted version read; null when the organization has no adoption of the pack that stands now. */
+                                        version: number | null;
+                                        mode: "active" | "shadow" | null;
+                                        rules: {
+                                            ruleId: string;
+                                            title: string;
+                                            /** @description The paragraph the rule reads, as the pack cites it. */
+                                            citation: string | null;
+                                            checkedBy: "automatic" | "person" | "not_supported";
+                                            /** @description How many subjects are in each result; null for a rule nothing checks. */
+                                            counts: {
+                                                supported: number;
+                                                attention: number;
+                                                no_record: number;
+                                                pending: number;
+                                                not_applicable: number;
+                                                relieved: number;
+                                                other: number;
+                                                not_evaluated: number;
+                                            } | null;
+                                            /** @description Every subject the rule covers is counted. */
+                                            complete: boolean;
+                                        }[];
+                                    }[];
+                                    /** @description Counted open findings by rule: active adoptions, nothing a waiver relieves. */
+                                    openFindings?: {
+                                        total: number;
+                                        /** @description More findings are open than one read counts. */
+                                        truncated: boolean;
+                                        rules: {
+                                            packId: string;
+                                            packTitle: string;
+                                            ruleId: string;
+                                            ruleTitle: string;
+                                            citation: string;
+                                            open: number;
+                                            oldestOpenedAt: string;
+                                            oldestAgeDays: number;
+                                        }[];
+                                    };
+                                    records?: {
+                                        producedAt: string;
+                                        records: number;
+                                        expiresAt: string;
+                                        /** @description The link to the set: /shared# and this, on the operator’s Ledger. */
+                                        secret: string;
+                                    }[];
+                                };
+                            } | null;
+                        }[];
+                        /** @description Operators no longer followed, most recently removed first, at most 50. */
+                        removed: {
+                            id: string;
+                            name: string;
+                            /** Format: date-time */
+                            removedAt: string;
+                            removedBy: {
+                                id: string;
+                                name: string;
+                            };
+                            reason: string;
+                        }[];
+                        /** @description Whether this Ledger reads an http:// address: only a local one. */
+                        httpAllowed: boolean;
+                    };
+                };
+            };
+            /** @description Invalid request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        error: {
+                            code: string;
+                            message: string;
+                            details?: {
+                                [key: string]: unknown;
+                            };
+                        };
+                        requestId: string;
+                    };
+                };
+            };
+            /** @description Authentication required */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        error: {
+                            code: string;
+                            message: string;
+                            details?: {
+                                [key: string]: unknown;
+                            };
+                        };
+                        requestId: string;
+                    };
+                };
+            };
+            /** @description Missing capability */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        error: {
+                            code: string;
+                            message: string;
+                            details?: {
+                                [key: string]: unknown;
+                            };
+                        };
+                        requestId: string;
+                    };
+                };
+            };
+            /** @description Scoped object unavailable */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        error: {
+                            code: string;
+                            message: string;
+                            details?: {
+                                [key: string]: unknown;
+                            };
+                        };
+                        requestId: string;
+                    };
+                };
+            };
+            /** @description Stale basis or conflicting idempotency content */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        error: {
+                            code: string;
+                            message: string;
+                            details?: {
+                                [key: string]: unknown;
+                            };
+                        };
+                        requestId: string;
+                    };
+                };
+            };
+            /** @description Bounded intake exceeded */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        error: {
+                            code: string;
+                            message: string;
+                            details?: {
+                                [key: string]: unknown;
+                            };
+                        };
+                        requestId: string;
+                    };
+                };
+            };
+        };
+    };
+    addProgramOperator: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    /** @description Your name for the operator. The view lists operators in alphabetical order of it. */
+                    name: string;
+                    /** @description The address of the operator’s Ledger, as its people open it. https:// outside a local Ledger. */
+                    address: string;
+                    /** @description The secret the operator gave you. */
+                    secret: string;
+                };
+            };
+        };
+        responses: {
+            /** @description Success */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        operator: {
+                            id: string;
+                            name: string;
+                            address: string;
+                            addedBy: {
+                                id: string;
+                                name: string;
+                            };
+                            /** Format: date-time */
+                            addedAt: string;
+                            nextReadAt: string | null;
+                            /** @description read: the last read answered and the grant is in force. late: the last answer is more than two hours old. failed: the last read failed. ended: the grant opens nothing any more. not_read: not read yet. */
+                            state: "read" | "late" | "failed" | "ended" | "not_read";
+                            lastRead: {
+                                id: string;
+                                /** Format: date-time */
+                                readAt: string;
+                                /** @description answered: the document was kept. not_in_use: the operator’s Ledger answered that the grant opens nothing. failed: no answer was kept. */
+                                outcome: "answered" | "not_in_use" | "failed";
+                                reason: string | null;
+                                /** @description Of the answer’s bytes as received. */
+                                sha256: string | null;
+                                byteLength: number | null;
+                            } | null;
+                            lastAnswer: {
+                                /** Format: date-time */
+                                readAt: string;
+                                sha256: string;
+                                /** @description What a grant shows: counts of recorded things only, never a subject, a record, a person or a safety report. Parts the grant does not cover are absent. */
+                                document: {
+                                    /** @constant */
+                                    version: "ledger.program-view.1";
+                                    operator: {
+                                        name: string;
+                                    };
+                                    madeAt: string;
+                                    grantExpiresAt: string;
+                                    packs?: {
+                                        packId: string;
+                                        title: string;
+                                        /** @description The adopted version read; null when the organization has no adoption of the pack that stands now. */
+                                        version: number | null;
+                                        mode: "active" | "shadow" | null;
+                                        rules: {
+                                            ruleId: string;
+                                            title: string;
+                                            /** @description The paragraph the rule reads, as the pack cites it. */
+                                            citation: string | null;
+                                            checkedBy: "automatic" | "person" | "not_supported";
+                                            /** @description How many subjects are in each result; null for a rule nothing checks. */
+                                            counts: {
+                                                supported: number;
+                                                attention: number;
+                                                no_record: number;
+                                                pending: number;
+                                                not_applicable: number;
+                                                relieved: number;
+                                                other: number;
+                                                not_evaluated: number;
+                                            } | null;
+                                            /** @description Every subject the rule covers is counted. */
+                                            complete: boolean;
+                                        }[];
+                                    }[];
+                                    /** @description Counted open findings by rule: active adoptions, nothing a waiver relieves. */
+                                    openFindings?: {
+                                        total: number;
+                                        /** @description More findings are open than one read counts. */
+                                        truncated: boolean;
+                                        rules: {
+                                            packId: string;
+                                            packTitle: string;
+                                            ruleId: string;
+                                            ruleTitle: string;
+                                            citation: string;
+                                            open: number;
+                                            oldestOpenedAt: string;
+                                            oldestAgeDays: number;
+                                        }[];
+                                    };
+                                    records?: {
+                                        producedAt: string;
+                                        records: number;
+                                        expiresAt: string;
+                                        /** @description The link to the set: /shared# and this, on the operator’s Ledger. */
+                                        secret: string;
+                                    }[];
+                                };
+                            } | null;
+                        };
+                    };
+                };
+            };
+            /** @description Invalid request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        error: {
+                            code: string;
+                            message: string;
+                            details?: {
+                                [key: string]: unknown;
+                            };
+                        };
+                        requestId: string;
+                    };
+                };
+            };
+            /** @description Authentication required */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        error: {
+                            code: string;
+                            message: string;
+                            details?: {
+                                [key: string]: unknown;
+                            };
+                        };
+                        requestId: string;
+                    };
+                };
+            };
+            /** @description Missing capability */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        error: {
+                            code: string;
+                            message: string;
+                            details?: {
+                                [key: string]: unknown;
+                            };
+                        };
+                        requestId: string;
+                    };
+                };
+            };
+            /** @description Scoped object unavailable */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        error: {
+                            code: string;
+                            message: string;
+                            details?: {
+                                [key: string]: unknown;
+                            };
+                        };
+                        requestId: string;
+                    };
+                };
+            };
+            /** @description Stale basis or conflicting idempotency content */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        error: {
+                            code: string;
+                            message: string;
+                            details?: {
+                                [key: string]: unknown;
+                            };
+                        };
+                        requestId: string;
+                    };
+                };
+            };
+            /** @description Bounded intake exceeded */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        error: {
+                            code: string;
+                            message: string;
+                            details?: {
+                                [key: string]: unknown;
+                            };
+                        };
+                        requestId: string;
+                    };
+                };
+            };
+        };
+    };
+    listProgramOperatorAnswers: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Success */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        operatorId: string;
+                        /** @description Newest first, at most 200. */
+                        answers: {
+                            id: string;
+                            /** Format: date-time */
+                            readAt: string;
+                            /** @description answered: the document was kept. not_in_use: the operator’s Ledger answered that the grant opens nothing. failed: no answer was kept. */
+                            outcome: "answered" | "not_in_use" | "failed";
+                            reason: string | null;
+                            /** @description Of the answer’s bytes as received. */
+                            sha256: string | null;
+                            byteLength: number | null;
+                        }[];
+                    };
+                };
+            };
+            /** @description Invalid request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        error: {
+                            code: string;
+                            message: string;
+                            details?: {
+                                [key: string]: unknown;
+                            };
+                        };
+                        requestId: string;
+                    };
+                };
+            };
+            /** @description Authentication required */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        error: {
+                            code: string;
+                            message: string;
+                            details?: {
+                                [key: string]: unknown;
+                            };
+                        };
+                        requestId: string;
+                    };
+                };
+            };
+            /** @description Missing capability */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        error: {
+                            code: string;
+                            message: string;
+                            details?: {
+                                [key: string]: unknown;
+                            };
+                        };
+                        requestId: string;
+                    };
+                };
+            };
+            /** @description Scoped object unavailable */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        error: {
+                            code: string;
+                            message: string;
+                            details?: {
+                                [key: string]: unknown;
+                            };
+                        };
+                        requestId: string;
+                    };
+                };
+            };
+            /** @description Stale basis or conflicting idempotency content */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        error: {
+                            code: string;
+                            message: string;
+                            details?: {
+                                [key: string]: unknown;
+                            };
+                        };
+                        requestId: string;
+                    };
+                };
+            };
+            /** @description Bounded intake exceeded */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        error: {
+                            code: string;
+                            message: string;
+                            details?: {
+                                [key: string]: unknown;
+                            };
+                        };
+                        requestId: string;
+                    };
+                };
+            };
+        };
+    };
+    askProgramRead: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Success */
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        operator: {
+                            id: string;
+                            name: string;
+                            address: string;
+                            addedBy: {
+                                id: string;
+                                name: string;
+                            };
+                            /** Format: date-time */
+                            addedAt: string;
+                            nextReadAt: string | null;
+                            /** @description read: the last read answered and the grant is in force. late: the last answer is more than two hours old. failed: the last read failed. ended: the grant opens nothing any more. not_read: not read yet. */
+                            state: "read" | "late" | "failed" | "ended" | "not_read";
+                            lastRead: {
+                                id: string;
+                                /** Format: date-time */
+                                readAt: string;
+                                /** @description answered: the document was kept. not_in_use: the operator’s Ledger answered that the grant opens nothing. failed: no answer was kept. */
+                                outcome: "answered" | "not_in_use" | "failed";
+                                reason: string | null;
+                                /** @description Of the answer’s bytes as received. */
+                                sha256: string | null;
+                                byteLength: number | null;
+                            } | null;
+                            lastAnswer: {
+                                /** Format: date-time */
+                                readAt: string;
+                                sha256: string;
+                                /** @description What a grant shows: counts of recorded things only, never a subject, a record, a person or a safety report. Parts the grant does not cover are absent. */
+                                document: {
+                                    /** @constant */
+                                    version: "ledger.program-view.1";
+                                    operator: {
+                                        name: string;
+                                    };
+                                    madeAt: string;
+                                    grantExpiresAt: string;
+                                    packs?: {
+                                        packId: string;
+                                        title: string;
+                                        /** @description The adopted version read; null when the organization has no adoption of the pack that stands now. */
+                                        version: number | null;
+                                        mode: "active" | "shadow" | null;
+                                        rules: {
+                                            ruleId: string;
+                                            title: string;
+                                            /** @description The paragraph the rule reads, as the pack cites it. */
+                                            citation: string | null;
+                                            checkedBy: "automatic" | "person" | "not_supported";
+                                            /** @description How many subjects are in each result; null for a rule nothing checks. */
+                                            counts: {
+                                                supported: number;
+                                                attention: number;
+                                                no_record: number;
+                                                pending: number;
+                                                not_applicable: number;
+                                                relieved: number;
+                                                other: number;
+                                                not_evaluated: number;
+                                            } | null;
+                                            /** @description Every subject the rule covers is counted. */
+                                            complete: boolean;
+                                        }[];
+                                    }[];
+                                    /** @description Counted open findings by rule: active adoptions, nothing a waiver relieves. */
+                                    openFindings?: {
+                                        total: number;
+                                        /** @description More findings are open than one read counts. */
+                                        truncated: boolean;
+                                        rules: {
+                                            packId: string;
+                                            packTitle: string;
+                                            ruleId: string;
+                                            ruleTitle: string;
+                                            citation: string;
+                                            open: number;
+                                            oldestOpenedAt: string;
+                                            oldestAgeDays: number;
+                                        }[];
+                                    };
+                                    records?: {
+                                        producedAt: string;
+                                        records: number;
+                                        expiresAt: string;
+                                        /** @description The link to the set: /shared# and this, on the operator’s Ledger. */
+                                        secret: string;
+                                    }[];
+                                };
+                            } | null;
+                        };
+                    };
+                };
+            };
+            /** @description Invalid request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        error: {
+                            code: string;
+                            message: string;
+                            details?: {
+                                [key: string]: unknown;
+                            };
+                        };
+                        requestId: string;
+                    };
+                };
+            };
+            /** @description Authentication required */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        error: {
+                            code: string;
+                            message: string;
+                            details?: {
+                                [key: string]: unknown;
+                            };
+                        };
+                        requestId: string;
+                    };
+                };
+            };
+            /** @description Missing capability */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        error: {
+                            code: string;
+                            message: string;
+                            details?: {
+                                [key: string]: unknown;
+                            };
+                        };
+                        requestId: string;
+                    };
+                };
+            };
+            /** @description Scoped object unavailable */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        error: {
+                            code: string;
+                            message: string;
+                            details?: {
+                                [key: string]: unknown;
+                            };
+                        };
+                        requestId: string;
+                    };
+                };
+            };
+            /** @description Stale basis or conflicting idempotency content */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        error: {
+                            code: string;
+                            message: string;
+                            details?: {
+                                [key: string]: unknown;
+                            };
+                        };
+                        requestId: string;
+                    };
+                };
+            };
+            /** @description Bounded intake exceeded */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        error: {
+                            code: string;
+                            message: string;
+                            details?: {
+                                [key: string]: unknown;
+                            };
+                        };
+                        requestId: string;
+                    };
+                };
+            };
+        };
+    };
+    removeProgramOperator: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    /** @description Why the operator is no longer followed. Kept with the removal. */
+                    reason: string;
+                };
+            };
+        };
+        responses: {
+            /** @description Success */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        operatorId: string;
+                    };
+                };
+            };
+            /** @description Invalid request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        error: {
+                            code: string;
+                            message: string;
+                            details?: {
+                                [key: string]: unknown;
+                            };
+                        };
+                        requestId: string;
+                    };
+                };
+            };
+            /** @description Authentication required */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        error: {
+                            code: string;
+                            message: string;
+                            details?: {
+                                [key: string]: unknown;
+                            };
+                        };
+                        requestId: string;
+                    };
+                };
+            };
+            /** @description Missing capability */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        error: {
+                            code: string;
+                            message: string;
+                            details?: {
+                                [key: string]: unknown;
+                            };
+                        };
+                        requestId: string;
+                    };
+                };
+            };
+            /** @description Scoped object unavailable */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        error: {
+                            code: string;
+                            message: string;
+                            details?: {
+                                [key: string]: unknown;
+                            };
+                        };
+                        requestId: string;
+                    };
+                };
+            };
+            /** @description Stale basis or conflicting idempotency content */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        error: {
+                            code: string;
+                            message: string;
+                            details?: {
+                                [key: string]: unknown;
+                            };
+                        };
+                        requestId: string;
+                    };
+                };
+            };
+            /** @description Bounded intake exceeded */
+            429: {
                 headers: {
                     [name: string]: unknown;
                 };

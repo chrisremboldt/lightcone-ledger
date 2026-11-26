@@ -288,3 +288,55 @@
     white-space: normal;
   }
 }
+
+/* The operators a program owner follows, side by side. A table scrolls inside its card, never the page. */
+.program-operators {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 420px), 1fr));
+  gap: 12px;
+  margin: 0 0 18px;
+}
+.program-operator {
+  margin: 0;
+  min-width: 0;
+}
+.program-operator h3 {
+  overflow-wrap: anywhere;
+}
+.program-answer h4 small,
+.program-table th small,
+.program-table td small {
+  display: block;
+  color: var(--muted);
+  font-weight: 400;
+  overflow-wrap: anywhere;
+}
+.program-table {
+  max-width: 100%;
+  overflow-x: auto;
+}
+.program-choices {
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+  margin: 0 0 10px;
+  padding: 8px 10px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+}
+.program-choices label {
+  overflow-wrap: anywhere;
+}
+.program-covers {
+  margin: 0;
+  padding-left: 18px;
+}
+.program-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 8px 0;
+}
+.report-page code {
+  overflow-wrap: anywhere;
+}

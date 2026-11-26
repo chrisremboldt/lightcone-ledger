@@ -22,6 +22,7 @@ import { findingStatusLabels } from './finding-work.js';
 import { ctDay, errorMessage, time, timeRange, timeZone, timeZoneLabel } from './format.js';
 import { columnFor, displayValue, recordHeadline } from './operator-records.js';
 import { calendarDay, goTo, type Place, type ReportView } from './place.js';
+import { ProgramGrantsPage, ProgramOperatorsPage } from './ProgramView.js';
 import { IndicatorChart, MonthlyChart } from './ReportCharts.js';
 import { monthLabel } from './report-charts.js';
 import { counted, hoursAndMinutes, periodChoices, readingNeeds } from './report-periods.js';
@@ -125,7 +126,15 @@ export function ReportsArea({
                 <PlaceLink place={reports({ report: 'indicators' })} current={current === 'indicators'}>
                   Indicators over time
                 </PlaceLink>
+                <PlaceLink place={reports({ report: 'operators' })} current={current === 'operators'}>
+                  Operators you follow
+                </PlaceLink>
               </>
+            )}
+            {may(principal, 'authority:write') && (
+              <PlaceLink place={reports({ report: 'grants' })} current={current === 'grants'}>
+                Shown to program owners
+              </PlaceLink>
             )}
           </nav>
         </div>
@@ -136,7 +145,8 @@ export function ReportsArea({
           {place.report === 'summary' && (
             <PeriodSummaryPage client={client} principal={principal} from={place.from} until={place.until} />
           )}
-          {place.report !== 'home' && place.report !== 'summary' && !records && (
+          {place.report === 'grants' && <ProgramGrantsPage client={client} principal={principal} />}
+          {place.report !== 'home' && place.report !== 'summary' && place.report !== 'grants' && !records && (
             <Notice tone="neutral" title="Not yours to read">
               This report counts records and findings. Reading them needs {readingNeeds['evidence:read']}. Ask the
               person who manages authority in your organization.
@@ -150,6 +160,7 @@ export function ReportsArea({
             <IndicatorPage client={client} principal={principal} id={place.id} version={place.version ?? 1} />
           )}
           {records && place.report === 'flight' && <FlightFilePage client={client} flightId={place.flightId} />}
+          {records && place.report === 'operators' && <ProgramOperatorsPage client={client} principal={principal} />}
         </div>
       </section>
     </main>
@@ -201,6 +212,16 @@ function ReportsHome({ client, principal }: { client: LedgerClient; principal: P
               The indicators with recorded results
             </PlaceLink>
           </section>
+          <section className="report-card" aria-label="Operators you follow">
+            <h3>Operators you follow</h3>
+            <p className="records-note">
+              For an organization that contracts operators: what each operator’s own Ledger shows you under its grant,
+              side by side.
+            </p>
+            <PlaceLink className="button button--secondary" place={reports({ report: 'operators' })}>
+              The operators you follow
+            </PlaceLink>
+          </section>
           <section className="report-card" aria-label="One flight’s file">
             <h3>One flight’s file</h3>
             <p className="records-note">
@@ -230,6 +251,18 @@ function ReportsHome({ client, principal }: { client: LedgerClient; principal: P
             </form>
           </section>
         </>
+      )}
+      {may(principal, 'authority:write') && (
+        <section className="report-card" aria-label="Shown to program owners">
+          <h3>Shown to program owners</h3>
+          <p className="records-note">
+            Grants that let an organization that contracts you read your coverage and open findings as counts, for a
+            period you choose.
+          </p>
+          <PlaceLink className="button button--secondary" place={reports({ report: 'grants' })}>
+            The grants you made
+          </PlaceLink>
+        </section>
       )}
     </>
   );

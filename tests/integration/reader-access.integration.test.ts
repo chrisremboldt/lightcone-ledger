@@ -1,6 +1,7 @@
 import { randomUUID } from 'node:crypto';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { createApp, OPEN_TO_READERS } from '../../apps/api/src/index.js';
+import { PROGRAM_VIEW_PATHS } from '../../apps/api/src/program-view-routes.js';
 import { SHARED_RECORDS_PATHS } from '../../apps/api/src/record-productions.js';
 import { UNAUTHENTICATED_REPORT_PATHS } from '../../apps/api/src/safety-report-submission.js';
 import { rolePresets } from '../../packages/contracts/src/index.js';
@@ -67,9 +68,12 @@ describe.runIf(process.env.LEDGER_ENV !== 'staging')('A reader looks and changes
     '/v1/sms/records/:id/signing': '?meaning=document.adopt',
   };
 
-  /** The routes that take no sign-in at all: the safety report submissions and the page of a link. */
+  /**
+   * The routes that take no sign-in at all: the safety report submissions, the page of a link, and the read a program
+   * grant's secret opens, which answers counts only (docs/design/program-owner-view.md).
+   */
   const unsigned = new Set(['/healthz', '/readyz', '/openapi.json', '/v1/sign-in']);
-  const unsignedWrites = new Set([...UNAUTHENTICATED_REPORT_PATHS, ...SHARED_RECORDS_PATHS]);
+  const unsignedWrites = new Set([...UNAUTHENTICATED_REPORT_PATHS, ...SHARED_RECORDS_PATHS, ...PROGRAM_VIEW_PATHS]);
 
   /** What a reader is for (decision 1 of the reader preset), each with the request that reads it. */
   const readerReads: Record<string, string> = {
@@ -101,6 +105,9 @@ describe.runIf(process.env.LEDGER_ENV !== 'staging')('A reader looks and changes
     '/v1/reports/findings-by-month': '/v1/reports/findings-by-month',
     '/v1/reports/indicators': '/v1/reports/indicators',
     '/v1/reports/indicators/:indicatorId/versions/:version': 'indicator-history',
+    // The operators the organization follows, under Reports: the counts their own Ledgers answered. Following and
+    // removing one needs authority:write, which a reader does not hold.
+    '/v1/program-operators': '/v1/program-operators',
   };
   const requestFor = (key: string, value: string) =>
     ({
@@ -154,6 +161,8 @@ describe.runIf(process.env.LEDGER_ENV !== 'staging')('A reader looks and changes
     '/v1/sms/exports/:id/packet',
     '/v1/sms/exports/:id/content',
     '/v1/sms/attachments/:id/content',
+    // Every read of one operator the organization follows, beside the view a reader opens.
+    '/v1/program-operators/:id/answers',
   ]);
 
   const gets = () => routes.filter((route) => route.method === 'GET' && !unsigned.has(route.url));
@@ -175,7 +184,8 @@ describe.runIf(process.env.LEDGER_ENV !== 'staging')('A reader looks and changes
         reached.push(`${route.method} ${route.url}: ${response.statusCode} ${response.body.slice(0, 120)}`);
     }
     expect(reached).toEqual([]);
-    // Only these take no sign-in, and none of them reaches an organization's records but the one set a link opens.
+    // Only these take no sign-in, and none of them reaches an organization's records but the one set a link opens and
+    // the counts a grant shows.
     expect(
       writes
         .filter((route) => unsignedWrites.has(route.url))

@@ -298,6 +298,18 @@ Each opening is kept on the set's screen beside its link: when, and whether it w
 
 A produced set never holds a safety report or a restricted attachment, so any set can be shared this way.
 
+### Show a program owner how you stand
+
+An organization that contracts you, a utility with inspection crews for example, may want to see how you stand without reading your records. Give it a grant. On **Reports**, **Shown to program owners** (a person who manages authority sees it), name the program owner, choose for how many days the grant answers (ninety unless you choose, a year at most) and tick what it shows, from this list only:
+
+- the coverage of packs you adopted: for each rule, its name and citation and how many subjects are in each result;
+- your open findings: how many are open for each rule, and when the oldest opened;
+- produced sets: each with a link of the kind above, made with the grant and ending with it.
+
+Choose **Make the grant**. Ledger shows this Ledger's address and the grant's secret once; give both to the program owner as you would any private document. Ledger keeps only a hash of the secret.
+
+The program owner's Ledger reads the grant over the network, about once an hour. What it gets is counts of recorded things: never a subject's id or name, a record or a value, a person's name, or anything of a safety report. Each read is listed under the grant with its time and what was read; Ledger keeps nothing about who read it. **Revoke this grant**, with the reason, stops it at once, and the links made with it with it. A grant that has expired, was revoked or never existed gets the same plain answer, so it tells nobody whether your organization exists.
+
 ### Reports to print or save
 
 **Reports**, in the bar, and linked from the Safety home and from **Records**, holds pages to read, print or save as a PDF. Each counts recorded things only, says when it was made in your organization's time zone, says what it does not count, and has an address of its own: a link to a summary opens the same period for whoever may read it.
@@ -308,6 +320,14 @@ A produced set never holds a safety report or a restricted attachment, so any se
 - **One flight's file**: the flight's own records, the records that name it, each rule's latest result with what it read, and its findings, on one page. Open it from **Reports** or from the flight's file under **Records**.
 
 A person sees the parts they may read. A reader sees the flights and findings and is told the hazards and safety assurance actions are not theirs to read; a person who reads only safety records sees the opposite. No report shows the content of a safety report.
+
+### Follow the operators you contract
+
+When you contract operators that run Ledger, each can give you a grant (see [Show a program owner how you stand](#show-a-program-owner-how-you-stand)): its Ledger's address and a secret. On **Reports**, **Operators you follow**, a person who manages authority fills in **Follow an operator** with your own name for the operator, its address and the secret. Ledger keeps the secret for its workers and never shows it again. The address starts with `https://`; only a local Ledger reads an `http://` address, or one on this computer or a private network.
+
+Ledger's workers read each operator within the hour and hourly after, and **Ask for a fresh read** reads it now. Every answer is kept with when it was read and its digest, and every failure with its reason, under **Every read**. The page lists the operators side by side in alphabetical order: when each was last read, until when its grant answers, each pack's rules with how many subjects are in each result, the open findings by rule with the oldest one's age, and links to the produced sets it shared. There is no score and no ranking. A row whose last read failed, whose grant ended, or that has not been read for two hours says so, and shows the last answer with its date, never as current.
+
+**Stop following** an operator, with the reason, when the contract ends: its answers are kept, its secret is erased, and it is read no more. Anyone who reads records, a reader too, can open the page.
 
 ## 10. Connect aircraft, docks and airspace services
 

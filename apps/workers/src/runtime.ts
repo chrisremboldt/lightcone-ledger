@@ -42,6 +42,7 @@ export function startWorkers(options: WorkerRuntimeOptions = {}): WorkerRuntime 
   configureNoticeChannels({ email: Boolean(deployment.smtp) });
   const ledgerEnv = env.LEDGER_ENV ?? (env.NODE_ENV === 'production' ? 'staging' : 'local');
   const notices = { deployment, httpWebhooks: ledgerEnv === 'local' };
+  const programReads = { httpAddresses: ledgerEnv === 'local' };
   // The same choice the API makes, so both hold the same packs.
   registerStandardPacks({ examples: examplePacksEnabled(env) });
   // The same folder the API reads, so both hold the same packs.
@@ -72,7 +73,7 @@ export function startWorkers(options: WorkerRuntimeOptions = {}): WorkerRuntime 
       let failures = 0;
       while (!stopping) {
         try {
-          const completed = await runOnce(pool, { objectStore, notices, trace, observer });
+          const completed = await runOnce(pool, { objectStore, notices, programReads, trace, observer });
           observer?.passed(true);
           failures = 0;
           if (!completed) await pause(250);

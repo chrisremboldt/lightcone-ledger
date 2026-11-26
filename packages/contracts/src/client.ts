@@ -124,6 +124,16 @@ import type {
   NoticeWebhookResponse,
   NoticeWebhookSetResponse,
 } from './notices.js';
+import type {
+  ProgramGrantCreate,
+  ProgramGrantCreated,
+  ProgramGrantList,
+  ProgramGrantResponse,
+  ProgramOperatorAdd,
+  ProgramOperatorAnswers,
+  ProgramOperatorList,
+  ProgramOperatorResponse,
+} from './program-view.js';
 import { parseEventStream } from './event-stream.js';
 export type ApiPaths = paths;
 type FlightListResponse = paths['/v1/flights']['get']['responses'][200]['content']['application/json'];
@@ -466,6 +476,51 @@ export class LedgerClient {
     return this.request<NoticeWebhookResponse>('/v1/notices/webhook', { cache: 'no-store' });
   }
   /** Sets the organization's webhook, whose new secret is in this response only, or removes it with null. */
+  programGrants() {
+    return this.request<ProgramGrantList>('/v1/program-grants', { cache: 'no-store' });
+  }
+  createProgramGrant(grant: ProgramGrantCreate, key: string) {
+    return this.request<ProgramGrantCreated>(
+      '/v1/program-grants',
+      { method: 'POST', cache: 'no-store', body: JSON.stringify(grant) },
+      key,
+    );
+  }
+  revokeProgramGrant(id: string, reason: string) {
+    return this.request<ProgramGrantResponse>(`/v1/program-grants/${encodeURIComponent(id)}/revoke`, {
+      method: 'POST',
+      cache: 'no-store',
+      body: JSON.stringify({ reason }),
+    });
+  }
+  programOperators() {
+    return this.request<ProgramOperatorList>('/v1/program-operators', { cache: 'no-store' });
+  }
+  addProgramOperator(operator: ProgramOperatorAdd) {
+    return this.request<ProgramOperatorResponse>('/v1/program-operators', {
+      method: 'POST',
+      cache: 'no-store',
+      body: JSON.stringify(operator),
+    });
+  }
+  programOperatorAnswers(id: string) {
+    return this.request<ProgramOperatorAnswers>(`/v1/program-operators/${encodeURIComponent(id)}/answers`, {
+      cache: 'no-store',
+    });
+  }
+  askProgramRead(id: string) {
+    return this.request<ProgramOperatorResponse>(`/v1/program-operators/${encodeURIComponent(id)}/read`, {
+      method: 'POST',
+      cache: 'no-store',
+    });
+  }
+  removeProgramOperator(id: string, reason: string) {
+    return this.request<{ operatorId: string }>(`/v1/program-operators/${encodeURIComponent(id)}/remove`, {
+      method: 'POST',
+      cache: 'no-store',
+      body: JSON.stringify({ reason }),
+    });
+  }
   setNoticeWebhook(url: string | null) {
     return this.request<NoticeWebhookSetResponse>('/v1/notices/webhook', {
       method: 'PUT',

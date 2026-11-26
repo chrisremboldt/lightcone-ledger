@@ -47,6 +47,14 @@ export {
   openSharedRecordsFile,
   revokeRecordLink,
 } from './record-production-links.js';
+export {
+  createProgramGrant,
+  grantLinkSecret,
+  grantNotInUse,
+  listProgramGrants,
+  readProgramView,
+  revokeProgramGrant,
+} from './program-grants.js';
 export { readZip, writeZip } from './zip.js';
 export { createSubjectExport, getSubjectExport, getSubjectExportObject, listSubjectExports } from './subject.js';
 export { createSmsExport, getSmsExport, SMS_EXPORT_FORMAT } from './sms.js';

@@ -12,6 +12,7 @@ import { runDueEvaluations } from './evaluations.js';
 import { runDueRuleEvaluations } from './rule-evaluations.js';
 import { runDueRuleSelections } from './rule-selections.js';
 import { runDueNotices, type NoticeWorkerOptions } from './notices.js';
+import { runDueProgramReads, type ProgramReadOptions } from './program-reads.js';
 import { runLeases, type WorkObserver } from './work-metrics.js';
 export { startWorkers, type WorkerRuntime, type WorkerRuntimeOptions } from './runtime.js';
 export {
@@ -51,6 +52,19 @@ export {
   type OutgoingEmail,
   type ScheduleLease,
 } from './notices.js';
+export {
+  callProgramOperator,
+  leaseProgramReads,
+  programCallFailure,
+  readLeasedProgramOperator,
+  runDueProgramReads,
+  PROGRAM_READ_INTERVAL_SECONDS,
+  PROGRAM_READ_MAX_BYTES,
+  PROGRAM_READ_TIMEOUT_MS,
+  type ProgramCall,
+  type ProgramReadLease,
+  type ProgramReadOptions,
+} from './program-reads.js';
 export {
   leaseRuleSelections,
   processRuleSelectionLease,
@@ -202,6 +216,8 @@ export async function runOnce(
     leaseSeconds?: number;
     /** Writes and sends notices too; the workers' process passes it, a test that sends none leaves it out. */
     notices?: NoticeWorkerOptions;
+    /** Reads the operators program owners follow; the workers' process passes it, a test that calls out leaves it out. */
+    programReads?: ProgramReadOptions;
   } = {},
 ): Promise<number> {
   const leases = await leaseWork(pool, options);
@@ -216,5 +232,7 @@ export async function runOnce(
   completed += await runDueEvaluations(pool, options);
   completed += await runDueRuleEvaluations(pool, options);
   if (options.notices) completed += await runDueNotices(pool, { ...options.notices, observer: options.observer });
+  if (options.programReads)
+    completed += await runDueProgramReads(pool, { ...options.programReads, observer: options.observer });
   return completed;
 }

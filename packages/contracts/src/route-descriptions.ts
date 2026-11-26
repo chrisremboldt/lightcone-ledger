@@ -233,6 +233,53 @@ export const routeDescriptions: Record<string, { summary: string; description: s
       'Returns the kept .zip of the set, checked against its recorded SHA-256, with X-Manifest-SHA256. The opening is kept. Needs the link’s secret in the body, and no sign-in.',
   },
 
+  // A program owner's view (docs/design/program-owner-view.md)
+  createProgramGrant: {
+    summary: 'Make a grant to a program owner',
+    description:
+      'Makes a grant whose secret answers with counts only: the coverage of named adopted packs by rule and result, the open findings by rule with the oldest one’s age, and links to named produced sets, made with the grant and ending with it. 90 days unless given, a year at most. The secret is in this response only; Ledger keeps its SHA-256. Recorded with who made it, for whom and what it covers. Needs `authority:write` and an Idempotency-Key.',
+  },
+  listProgramGrants: {
+    summary: 'List the grants to program owners',
+    description:
+      'Returns every grant, newest first: for whom, what it covers, who made it and when, when it expires, whether it was revoked, by whom and why, and each read with what was read. Never a secret. Needs `authority:write`.',
+  },
+  revokeProgramGrant: {
+    summary: 'Revoke a grant to a program owner',
+    description:
+      'Revokes a grant at once, and the links made with it: it answers nothing from then on. Recorded with who revoked it and why. Needs `authority:write`.',
+  },
+  readProgramView: {
+    summary: 'Read what a grant shows',
+    description:
+      'Returns one document of counts for the grant’s secret: the organization’s name, when it was made, the grant’s expiry and the parts granted. Never a subject, a record, a person or a safety report. Each read is kept with its time and the parts read, nothing about who read it. Unknown, expired and revoked secrets all answer 404 program_grant_not_in_use. Answered with Cache-Control no-store, Referrer-Policy no-referrer and X-Robots-Tag noindex. Needs the grant’s secret in the body, and no sign-in.',
+  },
+  listProgramOperators: {
+    summary: 'List the operators you follow',
+    description:
+      'Returns each operator you follow, in alphabetical order of your name for it: when it was last read, what came of it, and the last answer its Ledger gave with when it was read; and the operators no longer followed. Never the secret. Needs `evidence:read`.',
+  },
+  addProgramOperator: {
+    summary: 'Follow an operator',
+    description:
+      'Records your name for an operator, the address of its Ledger (https:// outside a local Ledger) and the secret it gave you, which is kept for the workers and never returned. The workers read it within the hour, and hourly after. Needs `authority:write`.',
+  },
+  listProgramOperatorAnswers: {
+    summary: 'List what an operator’s Ledger answered',
+    description:
+      'Returns every read of one operator, newest first, at most 200: when, what came of it, the digest of each answer kept and the reason of each failure. Needs `evidence:read`.',
+  },
+  askProgramRead: {
+    summary: 'Ask for a fresh read of an operator',
+    description:
+      'Makes the operator’s read due now; a worker makes it as it makes the hourly one. A principal who holds only reads is refused. Needs `evidence:read`.',
+  },
+  removeProgramOperator: {
+    summary: 'Stop following an operator',
+    description:
+      'The operator is read no more. Its answers are kept and its secret is erased. Recorded with who removed it and why. Needs `authority:write`.',
+  },
+
   rulePacks: {
     summary: 'List the rule pack versions this host offers',
     description:

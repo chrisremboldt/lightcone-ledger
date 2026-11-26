@@ -7,7 +7,7 @@ Each release has a section here. Its **Upgrading** part says what a deployment d
 ### Upgrading
 
 - **Recreate the database.** Ledger no longer uses PostGIS: the first and fourth migrations were edited in place, so a database made with v0.1.0 no longer matches their checksums and `pnpm db:migrate` refuses it. Make a new database, run the migrations and create your organization again. Ledger is pre-release and has no converter for this.
-- On a database made after that change, migrations 0090 (notices), 0091 (links to a produced set) and 0092 (the queue figures for the metrics) run forward with `pnpm db:migrate`; nothing is recreated.
+- On a database made after that change, migrations 0090 (notices), 0091 (links to a produced set), 0092 (the queue figures for the metrics) and 0093 (grants to a program owner and the operators a program owner follows) run forward with `pnpm db:migrate`; nothing is recreated.
 - PostgreSQL needs no extension any more: plain `postgres:17-alpine`, or a managed PostgreSQL 17, is enough.
 - **A person who holds only reads can no longer produce records or export.** Every request of theirs that is not a read is refused, except a read sent as a POST, reporting a safety concern, their own notice settings and acknowledging what was issued to them. Give anyone who produces records the capability for it.
 - **Notices are off until configured.** Email needs `LEDGER_SMTP_HOST`, `LEDGER_SMTP_FROM` and `LEDGER_PUBLIC_URL` (with `LEDGER_SMTP_PORT`, `LEDGER_SMTP_SECURE`, `LEDGER_SMTP_USER` and `LEDGER_SMTP_PASSWORD` where your server needs them), for the API and the workers both; with a mail server and no `LEDGER_PUBLIC_URL` both refuse to start. A webhook is set on People.
@@ -23,6 +23,7 @@ Each release has a section here. Its **Upgrading** part says what a deployment d
 
 ### Added
 
+- A program owner's view: an operator grants an organization that contracts it a read of counts (coverage of named packs, open findings by rule, links to named produced sets) for up to a year, revoked at once; the program owner's Ledger reads each operator it follows hourly through its workers, keeps every answer and failure, and shows them side by side under Reports.
 - Metrics in the Prometheus text format for the API, the workers and the adapter process, each on a listener of its own (`LEDGER_METRICS_LISTEN`), and one endpoint for the one-process start: requests by route template, every queue's depth and oldest wait across organizations, how far evaluation is behind, leases held and lost, notices sent, failed and given up, observations taken in and refused, database pool use and the process's own figures. No label names an organization, a person, a credential or a record.
 - A request limit per credential in each API process, with a higher limit for sources.
 - [docs/upgrading.md](docs/upgrading.md), this changelog, and a check that each release carries its upgrade note.

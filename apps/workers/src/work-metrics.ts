@@ -13,6 +13,7 @@ export const WORK_QUEUES = [
   'rule_evaluation',
   'notice_delivery',
   'notice_schedule',
+  'program_read',
 ] as const;
 export type WorkQueue = (typeof WORK_QUEUES)[number];
 const EVALUATION_QUEUES: readonly WorkQueue[] = ['rule_selection', 'evaluation_deadline', 'rule_evaluation'];

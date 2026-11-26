@@ -61,6 +61,8 @@ const places: Place[] = [
   { section: 'reports', report: 'indicators' },
   { section: 'reports', report: 'indicators', id: 'example-airspace.excursions-per-flight-hour', version: 2 },
   { section: 'reports', report: 'flight', flightId: 'RIDGE-FLT-1' },
+  { section: 'reports', report: 'grants' },
+  { section: 'reports', report: 'operators' },
 ];
 
 function roundTrip(place: Place): Place {
@@ -122,6 +124,8 @@ describe('places and their addresses', () => {
     '/reports/flights',
     '/reports/flights/a/b',
     '/reports/elsewhere',
+    '/reports/grants/one',
+    '/reports/operators/one',
   ])('%s goes to the place that says nothing is here', (path) => {
     expect(placeFromAddress(path)).toEqual({ section: 'unknown', path });
     expect(placeTitle(placeFromAddress(path))).toBe('Not found here · Ledger');

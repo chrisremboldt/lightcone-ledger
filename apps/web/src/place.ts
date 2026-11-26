@@ -48,7 +48,9 @@ export type ReportView =
   | { report: 'summary'; from: string; until: string }
   | { report: 'findings'; from?: string; until?: string }
   | { report: 'indicators'; id?: string; version?: number }
-  | { report: 'flight'; flightId: string };
+  | { report: 'flight'; flightId: string }
+  | { report: 'grants' }
+  | { report: 'operators' };
 /**
  * The plain choices a safety register is narrowed by: its state, its type and its order. A search's text and the days
  * are typed, and never go in the address.
@@ -181,6 +183,10 @@ function reportPath(place: ReportView, at: (...parts: string[]) => string): stri
         : '/reports/indicators';
     case 'flight':
       return at('reports', 'flights', place.flightId);
+    case 'grants':
+      return '/reports/grants';
+    case 'operators':
+      return '/reports/operators';
   }
 }
 
@@ -209,6 +215,8 @@ function reportsPlace(rest: string[]): Place | null {
   if (first === 'indicators' && one && two && /^[1-9][0-9]{0,8}$/.test(two))
     return reports({ report: 'indicators', id: one, version: Number(two) });
   if (first === 'flights' && one && !two) return reports({ report: 'flight', flightId: one });
+  if (first === 'grants' && !one) return reports({ report: 'grants' });
+  if (first === 'operators' && !one) return reports({ report: 'operators' });
   return null;
 }
 
@@ -427,6 +435,10 @@ export function placeTitle(place: Place, thing?: string): string {
           return title(place.id ? (thing ?? `Indicator ${place.id}`) : 'Indicators over time', 'Reports');
         case 'flight':
           return title(thing ?? `Flight ${place.flightId}`, 'Reports');
+        case 'grants':
+          return title('Shown to program owners', 'Reports');
+        case 'operators':
+          return title('Operators you follow', 'Reports');
       }
   }
 }

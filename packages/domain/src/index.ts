@@ -184,7 +184,12 @@ export {
 } from './open-findings.js';
 export { bridgeLegacyFlightReportLink } from './legacy-flight-report-bridge.js';
 export { registerSubjectFindingView, type SubjectFindingView } from './subject-findings.js';
-export { acceptPackAdoption, getOrganizationCoverage, projectPackAdoption } from './adoptions.js';
+export {
+  acceptPackAdoption,
+  getOrganizationCoverage,
+  projectPackAdoption,
+  standingAdoptionRecords,
+} from './adoptions.js';
 export { getFlightRuleSelection, getFlightRuleSelectionRecord, refreshFlightRuleSelection } from './rule-selections.js';
 export { ruleEvaluatorReference } from './rule-selections.js';
 export {
@@ -1436,3 +1441,15 @@ export {
   monthBefore,
   monthsBetween,
 } from './reports.js';
+export {
+  addProgramOperator,
+  askProgramRead,
+  listProgramOperatorAnswers,
+  listProgramOperators,
+  privateAddressLiteral,
+  programAddressProblem,
+  programAnswerDocument,
+  programOperatorState,
+  programViewUrl,
+  removeProgramOperator,
+} from './program-operators.js';

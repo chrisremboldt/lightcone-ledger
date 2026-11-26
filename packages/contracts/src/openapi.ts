@@ -16,6 +16,20 @@ import {
   SharedRecordsSchema,
 } from './record-production-links.js';
 import {
+  ProgramGrantCreatedSchema,
+  ProgramGrantCreateSchema,
+  ProgramGrantListSchema,
+  ProgramGrantResponseSchema,
+  ProgramGrantRevokeSchema,
+  ProgramOperatorAddSchema,
+  ProgramOperatorAnswersSchema,
+  ProgramOperatorListSchema,
+  ProgramOperatorRemoveSchema,
+  ProgramOperatorResponseSchema,
+  ProgramViewDocumentSchema,
+  ProgramViewRequestSchema,
+} from './program-view.js';
+import {
   RecordSubjectFileSchema,
   RecordSubjectQuerySchema,
   RecordSubjectsQuerySchema,
@@ -1570,6 +1584,56 @@ export const openApiDocument = {
           404: response(ErrorResponseSchema, 'record_link_not_in_use'),
           409: response(ErrorResponseSchema, 'Kept bytes differ from their record'),
         },
+      },
+    },
+    '/v1/program-grants': {
+      post: {
+        ...operation('createProgramGrant', ProgramGrantCreatedSchema, 201, ProgramGrantCreateSchema, [idempotency]),
+      },
+      get: {
+        ...operation('listProgramGrants', ProgramGrantListSchema),
+      },
+    },
+    '/v1/program-grants/{id}/revoke': {
+      post: {
+        ...operation('revokeProgramGrant', ProgramGrantResponseSchema, 200, ProgramGrantRevokeSchema, [
+          identifier('id'),
+        ]),
+      },
+    },
+    '/v1/program-view': {
+      post: {
+        ...operation('readProgramView', ProgramViewDocumentSchema, 200, ProgramViewRequestSchema),
+        security: [],
+      },
+    },
+    '/v1/program-operators': {
+      get: {
+        ...operation('listProgramOperators', ProgramOperatorListSchema),
+      },
+      post: {
+        ...operation('addProgramOperator', ProgramOperatorResponseSchema, 201, ProgramOperatorAddSchema),
+      },
+    },
+    '/v1/program-operators/{id}/answers': {
+      get: {
+        ...operation('listProgramOperatorAnswers', ProgramOperatorAnswersSchema, 200, undefined, [identifier('id')]),
+      },
+    },
+    '/v1/program-operators/{id}/read': {
+      post: {
+        ...operation('askProgramRead', ProgramOperatorResponseSchema, 202, undefined, [identifier('id')]),
+      },
+    },
+    '/v1/program-operators/{id}/remove': {
+      post: {
+        ...operation(
+          'removeProgramOperator',
+          Type.Object({ operatorId: Type.String() }, { additionalProperties: false }),
+          200,
+          ProgramOperatorRemoveSchema,
+          [identifier('id')],
+        ),
       },
     },
     '/v1/control-windows': {
