@@ -1,0 +1,166 @@
+{
+  "note": "Fetched 2026-11-26T04:33:47.000Z from the Aviation Weather Center data API (aviationweather.gov), GET /api/data/taf?ids=KORD,KLAX,KLAS,KMIA,EGLL,LFPG,UUEE,EDDF&format=json: this forecast's object, cut from the response as sent. A published government weather forecast, kept as reference data.",
+  "case": "valid",
+  "message": {
+    "contentType": "application/json",
+    "transport": {
+      "method": "GET",
+      "path": "/api/data/taf"
+    },
+    "capturedAt": "2026-11-26T04:33:47.000Z",
+    "bodyText": "{\"icaoId\":\"KLAX\",\"dbPopTime\":\"2026-11-26T03:46:25.145Z\",\"bulletinTime\":\"2026-11-26T03:46:00.000Z\",\"issueTime\":\"2026-11-26T03:46:00.000Z\",\"validTimeFrom\":1795665600,\"validTimeTo\":1795759200,\"rawTAF\":\"TAF KLAX 260346Z 2604/2706 33005KT P6SM SKC FM260800 VRB03KT P6SM SKC FM261600 03005KT P6SM SKC FM262000 27008KT P6SM SKC FM270200 VRB03KT P6SM SKC\",\"mostRecent\":1,\"remarks\":\" AMD\",\"lat\":33.93817,\"lon\":-118.3866,\"elev\":30,\"prior\":0,\"name\":\"Los Angeles Intl\",\"fcsts\":[{\"timeFrom\":1795665600,\"timeTo\":1795680000,\"timeBec\":null,\"fcstChange\":null,\"probability\":null,\"wdir\":330,\"wspd\":5,\"wgst\":null,\"wshearHgt\":null,\"wshearDir\":null,\"wshearSpd\":null,\"visib\":\"6+\",\"altim\":null,\"vertVis\":null,\"wxString\":null,\"notDecoded\":null,\"clouds\":[{\"cover\":\"SKC\",\"base\":null,\"type\":null}],\"icgTurb\":[],\"temp\":[]},{\"timeFrom\":1795680000,\"timeTo\":1795708800,\"timeBec\":null,\"fcstChange\":\"FM\",\"probability\":null,\"wdir\":\"VRB\",\"wspd\":3,\"wgst\":null,\"wshearHgt\":null,\"wshearDir\":null,\"wshearSpd\":null,\"visib\":\"6+\",\"altim\":null,\"vertVis\":null,\"wxString\":null,\"notDecoded\":null,\"clouds\":[{\"cover\":\"SKC\",\"base\":null,\"type\":null}],\"icgTurb\":[],\"temp\":[]},{\"timeFrom\":1795708800,\"timeTo\":1795723200,\"timeBec\":null,\"fcstChange\":\"FM\",\"probability\":null,\"wdir\":30,\"wspd\":5,\"wgst\":null,\"wshearHgt\":null,\"wshearDir\":null,\"wshearSpd\":null,\"visib\":\"6+\",\"altim\":null,\"vertVis\":null,\"wxString\":null,\"notDecoded\":null,\"clouds\":[{\"cover\":\"SKC\",\"base\":null,\"type\":null}],\"icgTurb\":[],\"temp\":[]},{\"timeFrom\":1795723200,\"timeTo\":1795744800,\"timeBec\":null,\"fcstChange\":\"FM\",\"probability\":null,\"wdir\":270,\"wspd\":8,\"wgst\":null,\"wshearHgt\":null,\"wshearDir\":null,\"wshearSpd\":null,\"visib\":\"6+\",\"altim\":null,\"vertVis\":null,\"wxString\":null,\"notDecoded\":null,\"clouds\":[{\"cover\":\"SKC\",\"base\":null,\"type\":null}],\"icgTurb\":[],\"temp\":[]},{\"timeFrom\":1795744800,\"timeTo\":1795759200,\"timeBec\":null,\"fcstChange\":\"FM\",\"probability\":null,\"wdir\":\"VRB\",\"wspd\":3,\"wgst\":null,\"wshearHgt\":null,\"wshearDir\":null,\"wshearSpd\":null,\"visib\":\"6+\",\"altim\":null,\"vertVis\":null,\"wxString\":null,\"notDecoded\":null,\"clouds\":[{\"cover\":\"SKC\",\"base\":null,\"type\":null}],\"icgTurb\":[],\"temp\":[]}]}"
+  },
+  "expect": {
+    "observations": [
+      {
+        "type": "weather.forecast",
+        "version": 1,
+        "subject": {
+          "kind": "site",
+          "id": "RIDGE-SITE-3",
+          "scope": "source"
+        },
+        "occurredAt": "2026-11-26T03:46:00.000Z",
+        "interval": {
+          "start": "2026-11-26T04:00:00.000Z",
+          "end": "2026-11-27T06:00:00.000Z"
+        },
+        "sourceEventId": "KLAX 2026-11-26T03:46:00.000Z TAF for RIDGE-SITE-3",
+        "position": {
+          "latitudeDegrees": 33.93817,
+          "longitudeDegrees": -118.3866
+        },
+        "originalLocator": {
+          "kind": "json_pointer",
+          "value": "/rawTAF"
+        },
+        "values": {
+          "stationId": "KLAX",
+          "periods": [
+            {
+              "change": "base",
+              "startAt": "2026-11-26T04:00:00.000Z",
+              "endAt": "2026-11-26T08:00:00.000Z",
+              "text": "33005KT P6SM SKC",
+              "wind": {
+                "speedMetersPerSecond": 2.5722222222222224,
+                "directionFromDegrees": 330
+              },
+              "visibility": {
+                "visibilityMeters": 9656.064,
+                "bound": "at_least"
+              }
+            },
+            {
+              "change": "from",
+              "startAt": "2026-11-26T08:00:00.000Z",
+              "endAt": "2026-11-26T16:00:00.000Z",
+              "text": "FM260800 VRB03KT P6SM SKC",
+              "wind": {
+                "speedMetersPerSecond": 1.5433333333333332,
+                "directionVariable": true
+              },
+              "visibility": {
+                "visibilityMeters": 9656.064,
+                "bound": "at_least"
+              }
+            },
+            {
+              "change": "from",
+              "startAt": "2026-11-26T16:00:00.000Z",
+              "endAt": "2026-11-26T20:00:00.000Z",
+              "text": "FM261600 03005KT P6SM SKC",
+              "wind": {
+                "speedMetersPerSecond": 2.5722222222222224,
+                "directionFromDegrees": 30
+              },
+              "visibility": {
+                "visibilityMeters": 9656.064,
+                "bound": "at_least"
+              }
+            },
+            {
+              "change": "from",
+              "startAt": "2026-11-26T20:00:00.000Z",
+              "endAt": "2026-11-27T02:00:00.000Z",
+              "text": "FM262000 27008KT P6SM SKC",
+              "wind": {
+                "speedMetersPerSecond": 4.115555555555556,
+                "directionFromDegrees": 270
+              },
+              "visibility": {
+                "visibilityMeters": 9656.064,
+                "bound": "at_least"
+              }
+            },
+            {
+              "change": "from",
+              "startAt": "2026-11-27T02:00:00.000Z",
+              "endAt": "2026-11-27T06:00:00.000Z",
+              "text": "FM270200 VRB03KT P6SM SKC",
+              "wind": {
+                "speedMetersPerSecond": 1.5433333333333332,
+                "directionVariable": true
+              },
+              "visibility": {
+                "visibilityMeters": 9656.064,
+                "bound": "at_least"
+              }
+            }
+          ]
+        },
+        "extraLimitations": [
+          "Forecast for station KLAX, configured for the site RIDGE-SITE-3; the distance from the station to the site is not on record."
+        ]
+      }
+    ],
+    "rejections": [],
+    "unmapped": [
+      {
+        "kind": "json_pointer",
+        "value": "/bulletinTime"
+      },
+      {
+        "kind": "json_pointer",
+        "value": "/dbPopTime"
+      },
+      {
+        "kind": "json_pointer",
+        "value": "/elev"
+      },
+      {
+        "kind": "json_pointer",
+        "value": "/fcsts"
+      },
+      {
+        "kind": "json_pointer",
+        "value": "/issueTime"
+      },
+      {
+        "kind": "json_pointer",
+        "value": "/mostRecent"
+      },
+      {
+        "kind": "json_pointer",
+        "value": "/name"
+      },
+      {
+        "kind": "json_pointer",
+        "value": "/prior"
+      },
+      {
+        "kind": "json_pointer",
+        "value": "/remarks"
+      },
+      {
+        "kind": "json_pointer",
+        "value": "/validTimeFrom"
+      },
+      {
+        "kind": "json_pointer",
+        "value": "/validTimeTo"
+      }
+    ],
+    "conversions": []
+  }
+}

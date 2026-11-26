@@ -219,6 +219,7 @@ export async function runAdapterHost(
         intervalMs: service.pollMs,
         log,
         ...(runnable.split ? { split: runnable.split } : {}),
+        ...(runnable.follow ? { follow: runnable.follow } : {}),
         ...(dependencies.fetcher ? { fetcher: dependencies.fetcher } : {}),
       },
       receive,

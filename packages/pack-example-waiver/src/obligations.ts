@@ -1451,6 +1451,7 @@ function windAtTakeoff(
         windowEndField: 'values.takeoffAt',
         includeValueAtStart: true,
         unit: 'm/s',
+        stationField: 'values.stationId',
         ...fromFlightRecord(
           measure === 'wind' ? 'windAtTakeoffMetersPerSecond' : 'gustAtTakeoffMetersPerSecond',
           'takeoffAt',
@@ -1462,7 +1463,7 @@ function windAtTakeoff(
     // Used only for a reported value: with the recorded one the worst value is null and the check's own summary,
     // which says the operator's record was read, stands.
     wording: {
-      attention: `At takeoff the measured ${measure} was {worstValue} m/s, above the {limit} m/s maximum.{recordedNote}`,
+      attention: `At takeoff the measured ${measure} was {worstValue} m/s, above the {limit} m/s maximum.{stationNote}{recordedNote}`,
     },
   };
 }

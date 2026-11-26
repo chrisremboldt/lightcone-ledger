@@ -10,7 +10,7 @@ export const RELIEVED_RULE_IDS = ['ledger.part107.107.31.a'];
 /** The invented certificate, kept unmodified beside the pack. */
 export const exampleBvlosWaiverFilename = 'example-bvlos-waiver-alpha-dispatch.txt';
 
-const VERSION_ONE_DIGEST = 'bbf9bdee5356e4ca53c51c7303e63adf5053538a19c582c5be9c1ba6472a6c05';
+const VERSION_ONE_DIGEST = '77554b2543cf01b57806a0782cfa468878f7d99abaa8e13550caaeaa88d6c78e';
 
 /**
  * Invented for this repository: a waiver for operations beyond visual line of sight, held by a seeded fictional

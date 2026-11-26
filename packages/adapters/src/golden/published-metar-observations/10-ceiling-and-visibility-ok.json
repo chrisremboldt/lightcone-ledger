@@ -33,7 +33,9 @@
         "values": {
           "method": "measured",
           "speedMetersPerSecond": 4.63,
-          "directionFromDegrees": 30
+          "directionFromDegrees": 30,
+          "stationId": "EDDF",
+          "stationDistanceMeters": 12500
         },
         "extraLimitations": [
           "Reported by station EDDF for the site RIDGE-SITE-9, 12.5 km from the site as configured.",
@@ -61,7 +63,9 @@
         "values": {
           "method": "observed",
           "visibilityMeters": 10000,
-          "bound": "at_least"
+          "bound": "at_least",
+          "stationId": "EDDF",
+          "stationDistanceMeters": 12500
         },
         "extraLimitations": [
           "Reported by station EDDF for the site RIDGE-SITE-9, 12.5 km from the site as configured.",

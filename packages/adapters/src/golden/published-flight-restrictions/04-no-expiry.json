@@ -1,0 +1,207 @@
+{
+  "note": "Fetched 2026-11-26T04:34:40.000Z from the FAA TFR service (tfr.faa.gov), GET /download/detail_6_6925.xml: the detail document as sent, except that contact names, contact organizations, telephone numbers and contact radio frequencies were replaced with neutral values, and named agencies and a company's venue with a neutral description, before it was committed (see the recording folder's README). Everything the adapter reads is as published. A published government airspace notice, kept as reference data.",
+  "case": "valid",
+  "message": {
+    "contentType": "application/xml",
+    "transport": {
+      "method": "GET",
+      "path": "/download/detail_6_6925.xml"
+    },
+    "capturedAt": "2026-11-26T04:34:40.000Z",
+    "bodyText": "﻿<XNOTAM-Update xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" version=\"0.1\" origin=\"\" created=\"2026-11-10T12:10:25\">\n  <Group>\n    <Add>\n      <Not>\n        <NotUid>\n          <txtNameAcctFac>FDC</txtNameAcctFac>\n          <dateIndexYear>2026</dateIndexYear>\n          <noSeqNo>6925</noSeqNo>\n          <dateIssued>2026-11-10T18:00:52</dateIssued>\n          <txtLocalName>2026 a theme park</txtLocalName>\n          <codeGUID>fa2fa22a-23a3-4a99-89f8-e62add9c92b1</codeGUID>\n          <noUSNSWorkNo>TFR24b90550284b</noUSNSWorkNo>\n        </NotUid>\n        <codeDailyOper>false</codeDailyOper>\n        <codeTimeZone>UTC</codeTimeZone>\n        <codeExpirationTimeZone>UTC</codeExpirationTimeZone>\n        <AffLocGroup>\n          <txtNameCity>a theme park anaheim</txtNameCity>\n          <txtNameUSState>CALIFORNIA</txtNameUSState>\n        </AffLocGroup>\n        <codeFacility>ZLA</codeFacility>\n        <TfrNot>\n          <codeType>99.7</codeType>\n          <TFRAreaGroup>\n            <aseTFRArea>\n              <AseUid>\n                <codeType>RAS</codeType>\n                <codeId>3349</codeId>\n              </AseUid>\n              <txtName>Area A</txtName>\n              <codeDistVerUpper>HEI</codeDistVerUpper>\n              <valDistVerUpper>3000</valDistVerUpper>\n              <uomDistVerUpper>FT</uomDistVerUpper>\n              <codeDistVerLower>HEI</codeDistVerLower>\n              <valDistVerLower>0</valDistVerLower>\n              <uomDistVerLower>FT</uomDistVerLower>\n              <Att>\n                <codeWorkHr>NOTAM</codeWorkHr>\n              </Att>\n              <codeExclVerUpper>INCLUDE</codeExclVerUpper>\n              <codeExclVerLower>INCLUDE</codeExclVerLower>\n              <isScheduledTfrArea>FALSE</isScheduledTfrArea>\n            </aseTFRArea>\n            <Aac>\n              <AacUid>\n                <AseUidChi>\n                  <codeType>RAS</codeType>\n                  <codeId>3349</codeId>\n                </AseUidChi>\n                <AseUidPar>\n                  <codeType>PART</codeType>\n                  <codeId>3350</codeId>\n                </AseUidPar>\n              </AacUid>\n              <codeType>BOM</codeType>\n              <codeOpr>BASE</codeOpr>\n            </Aac>\n            <abdMergedArea>\n              <AbdUid>\n                <AseUid>\n                  <codeType>RAS</codeType>\n                  <codeId>3349</codeId>\n                </AseUid>\n              </AbdUid>\n              <txtRmk>3349</txtRmk>\n              <Avx>\n                <codeDatum>WGE</codeDatum>\n                <codeType>GRC</codeType>\n                <geoLat>33.85147938N</geoLat>\n                <geoLong>117.92138889W</geoLong>\n              </Avx>\n              <Avx>\n                <codeDatum>WGE</codeDatum>\n                <codeType>GRC</codeType>\n                <geoLat>33.85071796N</geoLat>\n                <geoLong>117.91096393W</geoLong>\n              </Avx>\n              <Avx>\n                <codeDatum>WGE</codeDatum>\n                <codeType>GRC</codeType>\n                <geoLat>33.84845686N</geoLat>\n                <geoLong>117.90085627W</geoLong>\n              </Avx>\n              <Avx>\n                <codeDatum>WGE</codeDatum>\n                <codeType>GRC</codeType>\n                <geoLat>33.8447649N</geoLat>\n                <geoLong>117.8913735W</geoLong>\n              </Avx>\n              <Avx>\n                <codeDatum>WGE</codeDatum>\n                <codeType>GRC</codeType>\n                <geoLat>33.83975443N</geoLat>\n                <geoLong>117.88280409W</geoLong>\n              </Avx>\n              <Avx>\n                <codeDatum>WGE</codeDatum>\n                <codeType>GRC</codeType>\n                <geoLat>33.83357792N</geoLat>\n                <geoLong>117.87540863W</geoLong>\n              </Avx>\n              <Avx>\n                <codeDatum>WGE</codeDatum>\n                <codeType>GRC</codeType>\n                <geoLat>33.82642324N</geoLat>\n                <geoLong>117.8694118W</geoLong>\n              </Avx>\n              <Avx>\n                <codeDatum>WGE</codeDatum>\n                <codeType>GRC</codeType>\n                <geoLat>33.818508N</geoLat>\n                <geoLong>117.86499564W</geoLong>\n              </Avx>\n              <Avx>\n                <codeDatum>WGE</codeDatum>\n                <codeType>GRC</codeType>\n                <geoLat>33.81007289N</geoLat>\n                <geoLong>117.86229397W</geoLong>\n              </Avx>\n              <Avx>\n                <codeDatum>WGE</codeDatum>\n                <codeType>GRC</codeType>\n                <geoLat>33.8013743N</geoLat>\n                <geoLong>117.86138841W</geoLong>\n              </Avx>\n              <Avx>\n                <codeDatum>WGE</codeDatum>\n                <codeType>GRC</codeType>\n                <geoLat>33.79267658N</geoLat>\n                <geoLong>117.86230592W</geoLong>\n              </Avx>\n              <Avx>\n                <codeDatum>WGE</codeDatum>\n                <codeType>GRC</codeType>\n                <geoLat>33.78424396N</geoLat>\n                <geoLong>117.86501811W</geoLong>\n              </Avx>\n              <Avx>\n                <codeDatum>WGE</codeDatum>\n                <codeType>GRC</codeType>\n                <geoLat>33.77633256N</geoLat>\n                <geoLong>117.86944208W</geoLong>\n              </Avx>\n              <Avx>\n                <codeDatum>WGE</codeDatum>\n                <codeType>GRC</codeType>\n                <geoLat>33.76918257N</geoLat>\n                <geoLong>117.87544305W</geoLong>\n              </Avx>\n              <Avx>\n                <codeDatum>WGE</codeDatum>\n                <codeType>GRC</codeType>\n                <geoLat>33.76301105N</geoLat>\n                <geoLong>117.88283852W</geoLong>\n              </Avx>\n              <Avx>\n                <codeDatum>WGE</codeDatum>\n                <codeType>GRC</codeType>\n                <geoLat>33.75800528N</geoLat>\n                <geoLong>117.89140377W</geoLong>\n              </Avx>\n              <Avx>\n                <codeDatum>WGE</codeDatum>\n                <codeType>GRC</codeType>\n                <geoLat>33.75431715N</geoLat>\n                <geoLong>117.90087874W</geoLong>\n              </Avx>\n              <Avx>\n                <codeDatum>WGE</codeDatum>\n                <codeType>GRC</codeType>\n                <geoLat>33.75205855N</geoLat>\n                <geoLong>117.91097589W</geoLong>\n              </Avx>\n              <Avx>\n                <codeDatum>WGE</codeDatum>\n                <codeType>GRC</codeType>\n                <geoLat>33.75129799N</geoLat>\n                <geoLong>117.92138889W</geoLong>\n              </Avx>\n              <Avx>\n                <codeDatum>WGE</codeDatum>\n                <codeType>GRC</codeType>\n                <geoLat>33.75205855N</geoLat>\n                <geoLong>117.93180189W</geoLong>\n              </Avx>\n              <Avx>\n                <codeDatum>WGE</codeDatum>\n                <codeType>GRC</codeType>\n                <geoLat>33.75431715N</geoLat>\n                <geoLong>117.94189904W</geoLong>\n              </Avx>\n              <Avx>\n                <codeDatum>WGE</codeDatum>\n                <codeType>GRC</codeType>\n                <geoLat>33.75800528N</geoLat>\n                <geoLong>117.95137401W</geoLong>\n              </Avx>\n              <Avx>\n                <codeDatum>WGE</codeDatum>\n                <codeType>GRC</codeType>\n                <geoLat>33.76301105N</geoLat>\n                <geoLong>117.95993926W</geoLong>\n              </Avx>\n              <Avx>\n                <codeDatum>WGE</codeDatum>\n                <codeType>GRC</codeType>\n                <geoLat>33.76918257N</geoLat>\n                <geoLong>117.96733473W</geoLong>\n              </Avx>\n              <Avx>\n                <codeDatum>WGE</codeDatum>\n                <codeType>GRC</codeType>\n                <geoLat>33.77633256N</geoLat>\n                <geoLong>117.9733357W</geoLong>\n              </Avx>\n              <Avx>\n                <codeDatum>WGE</codeDatum>\n                <codeType>GRC</codeType>\n                <geoLat>33.78424396N</geoLat>\n                <geoLong>117.97775967W</geoLong>\n              </Avx>\n              <Avx>\n                <codeDatum>WGE</codeDatum>\n                <codeType>GRC</codeType>\n                <geoLat>33.79267658N</geoLat>\n                <geoLong>117.98047186W</geoLong>\n              </Avx>\n              <Avx>\n                <codeDatum>WGE</codeDatum>\n                <codeType>GRC</codeType>\n                <geoLat>33.8013743N</geoLat>\n                <geoLong>117.98138937W</geoLong>\n              </Avx>\n              <Avx>\n                <codeDatum>WGE</codeDatum>\n                <codeType>GRC</codeType>\n                <geoLat>33.81007289N</geoLat>\n                <geoLong>117.98048381W</geoLong>\n              </Avx>\n              <Avx>\n                <codeDatum>WGE</codeDatum>\n                <codeType>GRC</codeType>\n                <geoLat>33.818508N</geoLat>\n                <geoLong>117.97778214W</geoLong>\n              </Avx>\n              <Avx>\n                <codeDatum>WGE</codeDatum>\n                <codeType>GRC</codeType>\n                <geoLat>33.82642324N</geoLat>\n                <geoLong>117.97336598W</geoLong>\n              </Avx>\n              <Avx>\n                <codeDatum>WGE</codeDatum>\n                <codeType>GRC</codeType>\n                <geoLat>33.83357792N</geoLat>\n                <geoLong>117.96736915W</geoLong>\n              </Avx>\n              <Avx>\n                <codeDatum>WGE</codeDatum>\n                <codeType>GRC</codeType>\n                <geoLat>33.83975443N</geoLat>\n                <geoLong>117.95997369W</geoLong>\n              </Avx>\n              <Avx>\n                <codeDatum>WGE</codeDatum>\n                <codeType>GRC</codeType>\n                <geoLat>33.8447649N</geoLat>\n                <geoLong>117.95140428W</geoLong>\n              </Avx>\n              <Avx>\n                <codeDatum>WGE</codeDatum>\n                <codeType>GRC</codeType>\n                <geoLat>33.84845686N</geoLat>\n                <geoLong>117.94192151W</geoLong>\n              </Avx>\n              <Avx>\n                <codeDatum>WGE</codeDatum>\n                <codeType>GRC</codeType>\n                <geoLat>33.85071796N</geoLat>\n                <geoLong>117.93181385W</geoLong>\n              </Avx>\n              <Avx>\n                <codeDatum>WGE</codeDatum>\n                <codeType>GRC</codeType>\n                <geoLat>33.85147938N</geoLat>\n                <geoLong>117.92138889W</geoLong>\n              </Avx>\n            </abdMergedArea>\n            <aseShapes>\n              <AseUid>\n                <codeType>PART</codeType>\n                <codeId>3350</codeId>\n              </AseUid>\n              <Att>\n                <codeWorkHr>NOTAM</codeWorkHr>\n              </Att>\n              <Abd>\n                <AbdUid>\n                  <AseUid>\n                    <codeType>PART</codeType>\n                    <codeId>3350</codeId>\n                  </AseUid>\n                </AbdUid>\n                <txtRmk>3350</txtRmk>\n                <Avx>\n                  <codeType>CIR</codeType>\n                  <geoLat>33.80138889N</geoLat>\n                  <geoLong>117.92138889W</geoLong>\n                  <codeDatum>WGE</codeDatum>\n                  <valRadiusArc>3.0</valRadiusArc>\n                  <uomRadiusArc>NM</uomRadiusArc>\n                  <Frd>\n                    <FrdUid>\n                      <DpnUid>\n                        <codeId>SLI06</codeId>\n                        <geoLat>33.80138889N</geoLat>\n                        <geoLong>117.92138889W</geoLong>\n                      </DpnUid>\n                    </FrdUid>\n                    <Ain>\n                      <VorUid>\n                        <codeId>SLI</codeId>\n                        <geoLat>33.78330108N</geoLat>\n                        <geoLong>118.05475844W</geoLong>\n                      </VorUid>\n                      <valAngleBrg>066.0</valAngleBrg>\n                    </Ain>\n                    <Din>\n                      <TcnUid>\n                        <codeId>SLI</codeId>\n                        <geoLat>33.78330108N</geoLat>\n                        <geoLong>118.05475844W</geoLong>\n                      </TcnUid>\n                      <valDist>6.8</valDist>\n                      <uomDist>NM</uomDist>\n                    </Din>\n                    <txtRmk>SEAL BEACH</txtRmk>\n                  </Frd>\n                </Avx>\n              </Abd>\n            </aseShapes>\n            <codeIncFRD>TRUE</codeIncFRD>\n            <codeShpPrt>COMPOSITE</codeShpPrt>\n            <codeLclTime>TRUE</codeLclTime>\n            <codeAuthATC>FALSE</codeAuthATC>\n          </TFRAreaGroup>\n          <TemplateType>BigThreatLanguage</TemplateType>\n          <codeCtrlFacilityType>ARTCC</codeCtrlFacilityType>\n        </TfrNot>\n        <codeCoordFacilityType>ARTCC</codeCoordFacilityType>\n        <txtDescrUSNS>!FDC 6/6925 ZLA CA..AIRSPACE A THEME PARK ANAHEIM, CA..TEMPORARY FLIGHT RESTRICTIONS. THIS NOTAM REPLACES NOTAM 4/3635 TO REFLECT UPDATED LANGUAGE. FLIGHT RESTRICTIONS IN THIS NOTAM COMPLY WITH STATUTORY MANDATES DETAILED IN SECTION 352 OF PUBLIC LAW 108-7 AS AMENDED BY SECTION 521 OF PUBLIC LAW 108-199. PURSUANT TO 49 USC 40103(B), THE FEDERAL AVIATION ADMINISTRATION (FAA) CLASSIFIES THE AIRSPACE DEFINED IN THIS NOTAM AS 'NATIONAL DEFENSE AIRSPACE'. ANY PERSON WHO KNOWINGLY OR WILLFULLY VIOLATES THE RULES PERTAINING TO OPERATIONS IN THIS AIRSPACE MAY BE SUBJECT TO CERTAIN CRIMINAL PENALTIES UNDER 49 USC 46307. PILOTS WHO DO NOT ADHERE TO THE FOLLOWING PROCEDURES MAY BE INTERCEPTED, DETAINED AND INTERVIEWED BY LAW ENFORCEMENT/SECURITY PERSONNEL. PURSUANT TO 14 CFR 99.7, SPECIAL SECURITY INSTRUCTIONS, ALL ACFT FLT OPS ARE PROHIBITED: WI AN AREA DEFINED AS 3NM RADIUS OF 334805N1175517W (SLI066006.8) SFC-3000FT AGL THE RESTRICTIONS DO NOT APPLY TO THOSE AIRCRAFT AUTHORIZED BY AND IN CONTACT WITH ATC FOR OPERATIONAL OR SAFETY OF FLIGHT PURPOSES, FEDERAL AGENCY, LAW ENFORCEMENT, AND AIR AMBULANCE FLIGHT OPERATIONS. FLIGHTS CONDUCTED FOR OPERATIONAL PURPOSES OF ANY A THEME PARK EVENT AND VENUE ARE AUTHORIZED WITH AN APPROVED WAIVER. AN FAA AIRSPACE WAIVER DOES NOT RELIEVE OPERATORS FROM OBTAINING ALL OTHER NECESSARY AUTHORIZATIONS AND COMPLYING WITH ALL APPLICABLE FEDERAL AVIATION REGULATIONS. ALL PREVIOUSLY ISSUED WAIVERS TO FDC NOTAM 4/3635 REMAIN VALID UNTIL THE SPECIFIED END DATE BUT NOT TO EXCEED 90 DAYS FOLLOWING THE EFFECTIVE DATE OF THIS NOTAM. INFORMATION ABOUT AIRSPACE WAIVER APPLICATIONS AND FEDERAL AGENCY SECURITY AUTHORIZATIONS CAN BE FOUND AT HTTPS://EXAMPLE.ORG OR BY CALLING FEDERAL AGENCY AT 000-000-0000. SUBMIT REQUESTS FOR FAA AIRSPACE WAIVERS AT HTTPS://WAIVERS.FAA.GOV EFFECTIVE IMMEDIATELY UNTIL FURTHER NOTICE. 2611101755-PERM</txtDescrUSNS>\n        <txtDescrTraditional>!FDC Y/NNNN ZLA CA..AIRSPACE A THEME PARK ANAHEIM,  CA..TEMPORARY FLIGHT RESTRICTIONS. THIS NOTAM REPLACES NOTAM 4/3635 TO REFLECT UPDATED LANGUAGE. FLIGHT RESTRICTIONS IN THIS NOTAM COMPLY WITH STATUTORY MANDATES DETAILED IN SECTION 352 OF PUBLIC LAW 108-7 AS AMENDED BY SECTION 521 OF PUBLIC LAW 108-199. PURSUANT TO 49 USC 40103(B), THE FEDERAL AVIATION ADMINISTRATION (FAA) CLASSIFIES THE AIRSPACE DEFINED IN THIS NOTAM AS 'NATIONAL DEFENSE AIRSPACE'. ANY PERSON WHO KNOWINGLY OR WILLFULLY VIOLATES THE RULES PERTAINING TO OPERATIONS IN THIS AIRSPACE MAY BE SUBJECT TO CERTAIN CRIMINAL PENALTIES UNDER 49 USC 46307. PILOTS WHO DO NOT ADHERE TO THE FOLLOWING PROCEDURES MAY BE INTERCEPTED, DETAINED AND INTERVIEWED BY LAW ENFORCEMENT/SECURITY PERSONNEL.    PURSUANT TO 14 CFR 99.7, SPECIAL SECURITY INSTRUCTIONS, ALL ACFT  FLT OPS ARE PROHIBITED: WI AN AREA DEFINED AS 3NM RADIUS OF  334805N1175517W (SLI066006.8) SFC-3000FT AGL THE RESTRICTIONS DO NOT APPLY TO THOSE AIRCRAFT AUTHORIZED BY AND IN CONTACT WITH ATC FOR OPERATIONAL OR SAFETY OF FLIGHT PURPOSES, FEDERAL AGENCY, LAW ENFORCEMENT, AND AIR AMBULANCE FLIGHT OPERATIONS. FLIGHTS CONDUCTED FOR OPERATIONAL PURPOSES OF ANY A THEME PARK EVENT AND VENUE ARE AUTHORIZED WITH AN APPROVED WAIVER. AN FAA AIRSPACE WAIVER DOES NOT RELIEVE OPERATORS FROM OBTAINING ALL OTHER NECESSARY AUTHORIZATIONS AND COMPLYING WITH ALL APPLICABLE FEDERAL AVIATION REGULATIONS. ALL PREVIOUSLY ISSUED WAIVERS TO FDC NOTAM 4/3635 REMAIN VALID UNTIL THE SPECIFIED END DATE BUT NOT TO EXCEED 90 DAYS FOLLOWING THE EFFECTIVE DATE OF THIS NOTAM. INFORMATION ABOUT AIRSPACE WAIVER APPLICATIONS AND FEDERAL AGENCY SECURITY AUTHORIZATIONS CAN BE FOUND AT HTTPS://EXAMPLE.ORG OR BY CALLING FEDERAL AGENCY AT 000-000-0000. SUBMIT REQUESTS FOR FAA AIRSPACE WAIVERS AT HTTPS://WAIVERS.FAA.GOV EFFECTIVE IMMEDIATELY  UNTIL FURTHER NOTICE.   2611101751-PERM</txtDescrTraditional>\n        <txtDescrModern>&lt;html&gt;\n  &lt;span style=\"Arial\" valign=\"Top\"&gt;\n    &lt;Body&gt;\n      &lt;Table cellpadding=\"1\" cellspacing=\"0\"&gt;\n        &lt;TR bgcolor=\"#1E90FF\"&gt;\n          &lt;TD colspan=\"3\" align=\"left\" valign=\"bottom\" width=\"250\"&gt;\n            &lt;b&gt;\n              &lt;font color=\"#FFFFFF\" size=\"3\" face=\"Arial\"&gt;NOTAM Number     :&lt;/font&gt;\n            &lt;/b&gt;\n          &lt;/TD&gt;\n          &lt;TD valign=\"bottom\" align=\"left\" width=\"320\"&gt;\n            &lt;b&gt;\n              &lt;font color=\"#FFFFFF\" size=\"3\" face=\"Arial\"&gt;FDC 6/6925&lt;/font&gt;\n            &lt;/b&gt;\n          &lt;/TD&gt;\n        &lt;/TR&gt;\n        &lt;TR&gt;\n          &lt;TD colspan=\"3\" align=\"left\" valign=\"top\"&gt;\n            &lt;font face=\"Arial\" size=\"2\"&gt;Issue Date     :&lt;/font&gt;\n          &lt;/TD&gt;\n          &lt;TD valign=\"top\"&gt;\n            &lt;font face=\"Arial\" size=\"2\"&gt;November 10, 2026 at 1800 UTC&lt;/font&gt;\n          &lt;/TD&gt;\n        &lt;/TR&gt;\n        &lt;TR&gt;\n          &lt;TD colspan=\"3\" align=\"left\" valign=\"top\"&gt;\n            &lt;font face=\"Arial\" size=\"2\"&gt;Location     :&lt;/font&gt;\n          &lt;/TD&gt;\n          &lt;TD&gt;\n            &lt;font face=\"Arial\" size=\"2\"&gt;a theme park anaheim, California near SEAL BEACH VORTAC (SLI)&lt;/font&gt;\n          &lt;/TD&gt;\n        &lt;/TR&gt;\n        &lt;TR&gt;\n          &lt;TD colspan=\"3\" align=\"left\" valign=\"top\"&gt;\n            &lt;font face=\"Arial\" size=\"2\"&gt;Beginning Date and Time     :&lt;/font&gt;\n          &lt;/TD&gt;\n          &lt;TD&gt;\n            &lt;font face=\"Arial\" size=\"2\"&gt;Effective Immediately &lt;/font&gt;\n          &lt;/TD&gt;\n        &lt;/TR&gt;\n        &lt;TR&gt;\n          &lt;TD colspan=\"3\" align=\"left\" valign=\"top\"&gt;\n            &lt;font face=\"Arial\" size=\"2\"&gt;Ending Date and Time     :&lt;/font&gt;\n          &lt;/TD&gt;\n          &lt;TD&gt;\n            &lt;font face=\"Arial\" size=\"2\"&gt;Permanent&lt;/font&gt;\n          &lt;/TD&gt;\n        &lt;/TR&gt;\n        &lt;TR&gt;\n          &lt;TD colspan=\"3\" align=\"left\" valign=\"top\"&gt;\n            &lt;font face=\"Arial\" size=\"2\"&gt;Reason for NOTAM     :&lt;/font&gt;\n          &lt;/TD&gt;\n          &lt;TD&gt;\n            &lt;font face=\"Arial\" size=\"2\"&gt;Temporary flight restrictions for Special Security Reasons&lt;/font&gt;\n          &lt;/TD&gt;\n        &lt;/TR&gt;\n        &lt;TR&gt;\n          &lt;TD colspan=\"3\" align=\"left\" valign=\"top\"&gt;\n            &lt;font face=\"Arial\" size=\"2\"&gt;Type     :&lt;/font&gt;\n          &lt;/TD&gt;\n          &lt;TD&gt;\n            &lt;font face=\"Arial\" size=\"2\"&gt;Security&lt;/font&gt;\n          &lt;/TD&gt;\n        &lt;/TR&gt;\n        &lt;TR&gt;\n          &lt;TD colspan=\"3\" align=\"left\" valign=\"top\"&gt;\n            &lt;font face=\"Arial\" size=\"2\"&gt;Replaced NOTAM(s)     :&lt;/font&gt;\n          &lt;/TD&gt;\n          &lt;TD&gt;\n            &lt;font face=\"Arial\" size=\"2\"&gt;N/A&lt;/font&gt;\n          &lt;/TD&gt;\n        &lt;/TR&gt;\n        &lt;TR&gt;\n          &lt;TD colspan=\"2\" height=\"20\"&gt;  &lt;/TD&gt;\n        &lt;/TR&gt;\n        &lt;TR&gt;\n          &lt;TD colspan=\"3\" align=\"right\" valign=\"top\"&gt;\n            &lt;font face=\"Arial\" size=\"2\"&gt;\n              &lt;b&gt;Jump To: &amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&lt;/b&gt;\n            &lt;/font&gt;\n          &lt;/TD&gt;\n          &lt;TD&gt;\n            &lt;font face=\"Arial\" size=\"2\"&gt;\n              &lt;b&gt;\n                &lt;a href=\"#areas\" class=\"internal\"&gt; Affected Areas &lt;/a&gt;&lt;br/&gt;&lt;a href=\"#restrictions\" class=\"internal\"&gt; Operating Restrictions and Requirements &lt;/a&gt;&lt;br/&gt;&lt;a href=\"#other\" class=\"internal\"&gt; Other Information &lt;/a&gt;&lt;br/&gt;&lt;/b&gt;\n            &lt;/font&gt;\n          &lt;/TD&gt;\n        &lt;/TR&gt;\n        &lt;TR&gt;\n          &lt;TD colspan=\"2\" height=\"20\"&gt;  &lt;/TD&gt;\n        &lt;/TR&gt;\n      &lt;/Table&gt;\n      &lt;Table cellpadding=\"1\" cellspacing=\"0\"&gt;\n        &lt;TR bgcolor=\"#1E90FF\"&gt;\n          &lt;TD colspan=\"5\"&gt;\n            &lt;a name=\"areas\"&gt;\n              &lt;b&gt;\n                &lt;font color=\"#FFFFFF\" size=\"3\" face=\"Arial\"&gt;Affected Area(s)&lt;/font&gt;\n              &lt;/b&gt;\n            &lt;/a&gt;\n          &lt;/TD&gt;\n          &lt;TD colspan=\"1\" align=\"right\"&gt;\n            &lt;a href=\"#\"&gt;\n              &lt;font color=\"#FFFFFF\" face=\"Arial\"&gt;\n                &lt;b&gt;Top&lt;/b&gt;\n              &lt;/font&gt;\n            &lt;/a&gt;\n          &lt;/TD&gt;\n        &lt;/TR&gt;\n        &lt;TR&gt;\n          &lt;TD colspan=\"2\" height=\"10\"&gt;  &lt;/TD&gt;\n        &lt;/TR&gt;\n        &lt;TR&gt;\n          &lt;TD colspan=\"3\" width=\"200\"&gt;\n            &lt;font face=\"Arial\" size=\"2\"&gt;\n              &lt;b&gt;Airspace Definition:&lt;/b&gt;\n            &lt;/font&gt;\n          &lt;/TD&gt;\n        &lt;/TR&gt;\n        &lt;TR&gt;\n          &lt;TD&gt; &lt;/TD&gt;\n          &lt;TD&gt; &lt;/TD&gt;\n          &lt;TD colspan=\"3\"&gt;\n            &lt;font face=\"Arial\" size=\"2\"&gt;Center:&lt;/font&gt;\n          &lt;/TD&gt;\n          &lt;TD&gt;\n            &lt;font face=\"Arial\" size=\"2\"&gt; On the SEAL BEACH VORTAC (SLI) 066 degree radial at 6.8 nautical miles. (Latitude: 33&amp;#xBA;48'05\"N, Longitude: 117&amp;#xBA;55'17\"W)&lt;/font&gt;\n          &lt;/TD&gt;\n        &lt;/TR&gt;\n        &lt;TR&gt;\n          &lt;TD&gt; &lt;/TD&gt;\n          &lt;TD&gt; &lt;/TD&gt;\n          &lt;TD colspan=\"3\"&gt;\n            &lt;font face=\"Arial\" size=\"2\"&gt;Radius:&lt;/font&gt;\n          &lt;/TD&gt;\n          &lt;TD&gt;\n            &lt;font face=\"Arial\" size=\"2\"&gt; 3 nautical miles&lt;/font&gt;\n          &lt;/TD&gt;\n        &lt;/TR&gt;\n        &lt;TR&gt;\n          &lt;TD&gt; &lt;/TD&gt;\n          &lt;TD&gt; &lt;/TD&gt;\n          &lt;TD colspan=\"3\"&gt;\n            &lt;font face=\"Arial\" size=\"2\"&gt;Altitude:&lt;/font&gt;\n          &lt;/TD&gt;\n          &lt;TD&gt;\n            &lt;font face=\"Arial\" size=\"2\"&gt; From the surface  up to and including 3000 feet AGL &lt;/font&gt;\n          &lt;/TD&gt;\n        &lt;/TR&gt;\n        &lt;TR&gt;\n          &lt;TD colspan=\"2\" height=\"20\"&gt;  &lt;/TD&gt;\n        &lt;/TR&gt;\n      &lt;/Table&gt;\n      &lt;b&gt;ENDSECTION1&lt;/b&gt;\n      &lt;Table cellpadding=\"1\" cellspacing=\"0\"&gt;\n        &lt;TR bgcolor=\"#1E90FF\"&gt;\n          &lt;TD colspan=\"3\"&gt;\n            &lt;a name=\"restrictions\"&gt;\n              &lt;b&gt;\n                &lt;font color=\"#FFFFFF\" face=\"Arial\" size=\"3\"&gt;Operating Restrictions and Requirements&lt;/font&gt;\n              &lt;/b&gt;\n            &lt;/a&gt;\n          &lt;/TD&gt;\n          &lt;TD colspan=\"1\" align=\"right\"&gt;\n            &lt;a href=\"#\"&gt;\n              &lt;font color=\"#FFFFFF\" face=\"Arial\"&gt;\n                &lt;b&gt;Top&lt;/b&gt;\n              &lt;/font&gt;\n            &lt;/a&gt;\n          &lt;/TD&gt;\n        &lt;/TR&gt;\n        &lt;TR&gt;\n          &lt;TD colspan=\"2\" height=\"20\"&gt;  &lt;/TD&gt;\n        &lt;/TR&gt;\n        &lt;TR&gt;\n          &lt;TD colspan=\"3\"&gt;\n            &lt;font face=\"Arial\" size=\"2\"&gt;No pilots may operate an aircraft in the areas covered by this NOTAM (except as described).&lt;/font&gt;\n          &lt;/TD&gt;\n        &lt;/TR&gt;\n        &lt;TR&gt;\n          &lt;TD colspan=\"2\" height=\"20\"&gt;  &lt;/TD&gt;\n        &lt;/TR&gt;\n        &lt;TR&gt;\n          &lt;TD colspan=\"2\" height=\"10\"&gt;  &lt;/TD&gt;\n        &lt;/TR&gt;\n      &lt;/Table&gt;\n      &lt;Table cellpadding=\"1\" cellspacing=\"0\"&gt;\n        &lt;TR bgcolor=\"#1E90FF\"&gt;\n          &lt;TD colspan=\"3\"&gt;\n            &lt;a name=\"other\"&gt;\n              &lt;b&gt;\n                &lt;font color=\"#FFFFFF\" face=\"Arial\" size=\"3\"&gt;Other Information:&lt;/font&gt;\n              &lt;/b&gt;\n            &lt;/a&gt;\n          &lt;/TD&gt;\n          &lt;TD colspan=\"1\" align=\"right\"&gt;\n            &lt;a href=\"#\"&gt;\n              &lt;font color=\"#FFFFFF\" face=\"Arial\"&gt;\n                &lt;b&gt;Top&lt;/b&gt;\n              &lt;/font&gt;\n            &lt;/a&gt;\n          &lt;/TD&gt;\n        &lt;/TR&gt;\n        &lt;TR&gt;\n          &lt;TD colspan=\"2\"&gt;\n            &lt;font face=\"Arial\" size=\"2\"&gt;ARTCC:&lt;/font&gt;\n          &lt;/TD&gt;\n          &lt;TD&gt;\n            &lt;font face=\"Arial\" size=\"2\"&gt;ZLA - Los Angeles Center&lt;/font&gt;\n          &lt;/TD&gt;\n        &lt;/TR&gt;\n        &lt;TR&gt;\n          &lt;TD colspan=\"2\"&gt;\n            &lt;font face=\"Arial\" size=\"2\"&gt;Authority:&lt;/font&gt;\n          &lt;/TD&gt;\n          &lt;TD&gt;\n            &lt;font face=\"Arial\" size=\"2\"&gt;Title 14 CFR section 99.7&lt;/font&gt;\n          &lt;/TD&gt;\n        &lt;/TR&gt;\n        &lt;TR&gt;\n          &lt;TD Width=\"40\" /&gt;\n          &lt;TD Width=\"152\" /&gt;\n          &lt;TD Width=\"318\" /&gt;\n        &lt;/TR&gt;\n      &lt;/Table&gt;\n    &lt;/Body&gt;\n  &lt;/span&gt;\n&lt;/html&gt;</txtDescrModern>\n        <codeFreeformText>true</codeFreeformText>\n      </Not>\n    </Add>\n  </Group>\n</XNOTAM-Update>"
+  },
+  "expect": {
+    "observations": [
+      {
+        "type": "airspace.restriction",
+        "version": 1,
+        "subject": {
+          "kind": "site",
+          "id": "RIDGE-SITE-4",
+          "scope": "source"
+        },
+        "occurredAt": "2026-11-10T18:00:52.000Z",
+        "interval": {
+          "start": "2026-11-10T18:00:52.000Z"
+        },
+        "sourceEventId": "6/6925 Area A touching RIDGE-AREA-4",
+        "originalLocator": {
+          "kind": "byte_range",
+          "value": {
+            "offsetBytes": 964,
+            "lengthBytes": 11801
+          }
+        },
+        "values": {
+          "notamId": "6/6925",
+          "name": "2026 a theme park",
+          "areaName": "Area A",
+          "sourceTypeCode": "99.7",
+          "floor": {
+            "meters": 0,
+            "datum": "ground_level"
+          },
+          "ceiling": {
+            "meters": 914.4,
+            "datum": "ground_level"
+          },
+          "area": {
+            "boundary": [
+              {
+                "latitudeDegrees": 33.85147938,
+                "longitudeDegrees": -117.92138889
+              },
+              {
+                "latitudeDegrees": 33.85071796,
+                "longitudeDegrees": -117.91096393
+              },
+              {
+                "latitudeDegrees": 33.84845686,
+                "longitudeDegrees": -117.90085627
+              },
+              {
+                "latitudeDegrees": 33.8447649,
+                "longitudeDegrees": -117.8913735
+              },
+              {
+                "latitudeDegrees": 33.83975443,
+                "longitudeDegrees": -117.88280409
+              },
+              {
+                "latitudeDegrees": 33.83357792,
+                "longitudeDegrees": -117.87540863
+              },
+              {
+                "latitudeDegrees": 33.82642324,
+                "longitudeDegrees": -117.8694118
+              },
+              {
+                "latitudeDegrees": 33.818508,
+                "longitudeDegrees": -117.86499564
+              },
+              {
+                "latitudeDegrees": 33.81007289,
+                "longitudeDegrees": -117.86229397
+              },
+              {
+                "latitudeDegrees": 33.8013743,
+                "longitudeDegrees": -117.86138841
+              },
+              {
+                "latitudeDegrees": 33.79267658,
+                "longitudeDegrees": -117.86230592
+              },
+              {
+                "latitudeDegrees": 33.78424396,
+                "longitudeDegrees": -117.86501811
+              },
+              {
+                "latitudeDegrees": 33.77633256,
+                "longitudeDegrees": -117.86944208
+              },
+              {
+                "latitudeDegrees": 33.76918257,
+                "longitudeDegrees": -117.87544305
+              },
+              {
+                "latitudeDegrees": 33.76301105,
+                "longitudeDegrees": -117.88283852
+              },
+              {
+                "latitudeDegrees": 33.75800528,
+                "longitudeDegrees": -117.89140377
+              },
+              {
+                "latitudeDegrees": 33.75431715,
+                "longitudeDegrees": -117.90087874
+              },
+              {
+                "latitudeDegrees": 33.75205855,
+                "longitudeDegrees": -117.91097589
+              },
+              {
+                "latitudeDegrees": 33.75129799,
+                "longitudeDegrees": -117.92138889
+              },
+              {
+                "latitudeDegrees": 33.75205855,
+                "longitudeDegrees": -117.93180189
+              },
+              {
+                "latitudeDegrees": 33.75431715,
+                "longitudeDegrees": -117.94189904
+              },
+              {
+                "latitudeDegrees": 33.75800528,
+                "longitudeDegrees": -117.95137401
+              },
+              {
+                "latitudeDegrees": 33.76301105,
+                "longitudeDegrees": -117.95993926
+              },
+              {
+                "latitudeDegrees": 33.76918257,
+                "longitudeDegrees": -117.96733473
+              },
+              {
+                "latitudeDegrees": 33.77633256,
+                "longitudeDegrees": -117.9733357
+              },
+              {
+                "latitudeDegrees": 33.78424396,
+                "longitudeDegrees": -117.97775967
+              },
+              {
+                "latitudeDegrees": 33.79267658,
+                "longitudeDegrees": -117.98047186
+              },
+              {
+                "latitudeDegrees": 33.8013743,
+                "longitudeDegrees": -117.98138937
+              },
+              {
+                "latitudeDegrees": 33.81007289,
+                "longitudeDegrees": -117.98048381
+              },
+              {
+                "latitudeDegrees": 33.818508,
+                "longitudeDegrees": -117.97778214
+              },
+              {
+                "latitudeDegrees": 33.82642324,
+                "longitudeDegrees": -117.97336598
+              },
+              {
+                "latitudeDegrees": 33.83357792,
+                "longitudeDegrees": -117.96736915
+              },
+              {
+                "latitudeDegrees": 33.83975443,
+                "longitudeDegrees": -117.95997369
+              },
+              {
+                "latitudeDegrees": 33.8447649,
+                "longitudeDegrees": -117.95140428
+              },
+              {
+                "latitudeDegrees": 33.84845686,
+                "longitudeDegrees": -117.94192151
+              },
+              {
+                "latitudeDegrees": 33.85071796,
+                "longitudeDegrees": -117.93181385
+              }
+            ]
+          },
+          "regionId": "RIDGE-AREA-4"
+        },
+        "extraLimitations": [
+          "The published area touches the region RIDGE-AREA-4, a circle of 300 m configured around the site RIDGE-SITE-4.",
+          "The notice publishes no effective time: the interval starts at its issue time."
+        ]
+      }
+    ],
+    "rejections": [],
+    "unmapped": []
+  }
+}

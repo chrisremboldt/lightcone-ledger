@@ -42,7 +42,7 @@ export const djiOsdPositionDescriptor: AdapterDescriptor = {
 ```
 
 - `produces` lists every type the adapter may emit. Emitting anything else fails.
-- `fidelity` claims only what you have done. `synthetic_contract` means built from documentation and run against an emulator only; every adapter in this repository is at that level today except `published-metar-observations`, whose golden files hold reports fetched from the live service (`captured_source_replay`).
+- `fidelity` claims only what you have done. `synthetic_contract` means built from documentation and run against an emulator only; every adapter in this repository is at that level today except `published-metar-observations`, `published-taf-forecasts` and `published-flight-restrictions`, whose golden files hold answers fetched from the live services (`captured_source_replay`).
 - `limitations` are copied into every observation. Write them for a reader who has never seen the vendor's documentation, and never name the vendor in them.
 - A changed mapping is a new `version`.
 
@@ -131,7 +131,7 @@ Its `expect` holds the drafts, the rejections, the unmapped fields (`/bid`, `/da
 
 ## 6. The emulator
 
-`apps/emulators` plays the outside systems: partner orders, Airspace Link AirHub (from the pinned OpenAPI schemas that `pnpm vendor:airspace` downloads) DJI Cloud API telemetry over the local MQTT broker, and published weather reports recorded from the live service. An emulator emits vendor-shaped bytes only, never observations. The adapter is the one place vendor shapes become observations.
+`apps/emulators` plays the outside systems: partner orders, Airspace Link AirHub (from the pinned OpenAPI schemas that `pnpm vendor:airspace` downloads) DJI Cloud API telemetry over the local MQTT broker, and published weather reports, forecasts and flight restrictions recorded from the live services. An emulator emits vendor-shaped bytes only, never observations. The adapter is the one place vendor shapes become observations.
 
 Build your test messages with the emulator's own message builder, so the two cannot drift. The position test does this with `djiOsdBytes` from `apps/emulators/src/dji.ts`:
 

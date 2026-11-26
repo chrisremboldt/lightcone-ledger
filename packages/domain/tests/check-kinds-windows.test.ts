@@ -233,6 +233,56 @@ describe('window check kinds', () => {
     expect(check({ includeValueAtStart: true }, values, [report(0, 0)])).toMatchObject({ outcome: 'pass' });
   });
 
+  it('does not read a station’s report older than the greatest age at the start, and names the station', () => {
+    const fromStation = (second: number, value: number, station = 'ZZZA') => {
+      const item = reading(second, value);
+      (item.observation.values as Record<string, unknown>).station = station;
+      return item;
+    };
+    const atStart = { includeValueAtStart: true, stationField: 'values.station' };
+    // A station's report 100 minutes before the start is past the default of 90 minutes: it is not compared.
+    const old = check(atStart, [fromStation(-6000, 12)], [report(0, 0)]);
+    expect(old).toMatchObject({
+      evidenceState: 'insufficient',
+      outcome: 'attention',
+      reasonCode: 'value_too_old',
+      details: {
+        valuesChecked: 0,
+        maxAgeSeconds: 5400,
+        tooOldAt: at(-6000),
+        tooOldAgeSeconds: 6000,
+        tooOldStation: 'ZZZA',
+      },
+    });
+    expect(old.summary).toContain(
+      `before the start was reported at ${at(-6000)} by station ZZZA, 1 h 40 min before it, older than the greatest age of 1 h 30 min: it is not read, and none within that age is on file.`,
+    );
+    expect(old.evidence).toHaveLength(2);
+    // Within the age it is read, and the summary names the station.
+    const recent = check(atStart, [fromStation(-3000, 12)], [report(0, 0)]);
+    expect(recent).toMatchObject({
+      outcome: 'attention',
+      details: { valuesChecked: 1, worstValue: 12, stationNote: ' Reported by station ZZZA.', tooOldAt: null },
+    });
+    expect(recent.summary).toContain('Reported by station ZZZA.');
+    // A value that names no station was obtained at the subject: it has no greatest age unless the rule states one.
+    expect(check(atStart, [reading(-86_400, 4)], [report(0, 0)])).toMatchObject({
+      outcome: 'pass',
+      details: { maxAgeSeconds: null, stationNote: '' },
+    });
+    expect(check({ ...atStart, maxAgeSeconds: 600 }, [reading(-900, 4)], [report(0, 0)]).reasonCode).toBe(
+      'value_too_old',
+    );
+    // The rule's own greatest age replaces the default for a station's report too.
+    expect(check({ ...atStart, maxAgeSeconds: 7200 }, [fromStation(-6000, 4)], [report(0, 0)])).toMatchObject({
+      outcome: 'pass',
+      details: { maxAgeSeconds: 7200 },
+    });
+    expect(checkParameterProblem('window.values-within-limit', 1, { ...base, maxAgeSeconds: 60 })).toMatch(
+      /includeValueAtStart/,
+    );
+  });
+
   it('compares with a recorded limit, and conflicts when values at one instant disagree about it', () => {
     const limit = { ...reading(-60, 0, 'made-up.limit'), observation: { values: { max: 8 } } };
     const values = series(0, [4, 9]);

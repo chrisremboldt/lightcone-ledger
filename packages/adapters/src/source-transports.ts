@@ -204,6 +204,18 @@ export interface ServicePollConfig {
    * the response is handed over whole. With it, each poll hands over only the parts the previous poll did not hold.
    */
   readonly split?: (bytes: Uint8Array) => Uint8Array[] | undefined;
+  /**
+   * Reads the polled response as a list of items, each to be read at its own path on the same host, or returns
+   * undefined when it cannot. With it, each poll reads and hands over the items whose key the previous poll did not
+   * list, each as its own message; the list itself is not handed over.
+   */
+  readonly follow?: (bytes: Uint8Array) => readonly ListedItem[] | undefined;
+}
+
+/** An item a list names: the path it is read at, and a key that changes when the list's entry for it changes. */
+export interface ListedItem {
+  readonly path: string;
+  readonly key: string;
 }
 
 /**
@@ -277,9 +289,9 @@ export class ServicePoll {
     return this.running;
   }
 
-  private async read(): Promise<Uint8Array> {
-    const response = await (this.config.fetcher ?? fetch)(this.config.url, {
-      headers: { ...this.config.headers, accept: 'application/json' },
+  private async read(url = this.config.url, accept = 'application/json'): Promise<Uint8Array> {
+    const response = await (this.config.fetcher ?? fetch)(url, {
+      headers: { ...this.config.headers, accept },
       redirect: 'error',
       signal: AbortSignal.any([this.halt.signal, AbortSignal.timeout(this.config.timeoutMs ?? 10_000)]),
     });
@@ -294,7 +306,25 @@ export class ServicePoll {
     const bytes = new Uint8Array(await response.arrayBuffer());
     if (bytes.byteLength > (this.config.maxBytes ?? 1024 * 1024))
       throw new Error(`the response is larger than ${this.config.maxBytes ?? 1024 * 1024} bytes`);
+    this.contentType = response.headers.get('content-type')?.split(';')[0]?.trim() || 'application/octet-stream';
     return bytes;
+  }
+
+  private contentType = 'application/json';
+
+  /** Reads the items of a list the previous poll did not hold, on the polled host only. */
+  private async followList(bytes: Uint8Array, hand: (part: Uint8Array, path: string) => Promise<void>) {
+    const listed = bytes.byteLength ? this.config.follow!(bytes) : [];
+    if (!listed) throw new Error('the list could not be read');
+    const origin = new URL(this.config.url).origin;
+    const fresh = listed.filter((item) => !this.lastParts.has(item.key));
+    if (!fresh.length) this.unchanged++;
+    for (const item of fresh) {
+      const url = new URL(item.path, this.config.url);
+      if (url.origin !== origin) throw new Error('the list names an item on another host');
+      await hand(await this.read(url.toString(), '*/*'), url.pathname);
+    }
+    this.lastParts = new Set(listed.map((item) => item.key));
   }
 
   private async run(): Promise<void> {
@@ -307,14 +337,15 @@ export class ServicePoll {
         this.polls++;
         attempt = 0;
         const capturedAt = new Date().toISOString();
-        const hand = (part: Uint8Array) =>
+        const hand = (part: Uint8Array, at = path) =>
           this.receive({
             bytes: part,
-            contentType: 'application/json',
-            transport: { method: 'GET', path },
+            contentType: this.config.follow ? this.contentType : 'application/json',
+            transport: { method: 'GET', path: at },
             capturedAt,
           });
-        if (this.config.split) {
+        if (this.config.follow) await this.followList(bytes, hand);
+        else if (this.config.split) {
           // An empty response (204, no content) holds no messages.
           const parts = bytes.byteLength ? (this.config.split(bytes) ?? [bytes]) : [];
           const digests = parts.map(sha256);

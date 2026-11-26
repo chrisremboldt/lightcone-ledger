@@ -32,7 +32,9 @@
         },
         "values": {
           "method": "measured",
-          "speedMetersPerSecond": 0
+          "speedMetersPerSecond": 0,
+          "stationId": "KLAS",
+          "stationDistanceMeters": 800
         },
         "extraLimitations": ["Reported by station KLAS for the site RIDGE-SITE-4, 800 m from the site as configured."]
       },
@@ -57,7 +59,9 @@
         "values": {
           "method": "observed",
           "visibilityMeters": 16093.44,
-          "bound": "stated"
+          "bound": "stated",
+          "stationId": "KLAS",
+          "stationDistanceMeters": 800
         },
         "extraLimitations": ["Reported by station KLAS for the site RIDGE-SITE-4, 800 m from the site as configured."]
       }

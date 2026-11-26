@@ -1,0 +1,148 @@
+{
+  "note": "Fetched 2026-11-26T04:33:47.000Z from the Aviation Weather Center data API (aviationweather.gov), GET /api/data/taf?ids=KORD,KLAX,KLAS,KMIA,EGLL,LFPG,UUEE,EDDF&format=json: this forecast's object, cut from the response as sent. A published government weather forecast, kept as reference data.",
+  "case": "valid",
+  "message": {
+    "contentType": "application/json",
+    "transport": {
+      "method": "GET",
+      "path": "/api/data/taf"
+    },
+    "capturedAt": "2026-11-26T04:33:47.000Z",
+    "bodyText": "{\"icaoId\":\"EGLL\",\"dbPopTime\":\"2026-11-26T00:08:56.221Z\",\"bulletinTime\":\"2026-11-25T23:00:00.000Z\",\"issueTime\":\"2026-11-26T00:08:00.000Z\",\"validTimeFrom\":1795651200,\"validTimeTo\":1795759200,\"rawTAF\":\"TAF AMD EGLL 260008Z 2600/2706 05008KT 9999 BKN016 TEMPO 2600/2606 BKN012 PROB30 2600/2609 8000 PROB40 2620/2706 7000\",\"mostRecent\":1,\"remarks\":\"\",\"lat\":51.477,\"lon\":-0.461,\"elev\":26,\"prior\":0,\"name\":\"London/Heathrow Intl\",\"fcsts\":[{\"timeFrom\":1795651200,\"timeTo\":1795759200,\"timeBec\":null,\"fcstChange\":null,\"probability\":null,\"wdir\":50,\"wspd\":8,\"wgst\":null,\"wshearHgt\":null,\"wshearDir\":null,\"wshearSpd\":null,\"visib\":\"6+\",\"altim\":null,\"vertVis\":null,\"wxString\":null,\"notDecoded\":null,\"clouds\":[{\"cover\":\"BKN\",\"base\":1600,\"type\":null}],\"icgTurb\":[],\"temp\":[]},{\"timeFrom\":1795651200,\"timeTo\":1795672800,\"timeBec\":null,\"fcstChange\":\"TEMPO\",\"probability\":null,\"wdir\":null,\"wspd\":null,\"wgst\":null,\"wshearHgt\":null,\"wshearDir\":null,\"wshearSpd\":null,\"visib\":\"\",\"altim\":null,\"vertVis\":null,\"wxString\":null,\"notDecoded\":null,\"clouds\":[{\"cover\":\"BKN\",\"base\":1200,\"type\":null}],\"icgTurb\":[],\"temp\":[]},{\"timeFrom\":1795651200,\"timeTo\":1795683600,\"timeBec\":null,\"fcstChange\":\"PROB\",\"probability\":30,\"wdir\":null,\"wspd\":null,\"wgst\":null,\"wshearHgt\":null,\"wshearDir\":null,\"wshearSpd\":null,\"visib\":4.97,\"altim\":null,\"vertVis\":null,\"wxString\":null,\"notDecoded\":null,\"clouds\":[],\"icgTurb\":[],\"temp\":[]},{\"timeFrom\":1795723200,\"timeTo\":1795759200,\"timeBec\":null,\"fcstChange\":\"PROB\",\"probability\":40,\"wdir\":null,\"wspd\":null,\"wgst\":null,\"wshearHgt\":null,\"wshearDir\":null,\"wshearSpd\":null,\"visib\":4.35,\"altim\":null,\"vertVis\":null,\"wxString\":null,\"notDecoded\":null,\"clouds\":[],\"icgTurb\":[],\"temp\":[]}]}"
+  },
+  "expect": {
+    "observations": [
+      {
+        "type": "weather.forecast",
+        "version": 1,
+        "subject": {
+          "kind": "site",
+          "id": "RIDGE-SITE-6",
+          "scope": "source"
+        },
+        "occurredAt": "2026-11-26T00:08:00.000Z",
+        "interval": {
+          "start": "2026-11-26T00:00:00.000Z",
+          "end": "2026-11-27T06:00:00.000Z"
+        },
+        "sourceEventId": "EGLL 2026-11-26T00:08:00.000Z TAF AMD for RIDGE-SITE-6",
+        "position": {
+          "latitudeDegrees": 51.477,
+          "longitudeDegrees": -0.461
+        },
+        "originalLocator": {
+          "kind": "json_pointer",
+          "value": "/rawTAF"
+        },
+        "values": {
+          "stationId": "EGLL",
+          "amended": true,
+          "periods": [
+            {
+              "change": "base",
+              "startAt": "2026-11-26T00:00:00.000Z",
+              "endAt": "2026-11-27T06:00:00.000Z",
+              "text": "05008KT 9999 BKN016",
+              "wind": {
+                "speedMetersPerSecond": 4.115555555555556,
+                "directionFromDegrees": 50
+              },
+              "visibility": {
+                "visibilityMeters": 10000,
+                "bound": "at_least"
+              }
+            },
+            {
+              "change": "temporary",
+              "startAt": "2026-11-26T00:00:00.000Z",
+              "endAt": "2026-11-26T06:00:00.000Z",
+              "text": "TEMPO 2600/2606 BKN012"
+            },
+            {
+              "change": "probability",
+              "probabilityPercent": 30,
+              "startAt": "2026-11-26T00:00:00.000Z",
+              "endAt": "2026-11-26T09:00:00.000Z",
+              "text": "PROB30 2600/2609 8000",
+              "visibility": {
+                "visibilityMeters": 8000,
+                "bound": "stated"
+              }
+            },
+            {
+              "change": "probability",
+              "probabilityPercent": 40,
+              "startAt": "2026-11-26T20:00:00.000Z",
+              "endAt": "2026-11-27T06:00:00.000Z",
+              "text": "PROB40 2620/2706 7000",
+              "visibility": {
+                "visibilityMeters": 7000,
+                "bound": "stated"
+              }
+            }
+          ]
+        },
+        "extraLimitations": [
+          "Forecast for station EGLL, configured for the site RIDGE-SITE-6; the distance from the station to the site is not on record.",
+          "The forecast is an amendment (AMD) of an earlier forecast."
+        ]
+      }
+    ],
+    "rejections": [],
+    "unmapped": [
+      {
+        "kind": "json_pointer",
+        "value": "/bulletinTime"
+      },
+      {
+        "kind": "json_pointer",
+        "value": "/dbPopTime"
+      },
+      {
+        "kind": "json_pointer",
+        "value": "/elev"
+      },
+      {
+        "kind": "json_pointer",
+        "value": "/fcsts"
+      },
+      {
+        "kind": "json_pointer",
+        "value": "/issueTime"
+      },
+      {
+        "kind": "json_pointer",
+        "value": "/mostRecent"
+      },
+      {
+        "kind": "json_pointer",
+        "value": "/name"
+      },
+      {
+        "kind": "json_pointer",
+        "value": "/prior"
+      },
+      {
+        "kind": "json_pointer",
+        "value": "/remarks"
+      },
+      {
+        "kind": "json_pointer",
+        "value": "/validTimeFrom"
+      },
+      {
+        "kind": "json_pointer",
+        "value": "/validTimeTo"
+      }
+    ],
+    "conversions": [
+      {
+        "observation": 0,
+        "field": "/values/periods/2/probabilityPercent",
+        "vendorUnit": "%",
+        "vendorValue": 30,
+        "expected": 30
+      }
+    ]
+  }
+}

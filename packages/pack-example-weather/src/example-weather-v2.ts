@@ -6,7 +6,7 @@ import { EXAMPLE_WEATHER_PACK_ID, exampleWeatherVersionOne } from './example-wea
 export const WIND_AT_TAKEOFF_LEAF_ID = 'ledger.example-weather.wind-at-takeoff';
 export const WIND_FOR_FLIGHT_LEAF_ID = 'ledger.example-weather.wind-for-flight';
 
-const VERSION_TWO_DIGEST = '9c706716d0018e540ae00e4afb7b50f30d325642df0f1149a4981203a1530ad7';
+const VERSION_TWO_DIGEST = '2a68185e37e40b7a34ec49f84ae82fb807b94aceaa3b6f03b70426e70fe4aff4';
 
 /** Invented for this repository. It is not a regulation and not a manufacturer limit. */
 export const WIND_LIMIT_PROCEDURE_V2 =
@@ -101,7 +101,14 @@ const limitParameter = [
   },
 ];
 
-const compared = { field: 'values.speedMetersPerSecond', comparison: 'at_most', coverage: 'required', unit: 'm/s' };
+/** A wind a weather station reported for the site names the station; it is read only while 90 minutes old or less. */
+const compared = {
+  field: 'values.speedMetersPerSecond',
+  comparison: 'at_most',
+  coverage: 'required',
+  unit: 'm/s',
+  stationField: 'values.stationId',
+};
 
 /** The wind in effect at the flight's site at its takeoff: the latest measured at or before the takeoff. */
 export function windAtTakeoffLeafV1(procedureText: string = WIND_LIMIT_PROCEDURE_V2): CheckedRuleLeaf {
@@ -131,7 +138,8 @@ export function windAtTakeoffLeafV1(procedureText: string = WIND_LIMIT_PROCEDURE
     },
     adoptionParameters: limitParameter,
     wording: {
-      attention: 'At takeoff the measured wind was {worstValue} m/s, above the {limit} m/s limit.{recordedNote}',
+      attention:
+        'At takeoff the measured wind was {worstValue} m/s, above the {limit} m/s limit.{stationNote}{recordedNote}',
     },
   });
 }
@@ -169,7 +177,7 @@ export function windForFlightLeafV1(procedureText: string = WIND_LIMIT_PROCEDURE
     adoptionParameters: limitParameter,
     wording: {
       attention:
-        '{runCount} stretch(es) of measured wind above the {limit} m/s limit from {firstRunStartedAt}, {secondsOutside} s in all; the highest was {worstValue} m/s at {worstValueAt}.{recordedNote}',
+        '{runCount} stretch(es) of measured wind above the {limit} m/s limit from {firstRunStartedAt}, {secondsOutside} s in all; the highest was {worstValue} m/s at {worstValueAt}.{stationNote}{recordedNote}',
     },
   });
 }

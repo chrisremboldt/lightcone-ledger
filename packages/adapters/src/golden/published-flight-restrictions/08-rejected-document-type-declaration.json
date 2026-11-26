@@ -1,0 +1,22 @@
+{
+  "note": "Constructed for this test, not fetched: a document that declares an entity.",
+  "case": "rejected",
+  "message": {
+    "contentType": "application/xml",
+    "transport": {
+      "method": "GET",
+      "path": "/download/detail_6_0001.xml"
+    },
+    "capturedAt": "2026-11-26T04:34:40.000Z",
+    "bodyText": "<!DOCTYPE x [<!ENTITY a \"b\">]><XNOTAM-Update/>"
+  },
+  "expect": {
+    "observations": [],
+    "rejections": [
+      {
+        "reasonIncludes": "A document type declaration is not read"
+      }
+    ],
+    "unmapped": []
+  }
+}

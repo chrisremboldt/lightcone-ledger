@@ -44,7 +44,7 @@ The existing `Fidelity` values, from weakest to strongest:
 | `validated_sandbox` | Checked against the vendor's sandbox. |
 | `validated_live` | Checked against the vendor's live system. |
 
-Claim only what you have done. Every adapter in this repository is `synthetic_contract` today, except the published weather report adapter (`published-metar.ts`), at `captured_source_replay`: most of its golden files are reports fetched from the live service, each noting when and with which request.
+Claim only what you have done. Every adapter in this repository is `synthetic_contract` today, except the published weather report, forecast and flight restriction adapters (`published-metar.ts`, `published-taf.ts`, `published-tfr.ts`), at `captured_source_replay`: most of their golden files are answers fetched from the live services, each noting when and with which request. A service that lists items to be read one by one, as the flight restriction service does, is polled with `ServicePoll`'s `follow`: each poll reads the items whose list entry is new, on the same host only.
 
 ### Translate
 

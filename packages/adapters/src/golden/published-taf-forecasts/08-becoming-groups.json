@@ -1,0 +1,161 @@
+{
+  "note": "Fetched 2026-11-26T04:33:53.000Z from the Aviation Weather Center data API (aviationweather.gov), GET /api/data/taf?ids=KDEN,KSFO,KJFK,PHNL,CYYZ,RJTT,YSSY,KSEA,KBOS,KATL,OMDB,SBGR,KDFW,KMSP,LEMD,EHAM&format=json: this forecast's object, cut from the response as sent. A published government weather forecast, kept as reference data.",
+  "case": "valid",
+  "message": {
+    "contentType": "application/json",
+    "transport": {
+      "method": "GET",
+      "path": "/api/data/taf"
+    },
+    "capturedAt": "2026-11-26T04:33:53.000Z",
+    "bodyText": "{\"icaoId\":\"SBGR\",\"dbPopTime\":\"2026-11-25T22:26:33.577Z\",\"bulletinTime\":\"2026-11-26T00:00:00.000Z\",\"issueTime\":\"2026-11-25T22:25:00.000Z\",\"validTimeFrom\":1795651200,\"validTimeTo\":1795759200,\"rawTAF\":\"TAF SBGR 252225Z 2600/2706 16010KT 8000 RA BKN011 TN19/2609Z TX23/2618Z PROB30 2600/2602 6000 TSRA BKN015 FEW035CB BECMG 2604/2606 5000 DZ BR OVC008 BECMG 2610/2612 9999 NSW BKN016 BECMG 2614/2616 13015KT BKN027 BECMG 2620/2622 13007KT BKN009 RMK PGG\",\"mostRecent\":1,\"remarks\":\" RMK PGG\",\"lat\":-23.432,\"lon\":-46.469,\"elev\":745,\"prior\":2,\"name\":\"Sao Paulo Intl\",\"fcsts\":[{\"timeFrom\":1795651200,\"timeTo\":1795665600,\"timeBec\":null,\"fcstChange\":null,\"probability\":null,\"wdir\":160,\"wspd\":10,\"wgst\":null,\"wshearHgt\":null,\"wshearDir\":null,\"wshearSpd\":null,\"visib\":4.97,\"altim\":null,\"vertVis\":null,\"wxString\":\"RA\",\"notDecoded\":null,\"clouds\":[{\"cover\":\"BKN\",\"base\":1100,\"type\":null}],\"icgTurb\":[],\"temp\":[{\"validTime\":1795683600,\"surfaceTemp\":19,\"maxOrMin\":\"MIN\"},{\"validTime\":1795716000,\"surfaceTemp\":23,\"maxOrMin\":\"MAX\"}]},{\"timeFrom\":1795651200,\"timeTo\":1795658400,\"timeBec\":null,\"fcstChange\":\"PROB\",\"probability\":30,\"wdir\":null,\"wspd\":null,\"wgst\":null,\"wshearHgt\":null,\"wshearDir\":null,\"wshearSpd\":null,\"visib\":3.73,\"altim\":null,\"vertVis\":null,\"wxString\":\"TSRA\",\"notDecoded\":null,\"clouds\":[{\"cover\":\"BKN\",\"base\":1500,\"type\":null},{\"cover\":\"FEW\",\"base\":3500,\"type\":\"CB\"}],\"icgTurb\":[],\"temp\":[]},{\"timeFrom\":1795665600,\"timeTo\":1795687200,\"timeBec\":1795672800,\"fcstChange\":\"BECMG\",\"probability\":null,\"wdir\":160,\"wspd\":10,\"wgst\":null,\"wshearHgt\":null,\"wshearDir\":null,\"wshearSpd\":null,\"visib\":3.11,\"altim\":null,\"vertVis\":null,\"wxString\":\"DZ BR\",\"notDecoded\":null,\"clouds\":[{\"cover\":\"OVC\",\"base\":800,\"type\":null}],\"icgTurb\":[],\"temp\":[]},{\"timeFrom\":1795687200,\"timeTo\":1795701600,\"timeBec\":1795694400,\"fcstChange\":\"BECMG\",\"probability\":null,\"wdir\":160,\"wspd\":10,\"wgst\":null,\"wshearHgt\":null,\"wshearDir\":null,\"wshearSpd\":null,\"visib\":\"6+\",\"altim\":null,\"vertVis\":null,\"wxString\":\"NSW\",\"notDecoded\":null,\"clouds\":[{\"cover\":\"BKN\",\"base\":1600,\"type\":null}],\"icgTurb\":[],\"temp\":[]},{\"timeFrom\":1795701600,\"timeTo\":1795723200,\"timeBec\":1795708800,\"fcstChange\":\"BECMG\",\"probability\":null,\"wdir\":130,\"wspd\":15,\"wgst\":null,\"wshearHgt\":null,\"wshearDir\":null,\"wshearSpd\":null,\"visib\":\"6+\",\"altim\":null,\"vertVis\":null,\"wxString\":\"NSW\",\"notDecoded\":null,\"clouds\":[{\"cover\":\"BKN\",\"base\":2700,\"type\":null}],\"icgTurb\":[],\"temp\":[]},{\"timeFrom\":1795723200,\"timeTo\":1795759200,\"timeBec\":1795730400,\"fcstChange\":\"BECMG\",\"probability\":null,\"wdir\":130,\"wspd\":7,\"wgst\":null,\"wshearHgt\":null,\"wshearDir\":null,\"wshearSpd\":null,\"visib\":\"6+\",\"altim\":null,\"vertVis\":null,\"wxString\":\"NSW\",\"notDecoded\":null,\"clouds\":[{\"cover\":\"BKN\",\"base\":900,\"type\":null}],\"icgTurb\":[],\"temp\":[]}]}"
+  },
+  "expect": {
+    "observations": [
+      {
+        "type": "weather.forecast",
+        "version": 1,
+        "subject": {
+          "kind": "site",
+          "id": "RIDGE-SITE-14",
+          "scope": "source"
+        },
+        "occurredAt": "2026-11-25T22:25:00.000Z",
+        "interval": {
+          "start": "2026-11-26T00:00:00.000Z",
+          "end": "2026-11-27T06:00:00.000Z"
+        },
+        "sourceEventId": "SBGR 2026-11-25T22:25:00.000Z TAF for RIDGE-SITE-14",
+        "position": {
+          "latitudeDegrees": -23.432,
+          "longitudeDegrees": -46.469
+        },
+        "originalLocator": {
+          "kind": "json_pointer",
+          "value": "/rawTAF"
+        },
+        "values": {
+          "stationId": "SBGR",
+          "periods": [
+            {
+              "change": "base",
+              "startAt": "2026-11-26T00:00:00.000Z",
+              "endAt": "2026-11-27T06:00:00.000Z",
+              "text": "16010KT 8000 RA BKN011 TN19/2609Z TX23/2618Z",
+              "wind": {
+                "speedMetersPerSecond": 5.144444444444445,
+                "directionFromDegrees": 160
+              },
+              "visibility": {
+                "visibilityMeters": 8000,
+                "bound": "stated"
+              }
+            },
+            {
+              "change": "probability",
+              "probabilityPercent": 30,
+              "startAt": "2026-11-26T00:00:00.000Z",
+              "endAt": "2026-11-26T02:00:00.000Z",
+              "text": "PROB30 2600/2602 6000 TSRA BKN015 FEW035CB",
+              "visibility": {
+                "visibilityMeters": 6000,
+                "bound": "stated"
+              }
+            },
+            {
+              "change": "becoming",
+              "startAt": "2026-11-26T04:00:00.000Z",
+              "endAt": "2026-11-26T06:00:00.000Z",
+              "text": "BECMG 2604/2606 5000 DZ BR OVC008",
+              "visibility": {
+                "visibilityMeters": 5000,
+                "bound": "stated"
+              }
+            },
+            {
+              "change": "becoming",
+              "startAt": "2026-11-26T10:00:00.000Z",
+              "endAt": "2026-11-26T12:00:00.000Z",
+              "text": "BECMG 2610/2612 9999 NSW BKN016",
+              "visibility": {
+                "visibilityMeters": 10000,
+                "bound": "at_least"
+              }
+            },
+            {
+              "change": "becoming",
+              "startAt": "2026-11-26T14:00:00.000Z",
+              "endAt": "2026-11-26T16:00:00.000Z",
+              "text": "BECMG 2614/2616 13015KT BKN027",
+              "wind": {
+                "speedMetersPerSecond": 7.716666666666667,
+                "directionFromDegrees": 130
+              }
+            },
+            {
+              "change": "becoming",
+              "startAt": "2026-11-26T20:00:00.000Z",
+              "endAt": "2026-11-26T22:00:00.000Z",
+              "text": "BECMG 2620/2622 13007KT BKN009",
+              "wind": {
+                "speedMetersPerSecond": 3.601111111111111,
+                "directionFromDegrees": 130
+              }
+            }
+          ]
+        },
+        "extraLimitations": [
+          "Forecast for station SBGR, configured for the site RIDGE-SITE-14; the distance from the station to the site is not on record."
+        ]
+      }
+    ],
+    "rejections": [],
+    "unmapped": [
+      {
+        "kind": "json_pointer",
+        "value": "/bulletinTime"
+      },
+      {
+        "kind": "json_pointer",
+        "value": "/dbPopTime"
+      },
+      {
+        "kind": "json_pointer",
+        "value": "/elev"
+      },
+      {
+        "kind": "json_pointer",
+        "value": "/fcsts"
+      },
+      {
+        "kind": "json_pointer",
+        "value": "/issueTime"
+      },
+      {
+        "kind": "json_pointer",
+        "value": "/mostRecent"
+      },
+      {
+        "kind": "json_pointer",
+        "value": "/name"
+      },
+      {
+        "kind": "json_pointer",
+        "value": "/prior"
+      },
+      {
+        "kind": "json_pointer",
+        "value": "/remarks"
+      },
+      {
+        "kind": "json_pointer",
+        "value": "/validTimeFrom"
+      },
+      {
+        "kind": "json_pointer",
+        "value": "/validTimeTo"
+      }
+    ],
+    "conversions": []
+  }
+}

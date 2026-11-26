@@ -53,6 +53,7 @@ describe('named things a person picks instead of raw names', () => {
       secondsOutside: 80,
       worstValue: 14.2,
       worstValueAt: '2026-11-19T10:04:06.000Z',
+      stationNote: '',
       recordedNote: '',
     };
     const summary = template.replace(/\{([a-zA-Z]+)\}/g, (_, name: string) => String(details[name as 'limit']));

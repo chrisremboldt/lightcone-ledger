@@ -1,0 +1,223 @@
+{
+  "note": "Fetched 2026-11-26T04:33:47.000Z from the Aviation Weather Center data API (aviationweather.gov), GET /api/data/taf?ids=KORD,KLAX,KLAS,KMIA,EGLL,LFPG,UUEE,EDDF&format=json: this forecast's object, cut from the response as sent. A published government weather forecast, kept as reference data.",
+  "case": "valid",
+  "message": {
+    "contentType": "application/json",
+    "transport": {
+      "method": "GET",
+      "path": "/api/data/taf"
+    },
+    "capturedAt": "2026-11-26T04:33:47.000Z",
+    "bodyText": "{\"icaoId\":\"KORD\",\"dbPopTime\":\"2026-11-26T02:59:06.794Z\",\"bulletinTime\":\"2026-11-26T02:59:00.000Z\",\"issueTime\":\"2026-11-26T02:59:00.000Z\",\"validTimeFrom\":1795662000,\"validTimeTo\":1795759200,\"rawTAF\":\"TAF KORD 260259Z 2603/2706 06014G21KT P6SM SCT030 BKN035 OVC060 FM260600 05013KT P6SM FEW025 SCT035 OVC100 FM261200 04015G25KT P6SM SCT015 BKN020 OVC100 FM262200 03018G28KT P6SM VCSH BKN025 OVC100 FM270100 01018G28KT 5SM -SHRA BKN015 OVC035\",\"mostRecent\":1,\"remarks\":\" AMD\",\"lat\":41.96017,\"lon\":-87.93161,\"elev\":202,\"prior\":0,\"name\":\"Chicago/O'Hare Intl\",\"fcsts\":[{\"timeFrom\":1795662000,\"timeTo\":1795672800,\"timeBec\":null,\"fcstChange\":null,\"probability\":null,\"wdir\":60,\"wspd\":14,\"wgst\":21,\"wshearHgt\":null,\"wshearDir\":null,\"wshearSpd\":null,\"visib\":\"6+\",\"altim\":null,\"vertVis\":null,\"wxString\":null,\"notDecoded\":null,\"clouds\":[{\"cover\":\"SCT\",\"base\":3000,\"type\":null},{\"cover\":\"BKN\",\"base\":3500,\"type\":null},{\"cover\":\"OVC\",\"base\":6000,\"type\":null}],\"icgTurb\":[],\"temp\":[]},{\"timeFrom\":1795672800,\"timeTo\":1795694400,\"timeBec\":null,\"fcstChange\":\"FM\",\"probability\":null,\"wdir\":50,\"wspd\":13,\"wgst\":null,\"wshearHgt\":null,\"wshearDir\":null,\"wshearSpd\":null,\"visib\":\"6+\",\"altim\":null,\"vertVis\":null,\"wxString\":null,\"notDecoded\":null,\"clouds\":[{\"cover\":\"FEW\",\"base\":2500,\"type\":null},{\"cover\":\"SCT\",\"base\":3500,\"type\":null},{\"cover\":\"OVC\",\"base\":10000,\"type\":null}],\"icgTurb\":[],\"temp\":[]},{\"timeFrom\":1795694400,\"timeTo\":1795730400,\"timeBec\":null,\"fcstChange\":\"FM\",\"probability\":null,\"wdir\":40,\"wspd\":15,\"wgst\":25,\"wshearHgt\":null,\"wshearDir\":null,\"wshearSpd\":null,\"visib\":\"6+\",\"altim\":null,\"vertVis\":null,\"wxString\":null,\"notDecoded\":null,\"clouds\":[{\"cover\":\"SCT\",\"base\":1500,\"type\":null},{\"cover\":\"BKN\",\"base\":2000,\"type\":null},{\"cover\":\"OVC\",\"base\":10000,\"type\":null}],\"icgTurb\":[],\"temp\":[]},{\"timeFrom\":1795730400,\"timeTo\":1795741200,\"timeBec\":null,\"fcstChange\":\"FM\",\"probability\":null,\"wdir\":30,\"wspd\":18,\"wgst\":28,\"wshearHgt\":null,\"wshearDir\":null,\"wshearSpd\":null,\"visib\":\"6+\",\"altim\":null,\"vertVis\":null,\"wxString\":\"VCSH\",\"notDecoded\":null,\"clouds\":[{\"cover\":\"BKN\",\"base\":2500,\"type\":null},{\"cover\":\"OVC\",\"base\":10000,\"type\":null}],\"icgTurb\":[],\"temp\":[]},{\"timeFrom\":1795741200,\"timeTo\":1795759200,\"timeBec\":null,\"fcstChange\":\"FM\",\"probability\":null,\"wdir\":10,\"wspd\":18,\"wgst\":28,\"wshearHgt\":null,\"wshearDir\":null,\"wshearSpd\":null,\"visib\":5,\"altim\":null,\"vertVis\":null,\"wxString\":\"-SHRA\",\"notDecoded\":null,\"clouds\":[{\"cover\":\"BKN\",\"base\":1500,\"type\":null},{\"cover\":\"OVC\",\"base\":3500,\"type\":null}],\"icgTurb\":[],\"temp\":[]}]}"
+  },
+  "expect": {
+    "observations": [
+      {
+        "type": "weather.forecast",
+        "version": 1,
+        "subject": {
+          "kind": "site",
+          "id": "RIDGE-SITE-1",
+          "scope": "source"
+        },
+        "occurredAt": "2026-11-26T02:59:00.000Z",
+        "interval": {
+          "start": "2026-11-26T03:00:00.000Z",
+          "end": "2026-11-27T06:00:00.000Z"
+        },
+        "sourceEventId": "KORD 2026-11-26T02:59:00.000Z TAF for RIDGE-SITE-1",
+        "position": {
+          "latitudeDegrees": 41.96017,
+          "longitudeDegrees": -87.93161
+        },
+        "originalLocator": {
+          "kind": "json_pointer",
+          "value": "/rawTAF"
+        },
+        "values": {
+          "stationId": "KORD",
+          "stationDistanceMeters": 14200,
+          "periods": [
+            {
+              "change": "base",
+              "startAt": "2026-11-26T03:00:00.000Z",
+              "endAt": "2026-11-26T06:00:00.000Z",
+              "text": "06014G21KT P6SM SCT030 BKN035 OVC060",
+              "wind": {
+                "speedMetersPerSecond": 7.202222222222222,
+                "gustSpeedMetersPerSecond": 10.803333333333333,
+                "directionFromDegrees": 60
+              },
+              "visibility": {
+                "visibilityMeters": 9656.064,
+                "bound": "at_least"
+              }
+            },
+            {
+              "change": "from",
+              "startAt": "2026-11-26T06:00:00.000Z",
+              "endAt": "2026-11-26T12:00:00.000Z",
+              "text": "FM260600 05013KT P6SM FEW025 SCT035 OVC100",
+              "wind": {
+                "speedMetersPerSecond": 6.687777777777778,
+                "directionFromDegrees": 50
+              },
+              "visibility": {
+                "visibilityMeters": 9656.064,
+                "bound": "at_least"
+              }
+            },
+            {
+              "change": "from",
+              "startAt": "2026-11-26T12:00:00.000Z",
+              "endAt": "2026-11-26T22:00:00.000Z",
+              "text": "FM261200 04015G25KT P6SM SCT015 BKN020 OVC100",
+              "wind": {
+                "speedMetersPerSecond": 7.716666666666667,
+                "gustSpeedMetersPerSecond": 12.86111111111111,
+                "directionFromDegrees": 40
+              },
+              "visibility": {
+                "visibilityMeters": 9656.064,
+                "bound": "at_least"
+              }
+            },
+            {
+              "change": "from",
+              "startAt": "2026-11-26T22:00:00.000Z",
+              "endAt": "2026-11-27T01:00:00.000Z",
+              "text": "FM262200 03018G28KT P6SM VCSH BKN025 OVC100",
+              "wind": {
+                "speedMetersPerSecond": 9.26,
+                "gustSpeedMetersPerSecond": 14.404444444444444,
+                "directionFromDegrees": 30
+              },
+              "visibility": {
+                "visibilityMeters": 9656.064,
+                "bound": "at_least"
+              }
+            },
+            {
+              "change": "from",
+              "startAt": "2026-11-27T01:00:00.000Z",
+              "endAt": "2026-11-27T06:00:00.000Z",
+              "text": "FM270100 01018G28KT 5SM -SHRA BKN015 OVC035",
+              "wind": {
+                "speedMetersPerSecond": 9.26,
+                "gustSpeedMetersPerSecond": 14.404444444444444,
+                "directionFromDegrees": 10
+              },
+              "visibility": {
+                "visibilityMeters": 8046.72,
+                "bound": "stated"
+              }
+            }
+          ]
+        },
+        "extraLimitations": [
+          "Forecast for station KORD, configured for the site RIDGE-SITE-1; 14.2 km from the site as configured."
+        ]
+      }
+    ],
+    "rejections": [],
+    "unmapped": [
+      {
+        "kind": "json_pointer",
+        "value": "/bulletinTime"
+      },
+      {
+        "kind": "json_pointer",
+        "value": "/dbPopTime"
+      },
+      {
+        "kind": "json_pointer",
+        "value": "/elev"
+      },
+      {
+        "kind": "json_pointer",
+        "value": "/fcsts"
+      },
+      {
+        "kind": "json_pointer",
+        "value": "/issueTime"
+      },
+      {
+        "kind": "json_pointer",
+        "value": "/mostRecent"
+      },
+      {
+        "kind": "json_pointer",
+        "value": "/name"
+      },
+      {
+        "kind": "json_pointer",
+        "value": "/prior"
+      },
+      {
+        "kind": "json_pointer",
+        "value": "/remarks"
+      },
+      {
+        "kind": "json_pointer",
+        "value": "/validTimeFrom"
+      },
+      {
+        "kind": "json_pointer",
+        "value": "/validTimeTo"
+      }
+    ],
+    "conversions": [
+      {
+        "observation": 0,
+        "field": "/values/periods/0/wind/speedMetersPerSecond",
+        "vendorUnit": "kn",
+        "vendorValue": 14,
+        "expected": 7.202222222222222
+      },
+      {
+        "observation": 0,
+        "field": "/values/periods/0/wind/gustSpeedMetersPerSecond",
+        "vendorUnit": "kn",
+        "vendorValue": 21,
+        "expected": 10.803333333333333
+      },
+      {
+        "observation": 0,
+        "field": "/values/periods/0/wind/directionFromDegrees",
+        "vendorUnit": "deg",
+        "vendorValue": 60,
+        "expected": 60
+      },
+      {
+        "observation": 0,
+        "field": "/values/periods/0/visibility/visibilityMeters",
+        "vendorUnit": "mi",
+        "vendorValue": 6,
+        "expected": 9656.064
+      },
+      {
+        "observation": 0,
+        "field": "/values/stationDistanceMeters",
+        "vendorUnit": "km",
+        "vendorValue": 14.2,
+        "expected": 14200
+      },
+      {
+        "observation": 0,
+        "field": "/position/latitudeDegrees",
+        "vendorUnit": "deg",
+        "vendorValue": 41.96017,
+        "expected": 41.96017,
+        "vendorField": "/lat"
+      },
+      {
+        "observation": 0,
+        "field": "/position/longitudeDegrees",
+        "vendorUnit": "deg",
+        "vendorValue": -87.93161,
+        "expected": -87.93161,
+        "vendorField": "/lon"
+      }
+    ]
+  }
+}

@@ -15,11 +15,8 @@ import type {
 import { adoptShownPack } from '../../contracts/fixtures/demo/v1/ready.js';
 import { getRulePackVersion } from '../../domain/src/index.js';
 import { sha256 } from '../../integrity/src/index.js';
-import {
-  EXAMPLE_WEATHER_PACK_ID,
-  WIND_AT_DEPARTURE_LEAF_ID,
-  WIND_IN_FLIGHT_LEAF_ID,
-} from '../../pack-example-weather/src/index.js';
+import { EXAMPLE_WEATHER_PACK_ID } from '../../pack-example-weather/src/index.js';
+import { WIND_AT_TAKEOFF_LEAF_ID, WIND_FOR_FLIGHT_LEAF_ID } from '../../pack-example-weather/src/example-weather-v2.js';
 import { createPool, MemoryObjectStore, type AuthContext } from '../../persistence/src/index.js';
 import { translateAndSubmit } from '../src/adapter-contract.js';
 import type { GoldenFile } from '../src/conformance.js';
@@ -70,7 +67,7 @@ describe.runIf(process.env.LEDGER_ENV !== 'staging')('The example wind rule read
   const workerPool = createPool(process.env.WORKER_DATABASE_URL);
   const who = {} as Record<Role, AuthContext>;
   const limit = 8;
-  const pack = getRulePackVersion(EXAMPLE_WEATHER_PACK_ID, 1)!;
+  const pack = getRulePackVersion(EXAMPLE_WEATHER_PACK_ID, 2)!;
   let app: Awaited<ReturnType<typeof createApp>>;
   let address: string;
   let artifactId: string;
@@ -184,7 +181,7 @@ describe.runIf(process.env.LEDGER_ENV !== 'staging')('The example wind rule read
     );
     const adopted = await call(who.safety, 'POST', '/v1/commands', {
       ...adoption,
-      parameters: { [WIND_AT_DEPARTURE_LEAF_ID]: { limit }, [WIND_IN_FLIGHT_LEAF_ID]: { limit } },
+      parameters: { [WIND_AT_TAKEOFF_LEAF_ID]: { limit }, [WIND_FOR_FLIGHT_LEAF_ID]: { limit } },
     });
     expect(adopted.statusCode, adopted.body).toBe(201);
     await settle();
@@ -206,6 +203,34 @@ describe.runIf(process.env.LEDGER_ENV !== 'staging')('The example wind rule read
       '2026-11-25T19:40:00.000Z',
     ];
     const subject = { kind: 'flight', id: flight, scope: 'source' };
+    const later = { kind: 'flight', id: `${flight}-later`, scope: 'source' };
+    const plan = (flightSubject: typeof subject, start: string, end: string) =>
+      submit(
+        {
+          type: 'operator.record',
+          version: 1,
+          subject: flightSubject,
+          occurredAt: start,
+          sourceEventId: `${flightSubject.id}-plan`,
+          values: {
+            recordType: 'flight.plan',
+            recordVersion: 1,
+            record: {
+              windowStartsAt: start,
+              windowEndsAt: end,
+              operationKind: 'inspection',
+              plannedOriginDescription: 'Fictional survey pad',
+              plannedDestinationDescription: 'Fictional survey pad',
+              routeSummary: 'Out and back along the fictional ridge line.',
+              siteId: { id: site, scope: 'source' },
+            },
+          },
+        },
+        { start, end },
+      );
+    // A second flight from the same site takes off two hours after the report: past the 90 minutes a station's
+    // report is read for.
+    await plan(later, '2026-11-25T20:40:00.000Z', '2026-11-25T21:40:00.000Z');
     await submit(
       {
         type: 'operator.record',
@@ -257,6 +282,14 @@ describe.runIf(process.env.LEDGER_ENV !== 'staging')('The example wind rule read
       sourceEventId: `${flight}-landed`,
       values: { activity: 'landed', takeoffAt, landingAt },
     });
+    await submit({
+      type: 'flight.report',
+      version: 1,
+      subject: later,
+      occurredAt: '2026-11-25T21:10:00.000Z',
+      sourceEventId: `${later.id}-landed`,
+      values: { activity: 'landed', takeoffAt: '2026-11-25T20:55:00.000Z', landingAt: '2026-11-25T21:10:00.000Z' },
+    });
 
     const query = new URLSearchParams({
       type: 'weather.wind',
@@ -280,20 +313,34 @@ describe.runIf(process.env.LEDGER_ENV !== 'staging')('The example wind rule read
       `Reported by station KORD for the site ${site}, 14.2 km from the site as configured.`,
     );
 
-    const evaluations = await call(
-      who.safety,
-      'GET',
-      `/v1/evaluations?${new URLSearchParams({ subjectKind: 'flight', subjectId: flight, subjectScope: 'source', sourceId, limit: '100' })}`,
-    );
-    expect(evaluations.statusCode, evaluations.body).toBe(200);
-    const departure = (evaluations.json().evaluations as RuleEvaluationRecord[]).filter(
-      (evaluation) => evaluation.rule.id === WIND_AT_DEPARTURE_LEAF_ID,
-    );
-    expect(departure[0]).toMatchObject({
-      pack: { id: EXAMPLE_WEATHER_PACK_ID, version: 1, digest: pack.digest },
+    expect(wind!.observation.values).toMatchObject({ stationId: 'KORD', stationDistanceMeters: 14_200 });
+
+    const takeoffEvaluations = async (subjectId: string) => {
+      const evaluations = await call(
+        who.safety,
+        'GET',
+        `/v1/evaluations?${new URLSearchParams({ subjectKind: 'flight', subjectId, subjectScope: 'source', sourceId, limit: '100' })}`,
+      );
+      expect(evaluations.statusCode, evaluations.body).toBe(200);
+      return (evaluations.json().evaluations as RuleEvaluationRecord[]).filter(
+        (evaluation) => evaluation.rule.id === WIND_AT_TAKEOFF_LEAF_ID,
+      );
+    };
+    const [atTakeoff] = await takeoffEvaluations(flight);
+    expect(atTakeoff).toMatchObject({
+      pack: { id: EXAMPLE_WEATHER_PACK_ID, version: 2, digest: pack.digest },
       outcome: 'attention',
-      evidence: [{ observationId: wind!.id }],
     });
-    expect(departure[0]!.summary).toContain(`is ${(18 * 1852) / 3600}; the limit is at most ${limit}.`);
+    expect(atTakeoff!.evidence.map((item) => item.observationId)).toContain(wind!.id);
+    expect(atTakeoff!.summary).toContain(
+      `At takeoff the measured wind was ${(18 * 1852) / 3600} m/s, above the ${limit} m/s limit. Reported by station KORD.`,
+    );
+    // The later flight's latest report at or before its takeoff is the same one, 2 h 4 min old: it is not read.
+    const [tooOld] = await takeoffEvaluations(later.id);
+    expect(tooOld).toMatchObject({ evidenceState: 'insufficient', outcome: 'attention' });
+    expect(tooOld!.evidence.map((item) => item.observationId)).toContain(wind!.id);
+    expect(tooOld!.summary).toContain(
+      'The latest value of the wind reading’s Wind speed (m/s) before the start was reported at 2026-11-25 18:51 UTC by station KORD, 2 h 4 min before it, older than the greatest age of 1 h 30 min: it is not read, and none within that age is on file.',
+    );
   });
 });

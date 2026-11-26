@@ -1,0 +1,132 @@
+{
+  "note": "Fetched 2026-11-26T04:33:53.000Z from the Aviation Weather Center data API (aviationweather.gov), GET /api/data/taf?ids=KDEN,KSFO,KJFK,PHNL,CYYZ,RJTT,YSSY,KSEA,KBOS,KATL,OMDB,SBGR,KDFW,KMSP,LEMD,EHAM&format=json: this forecast's object, cut from the response as sent. A published government weather forecast, kept as reference data.",
+  "case": "valid",
+  "message": {
+    "contentType": "application/json",
+    "transport": {
+      "method": "GET",
+      "path": "/api/data/taf"
+    },
+    "capturedAt": "2026-11-26T04:33:53.000Z",
+    "bodyText": "{\"icaoId\":\"RJTT\",\"dbPopTime\":\"2026-11-26T01:42:06.980Z\",\"bulletinTime\":\"2026-11-25T23:00:00.000Z\",\"issueTime\":\"2026-11-26T01:41:00.000Z\",\"validTimeFrom\":1795654800,\"validTimeTo\":1795759200,\"rawTAF\":\"TAF AMD RJTT 260141Z 2601/2706 18006KT 9999 FEW030 BECMG 2608/2610 34006KT BECMG 2700/2703 12006KT\",\"mostRecent\":1,\"remarks\":\"\",\"lat\":35.553,\"lon\":139.781,\"elev\":5,\"prior\":0,\"name\":\"Tokyo/Haneda Intl\",\"fcsts\":[{\"timeFrom\":1795654800,\"timeTo\":1795680000,\"timeBec\":null,\"fcstChange\":null,\"probability\":null,\"wdir\":180,\"wspd\":6,\"wgst\":null,\"wshearHgt\":null,\"wshearDir\":null,\"wshearSpd\":null,\"visib\":\"6+\",\"altim\":null,\"vertVis\":null,\"wxString\":null,\"notDecoded\":null,\"clouds\":[{\"cover\":\"FEW\",\"base\":3000,\"type\":null}],\"icgTurb\":[],\"temp\":[]},{\"timeFrom\":1795680000,\"timeTo\":1795737600,\"timeBec\":1795687200,\"fcstChange\":\"BECMG\",\"probability\":null,\"wdir\":340,\"wspd\":6,\"wgst\":null,\"wshearHgt\":null,\"wshearDir\":null,\"wshearSpd\":null,\"visib\":\"6+\",\"altim\":null,\"vertVis\":null,\"wxString\":null,\"notDecoded\":null,\"clouds\":[{\"cover\":\"FEW\",\"base\":3000,\"type\":null}],\"icgTurb\":[],\"temp\":[]},{\"timeFrom\":1795737600,\"timeTo\":1795759200,\"timeBec\":1795748400,\"fcstChange\":\"BECMG\",\"probability\":null,\"wdir\":120,\"wspd\":6,\"wgst\":null,\"wshearHgt\":null,\"wshearDir\":null,\"wshearSpd\":null,\"visib\":\"6+\",\"altim\":null,\"vertVis\":null,\"wxString\":null,\"notDecoded\":null,\"clouds\":[{\"cover\":\"FEW\",\"base\":3000,\"type\":null}],\"icgTurb\":[],\"temp\":[]}]}"
+  },
+  "expect": {
+    "observations": [
+      {
+        "type": "weather.forecast",
+        "version": 1,
+        "subject": {
+          "kind": "site",
+          "id": "RIDGE-SITE-15",
+          "scope": "source"
+        },
+        "occurredAt": "2026-11-26T01:41:00.000Z",
+        "interval": {
+          "start": "2026-11-26T01:00:00.000Z",
+          "end": "2026-11-27T06:00:00.000Z"
+        },
+        "sourceEventId": "RJTT 2026-11-26T01:41:00.000Z TAF AMD for RIDGE-SITE-15",
+        "position": {
+          "latitudeDegrees": 35.553,
+          "longitudeDegrees": 139.781
+        },
+        "originalLocator": {
+          "kind": "json_pointer",
+          "value": "/rawTAF"
+        },
+        "values": {
+          "stationId": "RJTT",
+          "amended": true,
+          "periods": [
+            {
+              "change": "base",
+              "startAt": "2026-11-26T01:00:00.000Z",
+              "endAt": "2026-11-27T06:00:00.000Z",
+              "text": "18006KT 9999 FEW030",
+              "wind": {
+                "speedMetersPerSecond": 3.0866666666666664,
+                "directionFromDegrees": 180
+              },
+              "visibility": {
+                "visibilityMeters": 10000,
+                "bound": "at_least"
+              }
+            },
+            {
+              "change": "becoming",
+              "startAt": "2026-11-26T08:00:00.000Z",
+              "endAt": "2026-11-26T10:00:00.000Z",
+              "text": "BECMG 2608/2610 34006KT",
+              "wind": {
+                "speedMetersPerSecond": 3.0866666666666664,
+                "directionFromDegrees": 340
+              }
+            },
+            {
+              "change": "becoming",
+              "startAt": "2026-11-27T00:00:00.000Z",
+              "endAt": "2026-11-27T03:00:00.000Z",
+              "text": "BECMG 2700/2703 12006KT",
+              "wind": {
+                "speedMetersPerSecond": 3.0866666666666664,
+                "directionFromDegrees": 120
+              }
+            }
+          ]
+        },
+        "extraLimitations": [
+          "Forecast for station RJTT, configured for the site RIDGE-SITE-15; the distance from the station to the site is not on record.",
+          "The forecast is an amendment (AMD) of an earlier forecast."
+        ]
+      }
+    ],
+    "rejections": [],
+    "unmapped": [
+      {
+        "kind": "json_pointer",
+        "value": "/bulletinTime"
+      },
+      {
+        "kind": "json_pointer",
+        "value": "/dbPopTime"
+      },
+      {
+        "kind": "json_pointer",
+        "value": "/elev"
+      },
+      {
+        "kind": "json_pointer",
+        "value": "/fcsts"
+      },
+      {
+        "kind": "json_pointer",
+        "value": "/issueTime"
+      },
+      {
+        "kind": "json_pointer",
+        "value": "/mostRecent"
+      },
+      {
+        "kind": "json_pointer",
+        "value": "/name"
+      },
+      {
+        "kind": "json_pointer",
+        "value": "/prior"
+      },
+      {
+        "kind": "json_pointer",
+        "value": "/remarks"
+      },
+      {
+        "kind": "json_pointer",
+        "value": "/validTimeFrom"
+      },
+      {
+        "kind": "json_pointer",
+        "value": "/validTimeTo"
+      }
+    ],
+    "conversions": []
+  }
+}

@@ -71,9 +71,9 @@ describe('shipped packs keep their digests', () => {
     const versions = exampleOperationsRulePackWithVersionTwo().versions;
     expect(versions.map((pack) => [pack.version, pack.digest])).toEqual([
       [1, 'e56e599b0e0fd54f8dbc9de743c1b61edb115a2f47b232358a2df80fea7606bb'],
-      [2, 'ec66aed0739dff9130ef804ec03f704118831e511a0f5788a9ce53089c0279b8'],
+      [2, 'eec5d43781e50a519d94e7c4a2fdecebff4140367f655e3f8efb4827012b8c1d'],
     ]);
-    expect(batteryAtLandingLeafV1().digest).toBe('3c1d0c12a086b2d9d3b9be959d8d0d170ee1ab5e3e7611f97470c8f5f982ffeb');
+    expect(batteryAtLandingLeafV1().digest).toBe('5f463b45ec9288fd5eef31b6bf46280019408568c9dff50e8888958f34232a06');
     expect(versions[1]!.leaves[0]).toEqual(batteryReserveLeafV1());
   });
 
@@ -187,8 +187,8 @@ describe('shipped packs keep their digests', () => {
   it('pins the later example pack versions over a window, their rules, the window kinds and the indicators', () => {
     expect(exampleOperationsRulePackWithVersionThree().versions.map((pack) => [pack.version, pack.digest])).toEqual([
       [1, 'e56e599b0e0fd54f8dbc9de743c1b61edb115a2f47b232358a2df80fea7606bb'],
-      [2, 'ec66aed0739dff9130ef804ec03f704118831e511a0f5788a9ce53089c0279b8'],
-      [3, 'cf73c9d22b643e9b7526e1adc1dff2fb7687e583ddbc9d2205db6ee2d1ea58d2'],
+      [2, 'eec5d43781e50a519d94e7c4a2fdecebff4140367f655e3f8efb4827012b8c1d'],
+      [3, '8dce3b5596d3f9694129bc2c520fc3e4bce0e56bd5f04e92b0bd490f8cf1648a'],
     ]);
     expect(exampleAirspaceRulePackWithVersionTwo().versions.map((pack) => [pack.version, pack.digest])).toEqual([
       [1, 'f67a8435a27ae4939dc4b7be15256965feda566aee6d4f6d3e9deb127d572d3c'],
@@ -196,16 +196,16 @@ describe('shipped packs keep their digests', () => {
     ]);
     expect(exampleWeatherRulePackWithVersionTwo().versions.map((pack) => [pack.version, pack.digest])).toEqual([
       [1, '4d1dac7e716b00bf34fd90e7f0c027cc240a0d6710b57770a30913a4b81f3426'],
-      [2, '9c706716d0018e540ae00e4afb7b50f30d325642df0f1149a4981203a1530ad7'],
+      [2, '2a68185e37e40b7a34ec49f84ae82fb807b94aceaa3b6f03b70426e70fe4aff4'],
     ]);
-    expect(batteryForFlightLeafV1().digest).toBe('d59cfa19f6583310d6c897e3be83aa79042be7d93708ce287b6890e20e93fae9');
+    expect(batteryForFlightLeafV1().digest).toBe('6a75cf489dcf51fd58cbffed0b3ae5e1b811c0802fd88b6c6611831ffa44112b');
     expect(operatingAreaPerFlightLeafV1().digest).toBe(
       '95fdd2f3bf3e5fc09f41c490ec34c99685ad771bb49c7d4375e0a7e3cdd0dd83',
     );
-    expect(windAtTakeoffLeafV1().digest).toBe('fd723f2f9a5d56e59352839d84ca30aee036b8e60275e90132fd225067334e1b');
-    expect(windForFlightLeafV1().digest).toBe('295a7ca56d538539517fe65e7589f2421e71ae096383adba784e810ff5ec6af4');
+    expect(windAtTakeoffLeafV1().digest).toBe('d8472e5865989350b649ea49e10fd19f83bab8077fe20bd41baae0ba3ae72c2d');
+    expect(windForFlightLeafV1().digest).toBe('ff6bfa4302201c48f4f3ad72c96743030a49104796700f89277dfed3c4571dcf');
     expect(batteryForFlightLeafV1().check.definitionDigest).toBe(
-      '7d8f793116b55ae85a0a0dc500850f991be2b9d026f8059fc49fbf2b98af3514',
+      '5a3fe974005255709d7a2c92a138845eed6bc40c07d738a6579fce0631efe55f',
     );
     expect(operatingAreaPerFlightLeafV1().check.definitionDigest).toBe(
       'd0410b2208043685b92140c9b403b23a4cf975a2a38eca9bafeedb42f77182a6',

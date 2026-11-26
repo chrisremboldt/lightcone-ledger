@@ -1,0 +1,220 @@
+{
+  "note": "Fetched 2026-11-26T04:34:40.000Z from the FAA TFR service (tfr.faa.gov), GET /download/detail_6_9741.xml: the detail document as sent, except that contact names, contact organizations, telephone numbers and contact radio frequencies were replaced with neutral values, and named agencies and a company's venue with a neutral description, before it was committed (see the recording folder's README). Everything the adapter reads is as published. A published government airspace notice, kept as reference data.",
+  "case": "valid",
+  "message": {
+    "contentType": "application/xml",
+    "transport": {
+      "method": "GET",
+      "path": "/download/detail_6_9741.xml"
+    },
+    "capturedAt": "2026-11-26T04:34:40.000Z",
+    "bodyText": "﻿<XNOTAM-Update xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" version=\"0.1\" origin=\"\" created=\"2026-11-24T18:27:19\">\n  <Group>\n    <Add>\n      <Not>\n        <NotUid>\n          <txtNameAcctFac>FDC</txtNameAcctFac>\n          <dateIndexYear>2026</dateIndexYear>\n          <noSeqNo>9741</noSeqNo>\n          <dateIssued>2026-11-25T00:18:39</dateIssued>\n          <txtLocalName>6/9741</txtLocalName>\n          <codeGUID>faa77afc-fddb-4b75-acd4-41fb9c79b821</codeGUID>\n        </NotUid>\n        <codeDailyOper>true</codeDailyOper>\n        <dateEffective>2026-11-25T14:00:00</dateEffective>\n        <dateExpire>2026-11-30T23:00:00</dateExpire>\n        <codeTimeZone>UTC</codeTimeZone>\n        <codeExpirationTimeZone>UTC</codeExpirationTimeZone>\n        <txtDescrPurpose>TO PROVIDE A SAFE ENVIRONMENT FOR FIRE FIGHTING ACFT OPS</txtDescrPurpose>\n        <AffLocGroup>\n          <txtNameCity>41NM SW HARRISONBURG</txtNameCity>\n          <txtNameUSState>VIRGINIA</txtNameUSState>\n        </AffLocGroup>\n        <codeFacility>ZDC</codeFacility>\n        <TfrNot>\n          <codeType>91.137(a)(2)</codeType>\n          <TFRAreaGroup>\n            <aseTFRArea>\n              <AseUid>\n                <codeType>RAS</codeType>\n                <codeId>1073</codeId>\n              </AseUid>\n              <txtName>Hazard Area1</txtName>\n              <codeDistVerUpper>ALT</codeDistVerUpper>\n              <valDistVerUpper>5200</valDistVerUpper>\n              <uomDistVerUpper>FT</uomDistVerUpper>\n              <codeDistVerLower>ALT</codeDistVerLower>\n              <valDistVerLower>0</valDistVerLower>\n              <uomDistVerLower>FT</uomDistVerLower>\n              <Att>\n                <codeWorkHr>NOTAM</codeWorkHr>\n              </Att>\n              <codeExclVerUpper>INCLUDE</codeExclVerUpper>\n              <codeExclVerLower>INCLUDE</codeExclVerLower>\n              <isScheduledTfrArea>TRUE</isScheduledTfrArea>\n              <dayCode>Daily</dayCode>\n              <ScheduleGroup>\n                <isTimeSeparate>TRUE</isTimeSeparate>\n                <dateEffective>2026-11-25T14:00:00</dateEffective>\n                <dateExpire>2026-11-30T23:00:00</dateExpire>\n                <startTime>2026-11-24T14:00:00</startTime>\n                <endTime>2026-11-24T23:00:00</endTime>\n              </ScheduleGroup>\n            </aseTFRArea>\n            <Aac>\n              <AacUid>\n                <AseUidChi>\n                  <codeType>RAS</codeType>\n                  <codeId>1073</codeId>\n                </AseUidChi>\n                <AseUidPar>\n                  <codeType>PART</codeType>\n                  <codeId>1074</codeId>\n                </AseUidPar>\n              </AacUid>\n              <codeType>BOM</codeType>\n              <codeOpr>BASE</codeOpr>\n            </Aac>\n            <abdMergedArea>\n              <AbdUid>\n                <AseUid>\n                  <codeType>RAS</codeType>\n                  <codeId>1073</codeId>\n                </AseUid>\n              </AbdUid>\n              <txtRmk>1073</txtRmk>\n              <Avx>\n                <codeDatum>WGE</codeDatum>\n                <codeType>GRC</codeType>\n                <geoLat>38.33336862N</geoLat>\n                <geoLong>079.79166667W</geoLong>\n              </Avx>\n              <Avx>\n                <codeDatum>WGE</codeDatum>\n                <codeType>GRC</codeType>\n                <geoLat>38.33286145N</geoLat>\n                <geoLong>079.78431034W</geoLong>\n              </Avx>\n              <Avx>\n                <codeDatum>WGE</codeDatum>\n                <codeType>GRC</codeType>\n                <geoLat>38.33135536N</geoLat>\n                <geoLong>079.77717783W</geoLong>\n              </Avx>\n              <Avx>\n                <codeDatum>WGE</codeDatum>\n                <codeType>GRC</codeType>\n                <geoLat>38.32889618N</geoLat>\n                <geoLong>079.77048612W</geoLong>\n              </Avx>\n              <Avx>\n                <codeDatum>WGE</codeDatum>\n                <codeType>GRC</codeType>\n                <geoLat>38.32555871N</geoLat>\n                <geoLong>079.76443873W</geoLong>\n              </Avx>\n              <Avx>\n                <codeDatum>WGE</codeDatum>\n                <codeType>GRC</codeType>\n                <geoLat>38.32144447N</geoLat>\n                <geoLong>079.75921952W</geoLong>\n              </Avx>\n              <Avx>\n                <codeDatum>WGE</codeDatum>\n                <codeType>GRC</codeType>\n                <geoLat>38.3166786N</geoLat>\n                <geoLong>079.75498705W</geoLong>\n              </Avx>\n              <Avx>\n                <codeDatum>WGE</codeDatum>\n                <codeType>GRC</codeType>\n                <geoLat>38.31140601N</geoLat>\n                <geoLong>079.75186983W</geoLong>\n              </Avx>\n              <Avx>\n                <codeDatum>WGE</codeDatum>\n                <codeType>GRC</codeType>\n                <geoLat>38.305787N</geoLat>\n                <geoLong>079.74996238W</geoLong>\n              </Avx>\n              <Avx>\n                <codeDatum>WGE</codeDatum>\n                <codeType>GRC</codeType>\n                <geoLat>38.29999236N</geoLat>\n                <geoLong>079.74932239W</geoLong>\n              </Avx>\n              <Avx>\n                <codeDatum>WGE</codeDatum>\n                <codeType>GRC</codeType>\n                <geoLat>38.29419817N</geoLat>\n                <geoLong>079.74996901W</geoLong>\n              </Avx>\n              <Avx>\n                <codeDatum>WGE</codeDatum>\n                <codeType>GRC</codeType>\n                <geoLat>38.28858047N</geoLat>\n                <geoLong>079.7518823W</geoLong>\n              </Avx>\n              <Avx>\n                <codeDatum>WGE</codeDatum>\n                <codeType>GRC</codeType>\n                <geoLat>38.28330989N</geoLat>\n                <geoLong>079.75500384W</geoLong>\n              </Avx>\n              <Avx>\n                <codeDatum>WGE</codeDatum>\n                <codeType>GRC</codeType>\n                <geoLat>38.27854648N</geoLat>\n                <geoLong>079.75923862W</geoLong>\n              </Avx>\n              <Avx>\n                <codeDatum>WGE</codeDatum>\n                <codeType>GRC</codeType>\n                <geoLat>38.27443487N</geoLat>\n                <geoLong>079.76445784W</geoLong>\n              </Avx>\n              <Avx>\n                <codeDatum>WGE</codeDatum>\n                <codeType>GRC</codeType>\n                <geoLat>38.27109986N</geoLat>\n                <geoLong>079.77050292W</geoLong>\n              </Avx>\n              <Avx>\n                <codeDatum>WGE</codeDatum>\n                <codeType>GRC</codeType>\n                <geoLat>38.26864269N</geoLat>\n                <geoLong>079.7771903W</geoLong>\n              </Avx>\n              <Avx>\n                <codeDatum>WGE</codeDatum>\n                <codeType>GRC</codeType>\n                <geoLat>38.2671379N</geoLat>\n                <geoLong>079.78431697W</geoLong>\n              </Avx>\n              <Avx>\n                <codeDatum>WGE</codeDatum>\n                <codeType>GRC</codeType>\n                <geoLat>38.26663119N</geoLat>\n                <geoLong>079.79166667W</geoLong>\n              </Avx>\n              <Avx>\n                <codeDatum>WGE</codeDatum>\n                <codeType>GRC</codeType>\n                <geoLat>38.2671379N</geoLat>\n                <geoLong>079.79901636W</geoLong>\n              </Avx>\n              <Avx>\n                <codeDatum>WGE</codeDatum>\n                <codeType>GRC</codeType>\n                <geoLat>38.26864269N</geoLat>\n                <geoLong>079.80614303W</geoLong>\n              </Avx>\n              <Avx>\n                <codeDatum>WGE</codeDatum>\n                <codeType>GRC</codeType>\n                <geoLat>38.27109986N</geoLat>\n                <geoLong>079.81283041W</geoLong>\n              </Avx>\n              <Avx>\n                <codeDatum>WGE</codeDatum>\n                <codeType>GRC</codeType>\n                <geoLat>38.27443487N</geoLat>\n                <geoLong>079.8188755W</geoLong>\n              </Avx>\n              <Avx>\n                <codeDatum>WGE</codeDatum>\n                <codeType>GRC</codeType>\n                <geoLat>38.27854648N</geoLat>\n                <geoLong>079.82409472W</geoLong>\n              </Avx>\n              <Avx>\n                <codeDatum>WGE</codeDatum>\n                <codeType>GRC</codeType>\n                <geoLat>38.28330989N</geoLat>\n                <geoLong>079.82832949W</geoLong>\n              </Avx>\n              <Avx>\n                <codeDatum>WGE</codeDatum>\n                <codeType>GRC</codeType>\n                <geoLat>38.28858047N</geoLat>\n                <geoLong>079.83145104W</geoLong>\n              </Avx>\n              <Avx>\n                <codeDatum>WGE</codeDatum>\n                <codeType>GRC</codeType>\n                <geoLat>38.29419817N</geoLat>\n                <geoLong>079.83336432W</geoLong>\n              </Avx>\n              <Avx>\n                <codeDatum>WGE</codeDatum>\n                <codeType>GRC</codeType>\n                <geoLat>38.29999236N</geoLat>\n                <geoLong>079.83401094W</geoLong>\n              </Avx>\n              <Avx>\n                <codeDatum>WGE</codeDatum>\n                <codeType>GRC</codeType>\n                <geoLat>38.305787N</geoLat>\n                <geoLong>079.83337095W</geoLong>\n              </Avx>\n              <Avx>\n                <codeDatum>WGE</codeDatum>\n                <codeType>GRC</codeType>\n                <geoLat>38.31140601N</geoLat>\n                <geoLong>079.83146351W</geoLong>\n              </Avx>\n              <Avx>\n                <codeDatum>WGE</codeDatum>\n                <codeType>GRC</codeType>\n                <geoLat>38.3166786N</geoLat>\n                <geoLong>079.82834629W</geoLong>\n              </Avx>\n              <Avx>\n                <codeDatum>WGE</codeDatum>\n                <codeType>GRC</codeType>\n                <geoLat>38.32144447N</geoLat>\n                <geoLong>079.82411382W</geoLong>\n              </Avx>\n              <Avx>\n                <codeDatum>WGE</codeDatum>\n                <codeType>GRC</codeType>\n                <geoLat>38.32555871N</geoLat>\n                <geoLong>079.8188946W</geoLong>\n              </Avx>\n              <Avx>\n                <codeDatum>WGE</codeDatum>\n                <codeType>GRC</codeType>\n                <geoLat>38.32889618N</geoLat>\n                <geoLong>079.81284721W</geoLong>\n              </Avx>\n              <Avx>\n                <codeDatum>WGE</codeDatum>\n                <codeType>GRC</codeType>\n                <geoLat>38.33135536N</geoLat>\n                <geoLong>079.8061555W</geoLong>\n              </Avx>\n              <Avx>\n                <codeDatum>WGE</codeDatum>\n                <codeType>GRC</codeType>\n                <geoLat>38.33286145N</geoLat>\n                <geoLong>079.79902299W</geoLong>\n              </Avx>\n              <Avx>\n                <codeDatum>WGE</codeDatum>\n                <codeType>GRC</codeType>\n                <geoLat>38.33336862N</geoLat>\n                <geoLong>079.79166667W</geoLong>\n              </Avx>\n            </abdMergedArea>\n            <aseShapes>\n              <AseUid>\n                <codeType>PART</codeType>\n                <codeId>1074</codeId>\n              </AseUid>\n              <Att>\n                <codeWorkHr>NOTAM</codeWorkHr>\n              </Att>\n              <Abd>\n                <AbdUid>\n                  <AseUid>\n                    <codeType>PART</codeType>\n                    <codeId>1074</codeId>\n                  </AseUid>\n                </AbdUid>\n                <txtRmk>1074</txtRmk>\n                <Avx>\n                  <codeType>CIR</codeType>\n                  <geoLat>38.3N</geoLat>\n                  <geoLong>079.79166667W</geoLong>\n                  <codeDatum>WGE</codeDatum>\n                  <valRadiusArc>2.0</valRadiusArc>\n                  <uomRadiusArc>NM</uomRadiusArc>\n                  <Frd>\n                    <FrdUid>\n                      <DpnUid>\n                        <codeId>EKN39</codeId>\n                        <geoLat>38.3N</geoLat>\n                        <geoLong>079.79166667W</geoLong>\n                      </DpnUid>\n                    </FrdUid>\n                    <Ain>\n                      <VorUid>\n                        <codeId>EKN</codeId>\n                        <geoLat>38.91443583N</geoLat>\n                        <geoLong>080.0992725W</geoLong>\n                      </VorUid>\n                      <valAngleBrg>166.0</valAngleBrg>\n                    </Ain>\n                    <Din>\n                      <TcnUid>\n                        <codeId>EKN</codeId>\n                        <geoLat>38.91443583N</geoLat>\n                        <geoLong>080.0992725W</geoLong>\n                      </TcnUid>\n                      <valDist>39.6</valDist>\n                      <uomDist>NM</uomDist>\n                    </Din>\n                    <txtRmk>ELKINS</txtRmk>\n                  </Frd>\n                </Avx>\n              </Abd>\n            </aseShapes>\n            <InstructionsGroup />\n            <codeIncFRD>TRUE</codeIncFRD>\n            <codeShpPrt>COMPOSITE</codeShpPrt>\n            <codeLclTime>TRUE</codeLclTime>\n            <codeAuthATC>FALSE</codeAuthATC>\n          </TFRAreaGroup>\n          <TemplateType>BigThreatLanguage</TemplateType>\n          <codeCtrlFacilityType>ARTCC</codeCtrlFacilityType>\n        </TfrNot>\n        <txtNameCoordFacility>WASHINGTON</txtNameCoordFacility>\n        <codeCoordFacility>ZDC</codeCoordFacility>\n        <codeCoordFacilityType>ARTCC</codeCoordFacilityType>\n        <txtAddrCoordPhone>000-000-0000</txtAddrCoordPhone>\n        <txtNamePOC>CONTACT REMOVED ,  CONTACT REMOVED</txtNamePOC>\n        <txtAddrPOCPhone>000-000-0000</txtAddrPOCPhone>\n        <valFreqPOC>000.000</valFreqPOC>\n        <txtDescrUSNS>!FDC 6/9741 ZDC VA..AIRSPACE 41NM SW HARRISONBURG, VA..TEMPORARY FLIGHT RESTRICTIONS. PURSUANT TO 14 CFR SECTION 91.137(A)(2) TEMPORARY FLIGHT RESTRICTIONS ARE IN EFFECT TO PROVIDE A SAFE ENVIRONMENT FOR FIRE FIGHTING ACFT OPS. WI AN AREA DEFINED AS 2NM RADIUS OF 381800N0794730W (EKN166039.6) SFC-5200FT CONTACT REMOVED TEL 000-000-0000 OR FREQ 000.000 CONTACT REMOVED IS IN CHARGE OF THE OPERATION. WASHINGTON/ZDC/ARTCC TEL 000-000-0000 IS THE FAA CDN FAC. DLY 1400-2300 2611251400-2611302300EST</txtDescrUSNS>\n        <txtDescrTraditional>!FDC 6/9741 ZDC VA..AIRSPACE 41NM SW HARRISONBURG, VA..TEMPORARY FLIGHT RESTRICTION. PURSUANT TO 14 CFR SECTION 91.137(A)(2), TEMPORARY FLIGHT RESTRICTIONS ARE IN EFFECT WI AN AREA DEFINED AS 2NM RADIUS OF 381800N0794730W (EKN166039.6) SFC-5200FT MSL EFFECTIVE 2611251400 UTC UNTIL 2611302300 UTC DLY 1400-2300. TO PROVIDE A SAFE ENVIRONMENT FOR FIRE FIGHTING ACFT OPS CONTACT REMOVED , CONTACT REMOVED, TEL 000-000-0000, /FREQ 000.000 IS IN CHARGE OF ON SCENE EMERGENCY RESPONSE ACTIVITIES. THE WASHINGTON /ZDC/ ARTCC, TEL 000-000-0000, IS THE CDN FAC. 2611251400-2611302300</txtDescrTraditional>\n        <txtDescrModern>&lt;html&gt;\n  &lt;span style=\"Arial\" valign=\"Top\"&gt;\n    &lt;Body&gt;\n      &lt;Table cellpadding=\"1\" cellspacing=\"0\"&gt;\n        &lt;TR bgcolor=\"#1E90FF\"&gt;\n          &lt;TD colspan=\"3\" align=\"left\" valign=\"bottom\" width=\"250\"&gt;\n            &lt;b&gt;\n              &lt;font color=\"#FFFFFF\" size=\"3\" face=\"Arial\"&gt;NOTAM Number     :&lt;/font&gt;\n            &lt;/b&gt;\n          &lt;/TD&gt;\n          &lt;TD valign=\"bottom\" align=\"left\" width=\"320\"&gt;\n            &lt;b&gt;\n              &lt;font color=\"#FFFFFF\" size=\"3\" face=\"Arial\"&gt;FDC 6/9741&lt;/font&gt;\n            &lt;/b&gt;\n          &lt;/TD&gt;\n        &lt;/TR&gt;\n        &lt;TR&gt;\n          &lt;TD colspan=\"3\" align=\"left\" valign=\"top\"&gt;\n            &lt;font face=\"Arial\" size=\"2\"&gt;Issue Date     :&lt;/font&gt;\n          &lt;/TD&gt;\n          &lt;TD valign=\"top\"&gt;\n            &lt;font face=\"Arial\" size=\"2\"&gt;November 25, 2026 at 0018 UTC&lt;/font&gt;\n          &lt;/TD&gt;\n        &lt;/TR&gt;\n        &lt;TR&gt;\n          &lt;TD colspan=\"3\" align=\"left\" valign=\"top\"&gt;\n            &lt;font face=\"Arial\" size=\"2\"&gt;Location     :&lt;/font&gt;\n          &lt;/TD&gt;\n          &lt;TD&gt;\n            &lt;font face=\"Arial\" size=\"2\"&gt;41NM SW HARRISONBURG, Virginia near ELKINS VORTAC (EKN)&lt;/font&gt;\n          &lt;/TD&gt;\n        &lt;/TR&gt;\n        &lt;TR&gt;\n          &lt;TD colspan=\"3\" align=\"left\" valign=\"top\"&gt;\n            &lt;font face=\"Arial\" size=\"2\"&gt;Beginning Date and Time     :&lt;/font&gt;\n          &lt;/TD&gt;\n          &lt;TD&gt;\n            &lt;font face=\"Arial\" size=\"2\"&gt;November 25, 2026 UTC 1400-2300 Daily&lt;/font&gt;\n          &lt;/TD&gt;\n        &lt;/TR&gt;\n        &lt;TR&gt;\n          &lt;TD colspan=\"3\" align=\"left\" valign=\"top\"&gt;\n            &lt;font face=\"Arial\" size=\"2\"&gt;Ending Date and Time     :&lt;/font&gt;\n          &lt;/TD&gt;\n          &lt;TD&gt;\n            &lt;font face=\"Arial\" size=\"2\"&gt;November 30, 2026 UTC&lt;/font&gt;\n          &lt;/TD&gt;\n        &lt;/TR&gt;\n        &lt;TR&gt;\n          &lt;TD colspan=\"3\" align=\"left\" valign=\"top\"&gt;\n            &lt;font face=\"Arial\" size=\"2\"&gt;Reason for NOTAM     :&lt;/font&gt;\n          &lt;/TD&gt;\n          &lt;TD&gt;\n            &lt;font face=\"Arial\" size=\"2\"&gt;TO PROVIDE A SAFE ENVIRONMENT FOR FIRE FIGHTING ACFT OPS&lt;/font&gt;\n          &lt;/TD&gt;\n        &lt;/TR&gt;\n        &lt;TR&gt;\n          &lt;TD colspan=\"3\" align=\"left\" valign=\"top\"&gt;\n            &lt;font face=\"Arial\" size=\"2\"&gt;Type     :&lt;/font&gt;\n          &lt;/TD&gt;\n          &lt;TD&gt;\n            &lt;font face=\"Arial\" size=\"2\"&gt;Hazards&lt;/font&gt;\n          &lt;/TD&gt;\n        &lt;/TR&gt;\n        &lt;TR&gt;\n          &lt;TD colspan=\"3\" align=\"left\" valign=\"top\"&gt;\n            &lt;font face=\"Arial\" size=\"2\"&gt;Replaced NOTAM(s)     :&lt;/font&gt;\n          &lt;/TD&gt;\n          &lt;TD&gt;\n            &lt;font face=\"Arial\" size=\"2\"&gt;N/A&lt;/font&gt;\n          &lt;/TD&gt;\n        &lt;/TR&gt;\n        &lt;TR&gt;\n          &lt;TD colspan=\"3\" align=\"left\" valign=\"top\"&gt;\n            &lt;font face=\"Arial\" size=\"2\"&gt;Pilots May Contact     :&lt;/font&gt;\n          &lt;/TD&gt;\n          &lt;TD&gt;\n            &lt;font face=\"Arial\" size=\"2\"&gt;WASHINGTON (ZDC) ARTCC, 000-000-0000&lt;/font&gt;\n          &lt;/TD&gt;\n        &lt;/TR&gt;\n        &lt;TR&gt;\n          &lt;TD colspan=\"2\" height=\"20\"&gt;  &lt;/TD&gt;\n        &lt;/TR&gt;\n        &lt;TR&gt;\n          &lt;TD colspan=\"3\" align=\"right\" valign=\"top\"&gt;\n            &lt;font face=\"Arial\" size=\"2\"&gt;\n              &lt;b&gt;Jump To: &amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&lt;/b&gt;\n            &lt;/font&gt;\n          &lt;/TD&gt;\n          &lt;TD&gt;\n            &lt;font face=\"Arial\" size=\"2\"&gt;\n              &lt;b&gt;\n                &lt;a href=\"#areas\" class=\"internal\"&gt; Affected Areas &lt;/a&gt;&lt;br/&gt;&lt;a href=\"#restrictions\" class=\"internal\"&gt; Operating Restrictions and Requirements &lt;/a&gt;&lt;br/&gt;&lt;a href=\"#other\" class=\"internal\"&gt; Other Information &lt;/a&gt;&lt;br/&gt;&lt;/b&gt;\n            &lt;/font&gt;\n          &lt;/TD&gt;\n        &lt;/TR&gt;\n        &lt;TR&gt;\n          &lt;TD colspan=\"2\" height=\"20\"&gt;  &lt;/TD&gt;\n        &lt;/TR&gt;\n      &lt;/Table&gt;\n      &lt;Table cellpadding=\"1\" cellspacing=\"0\"&gt;\n        &lt;TR bgcolor=\"#1E90FF\"&gt;\n          &lt;TD colspan=\"5\"&gt;\n            &lt;a name=\"areas\"&gt;\n              &lt;b&gt;\n                &lt;font color=\"#FFFFFF\" size=\"3\" face=\"Arial\"&gt;Affected Area(s)&lt;/font&gt;\n              &lt;/b&gt;\n            &lt;/a&gt;\n          &lt;/TD&gt;\n          &lt;TD colspan=\"1\" align=\"right\"&gt;\n            &lt;a href=\"#\"&gt;\n              &lt;font color=\"#FFFFFF\" face=\"Arial\"&gt;\n                &lt;b&gt;Top&lt;/b&gt;\n              &lt;/font&gt;\n            &lt;/a&gt;\n          &lt;/TD&gt;\n        &lt;/TR&gt;\n        &lt;TR&gt;\n          &lt;TD colspan=\"2\" height=\"10\"&gt;  &lt;/TD&gt;\n        &lt;/TR&gt;\n        &lt;TR&gt;\n          &lt;TD colspan=\"3\" width=\"200\"&gt;\n            &lt;font face=\"Arial\" size=\"2\"&gt;\n              &lt;b&gt;Airspace Definition:&lt;/b&gt;\n            &lt;/font&gt;\n          &lt;/TD&gt;\n        &lt;/TR&gt;\n        &lt;TR&gt;\n          &lt;TD&gt; &lt;/TD&gt;\n          &lt;TD&gt; &lt;/TD&gt;\n          &lt;TD colspan=\"3\"&gt;\n            &lt;font face=\"Arial\" size=\"2\"&gt;Center:&lt;/font&gt;\n          &lt;/TD&gt;\n          &lt;TD&gt;\n            &lt;font face=\"Arial\" size=\"2\"&gt; On the ELKINS VORTAC (EKN) 166 degree radial at 39.6 nautical miles. (Latitude: 38&amp;#xBA;18'00\"N, Longitude: 79&amp;#xBA;47'30\"W)&lt;/font&gt;\n          &lt;/TD&gt;\n        &lt;/TR&gt;\n        &lt;TR&gt;\n          &lt;TD&gt; &lt;/TD&gt;\n          &lt;TD&gt; &lt;/TD&gt;\n          &lt;TD colspan=\"3\"&gt;\n            &lt;font face=\"Arial\" size=\"2\"&gt;Radius:&lt;/font&gt;\n          &lt;/TD&gt;\n          &lt;TD&gt;\n            &lt;font face=\"Arial\" size=\"2\"&gt; 2 nautical miles&lt;/font&gt;\n          &lt;/TD&gt;\n        &lt;/TR&gt;\n        &lt;TR&gt;\n          &lt;TD&gt; &lt;/TD&gt;\n          &lt;TD&gt; &lt;/TD&gt;\n          &lt;TD colspan=\"3\"&gt;\n            &lt;font face=\"Arial\" size=\"2\"&gt;Altitude:&lt;/font&gt;\n          &lt;/TD&gt;\n          &lt;TD&gt;\n            &lt;font face=\"Arial\" size=\"2\"&gt; From the surface  up to and including 5200 feet MSL &lt;/font&gt;\n          &lt;/TD&gt;\n        &lt;/TR&gt;\n        &lt;TR&gt;\n          &lt;TD colspan=\"5\"&gt;\n            &lt;font face=\"Arial\" size=\"2\"&gt;\n              &lt;b&gt;Effective Date(s):&lt;/b&gt;\n            &lt;/font&gt;\n          &lt;/TD&gt;\n        &lt;/TR&gt;\n        &lt;TR&gt;\n          &lt;TD&gt; &lt;/TD&gt;\n          &lt;TD&gt; &lt;/TD&gt;\n          &lt;TD colspan=\"5\"&gt;\n            &lt;font face=\"Arial\" size=\"2\"&gt;\n              &lt;b&gt;In UTC:&lt;/b&gt;\n            &lt;/font&gt;\n          &lt;/TD&gt;\n        &lt;/TR&gt;\n        &lt;TR&gt;\n          &lt;TD&gt; &lt;/TD&gt;\n          &lt;TD&gt; &lt;/TD&gt;\n          &lt;TD colspan=\"5\"&gt;\n            &lt;font face=\"Arial\" size=\"2\"&gt;1400 to 2300 UTC Daily starting November 25 and ending November 30.&lt;/font&gt;\n          &lt;/TD&gt;\n        &lt;/TR&gt;\n        &lt;TR&gt;\n          &lt;TD colspan=\"2\" height=\"20\"&gt;  &lt;/TD&gt;\n        &lt;/TR&gt;\n      &lt;/Table&gt;\n      &lt;b&gt;ENDSECTION1&lt;/b&gt;\n      &lt;Table cellpadding=\"1\" cellspacing=\"0\"&gt;\n        &lt;TR bgcolor=\"#1E90FF\"&gt;\n          &lt;TD colspan=\"3\"&gt;\n            &lt;a name=\"restrictions\"&gt;\n              &lt;b&gt;\n                &lt;font color=\"#FFFFFF\" face=\"Arial\" size=\"3\"&gt;Operating Restrictions and Requirements&lt;/font&gt;\n              &lt;/b&gt;\n            &lt;/a&gt;\n          &lt;/TD&gt;\n          &lt;TD colspan=\"1\" align=\"right\"&gt;\n            &lt;a href=\"#\"&gt;\n              &lt;font color=\"#FFFFFF\" face=\"Arial\"&gt;\n                &lt;b&gt;Top&lt;/b&gt;\n              &lt;/font&gt;\n            &lt;/a&gt;\n          &lt;/TD&gt;\n        &lt;/TR&gt;\n        &lt;TR&gt;\n          &lt;TD colspan=\"2\" height=\"20\"&gt;  &lt;/TD&gt;\n        &lt;/TR&gt;\n        &lt;TR&gt;\n          &lt;TD colspan=\"3\"&gt;\n            &lt;font face=\"Arial\" size=\"2\"&gt;No pilots may operate an aircraft in the areas covered by this NOTAM (except as described).&lt;/font&gt;\n          &lt;/TD&gt;\n        &lt;/TR&gt;\n        &lt;TR&gt;\n          &lt;TD colspan=\"2\" height=\"20\"&gt;  &lt;/TD&gt;\n        &lt;/TR&gt;\n        &lt;TR&gt;\n          &lt;TD&gt;\n            &lt;font face=\"Arial\" size=\"2\"&gt;\n              &lt;DL&gt;\n                &lt;DT /&gt;&lt;br/&gt;&lt;/DL&gt;\n            &lt;/font&gt;\n          &lt;/TD&gt;\n        &lt;/TR&gt;\n        &lt;TR&gt;\n          &lt;TD colspan=\"2\" height=\"10\"&gt;  &lt;/TD&gt;\n        &lt;/TR&gt;\n      &lt;/Table&gt;\n      &lt;Table cellpadding=\"1\" cellspacing=\"0\"&gt;\n        &lt;TR bgcolor=\"#1E90FF\"&gt;\n          &lt;TD colspan=\"3\"&gt;\n            &lt;a name=\"other\"&gt;\n              &lt;b&gt;\n                &lt;font color=\"#FFFFFF\" face=\"Arial\" size=\"3\"&gt;Other Information:&lt;/font&gt;\n              &lt;/b&gt;\n            &lt;/a&gt;\n          &lt;/TD&gt;\n          &lt;TD colspan=\"1\" align=\"right\"&gt;\n            &lt;a href=\"#\"&gt;\n              &lt;font color=\"#FFFFFF\" face=\"Arial\"&gt;\n                &lt;b&gt;Top&lt;/b&gt;\n              &lt;/font&gt;\n            &lt;/a&gt;\n          &lt;/TD&gt;\n        &lt;/TR&gt;\n        &lt;TR&gt;\n          &lt;TD colspan=\"2\"&gt;\n            &lt;font face=\"Arial\" size=\"2\"&gt;ARTCC:&lt;/font&gt;\n          &lt;/TD&gt;\n          &lt;TD&gt;\n            &lt;font face=\"Arial\" size=\"2\"&gt;ZDC - Washington Center&lt;/font&gt;\n          &lt;/TD&gt;\n        &lt;/TR&gt;\n        &lt;TR&gt;\n          &lt;TD colspan=\"2\"&gt;\n            &lt;font face=\"Arial\" size=\"2\"&gt;Point of Contact:&lt;/font&gt;\n          &lt;/TD&gt;\n          &lt;TD&gt;\n            &lt;font face=\"Arial\" size=\"2\"&gt;CONTACT REMOVED ,  CONTACT REMOVED&lt;/font&gt;\n          &lt;/TD&gt;\n        &lt;/TR&gt;\n        &lt;TR&gt;\n          &lt;TD colspan=\"2\"&gt; &lt;/TD&gt;\n          &lt;TD&gt;\n            &lt;font face=\"Arial\" size=\"2\"&gt;Telephone 000-000-0000&lt;/font&gt;\n          &lt;/TD&gt;\n        &lt;/TR&gt;\n        &lt;TR&gt;\n          &lt;TD colspan=\"2\"&gt; &lt;/TD&gt;\n          &lt;TD&gt;\n            &lt;font face=\"Arial\" size=\"2\"&gt;Frequency 000.000&lt;/font&gt;\n          &lt;/TD&gt;\n        &lt;/TR&gt;\n        &lt;TR&gt;\n          &lt;TD colspan=\"2\"&gt;\n            &lt;font face=\"Arial\" size=\"2\"&gt;Authority:&lt;/font&gt;\n          &lt;/TD&gt;\n          &lt;TD&gt;\n            &lt;font face=\"Arial\" size=\"2\"&gt;Title 14 CFR section 91.137(a)(2)&lt;/font&gt;\n          &lt;/TD&gt;\n        &lt;/TR&gt;\n        &lt;TR&gt;\n          &lt;TD Width=\"40\" /&gt;\n          &lt;TD Width=\"152\" /&gt;\n          &lt;TD Width=\"318\" /&gt;\n        &lt;/TR&gt;\n      &lt;/Table&gt;\n    &lt;/Body&gt;\n  &lt;/span&gt;\n&lt;/html&gt;</txtDescrModern>\n        <codeFreeformText>false</codeFreeformText>\n      </Not>\n    </Add>\n  </Group>\n</XNOTAM-Update>"
+  },
+  "expect": {
+    "observations": [
+      {
+        "type": "airspace.restriction",
+        "version": 1,
+        "subject": {
+          "kind": "site",
+          "id": "RIDGE-SITE-2",
+          "scope": "source"
+        },
+        "occurredAt": "2026-11-25T00:18:39.000Z",
+        "interval": {
+          "start": "2026-11-25T14:00:00.000Z",
+          "end": "2026-11-30T23:00:00.000Z"
+        },
+        "sourceEventId": "6/9741 Hazard Area1 touching RIDGE-AREA-2",
+        "originalLocator": {
+          "kind": "byte_range",
+          "value": {
+            "offsetBytes": 1115,
+            "lengthBytes": 12215
+          }
+        },
+        "values": {
+          "notamId": "6/9741",
+          "name": "6/9741",
+          "areaName": "Hazard Area1",
+          "sourceTypeCode": "91.137(a)(2)",
+          "floor": {
+            "meters": 0,
+            "datum": "mean_sea_level"
+          },
+          "ceiling": {
+            "meters": 1584.96,
+            "datum": "mean_sea_level"
+          },
+          "dailySchedule": {
+            "fromTime": "14:00",
+            "toTime": "23:00"
+          },
+          "area": {
+            "boundary": [
+              {
+                "latitudeDegrees": 38.33336862,
+                "longitudeDegrees": -79.79166667
+              },
+              {
+                "latitudeDegrees": 38.33286145,
+                "longitudeDegrees": -79.78431034
+              },
+              {
+                "latitudeDegrees": 38.33135536,
+                "longitudeDegrees": -79.77717783
+              },
+              {
+                "latitudeDegrees": 38.32889618,
+                "longitudeDegrees": -79.77048612
+              },
+              {
+                "latitudeDegrees": 38.32555871,
+                "longitudeDegrees": -79.76443873
+              },
+              {
+                "latitudeDegrees": 38.32144447,
+                "longitudeDegrees": -79.75921952
+              },
+              {
+                "latitudeDegrees": 38.3166786,
+                "longitudeDegrees": -79.75498705
+              },
+              {
+                "latitudeDegrees": 38.31140601,
+                "longitudeDegrees": -79.75186983
+              },
+              {
+                "latitudeDegrees": 38.305787,
+                "longitudeDegrees": -79.74996238
+              },
+              {
+                "latitudeDegrees": 38.29999236,
+                "longitudeDegrees": -79.74932239
+              },
+              {
+                "latitudeDegrees": 38.29419817,
+                "longitudeDegrees": -79.74996901
+              },
+              {
+                "latitudeDegrees": 38.28858047,
+                "longitudeDegrees": -79.7518823
+              },
+              {
+                "latitudeDegrees": 38.28330989,
+                "longitudeDegrees": -79.75500384
+              },
+              {
+                "latitudeDegrees": 38.27854648,
+                "longitudeDegrees": -79.75923862
+              },
+              {
+                "latitudeDegrees": 38.27443487,
+                "longitudeDegrees": -79.76445784
+              },
+              {
+                "latitudeDegrees": 38.27109986,
+                "longitudeDegrees": -79.77050292
+              },
+              {
+                "latitudeDegrees": 38.26864269,
+                "longitudeDegrees": -79.7771903
+              },
+              {
+                "latitudeDegrees": 38.2671379,
+                "longitudeDegrees": -79.78431697
+              },
+              {
+                "latitudeDegrees": 38.26663119,
+                "longitudeDegrees": -79.79166667
+              },
+              {
+                "latitudeDegrees": 38.2671379,
+                "longitudeDegrees": -79.79901636
+              },
+              {
+                "latitudeDegrees": 38.26864269,
+                "longitudeDegrees": -79.80614303
+              },
+              {
+                "latitudeDegrees": 38.27109986,
+                "longitudeDegrees": -79.81283041
+              },
+              {
+                "latitudeDegrees": 38.27443487,
+                "longitudeDegrees": -79.8188755
+              },
+              {
+                "latitudeDegrees": 38.27854648,
+                "longitudeDegrees": -79.82409472
+              },
+              {
+                "latitudeDegrees": 38.28330989,
+                "longitudeDegrees": -79.82832949
+              },
+              {
+                "latitudeDegrees": 38.28858047,
+                "longitudeDegrees": -79.83145104
+              },
+              {
+                "latitudeDegrees": 38.29419817,
+                "longitudeDegrees": -79.83336432
+              },
+              {
+                "latitudeDegrees": 38.29999236,
+                "longitudeDegrees": -79.83401094
+              },
+              {
+                "latitudeDegrees": 38.305787,
+                "longitudeDegrees": -79.83337095
+              },
+              {
+                "latitudeDegrees": 38.31140601,
+                "longitudeDegrees": -79.83146351
+              },
+              {
+                "latitudeDegrees": 38.3166786,
+                "longitudeDegrees": -79.82834629
+              },
+              {
+                "latitudeDegrees": 38.32144447,
+                "longitudeDegrees": -79.82411382
+              },
+              {
+                "latitudeDegrees": 38.32555871,
+                "longitudeDegrees": -79.8188946
+              },
+              {
+                "latitudeDegrees": 38.32889618,
+                "longitudeDegrees": -79.81284721
+              },
+              {
+                "latitudeDegrees": 38.33135536,
+                "longitudeDegrees": -79.8061555
+              },
+              {
+                "latitudeDegrees": 38.33286145,
+                "longitudeDegrees": -79.79902299
+              }
+            ]
+          },
+          "regionId": "RIDGE-AREA-2"
+        },
+        "extraLimitations": [
+          "The published area touches the region RIDGE-AREA-2, a circle of 1000 m configured around the site RIDGE-SITE-2."
+        ]
+      }
+    ],
+    "rejections": [],
+    "unmapped": [],
+    "conversions": [
+      {
+        "observation": 0,
+        "field": "/values/ceiling/meters",
+        "vendorUnit": "ft",
+        "vendorValue": 5200,
+        "expected": 1584.96
+      }
+    ]
+  }
+}

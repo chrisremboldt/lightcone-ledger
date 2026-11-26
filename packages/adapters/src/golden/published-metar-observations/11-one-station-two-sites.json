@@ -52,7 +52,9 @@
           "method": "measured",
           "speedMetersPerSecond": 9.26,
           "gustSpeedMetersPerSecond": 12.86111111111111,
-          "directionFromDegrees": 60
+          "directionFromDegrees": 60,
+          "stationId": "KORD",
+          "stationDistanceMeters": 14200
         },
         "extraLimitations": ["Reported by station KORD for the site RIDGE-SITE-1, 14.2 km from the site as configured."]
       },
@@ -77,7 +79,9 @@
         "values": {
           "method": "observed",
           "visibilityMeters": 16093.44,
-          "bound": "stated"
+          "bound": "stated",
+          "stationId": "KORD",
+          "stationDistanceMeters": 14200
         },
         "extraLimitations": ["Reported by station KORD for the site RIDGE-SITE-1, 14.2 km from the site as configured."]
       },
@@ -103,7 +107,8 @@
           "method": "measured",
           "speedMetersPerSecond": 9.26,
           "gustSpeedMetersPerSecond": 12.86111111111111,
-          "directionFromDegrees": 60
+          "directionFromDegrees": 60,
+          "stationId": "KORD"
         },
         "extraLimitations": [
           "Reported by station KORD for the site RIDGE-SITE-2; the distance from the station to the site is not on record."
@@ -130,7 +135,8 @@
         "values": {
           "method": "observed",
           "visibilityMeters": 16093.44,
-          "bound": "stated"
+          "bound": "stated",
+          "stationId": "KORD"
         },
         "extraLimitations": [
           "Reported by station KORD for the site RIDGE-SITE-2; the distance from the station to the site is not on record."
@@ -332,6 +338,20 @@
         "vendorUnit": "deg",
         "vendorValue": -87.9316,
         "expected": -87.9316
+      },
+      {
+        "observation": 0,
+        "field": "/values/stationDistanceMeters",
+        "vendorUnit": "km",
+        "vendorValue": 14.2,
+        "expected": 14200
+      },
+      {
+        "observation": 1,
+        "field": "/values/stationDistanceMeters",
+        "vendorUnit": "km",
+        "vendorValue": 14.2,
+        "expected": 14200
       }
     ]
   }

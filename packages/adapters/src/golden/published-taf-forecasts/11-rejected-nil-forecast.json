@@ -1,0 +1,22 @@
+{
+  "note": "Constructed for this test, not fetched: a NIL forecast from an invented station.",
+  "case": "rejected",
+  "message": {
+    "contentType": "application/json",
+    "transport": {
+      "method": "GET",
+      "path": "/api/data/taf"
+    },
+    "capturedAt": "2026-11-26T04:33:53.000Z",
+    "bodyText": "{\"icaoId\":\"ZZZZ\",\"rawTAF\":\"TAF ZZZZ 260200Z NIL\"}"
+  },
+  "expect": {
+    "observations": [],
+    "rejections": [
+      {
+        "reasonIncludes": "is NIL: no forecast"
+      }
+    ],
+    "unmapped": []
+  }
+}

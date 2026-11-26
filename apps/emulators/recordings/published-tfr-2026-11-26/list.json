@@ -1,0 +1,43 @@
+[{
+  "notam_id" : "6/9800",
+  "type" : "SECURITY",
+  "facility" : "ZID",
+  "state" : "IN",
+  "description" : "Carmel, IN, Thursday, November 26, 2026 through Thursday, December 24, 2026 Local",
+  "creation_date" : "11/25/2026"
+},{
+  "notam_id" : "6/9741",
+  "type" : "HAZARDS",
+  "facility" : "ZDC",
+  "state" : "VA",
+  "description" : "41NM SW HARRISONBURG, VA, Wednesday, November 25, 2026 through Monday, November 30, 2026 UTC",
+  "creation_date" : "11/25/2026"
+},{
+  "notam_id" : "6/9661",
+  "type" : "VIP",
+  "facility" : "ZID",
+  "state" : "OH",
+  "description" : "Cincinnati, OH, Tuesday, November 24, 2026 through Sunday, November 29, 2026 Local",
+  "creation_date" : "11/24/2026"
+},{
+  "notam_id" : "6/9432",
+  "type" : "AIR SHOWS/SPORTS",
+  "facility" : "ZDC",
+  "state" : "NC",
+  "description" : "New Bern, NC, Sunday, November 29, 2026 UTC",
+  "creation_date" : "11/23/2026"
+},{
+  "notam_id" : "6/6925",
+  "type" : "SECURITY",
+  "facility" : "ZLA",
+  "state" : "CA",
+  "description" : "a theme park anaheim, CA",
+  "creation_date" : "11/10/2026"
+},{
+  "notam_id" : "6/3366",
+  "type" : "SECURITY",
+  "facility" : "FDC",
+  "state" : "USA",
+  "description" : "  USA, Thursday, April 16, 2026 through Sunday, April 16, 2028 UTC",
+  "creation_date" : "04/16/2026"
+}]

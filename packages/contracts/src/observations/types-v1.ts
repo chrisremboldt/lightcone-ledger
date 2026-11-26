@@ -248,6 +248,26 @@ export const positionFixV1: ObservationTypeDefinition = {
 };
 
 // weather.wind v1 ----------------------------------------------------------------------------------------------
+/** A value a station reported for a subject it stands apart from: the station, and how far away it is when known. */
+const reportingStation = {
+  stationId: Type.Optional(
+    Type.String({
+      minLength: 1,
+      maxLength: 20,
+      title: 'Reporting station',
+      description:
+        'The identifier of the station that reported the value, when a station apart from the subject reported it. Absent: the value was obtained at the subject.',
+    }),
+  ),
+  stationDistanceMeters: Type.Optional(
+    Type.Number({
+      minimum: 0,
+      maximum: 1_000_000,
+      title: 'Distance from the station (m)',
+      description: 'How far the reporting station is from the subject, as the source’s configuration states it.',
+    }),
+  ),
+};
 const windSubjects = ['flight', 'aircraft', 'site'] as const;
 export const WindObservationV1Schema = Type.Object(
   {
@@ -298,6 +318,7 @@ export const WindObservationV1Schema = Type.Object(
         heightAboveGroundMeters: Type.Optional(
           Type.Number({ minimum: 0, maximum: 10_000, title: 'Measured height above ground (m)' }),
         ),
+        ...reportingStation,
       },
       Closed,
     ),
@@ -323,6 +344,7 @@ export const windV1: ObservationTypeDefinition = {
     'Absence of wind observations is not evidence of calm.',
     'Absent direction is not a calm or a variable wind; only directionVariable says the source reported a variable direction.',
     'A direction range says only between which directions the source reported the wind varying, not how often it blew from each.',
+    'A wind with stationId was measured where that station stands, not at the subject; stationDistanceMeters is the distance the configuration states, not a measured one.',
   ],
   schema: WindObservationV1Schema,
 };
@@ -348,6 +370,7 @@ export const VisibilityObservationV1Schema = Type.Object(
           ['stated', 'at_least', 'less_than'],
           'stated: the source stated this value. at_least: the source said the visibility was this value or more. less_than: the source said it was below this value.',
         ),
+        ...reportingStation,
       },
       Closed,
     ),
@@ -376,8 +399,111 @@ export const visibilityV1: ObservationTypeDefinition = {
     'A value with bound at_least or less_than is not the visibility itself; it is a bound on it.',
     'Visibility reported for a place is not the visibility from a control station or along a flight path.',
     'Absence of visibility observations is not evidence of good visibility.',
+    'A visibility with stationId was observed where that station stands, not at the subject.',
   ],
   schema: VisibilityObservationV1Schema,
+};
+
+// weather.forecast v1 -----------------------------------------------------------------------------------------
+const forecastSubjects = ['site'] as const;
+const forecastChangeValues = ['base', 'from', 'becoming', 'temporary', 'probability', 'probability_temporary'] as const;
+const ForecastWindSchema = Type.Object(
+  {
+    speedMetersPerSecond: Type.Number({ minimum: 0, maximum: 150, title: 'Forecast wind speed (m/s)' }),
+    gustSpeedMetersPerSecond: Type.Optional(
+      Type.Number({ minimum: 0, maximum: 150, title: 'Forecast gust speed (m/s)' }),
+    ),
+    directionFromDegrees: Type.Optional(
+      Type.Number({ minimum: 0, exclusiveMaximum: 360, title: 'Forecast wind direction (degrees)' }),
+    ),
+    directionVariable: Type.Optional(
+      Type.Literal(true, { description: 'The forecast states the direction as variable.' }),
+    ),
+  },
+  { ...Closed, description: 'The wind as the forecast states it for the period.' },
+);
+const ForecastVisibilitySchema = Type.Object(
+  {
+    visibilityMeters: Type.Number({ minimum: 0, maximum: 100_000, title: 'Forecast visibility (m)' }),
+    bound: oneOf(
+      ['stated', 'at_least', 'less_than'],
+      'stated: the forecast states this value. at_least: this value or more. less_than: below this value.',
+    ),
+  },
+  { ...Closed, description: 'The prevailing visibility as the forecast states it for the period.' },
+);
+export const ForecastObservationV1Schema = Type.Object(
+  {
+    ...observationHeader('weather.forecast', 1),
+    subject: subjectOf(forecastSubjects),
+    ...at,
+    interval: ObservationIntervalSchema,
+    ...optionalPosition,
+    ...observationProvenance,
+    values: Type.Object(
+      {
+        ...reportingStation,
+        amended: Type.Optional(Type.Literal(true, { description: 'The forecast is an amendment of an earlier one.' })),
+        corrected: Type.Optional(Type.Literal(true, { description: 'The forecast corrects an earlier one.' })),
+        periods: Type.Array(
+          Type.Object(
+            {
+              change: oneOf(
+                forecastChangeValues,
+                'base: the conditions the forecast opens with. from: conditions from startAt, replacing those before. becoming: a change expected during startAt to endAt that then lasts. temporary: fluctuations during startAt to endAt. probability and probability_temporary: conditions, or fluctuations, with the stated probability.',
+              ),
+              probabilityPercent: Type.Optional(Type.Integer({ minimum: 1, maximum: 100 })),
+              startAt: UtcTime,
+              endAt: UtcTime,
+              text: Type.String({
+                minLength: 1,
+                maxLength: 500,
+                description: 'The groups of the period exactly as the forecast gives them.',
+              }),
+              wind: Type.Optional(ForecastWindSchema),
+              visibility: Type.Optional(ForecastVisibilitySchema),
+            },
+            Closed,
+          ),
+          {
+            minItems: 1,
+            maxItems: 60,
+            description: 'The periods in the order the forecast gives them, the base period first.',
+          },
+        ),
+      },
+      Closed,
+    ),
+  },
+  {
+    ...Closed,
+    description:
+      'A forecast for a place: when it was issued (occurredAt), the time it covers (interval), and each period with the wind and visibility it states.',
+  },
+);
+export type ForecastObservationV1 = Static<typeof ForecastObservationV1Schema>;
+export const forecastV1: ObservationTypeDefinition = {
+  type: 'weather.forecast',
+  version: 1,
+  title: 'Weather forecast',
+  timing: 'interval',
+  intervalRequired: true,
+  subjectKinds: forecastSubjects,
+  secondarySubjectKinds: [],
+  description:
+    'What a forecast issued at occurredAt states for the time it covers, period by period, as the forecast gives its change groups.',
+  mayInfer: [
+    'The source issued, at occurredAt, a forecast covering the interval, with these periods.',
+    'A period states the wind or visibility it gives; a period that gives none states no change to it.',
+  ],
+  mayNotInfer: [
+    'A forecast is not an observation of what happened: it is a record of what was forecast, and when.',
+    'A temporary or probability period is not the conditions expected throughout it.',
+    'A forecast for a station is a forecast for the place the station stands, not for the subject or along a flight path.',
+    'A later forecast for the same time does not make an earlier one wrong; both are records of what was forecast.',
+    'Absence of a forecast is not evidence of good weather.',
+  ],
+  schema: ForecastObservationV1Schema,
 };
 
 // airspace.authorization v1 ------------------------------------------------------------------------------------
@@ -457,6 +583,111 @@ export const airspaceAuthorizationV1: ObservationTypeDefinition = {
     'unknown is not approved and not denied.',
   ],
   schema: AirspaceAuthorizationObservationV1Schema,
+};
+
+// airspace.restriction v1 --------------------------------------------------------------------------------------
+const restrictionSubjects = ['site'] as const;
+const boundaryCorner = Type.Object(
+  {
+    latitudeDegrees: Type.Number({ minimum: -90, maximum: 90 }),
+    longitudeDegrees: Type.Number({ minimum: -180, maximum: 180 }),
+  },
+  Closed,
+);
+export const AirspaceRestrictionObservationV1Schema = Type.Object(
+  {
+    ...observationHeader('airspace.restriction', 1),
+    subject: subjectOf(restrictionSubjects),
+    ...at,
+    interval: ObservationIntervalSchema,
+    ...optionalPosition,
+    ...observationProvenance,
+    values: Type.Object(
+      {
+        notamId: Type.String({
+          minLength: 1,
+          maxLength: 40,
+          description: 'The restriction’s notice identifier as the issuing authority publishes it.',
+        }),
+        name: Type.Optional(
+          Type.String({ minLength: 1, maxLength: 300, description: 'The name it is published under.' }),
+        ),
+        areaName: Type.Optional(
+          Type.String({ minLength: 1, maxLength: 200, description: 'The name of this area within the restriction.' }),
+        ),
+        sourceTypeCode: Type.Optional(
+          Type.String({
+            minLength: 1,
+            maxLength: 100,
+            description:
+              'The kind of restriction exactly as the source codes it, kept for people; rules do not match on it.',
+          }),
+        ),
+        floor: Type.Optional(AltitudeSchema),
+        ceiling: Type.Optional(AltitudeSchema),
+        dailySchedule: Type.Optional(
+          Type.Object(
+            {
+              fromTime: Type.String({ pattern: '^([01]\\d|2[0-3]):[0-5]\\d$', description: 'UTC time of day.' }),
+              toTime: Type.String({ pattern: '^([01]\\d|2[0-3]):[0-5]\\d$', description: 'UTC time of day.' }),
+            },
+            {
+              ...Closed,
+              description:
+                'The restriction is published as active daily between these UTC times within its interval; an end before the start runs past midnight.',
+            },
+          ),
+        ),
+        area: Type.Object(
+          {
+            boundary: Type.Array(boundaryCorner, {
+              minItems: 3,
+              maxItems: 1000,
+              description:
+                'The corners of the outer boundary, WGS84, in order, as published; the last joins the first.',
+            }),
+          },
+          { ...Closed, description: 'The area as the issuing authority published it.' },
+        ),
+        regionId: Type.String({
+          minLength: 1,
+          maxLength: 200,
+          description: 'The region of the source’s configuration the area touches, named as the organization names it.',
+        }),
+      },
+      Closed,
+    ),
+  },
+  {
+    ...Closed,
+    description:
+      'One area of a published temporary flight restriction that touches a region the organization configured: when it was issued (occurredAt), the time it is in effect (interval), its altitudes and its area.',
+  },
+);
+export type AirspaceRestrictionObservationV1 = Static<typeof AirspaceRestrictionObservationV1Schema>;
+export const airspaceRestrictionV1: ObservationTypeDefinition = {
+  type: 'airspace.restriction',
+  version: 1,
+  title: 'Airspace restriction',
+  timing: 'interval',
+  intervalRequired: true,
+  subjectKinds: restrictionSubjects,
+  secondarySubjectKinds: [],
+  description:
+    'A published temporary flight restriction area that touches a configured region of the subject site, with its times, altitudes and area as published.',
+  mayInfer: [
+    'The issuing authority published this restriction, with this area, altitudes and interval, by occurredAt.',
+    'The published area touches the configured region named by regionId, as computed by the adapter.',
+    'Whether an instant falls inside the interval, and with dailySchedule inside the published daily times.',
+  ],
+  mayNotInfer: [
+    'A restriction on file is not a judgment of whether a flight may be made; what it restricts and what it allows are in its published text.',
+    'A restriction that touches a configured region does not say a flight entered it.',
+    'Absence of a restriction observation is not evidence that none is in effect: only restrictions the source published, that the adapter read and that touch a configured region are recorded.',
+    'A restriction withdrawn by the authority stays on file as published; its absence from a later list is not recorded as a cancellation.',
+    'sourceTypeCode is the source’s code; rules do not match on it.',
+  ],
+  schema: AirspaceRestrictionObservationV1Schema,
 };
 
 // flight.report v1 ---------------------------------------------------------------------------------------------
@@ -863,7 +1094,9 @@ export const observationTypesV1 = [
   positionFixV1,
   windV1,
   visibilityV1,
+  forecastV1,
   airspaceAuthorizationV1,
+  airspaceRestrictionV1,
   flightReportV1,
   trafficAlertV1,
   aircraftFaultV1,
@@ -878,7 +1111,9 @@ export type ObservationV1 =
   | PositionFixObservationV1
   | WindObservationV1
   | VisibilityObservationV1
+  | ForecastObservationV1
   | AirspaceAuthorizationObservationV1
+  | AirspaceRestrictionObservationV1
   | FlightReportObservationV1
   | TrafficAlertObservationV1
   | AircraftFaultObservationV1

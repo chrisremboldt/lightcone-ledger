@@ -117,6 +117,8 @@ export interface WindowValuesWithinLimitParams extends WindowParams {
   limitSelect?: Selection;
   limitField?: string;
   includeValueAtStart?: boolean;
+  maxAgeSeconds?: number;
+  stationField?: string;
   minValues?: number;
   minSeconds?: number;
   maxGapSeconds?: number;
@@ -130,6 +132,22 @@ export interface WindowValuesWithinLimitParams extends WindowParams {
   recordedEndField?: string;
   recordedDescribes?: string;
   reportedDescribes?: string;
+}
+
+/** With stationField and no maxAgeSeconds, the greatest age of a station's report carried to the window start. */
+export const STATION_REPORT_MAX_AGE_SECONDS = 5400;
+
+function durationText(seconds: number): string {
+  const minutes = Math.round(seconds / 60);
+  if (minutes < 60) return `${minutes} min`;
+  const days = Math.floor(minutes / 1440);
+  const hours = Math.floor((minutes % 1440) / 60);
+  const rest = minutes % 60;
+  return [days ? `${days} d` : '', hours ? `${hours} h` : '', rest ? `${rest} min` : ''].filter(Boolean).join(' ');
+}
+
+function stationsText(stations: readonly string[]): string {
+  return `${stations.length > 1 ? 'stations' : 'station'} ${stations.join(', ')}`;
 }
 
 /** The values reported at one instant: outside, within, or disagreeing about the limit. */
@@ -234,7 +252,7 @@ export const windowValuesWithinLimitV1: CheckKind<WindowValuesWithinLimitParams>
   version: 1,
   title: 'Every value in a window within a limit',
   description:
-    'Every numeric value of a field among the selected observations whose span start falls in a window is compared with a limit: a fixed limit, or a numeric field of the latest selected limit observation, with the comparisons of value.within-limit. The window is stated by the latest selected window observation, an input or the subject state, by its start and end fields (default its interval); both ends belong to it, and a start equal to the end is one instant. With includeValueAtStart, the latest value before the start is in effect at the start and is checked there, unless a value is reported at the start. Values at one instant that fall on different sides of the limit disagree: that instant neither starts nor ends a run, and the evidence conflicts. Consecutive instants outside the limit are a run, which lasts from its first value outside to the first value back within the limit, or to its last value outside when none follows in the window. A run counts only with at least minValues values and lasting at least minSeconds: shorter runs are tolerated. Each counted run is one issue, named and timed by its start. A window with no stated end, or whose end is after the evaluation time, is open: the result covers the values reported so far and says so, a run still going on and not yet long enough to count is pending, and the result is the same when evaluated again after the window closes unless a value inside the window is added. Observations in the window without a numeric value are counted as missing values; with maxGapSeconds, longer stretches without a value from the window start, between values and to a closed window end are gaps. With coverage required, missing values or gaps make an otherwise passing result insufficient, and a closed window with no value is insufficient; with coverage optional a closed window with no value does not apply. No window, or simultaneous windows that disagree, are insufficient or conflicting; a missing limit is insufficient. With unit, the unit the values are stored in, each value and the limit are stated with it; with textUnit too, the unit the rule’s text uses, each is stated in that unit with the stored value in parentheses. With the recorded input, the operator’s own record stands in for what is not reported: when no window observation is on record the window is the latest record’s, from recordedStartField to recordedEndField; with neither the rule does not apply. When no value is reported in the window, the value in recordedField of the latest record is compared with the limit at the instant in recordedAtField, and a value outside the limit is one issue named and timed by that instant. A reported value is read before a recorded one, which the summary then names beside it; the two are never averaged. Records made at the same time that state different values conflict. The summary says which was read, in the rule’s words reportedDescribes and recordedDescribes.',
+    'Every numeric value of a field among the selected observations whose span start falls in a window is compared with a limit: a fixed limit, or a numeric field of the latest selected limit observation, with the comparisons of value.within-limit. The window is stated by the latest selected window observation, an input or the subject state, by its start and end fields (default its interval); both ends belong to it, and a start equal to the end is one instant. With includeValueAtStart, the latest value before the start is in effect at the start and is checked there, unless a value is reported at the start; with maxAgeSeconds, only when it was reported no longer than that before the start. With stationField, the field that names the station that reported a value when a station apart from the subject reported it, a value whose observation names a station is a station’s report: the summary names the station, and when the rule states no maxAgeSeconds a station’s report older than 5400 seconds at the start is not read. A value that names no station was obtained at the subject and has no greatest age unless the rule states one. A value too old to be read is not compared with the limit: the result says when it was reported, how long before the start, by which station, and that none within the greatest age is on file. Values at one instant that fall on different sides of the limit disagree: that instant neither starts nor ends a run, and the evidence conflicts. Consecutive instants outside the limit are a run, which lasts from its first value outside to the first value back within the limit, or to its last value outside when none follows in the window. A run counts only with at least minValues values and lasting at least minSeconds: shorter runs are tolerated. Each counted run is one issue, named and timed by its start. A window with no stated end, or whose end is after the evaluation time, is open: the result covers the values reported so far and says so, a run still going on and not yet long enough to count is pending, and the result is the same when evaluated again after the window closes unless a value inside the window is added. Observations in the window without a numeric value are counted as missing values; with maxGapSeconds, longer stretches without a value from the window start, between values and to a closed window end are gaps. With coverage required, missing values or gaps make an otherwise passing result insufficient, and a closed window with no value is insufficient; with coverage optional a closed window with no value does not apply. No window, or simultaneous windows that disagree, are insufficient or conflicting; a missing limit is insufficient. With unit, the unit the values are stored in, each value and the limit are stated with it; with textUnit too, the unit the rule’s text uses, each is stated in that unit with the stored value in parentheses. With the recorded input, the operator’s own record stands in for what is not reported: when no window observation is on record the window is the latest record’s, from recordedStartField to recordedEndField; with neither the rule does not apply. When no value is reported in the window, the value in recordedField of the latest record is compared with the limit at the instant in recordedAtField, and a value outside the limit is one issue named and timed by that instant. A reported value is read before a recorded one, which the summary then names beside it; the two are never averaged. Records made at the same time that state different values conflict. The summary says which was read, in the rule’s words reportedDescribes and recordedDescribes.',
   inputs: [
     { name: 'values', description: 'Observations or operator records that carry the value.' },
     {
@@ -266,6 +284,30 @@ export const windowValuesWithinLimitV1: CheckKind<WindowValuesWithinLimitParams>
         'With reported values read, the sentence naming the recorded value beside them, with a leading space, or empty when none is on record; null when the recorded value was read. A rule’s wording ends with it.',
     },
     { name: 'limit', description: 'The limit the values were compared with; null when none was read.' },
+    {
+      name: 'maxAgeSeconds',
+      description:
+        'The greatest age, in seconds, of the value carried to the window start, as the rule states it or by default for a station’s report; null when none applies.',
+    },
+    {
+      name: 'stationNote',
+      description:
+        'With stationField, the sentence naming the stations that reported the values read, with a leading space, or empty when none names one. A rule’s wording ends with it.',
+    },
+    {
+      name: 'tooOldAt',
+      description:
+        'When the latest value before the window start was reported, when it was too old to be read; otherwise null.',
+    },
+    {
+      name: 'tooOldAgeSeconds',
+      description: 'How long before the window start that value was reported, in seconds; otherwise null.',
+    },
+    {
+      name: 'tooOldStation',
+      description:
+        'The stations that reported that value, separated by commas; null when it names none or none was too old.',
+    },
     { name: 'valuesChecked', description: 'How many numeric values in the window were compared with the limit.' },
     { name: 'missingValues', description: 'How many observations in the window carry no numeric value.' },
     { name: 'disagreeingInstants', description: 'How many instants report values on both sides of the limit.' },
@@ -285,7 +327,7 @@ export const windowValuesWithinLimitV1: CheckKind<WindowValuesWithinLimitParams>
     { name: 'gapCount', description: 'With maxGapSeconds, how many gaps are longer; otherwise null.' },
     { name: 'longestGapSeconds', description: 'With maxGapSeconds, the longest gap, in seconds; otherwise null.' },
   ],
-  summaryValues: ['windowStart', 'windowEnd', 'worstValueAt'],
+  summaryValues: ['windowStart', 'windowEnd', 'worstValueAt', 'tooOldAt'],
   summaryRecordValues: ['evidenceOccurredAt'],
   issues: {
     description: 'One counted run of values outside the limit inside the window, named by when it began.',
@@ -305,6 +347,8 @@ export const windowValuesWithinLimitV1: CheckKind<WindowValuesWithinLimitParams>
       limitField: fieldPath,
       ...windowParameterSchema,
       includeValueAtStart: { type: 'boolean' },
+      maxAgeSeconds: { type: 'number', exclusiveMinimum: 0, maximum: 31_536_000 },
+      stationField: fieldPath,
       minValues: { type: 'integer', minimum: 1, maximum: 10_000 },
       minSeconds: { type: 'number', minimum: 0, maximum: 86_400 },
       maxGapSeconds: { type: 'number', exclusiveMinimum: 0, maximum: 86_400 },
@@ -321,6 +365,7 @@ export const windowValuesWithinLimitV1: CheckKind<WindowValuesWithinLimitParams>
     },
     oneOf: [{ required: ['limit'] }, { required: ['limitField'] }],
     dependencies: {
+      maxAgeSeconds: ['includeValueAtStart'],
       limitSelect: ['limitField'],
       textUnit: ['unit'],
       recordedField: ['recordedAtField', 'recordedDescribes', 'reportedDescribes'],
@@ -340,6 +385,11 @@ export const windowValuesWithinLimitV1: CheckKind<WindowValuesWithinLimitParams>
       recordedValue: null,
       recordedNote: '',
       limit: null,
+      maxAgeSeconds: null,
+      stationNote: '',
+      tooOldAt: null,
+      tooOldAgeSeconds: null,
+      tooOldStation: null,
       valuesChecked: 0,
       missingValues: 0,
       disagreeingInstants: 0,
@@ -444,11 +494,41 @@ export const windowValuesWithinLimitV1: CheckKind<WindowValuesWithinLimitParams>
     const inside = selected.filter((item) => inWindow(window, item.at, now));
     const reported = inside.filter(numeric);
     const missing = inside.filter((item) => !numeric(item));
+    const stationOf = (observation: CheckObservation): string | undefined => {
+      if (params.stationField === undefined) return undefined;
+      const station = observationField(observation, params.stationField);
+      return typeof station === 'string' && station ? station : undefined;
+    };
+    let tooOldNote = '';
     if (params.includeValueAtStart && !reported.some((item) => item.at === window.start)) {
       const before = selected.filter(numeric).filter((item) => item.at < window.start);
       const newest = Math.max(...before.map((item) => item.at));
-      reported.push(...before.filter((item) => item.at === newest).map((item) => ({ ...item, at: window.start })));
+      const carried = before.filter((item) => item.at === newest);
+      const ageSeconds = (window.start - newest) / 1000;
+      const greatestAge = (item: (typeof carried)[number]) =>
+        params.maxAgeSeconds ?? (stationOf(item.observation) ? STATION_REPORT_MAX_AGE_SECONDS : undefined);
+      const ages = carried.map(greatestAge).filter((age): age is number => age !== undefined);
+      if (ages.length) details.maxAgeSeconds = Math.min(...ages);
+      const readable = carried.filter((item) => (greatestAge(item) ?? Infinity) >= ageSeconds);
+      reported.push(...readable.map((item) => ({ ...item, at: window.start })));
+      const old = carried.filter((item) => !readable.includes(item));
+      if (old.length && !readable.length) {
+        const stations = [...new Set(old.flatMap((item) => stationOf(item.observation) ?? []))].sort();
+        Object.assign(details, {
+          tooOldAt: iso(newest),
+          tooOldAgeSeconds: round(ageSeconds),
+          tooOldStation: stations.length ? stations.join(', ') : null,
+        });
+        evidence.push(...old.map((item) => item.observation));
+        tooOldNote = ` The latest value of ${labelOf(
+          params.field,
+          old.map((item) => item.observation),
+          params.select,
+        )} before the start was reported at ${iso(newest)}${stations.length ? ` by ${stationsText(stations)}` : ''}, ${durationText(ageSeconds)} before it, older than the greatest age of ${durationText(details.maxAgeSeconds as number)}: it is not read, and none within that age is on file.`;
+      }
     }
+    const stations = [...new Set(reported.flatMap((item) => stationOf(item.observation) ?? []))].sort();
+    if (stations.length) details.stationNote = ` Reported by ${stationsText(stations)}.`;
     details.valuesChecked = reported.length;
     details.missingValues = missing.length;
     const field = labelOf(
@@ -473,7 +553,7 @@ export const windowValuesWithinLimitV1: CheckKind<WindowValuesWithinLimitParams>
         firstRunStartedAt: within ? null : iso(at),
         missingValues: missing.length,
       });
-      const summary = `No ${params.reportedDescribes} is reported; the result rests on the operator’s own record. Read the ${params.recordedDescribes}: ${stated(recordedItem.value)}, ${within ? 'within' : 'outside'} the limit, ${comparison.words} ${stated(limit!)}.`;
+      const summary = `No ${params.reportedDescribes} is reported; the result rests on the operator’s own record. Read the ${params.recordedDescribes}: ${stated(recordedItem.value)}, ${within ? 'within' : 'outside'} the limit, ${comparison.words} ${stated(limit!)}.${tooOldNote}`;
       return within
         ? windowResult(
             'supported',
@@ -500,7 +580,7 @@ export const windowValuesWithinLimitV1: CheckKind<WindowValuesWithinLimitParams>
       : '';
     if (reported.length) Object.assign(details, { basis: 'reported', recordedNote: recordedBeside });
     if (!reported.length) {
-      const missingNote = `${missing.length ? ` ${missing.length} observation(s) carry no value for ${field}.` : ''}${recordedNone}`;
+      const missingNote = `${missing.length ? ` ${missing.length} observation(s) carry no value for ${field}.` : ''}${tooOldNote}${recordedNone}`;
       if (!window.closed)
         return windowResult(
           'insufficient',
@@ -516,7 +596,7 @@ export const windowValuesWithinLimitV1: CheckKind<WindowValuesWithinLimitParams>
         ? windowResult(
             'insufficient',
             'attention',
-            'values_missing',
+            tooOldNote ? 'value_too_old' : 'values_missing',
             `No value is reported for ${field} in the window ${span}.${missingNote}`,
             [...evidence, ...missing.map((item) => item.observation)],
             details,
@@ -525,7 +605,7 @@ export const windowValuesWithinLimitV1: CheckKind<WindowValuesWithinLimitParams>
             'not_applicable',
             'not_applicable',
             'no_values_in_window',
-            `No value is reported for ${field} in the window ${span}.${recordedNone}`,
+            `No value is reported for ${field} in the window ${span}.${tooOldNote}${recordedNone}`,
             evidence,
             details,
           );
@@ -566,7 +646,7 @@ export const windowValuesWithinLimitV1: CheckKind<WindowValuesWithinLimitParams>
       ...(missing.length ? [`${missing.length} observation(s) carry no value for ${field}`] : []),
       ...(gaps?.length ? [`${gaps.length} gap(s) longer than ${params.maxGapSeconds} s without a value`] : []),
     ];
-    const noteText = `${notes.length ? ` ${notes.join('; ')}.` : ''}${recordedBeside}`;
+    const noteText = `${notes.length ? ` ${notes.join('; ')}.` : ''}${details.stationNote}${recordedBeside}`;
     const worstText = `the worst is ${stated(worst.value)} at ${iso(worst.at)}`;
     const disagree = details.disagreeingInstants !== 0;
     if (counted.length) {

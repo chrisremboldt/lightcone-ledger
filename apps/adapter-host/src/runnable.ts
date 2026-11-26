@@ -6,14 +6,20 @@ import {
   djiOsdPositionAdapter,
   jsonArrayElements,
   parseMetarStations,
+  parseRestrictionRegions,
   publishedMetarAdapter,
+  publishedTafAdapter,
+  publishedTfrAdapter,
+  restrictionListItems,
   type DeliveryKind,
+  type ListedItem,
   type ObservationAdapter,
   type SubjectNaming,
 } from '@ledger/adapters';
 
 /** The source settings an adapter is bound by, given as flags or environment variables. */
-export type BindingOption = 'device' | 'gateway' | 'dock' | 'site' | 'dockModel' | 'operation' | 'flight' | 'stations';
+export type BindingOption =
+  'device' | 'gateway' | 'dock' | 'site' | 'dockModel' | 'operation' | 'flight' | 'stations' | 'regions';
 export type BindingValues = Readonly<Partial<Record<BindingOption, string>>>;
 
 interface Common {
@@ -37,6 +43,8 @@ export interface PollAdapter extends Common {
   readonly serviceCredential: 'bearer' | 'none';
   /** Cuts a response into the messages it holds; each poll then hands over only those not in the previous one. */
   readonly split?: (bytes: Uint8Array) => Uint8Array[] | undefined;
+  /** Reads a response as a list of items, each read at its own path and handed over as its own message. */
+  readonly follow?: (bytes: Uint8Array) => readonly ListedItem[] | undefined;
 }
 export type RunnableAdapter = BrokerAdapter | PollAdapter;
 
@@ -112,12 +120,50 @@ export const runnableAdapters: Readonly<Record<string, RunnableAdapter>> = {
     serviceCredential: 'none',
     split: jsonArrayElements,
   },
+  [publishedTafAdapter.descriptor.id]: {
+    adapter: publishedTafAdapter as ObservationAdapter<never>,
+    transport: 'poll',
+    // Each forecast is kept: a newer one, or an amendment, is another record of what was forecast.
+    delivery: 'every',
+    bindingOptions: ['stations'],
+    binding: (values) => parseMetarStations(value(values, 'stations')),
+    subjects: () => sourceNames,
+    path: (values) =>
+      `/api/data/taf?ids=${Object.keys(parseMetarStations(value(values, 'stations')).stations)
+        .sort()
+        .join(',')}&format=json`,
+    // Forecasts are issued about every six hours and amended between.
+    defaultPollSeconds: 900,
+    serviceCredential: 'none',
+    split: jsonArrayElements,
+  },
+  [publishedTfrAdapter.descriptor.id]: {
+    adapter: publishedTfrAdapter as ObservationAdapter<never>,
+    transport: 'poll',
+    // Each restriction is its own notice: none is dropped.
+    delivery: 'every',
+    bindingOptions: ['regions'],
+    binding: (values) => parseRestrictionRegions(value(values, 'regions')),
+    subjects: () => sourceNames,
+    path: () => '/tfrapi/exportTfrList',
+    // The list changes a few times an hour; each new entry's document is read once.
+    defaultPollSeconds: 600,
+    serviceCredential: 'none',
+    follow: restrictionListItems,
+  },
 };
 
 const IDENTIFIER = /^[A-Za-z0-9_-]{1,128}$/;
 
 /** Why a binding value cannot be used, or undefined. */
 export function bindingProblem(name: BindingOption, given: string): string | undefined {
+  if (name === 'regions')
+    try {
+      parseRestrictionRegions(given);
+      return undefined;
+    } catch (error) {
+      return (error as Error).message;
+    }
   if (name === 'stations')
     try {
       parseMetarStations(given);

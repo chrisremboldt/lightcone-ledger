@@ -54,7 +54,7 @@ export const publishedMetarDescriptor: AdapterDescriptor = {
     'Visibility in statute miles is converted at 1609.344 meters per mile. 9999 and CAVOK are carried as at least 10000 m, 0000 as less than 50 m, a value marked M as less than and one marked P as at least the value. Reports from the United States state at most 10 statute miles, so a stated 10 may have been more.',
     'The visibility is the prevailing visibility the station reports, not the visibility from a control station or in a direction the report qualifies separately.',
     'A group that cannot be read is reported as not read, with its text, and no value is carried for it. A report marked NIL is not translated.',
-    'The position is the station’s location as the service lists it beside the report, not the site’s.',
+    'The position is the station’s location as the service lists it beside the report, not the site’s. stationId names the station; stationDistanceMeters is the distance the configuration states, when it states one.',
     'A corrected report (COR) is carried as another observation; it does not replace the report it corrects.',
   ],
   documentation: [
@@ -346,12 +346,16 @@ function translate(
       ...(position ? { position } : {}),
       originalLocator: jsonPointer('rawOb'),
     };
+    const reportedBy = {
+      stationId: station,
+      ...(site.distanceMeters === undefined ? {} : { stationDistanceMeters: site.distanceMeters }),
+    };
     if ('values' in reading.wind)
       drafts.push({
         type: 'weather.wind',
         version: 1,
         ...common,
-        values: reading.wind.values,
+        values: { ...reading.wind.values, ...reportedBy },
         extraLimitations: [stationNote(station, site), ...marks, ...reading.wind.notes],
       });
     if ('values' in reading.visibility)
@@ -359,7 +363,7 @@ function translate(
         type: 'weather.visibility',
         version: 1,
         ...common,
-        values: reading.visibility.values,
+        values: { ...reading.visibility.values, ...reportedBy },
         extraLimitations: [stationNote(station, site), ...marks],
       });
   }

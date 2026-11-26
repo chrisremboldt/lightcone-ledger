@@ -1,0 +1,234 @@
+{
+  "note": "Fetched 2026-11-26T04:33:53.000Z from the Aviation Weather Center data API (aviationweather.gov), GET /api/data/taf?ids=KDEN,KSFO,KJFK,PHNL,CYYZ,RJTT,YSSY,KSEA,KBOS,KATL,OMDB,SBGR,KDFW,KMSP,LEMD,EHAM&format=json: this forecast's object, cut from the response as sent. A published government weather forecast, kept as reference data.",
+  "case": "valid",
+  "message": {
+    "contentType": "application/json",
+    "transport": {
+      "method": "GET",
+      "path": "/api/data/taf"
+    },
+    "capturedAt": "2026-11-26T04:33:53.000Z",
+    "bodyText": "{\"icaoId\":\"KJFK\",\"dbPopTime\":\"2026-11-26T02:00:04.403Z\",\"bulletinTime\":\"2026-11-26T01:59:00.000Z\",\"issueTime\":\"2026-11-26T01:59:00.000Z\",\"validTimeFrom\":1795658400,\"validTimeTo\":1795759200,\"rawTAF\":\"TAF KJFK 260159Z 2602/2706 06015G22KT P6SM BKN035 TEMPO 2605/2607 BKN030 FM260700 05022G29KT P6SM OVC030 FM261000 05026G34KT P6SM OVC025 FM261100 06027G37KT P6SM OVC015 PROB30 2612/2614 5SM -RA FM261400 07031G42KT 4SM -RA BR OVC015 FM261800 07034G49KT 2SM +RA BR OVC015 WS020/07060KT FM270100 07032G42KT 2SM -RA BR OVC015 WS020/08060KT FM270300 08026G32KT 4SM -RA BR OVC006 WS020/11055KT\",\"mostRecent\":1,\"remarks\":\" AMD\",\"lat\":40.63916,\"lon\":-73.76394,\"elev\":3,\"prior\":0,\"name\":\"New York/JF Kennedy Intl\",\"fcsts\":[{\"timeFrom\":1795658400,\"timeTo\":1795676400,\"timeBec\":null,\"fcstChange\":null,\"probability\":null,\"wdir\":60,\"wspd\":15,\"wgst\":22,\"wshearHgt\":null,\"wshearDir\":null,\"wshearSpd\":null,\"visib\":\"6+\",\"altim\":null,\"vertVis\":null,\"wxString\":null,\"notDecoded\":null,\"clouds\":[{\"cover\":\"BKN\",\"base\":3500,\"type\":null}],\"icgTurb\":[],\"temp\":[]},{\"timeFrom\":1795669200,\"timeTo\":1795676400,\"timeBec\":null,\"fcstChange\":\"TEMPO\",\"probability\":null,\"wdir\":null,\"wspd\":null,\"wgst\":null,\"wshearHgt\":null,\"wshearDir\":null,\"wshearSpd\":null,\"visib\":\"\",\"altim\":null,\"vertVis\":null,\"wxString\":null,\"notDecoded\":null,\"clouds\":[{\"cover\":\"BKN\",\"base\":3000,\"type\":null}],\"icgTurb\":[],\"temp\":[]},{\"timeFrom\":1795676400,\"timeTo\":1795687200,\"timeBec\":null,\"fcstChange\":\"FM\",\"probability\":null,\"wdir\":50,\"wspd\":22,\"wgst\":29,\"wshearHgt\":null,\"wshearDir\":null,\"wshearSpd\":null,\"visib\":\"6+\",\"altim\":null,\"vertVis\":null,\"wxString\":null,\"notDecoded\":null,\"clouds\":[{\"cover\":\"OVC\",\"base\":3000,\"type\":null}],\"icgTurb\":[],\"temp\":[]},{\"timeFrom\":1795687200,\"timeTo\":1795690800,\"timeBec\":null,\"fcstChange\":\"FM\",\"probability\":null,\"wdir\":50,\"wspd\":26,\"wgst\":34,\"wshearHgt\":null,\"wshearDir\":null,\"wshearSpd\":null,\"visib\":\"6+\",\"altim\":null,\"vertVis\":null,\"wxString\":null,\"notDecoded\":null,\"clouds\":[{\"cover\":\"OVC\",\"base\":2500,\"type\":null}],\"icgTurb\":[],\"temp\":[]},{\"timeFrom\":1795690800,\"timeTo\":1795701600,\"timeBec\":null,\"fcstChange\":\"FM\",\"probability\":null,\"wdir\":60,\"wspd\":27,\"wgst\":37,\"wshearHgt\":null,\"wshearDir\":null,\"wshearSpd\":null,\"visib\":\"6+\",\"altim\":null,\"vertVis\":null,\"wxString\":null,\"notDecoded\":null,\"clouds\":[{\"cover\":\"OVC\",\"base\":1500,\"type\":null}],\"icgTurb\":[],\"temp\":[]},{\"timeFrom\":1795694400,\"timeTo\":1795701600,\"timeBec\":null,\"fcstChange\":\"PROB\",\"probability\":30,\"wdir\":null,\"wspd\":null,\"wgst\":null,\"wshearHgt\":null,\"wshearDir\":null,\"wshearSpd\":null,\"visib\":5,\"altim\":null,\"vertVis\":null,\"wxString\":\"-RA\",\"notDecoded\":null,\"clouds\":[],\"icgTurb\":[],\"temp\":[]},{\"timeFrom\":1795701600,\"timeTo\":1795716000,\"timeBec\":null,\"fcstChange\":\"FM\",\"probability\":null,\"wdir\":70,\"wspd\":31,\"wgst\":42,\"wshearHgt\":null,\"wshearDir\":null,\"wshearSpd\":null,\"visib\":4,\"altim\":null,\"vertVis\":null,\"wxString\":\"-RA BR\",\"notDecoded\":null,\"clouds\":[{\"cover\":\"OVC\",\"base\":1500,\"type\":null}],\"icgTurb\":[],\"temp\":[]},{\"timeFrom\":1795716000,\"timeTo\":1795741200,\"timeBec\":null,\"fcstChange\":\"FM\",\"probability\":null,\"wdir\":70,\"wspd\":34,\"wgst\":49,\"wshearHgt\":2000,\"wshearDir\":70,\"wshearSpd\":60,\"visib\":2,\"altim\":null,\"vertVis\":null,\"wxString\":\"+RA BR\",\"notDecoded\":null,\"clouds\":[{\"cover\":\"OVC\",\"base\":1500,\"type\":null}],\"icgTurb\":[],\"temp\":[]},{\"timeFrom\":1795741200,\"timeTo\":1795748400,\"timeBec\":null,\"fcstChange\":\"FM\",\"probability\":null,\"wdir\":70,\"wspd\":32,\"wgst\":42,\"wshearHgt\":2000,\"wshearDir\":80,\"wshearSpd\":60,\"visib\":2,\"altim\":null,\"vertVis\":null,\"wxString\":\"-RA BR\",\"notDecoded\":null,\"clouds\":[{\"cover\":\"OVC\",\"base\":1500,\"type\":null}],\"icgTurb\":[],\"temp\":[]},{\"timeFrom\":1795748400,\"timeTo\":1795759200,\"timeBec\":null,\"fcstChange\":\"FM\",\"probability\":null,\"wdir\":80,\"wspd\":26,\"wgst\":32,\"wshearHgt\":2000,\"wshearDir\":110,\"wshearSpd\":55,\"visib\":4,\"altim\":null,\"vertVis\":null,\"wxString\":\"-RA BR\",\"notDecoded\":null,\"clouds\":[{\"cover\":\"OVC\",\"base\":600,\"type\":null}],\"icgTurb\":[],\"temp\":[]}]}"
+  },
+  "expect": {
+    "observations": [
+      {
+        "type": "weather.forecast",
+        "version": 1,
+        "subject": {
+          "kind": "site",
+          "id": "RIDGE-SITE-13",
+          "scope": "source"
+        },
+        "occurredAt": "2026-11-26T01:59:00.000Z",
+        "interval": {
+          "start": "2026-11-26T02:00:00.000Z",
+          "end": "2026-11-27T06:00:00.000Z"
+        },
+        "sourceEventId": "KJFK 2026-11-26T01:59:00.000Z TAF for RIDGE-SITE-13",
+        "position": {
+          "latitudeDegrees": 40.63916,
+          "longitudeDegrees": -73.76394
+        },
+        "originalLocator": {
+          "kind": "json_pointer",
+          "value": "/rawTAF"
+        },
+        "values": {
+          "stationId": "KJFK",
+          "stationDistanceMeters": 21000,
+          "periods": [
+            {
+              "change": "base",
+              "startAt": "2026-11-26T02:00:00.000Z",
+              "endAt": "2026-11-26T07:00:00.000Z",
+              "text": "06015G22KT P6SM BKN035",
+              "wind": {
+                "speedMetersPerSecond": 7.716666666666667,
+                "gustSpeedMetersPerSecond": 11.317777777777778,
+                "directionFromDegrees": 60
+              },
+              "visibility": {
+                "visibilityMeters": 9656.064,
+                "bound": "at_least"
+              }
+            },
+            {
+              "change": "temporary",
+              "startAt": "2026-11-26T05:00:00.000Z",
+              "endAt": "2026-11-26T07:00:00.000Z",
+              "text": "TEMPO 2605/2607 BKN030"
+            },
+            {
+              "change": "from",
+              "startAt": "2026-11-26T07:00:00.000Z",
+              "endAt": "2026-11-26T10:00:00.000Z",
+              "text": "FM260700 05022G29KT P6SM OVC030",
+              "wind": {
+                "speedMetersPerSecond": 11.317777777777778,
+                "gustSpeedMetersPerSecond": 14.918888888888889,
+                "directionFromDegrees": 50
+              },
+              "visibility": {
+                "visibilityMeters": 9656.064,
+                "bound": "at_least"
+              }
+            },
+            {
+              "change": "from",
+              "startAt": "2026-11-26T10:00:00.000Z",
+              "endAt": "2026-11-26T11:00:00.000Z",
+              "text": "FM261000 05026G34KT P6SM OVC025",
+              "wind": {
+                "speedMetersPerSecond": 13.375555555555556,
+                "gustSpeedMetersPerSecond": 17.49111111111111,
+                "directionFromDegrees": 50
+              },
+              "visibility": {
+                "visibilityMeters": 9656.064,
+                "bound": "at_least"
+              }
+            },
+            {
+              "change": "from",
+              "startAt": "2026-11-26T11:00:00.000Z",
+              "endAt": "2026-11-26T14:00:00.000Z",
+              "text": "FM261100 06027G37KT P6SM OVC015",
+              "wind": {
+                "speedMetersPerSecond": 13.89,
+                "gustSpeedMetersPerSecond": 19.034444444444443,
+                "directionFromDegrees": 60
+              },
+              "visibility": {
+                "visibilityMeters": 9656.064,
+                "bound": "at_least"
+              }
+            },
+            {
+              "change": "probability",
+              "probabilityPercent": 30,
+              "startAt": "2026-11-26T12:00:00.000Z",
+              "endAt": "2026-11-26T14:00:00.000Z",
+              "text": "PROB30 2612/2614 5SM -RA",
+              "visibility": {
+                "visibilityMeters": 8046.72,
+                "bound": "stated"
+              }
+            },
+            {
+              "change": "from",
+              "startAt": "2026-11-26T14:00:00.000Z",
+              "endAt": "2026-11-26T18:00:00.000Z",
+              "text": "FM261400 07031G42KT 4SM -RA BR OVC015",
+              "wind": {
+                "speedMetersPerSecond": 15.947777777777778,
+                "gustSpeedMetersPerSecond": 21.606666666666666,
+                "directionFromDegrees": 70
+              },
+              "visibility": {
+                "visibilityMeters": 6437.376,
+                "bound": "stated"
+              }
+            },
+            {
+              "change": "from",
+              "startAt": "2026-11-26T18:00:00.000Z",
+              "endAt": "2026-11-27T01:00:00.000Z",
+              "text": "FM261800 07034G49KT 2SM +RA BR OVC015 WS020/07060KT",
+              "wind": {
+                "speedMetersPerSecond": 17.49111111111111,
+                "gustSpeedMetersPerSecond": 25.20777777777778,
+                "directionFromDegrees": 70
+              },
+              "visibility": {
+                "visibilityMeters": 3218.688,
+                "bound": "stated"
+              }
+            },
+            {
+              "change": "from",
+              "startAt": "2026-11-27T01:00:00.000Z",
+              "endAt": "2026-11-27T03:00:00.000Z",
+              "text": "FM270100 07032G42KT 2SM -RA BR OVC015 WS020/08060KT",
+              "wind": {
+                "speedMetersPerSecond": 16.462222222222223,
+                "gustSpeedMetersPerSecond": 21.606666666666666,
+                "directionFromDegrees": 70
+              },
+              "visibility": {
+                "visibilityMeters": 3218.688,
+                "bound": "stated"
+              }
+            },
+            {
+              "change": "from",
+              "startAt": "2026-11-27T03:00:00.000Z",
+              "endAt": "2026-11-27T06:00:00.000Z",
+              "text": "FM270300 08026G32KT 4SM -RA BR OVC006 WS020/11055KT",
+              "wind": {
+                "speedMetersPerSecond": 13.375555555555556,
+                "gustSpeedMetersPerSecond": 16.462222222222223,
+                "directionFromDegrees": 80
+              },
+              "visibility": {
+                "visibilityMeters": 6437.376,
+                "bound": "stated"
+              }
+            }
+          ]
+        },
+        "extraLimitations": [
+          "Forecast for station KJFK, configured for the site RIDGE-SITE-13; 21 km from the site as configured."
+        ]
+      }
+    ],
+    "rejections": [],
+    "unmapped": [
+      {
+        "kind": "json_pointer",
+        "value": "/bulletinTime"
+      },
+      {
+        "kind": "json_pointer",
+        "value": "/dbPopTime"
+      },
+      {
+        "kind": "json_pointer",
+        "value": "/elev"
+      },
+      {
+        "kind": "json_pointer",
+        "value": "/fcsts"
+      },
+      {
+        "kind": "json_pointer",
+        "value": "/issueTime"
+      },
+      {
+        "kind": "json_pointer",
+        "value": "/mostRecent"
+      },
+      {
+        "kind": "json_pointer",
+        "value": "/name"
+      },
+      {
+        "kind": "json_pointer",
+        "value": "/prior"
+      },
+      {
+        "kind": "json_pointer",
+        "value": "/remarks"
+      },
+      {
+        "kind": "json_pointer",
+        "value": "/validTimeFrom"
+      },
+      {
+        "kind": "json_pointer",
+        "value": "/validTimeTo"
+      }
+    ],
+    "conversions": []
+  }
+}

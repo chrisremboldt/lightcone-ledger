@@ -38,6 +38,7 @@ const settings = {
   ADAPTER_OPERATION: 'operation',
   ADAPTER_FLIGHT: 'flight',
   ADAPTER_STATIONS: 'stations',
+  ADAPTER_REGIONS: 'regions',
   ADAPTER_POLL_SECONDS: 'poll-seconds',
   ADAPTER_QUEUE_LIMIT: 'queue-limit',
   ADAPTER_SHUTDOWN_SECONDS: 'shutdown-seconds',
@@ -62,6 +63,7 @@ const bindingVariables: Record<BindingOption, Variable> = {
   operation: 'ADAPTER_OPERATION',
   flight: 'ADAPTER_FLIGHT',
   stations: 'ADAPTER_STATIONS',
+  regions: 'ADAPTER_REGIONS',
 };
 const flagOf = (option: BindingOption): Flag => settings[bindingVariables[option]];
 
@@ -98,8 +100,12 @@ Every flag can be given as the environment variable after it instead; the flag w
   --stations <list>          ADAPTER_STATIONS          Weather stations and the sites each reports for, as
                                                        STATION=SITE[@DISTANCE] separated by semicolons, the
                                                        distance in m or km: KORD=RIDGE-SITE-1@14.2km;KORD=RIDGE-SITE-2
+  --regions <list>           ADAPTER_REGIONS           Circles a flight restriction is recorded for when it touches one,
+                                                       as REGION=SITE@LATITUDE,LONGITUDE,RADIUS separated by
+                                                       semicolons, the radius in m or km: RIDGE-AREA-1=RIDGE-SITE-1@39.97,-86.13,5km
   --poll-seconds <n>         ADAPTER_POLL_SECONDS      Seconds between reads of the service (default 60 for the
-                                                       airspace service, 300 for weather reports; at least 5)
+                                                       airspace service, 300 for weather reports, 900 for
+                                                       forecasts, 600 for flight restrictions; at least 5)
   --queue-limit <n>          ADAPTER_QUEUE_LIMIT       Messages held while Ledger cannot be reached (default 10000)
   --shutdown-seconds <n>     ADAPTER_SHUTDOWN_SECONDS  How long a stop waits to submit what it holds (default 10)
   --private-network          ADAPTER_PRIVATE_NETWORK=1 Allow http:// and mqtt:// to another host on a network you
@@ -110,7 +116,7 @@ Secrets, from the environment only:
   ADAPTER_BROKER_PASSWORD    The broker account's password
   ADAPTER_SERVICE_TOKEN      The airspace service's access token, sent as a bearer token
   ADAPTER_SERVICE_API_KEY    The airspace service's API key, if it asks for one (sent as x-api-key)
-  The weather report service is public and takes no secret.`;
+  The weather and flight restriction services are public and take no secret.`;
 
 export class UsageError extends Error {}
 

@@ -15,7 +15,7 @@ import {
 
 export const BATTERY_FOR_FLIGHT_LEAF_ID = 'ledger.example-operations.battery-reserve-for-flight';
 
-const VERSION_THREE_DIGEST = 'cf73c9d22b643e9b7526e1adc1dff2fb7687e583ddbc9d2205db6ee2d1ea58d2';
+const VERSION_THREE_DIGEST = '8dce3b5596d3f9694129bc2c520fc3e4bce0e56bd5f04e92b0bd490f8cf1648a';
 
 /** Invented for this repository. It is not a regulation and not a manufacturer limit. */
 export const BATTERY_FOR_FLIGHT_PROCEDURE_V1 =

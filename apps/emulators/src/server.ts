@@ -2,6 +2,8 @@ import { createServer, type IncomingMessage, type Server, type ServerResponse } 
 import { createHash, createHmac, randomUUID } from 'node:crypto';
 import { endpointSchemas, missingAirspaceSchemas, validatePayload } from './schema.js';
 import { answerMetarRequest, recordedMetarReports } from './metar.js';
+import { answerTafRequest, recordedTafForecasts } from './taf.js';
+import { answerTfrRequest } from './tfr.js';
 import { handleNoticeRequest, NoticeInbox } from './notices.js';
 import {
   djiFaultScripts,
@@ -74,6 +76,8 @@ export interface EmulatorState {
   sourceClock?: string;
   /** Published weather reports, each the exact text of one report object; the recorded ones until replaced. */
   metarReports: string[];
+  /** Published weather forecasts, each the exact text of one forecast object; the recorded ones until replaced. */
+  tafForecasts: string[];
   /** What the notice stand-ins received: email over SMTP and webhook calls. */
   notices: NoticeInbox;
 }
@@ -145,6 +149,7 @@ export function createEmulator(
     codes: new Map(),
     callbackAttempts: [],
     metarReports: recordedMetarReports(),
+    tafForecasts: recordedTafForecasts(),
     notices: options.notices ?? new NoticeInbox(),
   };
   let controlLease: { id: string; owner: 'scenario' | 'trickle'; expires: number } | undefined;
@@ -324,6 +329,7 @@ export function createEmulator(
           state.callbackAttempts = [];
           state.sourceClock = undefined;
           state.metarReports = recordedMetarReports();
+          state.tafForecasts = recordedTafForecasts();
           scriptedFlight?.stop();
           scriptedFlight = undefined;
           return send(response, 200, { reset: true });
@@ -353,6 +359,25 @@ export function createEmulator(
             throw new HttpError(400, 'Expected reports: report objects with icaoId, rawOb and obsTime');
           state.metarReports = reports.map((report) => JSON.stringify(report));
           return send(response, 200, { reports: state.metarReports.length });
+        }
+        if (path === '/_simulation/taf/forecasts' && request.method === 'PUT') {
+          const value = JSON.parse(Buffer.from(await readBytes(request)).toString()) as { forecasts?: unknown };
+          const forecasts = value.forecasts;
+          if (
+            !Array.isArray(forecasts) ||
+            forecasts.length > 5000 ||
+            forecasts.some(
+              (forecast) =>
+                !forecast ||
+                typeof forecast !== 'object' ||
+                typeof (forecast as Json).icaoId !== 'string' ||
+                typeof (forecast as Json).rawTAF !== 'string' ||
+                !Number.isFinite(Date.parse(String((forecast as Json).issueTime))),
+            )
+          )
+            throw new HttpError(400, 'Expected forecasts: forecast objects with icaoId, rawTAF and issueTime');
+          state.tafForecasts = forecasts.map((forecast) => JSON.stringify(forecast));
+          return send(response, 200, { forecasts: state.tafForecasts.length });
         }
         if (path === '/_simulation/partner/orders' && request.method === 'PUT') {
           const value = JSON.parse(Buffer.from(await readBytes(request)).toString()) as { orders?: Json[] };
@@ -548,6 +573,24 @@ export function createEmulator(
           message: 'success',
           statusCode: 200,
         });
+      }
+      const restriction = request.method === 'GET' ? answerTfrRequest(path) : undefined;
+      if (restriction) {
+        response.writeHead(restriction.status, {
+          ...(restriction.contentType ? { 'content-type': restriction.contentType } : {}),
+          'cache-control': 'no-store',
+          'x-ledger-simulation': 'recorded-flight-restrictions',
+        });
+        return response.end(restriction.body);
+      }
+      if (path === '/api/data/taf' && request.method === 'GET') {
+        const answer = answerTafRequest(state.tafForecasts, url.searchParams, sourceTime());
+        response.writeHead(answer.status, {
+          ...(answer.status === 204 ? {} : { 'content-type': 'application/json; charset=utf-8' }),
+          'cache-control': 'no-store',
+          'x-ledger-simulation': 'recorded-weather-forecasts',
+        });
+        return response.end(answer.body);
       }
       if (path === '/api/data/metar' && request.method === 'GET') {
         const answer = answerMetarRequest(state.metarReports, url.searchParams, sourceTime());

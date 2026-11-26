@@ -98,7 +98,7 @@ describe('a check kind’s own summary as wording', () => {
     const kinds = listCheckKinds()
       .map((kind) => `${kind.id}@${kind.version} ${registeredCheckKindDigest(kind.id, kind.version)}`)
       .sort();
-    expect(canonicalDigest(kinds)).toBe('bd1e45d0b03249046dfbf10bea3abc4037e21d4ae46db621acb1649f3edd4311');
+    expect(canonicalDigest(kinds)).toBe('aa18fd6249a93e34edac3aeef1ba6c9827434c71fe6a66786dcce57733a2120f');
     expect(canonicalDigest(overdue())).toBe('e2b923c28a17b4f8f5f737a005f31f5411f805337aa099148b20171ac76bb50a');
     expect(canonicalDigest(covered())).toBe('4bc6e3a804a62b52b8ae43cdd2a25d4560d1800480f6b7bcf137ee57f1b4e2db');
   });

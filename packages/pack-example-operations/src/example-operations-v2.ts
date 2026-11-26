@@ -9,7 +9,7 @@ import {
 
 export const BATTERY_AT_LANDING_LEAF_ID = 'ledger.example-operations.battery-reserve-at-landing';
 
-const VERSION_TWO_DIGEST = 'ec66aed0739dff9130ef804ec03f704118831e511a0f5788a9ce53089c0279b8';
+const VERSION_TWO_DIGEST = 'eec5d43781e50a519d94e7c4a2fdecebff4140367f655e3f8efb4827012b8c1d';
 
 /** Invented for this repository. It is not a regulation and not a manufacturer limit. */
 export const BATTERY_AT_LANDING_PROCEDURE_V1 =

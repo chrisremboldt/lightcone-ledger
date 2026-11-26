@@ -1,0 +1,132 @@
+{
+  "note": "Fetched 2026-11-26T04:33:53.000Z from the Aviation Weather Center data API (aviationweather.gov), GET /api/data/taf?ids=KDEN,KSFO,KJFK,PHNL,CYYZ,RJTT,YSSY,KSEA,KBOS,KATL,OMDB,SBGR,KDFW,KMSP,LEMD,EHAM&format=json: this forecast's object, cut from the response as sent. A published government weather forecast, kept as reference data.",
+  "case": "valid",
+  "message": {
+    "contentType": "application/json",
+    "transport": {
+      "method": "GET",
+      "path": "/api/data/taf"
+    },
+    "capturedAt": "2026-11-26T04:33:53.000Z",
+    "bodyText": "{\"icaoId\":\"LEMD\",\"dbPopTime\":\"2026-11-25T23:25:11.313Z\",\"bulletinTime\":\"2026-11-25T23:00:00.000Z\",\"issueTime\":\"2026-11-25T23:00:00.000Z\",\"validTimeFrom\":1795651200,\"validTimeTo\":1795759200,\"rawTAF\":\"TAF LEMD 252300Z 2600/2706 VRB04KT CAVOK TX11/2614Z TNM03/2705Z PROB40 TEMPO 2603/2611 3000 BR BCFG BKN004 PROB40 TEMPO 2606/2610 0600 FZFG VV002\",\"mostRecent\":1,\"remarks\":\"\",\"lat\":40.466,\"lon\":-3.555,\"elev\":589,\"prior\":0,\"name\":\"Madrid/Barajas Arpt\",\"fcsts\":[{\"timeFrom\":1795651200,\"timeTo\":1795759200,\"timeBec\":null,\"fcstChange\":null,\"probability\":null,\"wdir\":\"VRB\",\"wspd\":4,\"wgst\":null,\"wshearHgt\":null,\"wshearDir\":null,\"wshearSpd\":null,\"visib\":\"6+\",\"altim\":null,\"vertVis\":null,\"wxString\":null,\"notDecoded\":null,\"clouds\":[{\"cover\":\"NSC\",\"base\":null,\"type\":null}],\"icgTurb\":[],\"temp\":[{\"validTime\":1795701600,\"surfaceTemp\":11,\"maxOrMin\":\"MAX\"},{\"validTime\":1795669200,\"surfaceTemp\":-3,\"maxOrMin\":\"MIN\"}]},{\"timeFrom\":1795662000,\"timeTo\":1795690800,\"timeBec\":null,\"fcstChange\":\"TEMPO\",\"probability\":40,\"wdir\":null,\"wspd\":null,\"wgst\":null,\"wshearHgt\":null,\"wshearDir\":null,\"wshearSpd\":null,\"visib\":1.86,\"altim\":null,\"vertVis\":null,\"wxString\":\"BR BCFG\",\"notDecoded\":null,\"clouds\":[{\"cover\":\"BKN\",\"base\":400,\"type\":null}],\"icgTurb\":[],\"temp\":[]},{\"timeFrom\":1795672800,\"timeTo\":1795687200,\"timeBec\":null,\"fcstChange\":\"TEMPO\",\"probability\":40,\"wdir\":null,\"wspd\":null,\"wgst\":null,\"wshearHgt\":null,\"wshearDir\":null,\"wshearSpd\":null,\"visib\":0.37,\"altim\":null,\"vertVis\":200,\"wxString\":\"FZFG\",\"notDecoded\":null,\"clouds\":[{\"cover\":\"OVX\",\"base\":null,\"type\":null}],\"icgTurb\":[],\"temp\":[]}]}"
+  },
+  "expect": {
+    "observations": [
+      {
+        "type": "weather.forecast",
+        "version": 1,
+        "subject": {
+          "kind": "site",
+          "id": "RIDGE-SITE-12",
+          "scope": "source"
+        },
+        "occurredAt": "2026-11-25T23:00:00.000Z",
+        "interval": {
+          "start": "2026-11-26T00:00:00.000Z",
+          "end": "2026-11-27T06:00:00.000Z"
+        },
+        "sourceEventId": "LEMD 2026-11-25T23:00:00.000Z TAF for RIDGE-SITE-12",
+        "position": {
+          "latitudeDegrees": 40.466,
+          "longitudeDegrees": -3.555
+        },
+        "originalLocator": {
+          "kind": "json_pointer",
+          "value": "/rawTAF"
+        },
+        "values": {
+          "stationId": "LEMD",
+          "periods": [
+            {
+              "change": "base",
+              "startAt": "2026-11-26T00:00:00.000Z",
+              "endAt": "2026-11-27T06:00:00.000Z",
+              "text": "VRB04KT CAVOK TX11/2614Z TNM03/2705Z",
+              "wind": {
+                "speedMetersPerSecond": 2.057777777777778,
+                "directionVariable": true
+              },
+              "visibility": {
+                "visibilityMeters": 10000,
+                "bound": "at_least"
+              }
+            },
+            {
+              "change": "probability_temporary",
+              "probabilityPercent": 40,
+              "startAt": "2026-11-26T03:00:00.000Z",
+              "endAt": "2026-11-26T11:00:00.000Z",
+              "text": "PROB40 TEMPO 2603/2611 3000 BR BCFG BKN004",
+              "visibility": {
+                "visibilityMeters": 3000,
+                "bound": "stated"
+              }
+            },
+            {
+              "change": "probability_temporary",
+              "probabilityPercent": 40,
+              "startAt": "2026-11-26T06:00:00.000Z",
+              "endAt": "2026-11-26T10:00:00.000Z",
+              "text": "PROB40 TEMPO 2606/2610 0600 FZFG VV002",
+              "visibility": {
+                "visibilityMeters": 600,
+                "bound": "stated"
+              }
+            }
+          ]
+        },
+        "extraLimitations": [
+          "Forecast for station LEMD, configured for the site RIDGE-SITE-12; the distance from the station to the site is not on record."
+        ]
+      }
+    ],
+    "rejections": [],
+    "unmapped": [
+      {
+        "kind": "json_pointer",
+        "value": "/bulletinTime"
+      },
+      {
+        "kind": "json_pointer",
+        "value": "/dbPopTime"
+      },
+      {
+        "kind": "json_pointer",
+        "value": "/elev"
+      },
+      {
+        "kind": "json_pointer",
+        "value": "/fcsts"
+      },
+      {
+        "kind": "json_pointer",
+        "value": "/issueTime"
+      },
+      {
+        "kind": "json_pointer",
+        "value": "/mostRecent"
+      },
+      {
+        "kind": "json_pointer",
+        "value": "/name"
+      },
+      {
+        "kind": "json_pointer",
+        "value": "/prior"
+      },
+      {
+        "kind": "json_pointer",
+        "value": "/remarks"
+      },
+      {
+        "kind": "json_pointer",
+        "value": "/validTimeFrom"
+      },
+      {
+        "kind": "json_pointer",
+        "value": "/validTimeTo"
+      }
+    ],
+    "conversions": []
+  }
+}

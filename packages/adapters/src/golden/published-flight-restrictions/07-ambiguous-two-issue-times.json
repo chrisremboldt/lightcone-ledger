@@ -1,0 +1,22 @@
+{
+  "note": "Constructed for this test, not fetched: a notice that states two issue times.",
+  "case": "ambiguous",
+  "message": {
+    "contentType": "application/xml",
+    "transport": {
+      "method": "GET",
+      "path": "/download/detail_6_0001.xml"
+    },
+    "capturedAt": "2026-11-26T04:34:40.000Z",
+    "bodyText": "<XNOTAM-Update version=\"0.1\"><Group><Add><Not><NotUid><dateIndexYear>2026</dateIndexYear><noSeqNo>1</noSeqNo><dateIssued>2026-11-25T12:00:00</dateIssued><dateIssued>2026-11-25T13:00:00</dateIssued><txtLocalName>Invented restriction</txtLocalName></NotUid><dateEffective>2026-11-26T14:00:00</dateEffective><dateExpire>2026-11-26T18:00:00</dateExpire><TfrNot><codeType>99.7</codeType><TFRAreaGroup><aseTFRArea><txtName>Area A</txtName><codeDistVerUpper>HEI</codeDistVerUpper><valDistVerUpper>400</valDistVerUpper><uomDistVerUpper>FT</uomDistVerUpper><codeDistVerLower>HEI</codeDistVerLower><valDistVerLower>0</valDistVerLower><uomDistVerLower>FT</uomDistVerLower></aseTFRArea><abdMergedArea><Avx><codeDatum>WGE</codeDatum><codeType>GRC</codeType><geoLat>39.9N</geoLat><geoLong>086.1W</geoLong></Avx><Avx><codeDatum>WGE</codeDatum><codeType>GRC</codeType><geoLat>39.95N</geoLat><geoLong>086.1W</geoLong></Avx><Avx><codeDatum>WGE</codeDatum><codeType>GRC</codeType><geoLat>39.95N</geoLat><geoLong>086.15W</geoLong></Avx></abdMergedArea></TFRAreaGroup></TfrNot></Not></Add></Group></XNOTAM-Update>"
+  },
+  "expect": {
+    "observations": [],
+    "rejections": [
+      {
+        "reasonIncludes": "has 2 dateIssued elements, not one"
+      }
+    ],
+    "unmapped": []
+  }
+}

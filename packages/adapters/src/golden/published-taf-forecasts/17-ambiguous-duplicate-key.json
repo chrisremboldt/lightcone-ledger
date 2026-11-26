@@ -1,0 +1,22 @@
+{
+  "note": "Constructed for this test, not fetched: the forecast text given twice.",
+  "case": "ambiguous",
+  "message": {
+    "contentType": "application/json",
+    "transport": {
+      "method": "GET",
+      "path": "/api/data/taf"
+    },
+    "capturedAt": "2026-11-26T04:33:53.000Z",
+    "bodyText": "{\"icaoId\":\"ZZZZ\",\"rawTAF\":\"TAF ZZZZ 260200Z 2603/2706 27010KT P6SM SKC\",\"rawTAF\":\"TAF ZZZZ 260200Z 2603/2706 27030KT 1SM SKC\"}"
+  },
+  "expect": {
+    "observations": [],
+    "rejections": [
+      {
+        "reasonIncludes": "Invalid or ambiguous JSON"
+      }
+    ],
+    "unmapped": []
+  }
+}

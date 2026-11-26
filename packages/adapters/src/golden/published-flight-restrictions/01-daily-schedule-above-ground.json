@@ -1,0 +1,241 @@
+{
+  "note": "Fetched 2026-11-26T04:34:20.000Z from the FAA TFR service (tfr.faa.gov), GET /download/detail_6_9800.xml: the detail document as sent, except that contact names, contact organizations, telephone numbers and contact radio frequencies were replaced with neutral values, and named agencies and a company's venue with a neutral description, before it was committed (see the recording folder's README). Everything the adapter reads is as published. A published government airspace notice, kept as reference data.",
+  "case": "valid",
+  "message": {
+    "contentType": "application/xml",
+    "transport": {
+      "method": "GET",
+      "path": "/download/detail_6_9800.xml"
+    },
+    "capturedAt": "2026-11-26T04:34:20.000Z",
+    "bodyText": "﻿<XNOTAM-Update xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" version=\"0.1\" origin=\"\" created=\"2026-11-25T16:14:44\">\n  <Group>\n    <Add>\n      <Not>\n        <NotUid>\n          <txtNameAcctFac>FDC</txtNameAcctFac>\n          <dateIndexYear>2026</dateIndexYear>\n          <noSeqNo>9800</noSeqNo>\n          <dateIssued>2026-11-25T22:07:52</dateIssued>\n          <txtLocalName>261126-261224 Carmel, IN FEDERAL AGENCY UAS Only</txtLocalName>\n          <codeGUID>3e3c4117-4117-4b3b-8e48-1ded23b7bef1</codeGUID>\n          <noUSNSWorkNo>TFR25000b326084</noUSNSWorkNo>\n        </NotUid>\n        <codeDailyOper>false</codeDailyOper>\n        <dateEffective>2026-11-26T20:30:00</dateEffective>\n        <dateExpire>2026-12-25T02:00:00</dateExpire>\n        <codeTimeZone>EST</codeTimeZone>\n        <codeExpirationTimeZone>EST</codeExpirationTimeZone>\n        <AffLocGroup>\n          <txtNameCity>Carmel</txtNameCity>\n          <txtNameUSState>INDIANA</txtNameUSState>\n        </AffLocGroup>\n        <codeFacility>ZID</codeFacility>\n        <TfrNot>\n          <codeType>99.7</codeType>\n          <TFRAreaGroup>\n            <aseTFRArea>\n              <AseUid>\n                <codeType>RAS</codeType>\n                <codeId>1101</codeId>\n              </AseUid>\n              <txtName>Area A</txtName>\n              <codeDistVerUpper>HEI</codeDistVerUpper>\n              <valDistVerUpper>400</valDistVerUpper>\n              <uomDistVerUpper>FT</uomDistVerUpper>\n              <codeDistVerLower>HEI</codeDistVerLower>\n              <valDistVerLower>0</valDistVerLower>\n              <uomDistVerLower>FT</uomDistVerLower>\n              <Att>\n                <codeWorkHr>NOTAM</codeWorkHr>\n              </Att>\n              <codeExclVerUpper>INCLUDE</codeExclVerUpper>\n              <codeExclVerLower>INCLUDE</codeExclVerLower>\n              <isScheduledTfrArea>TRUE</isScheduledTfrArea>\n              <dayCode>Daily</dayCode>\n              <ScheduleGroup>\n                <isTimeSeparate>TRUE</isTimeSeparate>\n                <dateEffective>2026-11-26T20:30:00</dateEffective>\n                <dateExpire>2026-12-25T02:00:00</dateExpire>\n                <startTime>2026-11-26T20:30:00</startTime>\n                <endTime>2026-12-25T02:00:00</endTime>\n              </ScheduleGroup>\n            </aseTFRArea>\n            <Aac>\n              <AacUid>\n                <AseUidChi>\n                  <codeType>RAS</codeType>\n                  <codeId>1101</codeId>\n                </AseUidChi>\n                <AseUidPar>\n                  <codeType>PART</codeType>\n                  <codeId>1102</codeId>\n                </AseUidPar>\n              </AacUid>\n              <codeType>BOM</codeType>\n              <codeOpr>BASE</codeOpr>\n            </Aac>\n            <abdMergedArea>\n              <AbdUid>\n                <AseUid>\n                  <codeType>RAS</codeType>\n                  <codeId>1101</codeId>\n                </AseUid>\n              </AbdUid>\n              <txtRmk>1101</txtRmk>\n              <Avx>\n                <codeDatum>WGE</codeDatum>\n                <codeType>GRC</codeType>\n                <geoLat>39.97750645N</geoLat>\n                <geoLong>086.13W</geoLong>\n              </Avx>\n              <Avx>\n                <codeDatum>WGE</codeDatum>\n                <codeType>GRC</codeType>\n                <geoLat>39.97737973N</geoLat>\n                <geoLong>086.1281176W</geoLong>\n              </Avx>\n              <Avx>\n                <codeDatum>WGE</codeDatum>\n                <codeType>GRC</codeType>\n                <geoLat>39.97700344N</geoLat>\n                <geoLong>086.12629242W</geoLong>\n              </Avx>\n              <Avx>\n                <codeDatum>WGE</codeDatum>\n                <codeType>GRC</codeType>\n                <geoLat>39.976389N</geoLat>\n                <geoLong>086.12457993W</geoLong>\n              </Avx>\n              <Avx>\n                <codeDatum>WGE</codeDatum>\n                <codeType>GRC</codeType>\n                <geoLat>39.9755551N</geoLat>\n                <geoLong>086.12303218W</geoLong>\n              </Avx>\n              <Avx>\n                <codeDatum>WGE</codeDatum>\n                <codeType>GRC</codeType>\n                <geoLat>39.97452708N</geoLat>\n                <geoLong>086.1216962W</geoLong>\n              </Avx>\n              <Avx>\n                <codeDatum>WGE</codeDatum>\n                <codeType>GRC</codeType>\n                <geoLat>39.97333618N</geoLat>\n                <geoLong>086.12061258W</geoLong>\n              </Avx>\n              <Avx>\n                <codeDatum>WGE</codeDatum>\n                <codeType>GRC</codeType>\n                <geoLat>39.9720186N</geoLat>\n                <geoLong>086.11981425W</geoLong>\n              </Avx>\n              <Avx>\n                <codeDatum>WGE</codeDatum>\n                <codeType>GRC</codeType>\n                <geoLat>39.97061437N</geoLat>\n                <geoLong>086.11932545W</geoLong>\n              </Avx>\n              <Avx>\n                <codeDatum>WGE</codeDatum>\n                <codeType>GRC</codeType>\n                <geoLat>39.96916616N</geoLat>\n                <geoLong>086.119161W</geoLong>\n              </Avx>\n              <Avx>\n                <codeDatum>WGE</codeDatum>\n                <codeType>GRC</codeType>\n                <geoLat>39.96771799N</geoLat>\n                <geoLong>086.1193259W</geoLong>\n              </Avx>\n              <Avx>\n                <codeDatum>WGE</codeDatum>\n                <codeType>GRC</codeType>\n                <geoLat>39.96631385N</geoLat>\n                <geoLong>086.1198151W</geoLong>\n              </Avx>\n              <Avx>\n                <codeDatum>WGE</codeDatum>\n                <codeType>GRC</codeType>\n                <geoLat>39.9649964N</geoLat>\n                <geoLong>086.12061372W</geoLong>\n              </Avx>\n              <Avx>\n                <codeDatum>WGE</codeDatum>\n                <codeType>GRC</codeType>\n                <geoLat>39.96380566N</geoLat>\n                <geoLong>086.1216975W</geoLong>\n              </Avx>\n              <Avx>\n                <codeDatum>WGE</codeDatum>\n                <codeType>GRC</codeType>\n                <geoLat>39.96277781N</geoLat>\n                <geoLong>086.12303348W</geoLong>\n              </Avx>\n              <Avx>\n                <codeDatum>WGE</codeDatum>\n                <codeType>GRC</codeType>\n                <geoLat>39.96194407N</geoLat>\n                <geoLong>086.12458107W</geoLong>\n              </Avx>\n              <Avx>\n                <codeDatum>WGE</codeDatum>\n                <codeType>GRC</codeType>\n                <geoLat>39.96132977N</geoLat>\n                <geoLong>086.12629327W</geoLong>\n              </Avx>\n              <Avx>\n                <codeDatum>WGE</codeDatum>\n                <codeType>GRC</codeType>\n                <geoLat>39.96095356N</geoLat>\n                <geoLong>086.12811805W</geoLong>\n              </Avx>\n              <Avx>\n                <codeDatum>WGE</codeDatum>\n                <codeType>GRC</codeType>\n                <geoLat>39.96082688N</geoLat>\n                <geoLong>086.13W</geoLong>\n              </Avx>\n              <Avx>\n                <codeDatum>WGE</codeDatum>\n                <codeType>GRC</codeType>\n                <geoLat>39.96095356N</geoLat>\n                <geoLong>086.13188195W</geoLong>\n              </Avx>\n              <Avx>\n                <codeDatum>WGE</codeDatum>\n                <codeType>GRC</codeType>\n                <geoLat>39.96132977N</geoLat>\n                <geoLong>086.13370673W</geoLong>\n              </Avx>\n              <Avx>\n                <codeDatum>WGE</codeDatum>\n                <codeType>GRC</codeType>\n                <geoLat>39.96194407N</geoLat>\n                <geoLong>086.13541893W</geoLong>\n              </Avx>\n              <Avx>\n                <codeDatum>WGE</codeDatum>\n                <codeType>GRC</codeType>\n                <geoLat>39.96277781N</geoLat>\n                <geoLong>086.13696652W</geoLong>\n              </Avx>\n              <Avx>\n                <codeDatum>WGE</codeDatum>\n                <codeType>GRC</codeType>\n                <geoLat>39.96380566N</geoLat>\n                <geoLong>086.1383025W</geoLong>\n              </Avx>\n              <Avx>\n                <codeDatum>WGE</codeDatum>\n                <codeType>GRC</codeType>\n                <geoLat>39.9649964N</geoLat>\n                <geoLong>086.13938628W</geoLong>\n              </Avx>\n              <Avx>\n                <codeDatum>WGE</codeDatum>\n                <codeType>GRC</codeType>\n                <geoLat>39.96631385N</geoLat>\n                <geoLong>086.1401849W</geoLong>\n              </Avx>\n              <Avx>\n                <codeDatum>WGE</codeDatum>\n                <codeType>GRC</codeType>\n                <geoLat>39.96771799N</geoLat>\n                <geoLong>086.1406741W</geoLong>\n              </Avx>\n              <Avx>\n                <codeDatum>WGE</codeDatum>\n                <codeType>GRC</codeType>\n                <geoLat>39.96916616N</geoLat>\n                <geoLong>086.140839W</geoLong>\n              </Avx>\n              <Avx>\n                <codeDatum>WGE</codeDatum>\n                <codeType>GRC</codeType>\n                <geoLat>39.97061437N</geoLat>\n                <geoLong>086.14067455W</geoLong>\n              </Avx>\n              <Avx>\n                <codeDatum>WGE</codeDatum>\n                <codeType>GRC</codeType>\n                <geoLat>39.9720186N</geoLat>\n                <geoLong>086.14018575W</geoLong>\n              </Avx>\n              <Avx>\n                <codeDatum>WGE</codeDatum>\n                <codeType>GRC</codeType>\n                <geoLat>39.97333618N</geoLat>\n                <geoLong>086.13938742W</geoLong>\n              </Avx>\n              <Avx>\n                <codeDatum>WGE</codeDatum>\n                <codeType>GRC</codeType>\n                <geoLat>39.97452708N</geoLat>\n                <geoLong>086.1383038W</geoLong>\n              </Avx>\n              <Avx>\n                <codeDatum>WGE</codeDatum>\n                <codeType>GRC</codeType>\n                <geoLat>39.9755551N</geoLat>\n                <geoLong>086.13696782W</geoLong>\n              </Avx>\n              <Avx>\n                <codeDatum>WGE</codeDatum>\n                <codeType>GRC</codeType>\n                <geoLat>39.976389N</geoLat>\n                <geoLong>086.13542007W</geoLong>\n              </Avx>\n              <Avx>\n                <codeDatum>WGE</codeDatum>\n                <codeType>GRC</codeType>\n                <geoLat>39.97700344N</geoLat>\n                <geoLong>086.13370758W</geoLong>\n              </Avx>\n              <Avx>\n                <codeDatum>WGE</codeDatum>\n                <codeType>GRC</codeType>\n                <geoLat>39.97737973N</geoLat>\n                <geoLong>086.1318824W</geoLong>\n              </Avx>\n              <Avx>\n                <codeDatum>WGE</codeDatum>\n                <codeType>GRC</codeType>\n                <geoLat>39.97750645N</geoLat>\n                <geoLong>086.13W</geoLong>\n              </Avx>\n            </abdMergedArea>\n            <aseShapes>\n              <AseUid>\n                <codeType>PART</codeType>\n                <codeId>1102</codeId>\n              </AseUid>\n              <Att>\n                <codeWorkHr>NOTAM</codeWorkHr>\n              </Att>\n              <Abd>\n                <AbdUid>\n                  <AseUid>\n                    <codeType>PART</codeType>\n                    <codeId>1102</codeId>\n                  </AseUid>\n                </AbdUid>\n                <txtRmk>1102</txtRmk>\n                <Avx>\n                  <codeType>CIR</codeType>\n                  <geoLat>39.96916667N</geoLat>\n                  <geoLong>086.13W</geoLong>\n                  <codeDatum>WGE</codeDatum>\n                  <valRadiusArc>0.5</valRadiusArc>\n                  <uomRadiusArc>NM</uomRadiusArc>\n                  <Frd>\n                    <FrdUid>\n                      <DpnUid>\n                        <codeId>VHP14</codeId>\n                        <geoLat>39.96916667N</geoLat>\n                        <geoLong>086.13W</geoLong>\n                      </DpnUid>\n                    </FrdUid>\n                    <Ain>\n                      <VorUid>\n                        <codeId>VHP</codeId>\n                        <geoLat>39.81472906N</geoLat>\n                        <geoLong>086.36749978W</geoLong>\n                      </VorUid>\n                      <valAngleBrg>049.0</valAngleBrg>\n                    </Ain>\n                    <Din>\n                      <TcnUid>\n                        <codeId>VHP</codeId>\n                        <geoLat>39.81472906N</geoLat>\n                        <geoLong>086.36749978W</geoLong>\n                      </TcnUid>\n                      <valDist>14.4</valDist>\n                      <uomDist>NM</uomDist>\n                    </Din>\n                    <txtRmk>BRICKYARD</txtRmk>\n                  </Frd>\n                </Avx>\n              </Abd>\n            </aseShapes>\n            <InstructionsGroup>\n              <txtInstr>EXC AS SPECIFIED BLW: </txtInstr>\n              <txtInstr>A. UAS OPS MAY BE AUTH WI THE DEFINED SSI AIRSPACE IF IN COMPLIANCE WITH THE RQMNTS LISTED BLW: 1)  UAS OPS IN DCT SUPPORT OF AN ACT NTL DEFENSE, HOMELAND SECURITY, LAW ENFORCEMENT, FIREFIGHTING, SAR, OR DISASTER RESPONSE MISSION; 2) UAS OPS IN SUPPORT OF EVENT OPS; 3) COMMERCIAL UAS OPS WITH A VALID STATEMENT OF WORK; 4) MUST BE IN POSSESSION OF AN APPROVED SPECIAL GOVERNMENTAL INTEREST(SGI) AIRSPACE WAIVER; 5) AND COMPLY WITH ALL OTHER APPLICABLE FEDERAL AVIATION REGULATIONS. </txtInstr>\n              <txtInstr>B. UAS OPR IDENTIFIED IN A.1, A.2 OR A.3 ABV MUST APPLY FOR A SGI WAIVER VIA HTTPS://WAIVERS.FAA.GOV, </txtInstr>\n              <txtInstr>C. UAS OPR WHO DO NOT COMPLY WITH APPLICABLE AIRSPACE RESTRICTIONS ARE WARNED THAT PURSUANT TO 10 U.S.C.SECTION 130I AND 6 U.S.C.SECTION 124N, A FEDERAL AGENCY MAY TAKE SECURITY ACTION THAT RESULTS IN THE INTERFERENCE, DISRUPTION, SEIZURE, DAMAGING, OR DESTRUCTION OF UNMANNED ACFT DEEMED TO POSE A CREDIBLE SAFETY OR SECURITY THREAT TO PROTECTED PERSONNEL, FAC, OR ASSETS. </txtInstr>\n              <txtInstr>D. THE SYSTEM OPERATIONS SUPPORT CENTER (SOSC), IS THE CDN FAC FOR UAS OPS, SUBMIT SGI WAIVER REQUEST VIA HTTPS://WAIVERS.FAA.GOV, FIRST RESPONDERS EMGERGENCY OPS CTC THE SOSC AT 000-000-0000.</txtInstr>\n              <txtInstr>E. THE FAA RECOMMENDS THAT ALL ACFT OPR CK NOTAMS FREQUENTLY FOR POSSIBLE CHANGES TO THIS TFR PRIOR TO OPS. OPR MAY REVIEW THE TFR DETAILS AT HTTPS://TFR.FAA.GOV/ OR HTTPS://WWW.1800WXBRIEF.COM.</txtInstr>\n            </InstructionsGroup>\n            <codeIncFRD>TRUE</codeIncFRD>\n            <codeShpPrt>COMPOSITE</codeShpPrt>\n            <codeLclTime>TRUE</codeLclTime>\n            <codeAuthATC>FALSE</codeAuthATC>\n          </TFRAreaGroup>\n          <TemplateType>LittleThreatLanguage</TemplateType>\n          <codeCtrlFacilityType>ARTCC</codeCtrlFacilityType>\n        </TfrNot>\n        <codeCoordFacilityType>ARTCC</codeCoordFacilityType>\n        <txtDescrUSNS>!FDC 6/9800 ZID IN..AIRSPACE CARMEL, IN..TEMPORARY FLIGHT RESTRICTIONS. NOVEMBER 26-DECEMBER 24, 2026 LOCAL. PURSUANT TO 49 USC 40103(B)(3), THE FEDERAL AVIATION ADMINISTRATION (FAA) CLASSIFIES THE AIRSPACE DEFINED IN THIS NOTAM AS 'NTL DEFENSE AIRSPACE'. ANY PERSON WHO KNOWINGLY OR WILLFULLY VIOLATES THE RULES CONCERNING OPS IN THIS AIRSPACE MAY BE SUBJECT TO CERTAIN CRIMINAL PENALTIES UNDER 49 USC SECTION 46307. PILOTS WHO DO NOT ADHERE TO THE FOLLOWING PROC MAY BE INTERCEPTED, DETAINED AND INTERVIEWED BY LAW ENFORCEMENT/SECURITY PERSONNEL. PURSUANT TO 14 CFR 99.7, SPECIAL SECURITY INSTRUCTIONS (SSI), ALL UNMANNED ACFT SYSTEM (UAS) FLT OPS ARE PROHIBITED: WI AN AREA DEFINED AS 0.5NM RADIUS OF 395809N0860748W (VHP049014.4) SFC-400FT AGL EFFECTIVE 2611262030 UTC (1530 LOCAL 11/26/26) UNTIL 2612250200 UTC (2100 LOCAL 12/24/26) DLY 2030-0200 (1530-2100 LOCAL). EXC AS SPECIFIED BLW: A. UAS OPS MAY BE AUTH WI THE DEFINED SSI AIRSPACE IF IN COMPLIANCE WITH THE RQMNTS LISTED BLW: 1) UAS OPS IN DCT SUPPORT OF AN ACT NTL DEFENSE, HOMELAND SECURITY, LAW ENFORCEMENT, FIREFIGHTING, SAR, OR DISASTER RESPONSE MISSION; 2) UAS OPS IN SUPPORT OF EVENT OPS; 3) COMMERCIAL UAS OPS WITH A VALID STATEMENT OF WORK; 4) MUST BE IN POSSESSION OF AN APPROVED SPECIAL GOVERNMENTAL INTEREST(SGI) AIRSPACE WAIVER; 5) AND COMPLY WITH ALL OTHER APPLICABLE FEDERAL AVIATION REGULATIONS. B. UAS OPR IDENTIFIED IN A.1, A.2 OR A.3 ABV MUST APPLY FOR A SGI WAIVER VIA HTTPS://WAIVERS.FAA.GOV, C. UAS OPR WHO DO NOT COMPLY WITH APPLICABLE AIRSPACE RESTRICTIONS ARE WARNED THAT PURSUANT TO 10 U.S.C.SECTION 130I AND 6 U.S.C.SECTION 124N, A FEDERAL AGENCY MAY TAKE SECURITY ACTION THAT RESULTS IN THE INTERFERENCE, DISRUPTION, SEIZURE, DAMAGING, OR DESTRUCTION OF UNMANNED ACFT DEEMED TO POSE A CREDIBLE SAFETY OR SECURITY THREAT TO PROTECTED PERSONNEL, FAC, OR ASSETS. D. THE SYSTEM OPERATIONS SUPPORT CENTER (SOSC), IS THE CDN FAC FOR UAS OPS, SUBMIT SGI WAIVER REQUEST VIA HTTPS://WAIVERS.FAA.GOV, FIRST RESPONDERS EMGERGENCY OPS CTC THE SOSC AT 000-000-0000. E. THE FAA RECOMMENDS THAT ALL ACFT OPR CK NOTAMS FREQUENTLY FOR POSSIBLE CHANGES TO THIS TFR PRIOR TO OPS. OPR MAY REVIEW THE TFR DETAILS AT HTTPS://TFR.FAA.GOV/ OR HTTPS://WWW.1800WXBRIEF.COM. 2611262030-2612250200</txtDescrUSNS>\n        <txtDescrTraditional>!FDC 6/9800 ZID IN..AIRSPACE CARMEL, IN..TEMPORARY FLIGHT RESTRICTIONS. NOVEMBER 26-DECEMBER 24, 2026 LOCAL. PURSUANT TO 49 USC 40103(B)(3), THE FEDERAL AVIATION ADMINISTRATION (FAA) CLASSIFIES THE AIRSPACE DEFINED IN THIS NOTAM AS 'NTL DEFENSE AIRSPACE'. ANY PERSON WHO KNOWINGLY OR WILLFULLY VIOLATES THE RULES CONCERNING OPS IN THIS AIRSPACE MAY BE SUBJECT TO CERTAIN CRIMINAL PENALTIES UNDER 49 USC 40103(B)(3). PILOTS WHO DO NOT ADHERE TO THE FOLLOWING PROC MAY BE INTERCEPTED, DETAINED AND INTERVIEWED BY LAW ENFORCEMENT/SECURITY PERSONNEL. \nPURSUANT TO 14 CFR 99.7, SPECIAL SECURITY INSTRUCTIONS (SSI), ALL UNMANNED ACFT SYSTEM (UAS) FLT OPS ARE PROHIBITED: WI AN AREA DEFINED AS 0.5NM RADIUS OF 395809N0860748W (VHP049014.4) SFC-400FT AGL EFFECTIVE 2611262030 UTC (1530 LOCAL 11/26/26) UNTIL 2612250200 UTC (2100 LOCAL 12/24/26) DLY 2030-0200 (1530-2100 LOCAL). EXC AS SPECIFIED BLW: A. UAS OPS MAY BE AUTH WI THE DEFINED SSI AIRSPACE IF IN COMPLIANCE WITH THE RQMNTS LISTED BLW: 1) UAS OPS IN DCT SUPPORT OF AN ACT NTL DEFENSE, HOMELAND SECURITY, LAW ENFORCEMENT, FIREFIGHTING, SAR, OR DISASTER RESPONSE MISSION; 2) UAS OPS IN SUPPORT OF EVENT OPS; 3) COMMERCIAL UAS OPS WITH A VALID STATEMENT OF WORK; 4) MUST BE IN POSSESSION OF AN APPROVED SPECIAL GOVERNMENTAL INTEREST(SGI) AIRSPACE WAIVER; 5) AND COMPLY WITH ALL OTHER APPLICABLE FEDERAL AVIATION REGULATIONS. B. UAS OPR IDENTIFIED IN A.1, A.2 OR A.3 ABV MUST APPLY FOR A SGI WAIVER VIA HTTPS://WAIVERS.FAA.GOV, C. UAS OPR WHO DO NOT COMPLY WITH APPLICABLE AIRSPACE RESTRICTIONS ARE WARNED THAT PURSUANT TO 10 U.S.C.SECTION 130I AND 6 U.S.C.SECTION 124N, A FEDERAL AGENCY MAY TAKE SECURITY ACTION THAT RESULTS IN THE INTERFERENCE, DISRUPTION, SEIZURE, DAMAGING, OR DESTRUCTION OF UNMANNED ACFT DEEMED TO POSE A CREDIBLE SAFETY OR SECURITY THREAT TO PROTECTED PERSONNEL, FAC, OR ASSETS. D. THE SYSTEM OPERATIONS SUPPORT CENTER (SOSC), IS THE CDN FAC FOR UAS OPS, SUBMIT SGI WAIVER REQUEST VIA HTTPS://WAIVERS.FAA.GOV, FIRST RESPONDERS EMGERGENCY OPS CTC THE SOSC AT 000-000-0000. E. THE FAA RECOMMENDS THAT ALL ACFT OPR CK NOTAMS FREQUENTLY FOR POSSIBLE CHANGES TO THIS TFR PRIOR TO OPS. OPR MAY REVIEW THE TFR DETAILS AT HTTPS://TFR.FAA.GOV/ OR HTTPS://WWW.1800WXBRIEF.COM. 2611262030-2612250200</txtDescrTraditional>\n        <txtDescrModern>&lt;html&gt;\n  &lt;span style=\"Arial\" valign=\"Top\"&gt;\n    &lt;Body&gt;\n      &lt;Table cellpadding=\"1\" cellspacing=\"0\"&gt;\n        &lt;TR bgcolor=\"#1E90FF\"&gt;\n          &lt;TD colspan=\"3\" align=\"left\" valign=\"bottom\" width=\"250\"&gt;\n            &lt;b&gt;\n              &lt;font color=\"#FFFFFF\" size=\"3\" face=\"Arial\"&gt;NOTAM Number     :&lt;/font&gt;\n            &lt;/b&gt;\n          &lt;/TD&gt;\n          &lt;TD valign=\"bottom\" align=\"left\" width=\"320\"&gt;\n            &lt;b&gt;\n              &lt;font color=\"#FFFFFF\" size=\"3\" face=\"Arial\"&gt;FDC 6/9800&lt;/font&gt;\n            &lt;/b&gt;\n          &lt;/TD&gt;\n        &lt;/TR&gt;\n        &lt;TR&gt;\n          &lt;TD colspan=\"3\" align=\"left\" valign=\"top\"&gt;\n            &lt;font face=\"Arial\" size=\"2\"&gt;Issue Date     :&lt;/font&gt;\n          &lt;/TD&gt;\n          &lt;TD valign=\"top\"&gt;\n            &lt;font face=\"Arial\" size=\"2\"&gt;November 25, 2026 at 2207 UTC&lt;/font&gt;\n          &lt;/TD&gt;\n        &lt;/TR&gt;\n        &lt;TR&gt;\n          &lt;TD colspan=\"3\" align=\"left\" valign=\"top\"&gt;\n            &lt;font face=\"Arial\" size=\"2\"&gt;Location     :&lt;/font&gt;\n          &lt;/TD&gt;\n          &lt;TD&gt;\n            &lt;font face=\"Arial\" size=\"2\"&gt;Carmel, Indiana near BRICKYARD VORTAC (VHP)&lt;/font&gt;\n          &lt;/TD&gt;\n        &lt;/TR&gt;\n        &lt;TR&gt;\n          &lt;TD colspan=\"3\" align=\"left\" valign=\"top\"&gt;\n            &lt;font face=\"Arial\" size=\"2\"&gt;Beginning Date and Time     :&lt;/font&gt;\n          &lt;/TD&gt;\n          &lt;TD&gt;\n            &lt;font face=\"Arial\" size=\"2\"&gt;November 26, 2026 UTC 2030-0200 Daily&lt;/font&gt;\n          &lt;/TD&gt;\n        &lt;/TR&gt;\n        &lt;TR&gt;\n          &lt;TD colspan=\"3\" align=\"left\" valign=\"top\"&gt;\n            &lt;font face=\"Arial\" size=\"2\"&gt;Ending Date and Time     :&lt;/font&gt;\n          &lt;/TD&gt;\n          &lt;TD&gt;\n            &lt;font face=\"Arial\" size=\"2\"&gt;December 25, 2026 UTC&lt;/font&gt;\n          &lt;/TD&gt;\n        &lt;/TR&gt;\n        &lt;TR&gt;\n          &lt;TD colspan=\"3\" align=\"left\" valign=\"top\"&gt;\n            &lt;font face=\"Arial\" size=\"2\"&gt;Reason for NOTAM     :&lt;/font&gt;\n          &lt;/TD&gt;\n          &lt;TD&gt;\n            &lt;font face=\"Arial\" size=\"2\"&gt;Temporary flight restrictions for Special Security Reasons&lt;/font&gt;\n          &lt;/TD&gt;\n        &lt;/TR&gt;\n        &lt;TR&gt;\n          &lt;TD colspan=\"3\" align=\"left\" valign=\"top\"&gt;\n            &lt;font face=\"Arial\" size=\"2\"&gt;Type     :&lt;/font&gt;\n          &lt;/TD&gt;\n          &lt;TD&gt;\n            &lt;font face=\"Arial\" size=\"2\"&gt;Security&lt;/font&gt;\n          &lt;/TD&gt;\n        &lt;/TR&gt;\n        &lt;TR&gt;\n          &lt;TD colspan=\"3\" align=\"left\" valign=\"top\"&gt;\n            &lt;font face=\"Arial\" size=\"2\"&gt;Replaced NOTAM(s)     :&lt;/font&gt;\n          &lt;/TD&gt;\n          &lt;TD&gt;\n            &lt;font face=\"Arial\" size=\"2\"&gt;N/A&lt;/font&gt;\n          &lt;/TD&gt;\n        &lt;/TR&gt;\n        &lt;TR&gt;\n          &lt;TD colspan=\"2\" height=\"20\"&gt;  &lt;/TD&gt;\n        &lt;/TR&gt;\n        &lt;TR&gt;\n          &lt;TD colspan=\"3\" align=\"right\" valign=\"top\"&gt;\n            &lt;font face=\"Arial\" size=\"2\"&gt;\n              &lt;b&gt;Jump To: &amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&lt;/b&gt;\n            &lt;/font&gt;\n          &lt;/TD&gt;\n          &lt;TD&gt;\n            &lt;font face=\"Arial\" size=\"2\"&gt;\n              &lt;b&gt;\n                &lt;a href=\"#areas\" class=\"internal\"&gt; Affected Areas &lt;/a&gt;&lt;br/&gt;&lt;a href=\"#restrictions\" class=\"internal\"&gt; Operating Restrictions and Requirements &lt;/a&gt;&lt;br/&gt;&lt;a href=\"#other\" class=\"internal\"&gt; Other Information &lt;/a&gt;&lt;br/&gt;&lt;/b&gt;\n            &lt;/font&gt;\n          &lt;/TD&gt;\n        &lt;/TR&gt;\n        &lt;TR&gt;\n          &lt;TD colspan=\"2\" height=\"20\"&gt;  &lt;/TD&gt;\n        &lt;/TR&gt;\n      &lt;/Table&gt;\n      &lt;Table cellpadding=\"1\" cellspacing=\"0\"&gt;\n        &lt;TR bgcolor=\"#1E90FF\"&gt;\n          &lt;TD colspan=\"5\"&gt;\n            &lt;a name=\"areas\"&gt;\n              &lt;b&gt;\n                &lt;font color=\"#FFFFFF\" size=\"3\" face=\"Arial\"&gt;Affected Area(s)&lt;/font&gt;\n              &lt;/b&gt;\n            &lt;/a&gt;\n          &lt;/TD&gt;\n          &lt;TD colspan=\"1\" align=\"right\"&gt;\n            &lt;a href=\"#\"&gt;\n              &lt;font color=\"#FFFFFF\" face=\"Arial\"&gt;\n                &lt;b&gt;Top&lt;/b&gt;\n              &lt;/font&gt;\n            &lt;/a&gt;\n          &lt;/TD&gt;\n        &lt;/TR&gt;\n        &lt;TR&gt;\n          &lt;TD colspan=\"2\" height=\"10\"&gt;  &lt;/TD&gt;\n        &lt;/TR&gt;\n        &lt;TR&gt;\n          &lt;TD colspan=\"3\" width=\"200\"&gt;\n            &lt;font face=\"Arial\" size=\"2\"&gt;\n              &lt;b&gt;Airspace Definition:&lt;/b&gt;\n            &lt;/font&gt;\n          &lt;/TD&gt;\n        &lt;/TR&gt;\n        &lt;TR&gt;\n          &lt;TD&gt; &lt;/TD&gt;\n          &lt;TD&gt; &lt;/TD&gt;\n          &lt;TD colspan=\"3\"&gt;\n            &lt;font face=\"Arial\" size=\"2\"&gt;Center:&lt;/font&gt;\n          &lt;/TD&gt;\n          &lt;TD&gt;\n            &lt;font face=\"Arial\" size=\"2\"&gt; On the BRICKYARD VORTAC (VHP) 049 degree radial at 14.4 nautical miles. (Latitude: 39&amp;#xBA;58'09\"N, Longitude: 86&amp;#xBA;07'48\"W)&lt;/font&gt;\n          &lt;/TD&gt;\n        &lt;/TR&gt;\n        &lt;TR&gt;\n          &lt;TD&gt; &lt;/TD&gt;\n          &lt;TD&gt; &lt;/TD&gt;\n          &lt;TD colspan=\"3\"&gt;\n            &lt;font face=\"Arial\" size=\"2\"&gt;Radius:&lt;/font&gt;\n          &lt;/TD&gt;\n          &lt;TD&gt;\n            &lt;font face=\"Arial\" size=\"2\"&gt; 0.5 nautical miles&lt;/font&gt;\n          &lt;/TD&gt;\n        &lt;/TR&gt;\n        &lt;TR&gt;\n          &lt;TD&gt; &lt;/TD&gt;\n          &lt;TD&gt; &lt;/TD&gt;\n          &lt;TD colspan=\"3\"&gt;\n            &lt;font face=\"Arial\" size=\"2\"&gt;Altitude:&lt;/font&gt;\n          &lt;/TD&gt;\n          &lt;TD&gt;\n            &lt;font face=\"Arial\" size=\"2\"&gt; From the surface  up to and including 400 feet AGL &lt;/font&gt;\n          &lt;/TD&gt;\n        &lt;/TR&gt;\n        &lt;TR&gt;\n          &lt;TD colspan=\"5\"&gt;\n            &lt;font face=\"Arial\" size=\"2\"&gt;\n              &lt;b&gt;Effective Date(s):&lt;/b&gt;\n            &lt;/font&gt;\n          &lt;/TD&gt;\n        &lt;/TR&gt;\n        &lt;TR&gt;\n          &lt;TD&gt; &lt;/TD&gt;\n          &lt;TD&gt; &lt;/TD&gt;\n          &lt;TD colspan=\"5\"&gt;\n            &lt;font face=\"Arial\" size=\"2\"&gt;\n              &lt;b&gt;In UTC:&lt;/b&gt;\n            &lt;/font&gt;\n          &lt;/TD&gt;\n        &lt;/TR&gt;\n        &lt;TR&gt;\n          &lt;TD&gt; &lt;/TD&gt;\n          &lt;TD&gt; &lt;/TD&gt;\n          &lt;TD colspan=\"5\"&gt;\n            &lt;font face=\"Arial\" size=\"2\"&gt;2030 to 0200 UTC Daily starting November 26 and ending December 25.&lt;/font&gt;\n          &lt;/TD&gt;\n        &lt;/TR&gt;\n        &lt;TR&gt;\n          &lt;TD colspan=\"2\" height=\"20\"&gt;  &lt;/TD&gt;\n        &lt;/TR&gt;\n        &lt;TR&gt;\n          &lt;TD&gt; &lt;/TD&gt;\n          &lt;TD&gt; &lt;/TD&gt;\n          &lt;TD colspan=\"5\"&gt;\n            &lt;font face=\"Arial\" size=\"2\"&gt;\n              &lt;b&gt;In Local EST:&lt;/b&gt;\n            &lt;/font&gt;\n          &lt;/TD&gt;\n        &lt;/TR&gt;\n        &lt;TR&gt;\n          &lt;TD&gt; &lt;/TD&gt;\n          &lt;TD&gt; &lt;/TD&gt;\n          &lt;TD colspan=\"5\"&gt;\n            &lt;font face=\"Arial\" size=\"2\"&gt;1530 to 2100 EST Daily starting November 26 and ending December 24.&lt;/font&gt;\n          &lt;/TD&gt;\n        &lt;/TR&gt;\n        &lt;TR&gt;\n          &lt;TD colspan=\"2\" height=\"20\"&gt;  &lt;/TD&gt;\n        &lt;/TR&gt;\n      &lt;/Table&gt;\n      &lt;b&gt;ENDSECTION1&lt;/b&gt;\n      &lt;Table cellpadding=\"1\" cellspacing=\"0\"&gt;\n        &lt;TR bgcolor=\"#1E90FF\"&gt;\n          &lt;TD colspan=\"3\"&gt;\n            &lt;a name=\"restrictions\"&gt;\n              &lt;b&gt;\n                &lt;font color=\"#FFFFFF\" face=\"Arial\" size=\"3\"&gt;Operating Restrictions and Requirements&lt;/font&gt;\n              &lt;/b&gt;\n            &lt;/a&gt;\n          &lt;/TD&gt;\n          &lt;TD colspan=\"1\" align=\"right\"&gt;\n            &lt;a href=\"#\"&gt;\n              &lt;font color=\"#FFFFFF\" face=\"Arial\"&gt;\n                &lt;b&gt;Top&lt;/b&gt;\n              &lt;/font&gt;\n            &lt;/a&gt;\n          &lt;/TD&gt;\n        &lt;/TR&gt;\n        &lt;TR&gt;\n          &lt;TD colspan=\"2\" height=\"20\"&gt;  &lt;/TD&gt;\n        &lt;/TR&gt;\n        &lt;TR&gt;\n          &lt;TD colspan=\"3\"&gt;\n            &lt;font face=\"Arial\" size=\"2\"&gt;No UAS operations are authorized in the areas covered by this NOTAM (except as described).&lt;/font&gt;\n          &lt;/TD&gt;\n        &lt;/TR&gt;\n        &lt;TR&gt;\n          &lt;TD colspan=\"2\" height=\"20\"&gt;  &lt;/TD&gt;\n        &lt;/TR&gt;\n        &lt;TR&gt;\n          &lt;TD&gt;\n            &lt;font face=\"Arial\" size=\"2\"&gt;\n              &lt;DL&gt;\n                &lt;DT&gt;EXC AS SPECIFIED BLW: &lt;/DT&gt;&lt;br/&gt;&lt;DT&gt;A. UAS OPS MAY BE AUTH WI THE DEFINED SSI AIRSPACE IF IN COMPLIANCE WITH THE RQMNTS LISTED BLW: 1)  UAS OPS IN DCT SUPPORT OF AN ACT NTL DEFENSE, HOMELAND SECURITY, LAW ENFORCEMENT, FIREFIGHTING, SAR, OR DISASTER RESPONSE MISSION; 2) UAS OPS IN SUPPORT OF EVENT OPS; 3) COMMERCIAL UAS OPS WITH A VALID STATEMENT OF WORK; 4) MUST BE IN POSSESSION OF AN APPROVED SPECIAL GOVERNMENTAL INTEREST(SGI) AIRSPACE WAIVER; 5) AND COMPLY WITH ALL OTHER APPLICABLE FEDERAL AVIATION REGULATIONS. &lt;/DT&gt;&lt;br/&gt;&lt;DT&gt;B. UAS OPR IDENTIFIED IN A.1, A.2 OR A.3 ABV MUST APPLY FOR A SGI WAIVER VIA HTTPS://WAIVERS.FAA.GOV, &lt;/DT&gt;&lt;br/&gt;&lt;DT&gt;C. UAS OPR WHO DO NOT COMPLY WITH APPLICABLE AIRSPACE RESTRICTIONS ARE WARNED THAT PURSUANT TO 10 U.S.C.SECTION 130I AND 6 U.S.C.SECTION 124N, A FEDERAL AGENCY MAY TAKE SECURITY ACTION THAT RESULTS IN THE INTERFERENCE, DISRUPTION, SEIZURE, DAMAGING, OR DESTRUCTION OF UNMANNED ACFT DEEMED TO POSE A CREDIBLE SAFETY OR SECURITY THREAT TO PROTECTED PERSONNEL, FAC, OR ASSETS. &lt;/DT&gt;&lt;br/&gt;&lt;DT&gt;D. THE SYSTEM OPERATIONS SUPPORT CENTER (SOSC), IS THE CDN FAC FOR UAS OPS, SUBMIT SGI WAIVER REQUEST VIA HTTPS://WAIVERS.FAA.GOV, FIRST RESPONDERS EMGERGENCY OPS CTC THE SOSC AT 000-000-0000.&lt;/DT&gt;&lt;br/&gt;&lt;DT&gt;E. THE FAA RECOMMENDS THAT ALL ACFT OPR CK NOTAMS FREQUENTLY FOR POSSIBLE CHANGES TO THIS TFR PRIOR TO OPS. OPR MAY REVIEW THE TFR DETAILS AT HTTPS://TFR.FAA.GOV/ OR HTTPS://WWW.1800WXBRIEF.COM.&lt;/DT&gt;&lt;br/&gt;&lt;/DL&gt;\n            &lt;/font&gt;\n          &lt;/TD&gt;\n        &lt;/TR&gt;\n        &lt;TR&gt;\n          &lt;TD colspan=\"2\" height=\"10\"&gt;  &lt;/TD&gt;\n        &lt;/TR&gt;\n      &lt;/Table&gt;\n      &lt;Table cellpadding=\"1\" cellspacing=\"0\"&gt;\n        &lt;TR bgcolor=\"#1E90FF\"&gt;\n          &lt;TD colspan=\"3\"&gt;\n            &lt;a name=\"other\"&gt;\n              &lt;b&gt;\n                &lt;font color=\"#FFFFFF\" face=\"Arial\" size=\"3\"&gt;Other Information:&lt;/font&gt;\n              &lt;/b&gt;\n            &lt;/a&gt;\n          &lt;/TD&gt;\n          &lt;TD colspan=\"1\" align=\"right\"&gt;\n            &lt;a href=\"#\"&gt;\n              &lt;font color=\"#FFFFFF\" face=\"Arial\"&gt;\n                &lt;b&gt;Top&lt;/b&gt;\n              &lt;/font&gt;\n            &lt;/a&gt;\n          &lt;/TD&gt;\n        &lt;/TR&gt;\n        &lt;TR&gt;\n          &lt;TD colspan=\"2\"&gt;\n            &lt;font face=\"Arial\" size=\"2\"&gt;ARTCC:&lt;/font&gt;\n          &lt;/TD&gt;\n          &lt;TD&gt;\n            &lt;font face=\"Arial\" size=\"2\"&gt;ZID - Indianapolis Center&lt;/font&gt;\n          &lt;/TD&gt;\n        &lt;/TR&gt;\n        &lt;TR&gt;\n          &lt;TD colspan=\"2\"&gt;\n            &lt;font face=\"Arial\" size=\"2\"&gt;Authority:&lt;/font&gt;\n          &lt;/TD&gt;\n          &lt;TD&gt;\n            &lt;font face=\"Arial\" size=\"2\"&gt;Title 14 CFR section 99.7&lt;/font&gt;\n          &lt;/TD&gt;\n        &lt;/TR&gt;\n        &lt;TR&gt;\n          &lt;TD Width=\"40\" /&gt;\n          &lt;TD Width=\"152\" /&gt;\n          &lt;TD Width=\"318\" /&gt;\n        &lt;/TR&gt;\n      &lt;/Table&gt;\n    &lt;/Body&gt;\n  &lt;/span&gt;\n&lt;/html&gt;</txtDescrModern>\n        <codeFreeformText>false</codeFreeformText>\n      </Not>\n    </Add>\n  </Group>\n</XNOTAM-Update>"
+  },
+  "expect": {
+    "observations": [
+      {
+        "type": "airspace.restriction",
+        "version": 1,
+        "subject": {
+          "kind": "site",
+          "id": "RIDGE-SITE-1",
+          "scope": "source"
+        },
+        "occurredAt": "2026-11-25T22:07:52.000Z",
+        "interval": {
+          "start": "2026-11-26T20:30:00.000Z",
+          "end": "2026-12-25T02:00:00.000Z"
+        },
+        "sourceEventId": "6/9800 Area A touching RIDGE-AREA-1",
+        "originalLocator": {
+          "kind": "byte_range",
+          "value": {
+            "offsetBytes": 1090,
+            "lengthBytes": 13800
+          }
+        },
+        "values": {
+          "notamId": "6/9800",
+          "name": "261126-261224 Carmel, IN FEDERAL AGENCY UAS Only",
+          "areaName": "Area A",
+          "sourceTypeCode": "99.7",
+          "floor": {
+            "meters": 0,
+            "datum": "ground_level"
+          },
+          "ceiling": {
+            "meters": 121.92,
+            "datum": "ground_level"
+          },
+          "dailySchedule": {
+            "fromTime": "20:30",
+            "toTime": "02:00"
+          },
+          "area": {
+            "boundary": [
+              {
+                "latitudeDegrees": 39.97750645,
+                "longitudeDegrees": -86.13
+              },
+              {
+                "latitudeDegrees": 39.97737973,
+                "longitudeDegrees": -86.1281176
+              },
+              {
+                "latitudeDegrees": 39.97700344,
+                "longitudeDegrees": -86.12629242
+              },
+              {
+                "latitudeDegrees": 39.976389,
+                "longitudeDegrees": -86.12457993
+              },
+              {
+                "latitudeDegrees": 39.9755551,
+                "longitudeDegrees": -86.12303218
+              },
+              {
+                "latitudeDegrees": 39.97452708,
+                "longitudeDegrees": -86.1216962
+              },
+              {
+                "latitudeDegrees": 39.97333618,
+                "longitudeDegrees": -86.12061258
+              },
+              {
+                "latitudeDegrees": 39.9720186,
+                "longitudeDegrees": -86.11981425
+              },
+              {
+                "latitudeDegrees": 39.97061437,
+                "longitudeDegrees": -86.11932545
+              },
+              {
+                "latitudeDegrees": 39.96916616,
+                "longitudeDegrees": -86.119161
+              },
+              {
+                "latitudeDegrees": 39.96771799,
+                "longitudeDegrees": -86.1193259
+              },
+              {
+                "latitudeDegrees": 39.96631385,
+                "longitudeDegrees": -86.1198151
+              },
+              {
+                "latitudeDegrees": 39.9649964,
+                "longitudeDegrees": -86.12061372
+              },
+              {
+                "latitudeDegrees": 39.96380566,
+                "longitudeDegrees": -86.1216975
+              },
+              {
+                "latitudeDegrees": 39.96277781,
+                "longitudeDegrees": -86.12303348
+              },
+              {
+                "latitudeDegrees": 39.96194407,
+                "longitudeDegrees": -86.12458107
+              },
+              {
+                "latitudeDegrees": 39.96132977,
+                "longitudeDegrees": -86.12629327
+              },
+              {
+                "latitudeDegrees": 39.96095356,
+                "longitudeDegrees": -86.12811805
+              },
+              {
+                "latitudeDegrees": 39.96082688,
+                "longitudeDegrees": -86.13
+              },
+              {
+                "latitudeDegrees": 39.96095356,
+                "longitudeDegrees": -86.13188195
+              },
+              {
+                "latitudeDegrees": 39.96132977,
+                "longitudeDegrees": -86.13370673
+              },
+              {
+                "latitudeDegrees": 39.96194407,
+                "longitudeDegrees": -86.13541893
+              },
+              {
+                "latitudeDegrees": 39.96277781,
+                "longitudeDegrees": -86.13696652
+              },
+              {
+                "latitudeDegrees": 39.96380566,
+                "longitudeDegrees": -86.1383025
+              },
+              {
+                "latitudeDegrees": 39.9649964,
+                "longitudeDegrees": -86.13938628
+              },
+              {
+                "latitudeDegrees": 39.96631385,
+                "longitudeDegrees": -86.1401849
+              },
+              {
+                "latitudeDegrees": 39.96771799,
+                "longitudeDegrees": -86.1406741
+              },
+              {
+                "latitudeDegrees": 39.96916616,
+                "longitudeDegrees": -86.140839
+              },
+              {
+                "latitudeDegrees": 39.97061437,
+                "longitudeDegrees": -86.14067455
+              },
+              {
+                "latitudeDegrees": 39.9720186,
+                "longitudeDegrees": -86.14018575
+              },
+              {
+                "latitudeDegrees": 39.97333618,
+                "longitudeDegrees": -86.13938742
+              },
+              {
+                "latitudeDegrees": 39.97452708,
+                "longitudeDegrees": -86.1383038
+              },
+              {
+                "latitudeDegrees": 39.9755551,
+                "longitudeDegrees": -86.13696782
+              },
+              {
+                "latitudeDegrees": 39.976389,
+                "longitudeDegrees": -86.13542007
+              },
+              {
+                "latitudeDegrees": 39.97700344,
+                "longitudeDegrees": -86.13370758
+              },
+              {
+                "latitudeDegrees": 39.97737973,
+                "longitudeDegrees": -86.1318824
+              }
+            ]
+          },
+          "regionId": "RIDGE-AREA-1"
+        },
+        "extraLimitations": [
+          "The published area touches the region RIDGE-AREA-1, a circle of 2000 m configured around the site RIDGE-SITE-1."
+        ]
+      }
+    ],
+    "rejections": [],
+    "unmapped": [],
+    "conversions": [
+      {
+        "observation": 0,
+        "field": "/values/ceiling/meters",
+        "vendorUnit": "ft",
+        "vendorValue": 400,
+        "expected": 121.92
+      },
+      {
+        "observation": 0,
+        "field": "/values/floor/meters",
+        "vendorUnit": "ft",
+        "vendorValue": 0,
+        "expected": 0
+      },
+      {
+        "observation": 0,
+        "field": "/values/area/boundary/0/latitudeDegrees",
+        "vendorUnit": "deg",
+        "vendorValue": 39.97750645,
+        "expected": 39.97750645
+      },
+      {
+        "observation": 0,
+        "field": "/values/area/boundary/0/longitudeDegrees",
+        "vendorUnit": "deg",
+        "vendorValue": -86.13,
+        "expected": -86.13
+      }
+    ]
+  }
+}

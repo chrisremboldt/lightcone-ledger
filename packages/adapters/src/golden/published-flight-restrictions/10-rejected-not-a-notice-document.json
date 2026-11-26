@@ -1,0 +1,22 @@
+{
+  "note": "Constructed for this test, not fetched: a document of another kind.",
+  "case": "rejected",
+  "message": {
+    "contentType": "application/xml",
+    "transport": {
+      "method": "GET",
+      "path": "/download/detail_6_0001.xml"
+    },
+    "capturedAt": "2026-11-26T04:34:40.000Z",
+    "bodyText": "<NotamList><Item/></NotamList>"
+  },
+  "expect": {
+    "observations": [],
+    "rejections": [
+      {
+        "reasonIncludes": "The document is NotamList, not an XNOTAM-Update"
+      }
+    ],
+    "unmapped": []
+  }
+}

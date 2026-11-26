@@ -92,6 +92,36 @@ const examples: Record<string, ObservationV1> = {
     ...provenance,
     values: { method: 'observed', visibilityMeters: 4023.36, bound: 'stated' },
   },
+  'weather.forecast': {
+    type: 'weather.forecast',
+    version: 1,
+    subject: { kind: 'site', id: 'site-ridge-1', scope: 'source' },
+    occurredAt: '2026-10-15T11:20:00Z',
+    interval: { start: '2026-10-15T12:00:00Z', end: '2026-10-16T12:00:00Z' },
+    ...provenance,
+    values: {
+      stationId: 'ZZZA',
+      stationDistanceMeters: 9000,
+      periods: [
+        {
+          change: 'base',
+          startAt: '2026-10-15T12:00:00Z',
+          endAt: '2026-10-15T18:00:00Z',
+          text: '27010G18KT P6SM SCT040',
+          wind: { speedMetersPerSecond: 5.14, gustSpeedMetersPerSecond: 9.26, directionFromDegrees: 270 },
+          visibility: { visibilityMeters: 9656.06, bound: 'at_least' },
+        },
+        {
+          change: 'probability_temporary',
+          probabilityPercent: 30,
+          startAt: '2026-10-15T14:00:00Z',
+          endAt: '2026-10-15T16:00:00Z',
+          text: '3SM -SHRA',
+          visibility: { visibilityMeters: 4828.03, bound: 'stated' },
+        },
+      ],
+    },
+  },
   'airspace.authorization': {
     type: 'airspace.authorization',
     version: 1,
@@ -112,6 +142,31 @@ const examples: Record<string, ObservationV1> = {
           { latitudeDegrees: 41.87, longitudeDegrees: -87.62 },
         ],
       },
+    },
+  },
+  'airspace.restriction': {
+    type: 'airspace.restriction',
+    version: 1,
+    subject: { kind: 'site', id: 'site-ridge-1', scope: 'source' },
+    occurredAt: '2026-10-14T22:07:52Z',
+    interval: { start: '2026-10-15T20:30:00Z', end: '2026-10-25T02:00:00Z' },
+    ...provenance,
+    values: {
+      notamId: '6/0001',
+      name: 'Invented event restriction',
+      areaName: 'Area A',
+      sourceTypeCode: '99.7',
+      floor: { meters: 0, datum: 'ground_level' },
+      ceiling: { meters: 121.92, datum: 'ground_level' },
+      dailySchedule: { fromTime: '20:30', toTime: '02:00' },
+      area: {
+        boundary: [
+          { latitudeDegrees: 41.87, longitudeDegrees: -87.64 },
+          { latitudeDegrees: 41.89, longitudeDegrees: -87.64 },
+          { latitudeDegrees: 41.89, longitudeDegrees: -87.62 },
+        ],
+      },
+      regionId: 'RIDGE-AREA-1',
     },
   },
   'flight.report': {
@@ -193,6 +248,9 @@ const breaks: Record<string, (observation: Record<string, any>) => void> = {
   'position.fix': (o) => delete o.position,
   'weather.wind': (o) => delete o.values.method,
   'weather.visibility': (o) => (o.values.bound = 'about'),
+  // A forecast's wind is the forecast's: it is never carried as a measurement.
+  'airspace.restriction': (o) => (o.values.dailySchedule.fromTime = '25:00'),
+  'weather.forecast': (o) => (o.values.periods[0].wind.method = 'measured'),
   'airspace.authorization': (o) => delete o.values.authorizationId,
   'flight.report': (o) => (o.values = {}),
   'traffic.alert': (o) => (o.values.level = 'severe'),
@@ -215,6 +273,7 @@ describe('observation vocabulary v1', () => {
     expect(listObservationTypes(observationRegistryV1).map(({ type, version }) => `${type}@${version}`)).toEqual([
       'aircraft.fault@1',
       'airspace.authorization@1',
+      'airspace.restriction@1',
       'battery.state@1',
       'crew.duty-period@1',
       'flight.report@1',
@@ -223,6 +282,7 @@ describe('observation vocabulary v1', () => {
       'organization.record-in-force@1',
       'position.fix@1',
       'traffic.alert@1',
+      'weather.forecast@1',
       'weather.visibility@1',
       'weather.wind@1',
     ]);
@@ -534,6 +594,7 @@ function structureDigest(definition: ObservationTypeDefinition): string {
 const PUBLISHED_DIGESTS: Record<string, string> = {
   'aircraft.fault@1': '795c909776e3f6de5466819d295f5cbd274caa244d00ba690b3587caa20d94cb',
   'airspace.authorization@1': 'e18831bc554851e980d7205fbcc02ddff32bdaafdbdf6ddb5b5b66f4cae02026',
+  'airspace.restriction@1': '4a0124510da38155aa1fed22c2e44de4683196928111873b10c610bfdaf69a4c',
   'battery.state@1': '44004161d15fdf33e524cc1ed7ee4ce61c6c35d176c02d68b25f432cee8efb30',
   'crew.duty-period@1': 'ed612707c16c46053e7095a5c565ba1deef128184d48bbcbb5cf179f3d73bbdb',
   'flight.report@1': 'a4c64c0fe66a1431a690348044a442a3d6a792b330329ff39a54879f65b2337e',
@@ -542,6 +603,7 @@ const PUBLISHED_DIGESTS: Record<string, string> = {
   'organization.record-in-force@1': '017efe903689e3dc85c79b5538a84d9bc3aa94f79b5310387f118990fd7403c0',
   'position.fix@1': 'e6f4abbd6356af9d5482048bdd0c36c6d956ba3c071cb97b19558ef41fd4da8d',
   'traffic.alert@1': '7f0111c64faf3f7336dcd2362aed12ef33e8cad1b86da21d7a5fde236ac94bde',
-  'weather.visibility@1': '2a620848dfc3bbae59b06cae2597be1f18ef722b709e97d3f03689c1daede8dc',
-  'weather.wind@1': 'd36e744d34ef5e883f9e962cb6990cdf29a14b9ea0c15ac538dfe0fa83f847fd',
+  'weather.forecast@1': '02b331300842a759c983fefad80055882819e94c275d5019c8a50c7f081cdd0d',
+  'weather.visibility@1': 'cab450f1c23ef907c830d2b3d4010a12f215d820fbbebf31af6321e4683167b1',
+  'weather.wind@1': 'd249fb52ae8b94c030ad3ab99c52d4556e54fdce35ec4fd3b2f45e51587d30ee',
 };

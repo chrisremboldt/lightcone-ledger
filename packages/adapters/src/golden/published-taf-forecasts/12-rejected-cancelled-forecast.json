@@ -1,0 +1,22 @@
+{
+  "note": "Constructed for this test, not fetched: a cancelling amendment from an invented station.",
+  "case": "rejected",
+  "message": {
+    "contentType": "application/json",
+    "transport": {
+      "method": "GET",
+      "path": "/api/data/taf"
+    },
+    "capturedAt": "2026-11-26T04:33:53.000Z",
+    "bodyText": "{\"icaoId\":\"ZZZZ\",\"rawTAF\":\"TAF AMD ZZZZ 260200Z 2602/2706 CNL\"}"
+  },
+  "expect": {
+    "observations": [],
+    "rejections": [
+      {
+        "reasonIncludes": "cancels the forecast before it (CNL)"
+      }
+    ],
+    "unmapped": []
+  }
+}

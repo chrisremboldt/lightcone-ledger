@@ -34,7 +34,8 @@
           "method": "measured",
           "speedMetersPerSecond": 7,
           "gustSpeedMetersPerSecond": 15,
-          "directionFromDegrees": 330
+          "directionFromDegrees": 330,
+          "stationId": "UUEE"
         },
         "extraLimitations": [
           "Reported by station UUEE for the site RIDGE-SITE-8; the distance from the station to the site is not on record."
@@ -61,7 +62,8 @@
         "values": {
           "method": "observed",
           "visibilityMeters": 10000,
-          "bound": "at_least"
+          "bound": "at_least",
+          "stationId": "UUEE"
         },
         "extraLimitations": [
           "Reported by station UUEE for the site RIDGE-SITE-8; the distance from the station to the site is not on record."

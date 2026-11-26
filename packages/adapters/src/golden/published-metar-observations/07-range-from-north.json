@@ -35,7 +35,8 @@
           "speedMetersPerSecond": 3.601111111111111,
           "directionFromDegrees": 50,
           "directionVariesFromDegrees": 0,
-          "directionVariesToDegrees": 80
+          "directionVariesToDegrees": 80,
+          "stationId": "EGLL"
         },
         "extraLimitations": [
           "Reported by station EGLL for the site RIDGE-SITE-6; the distance from the station to the site is not on record.",
@@ -64,7 +65,8 @@
         "values": {
           "method": "observed",
           "visibilityMeters": 10000,
-          "bound": "at_least"
+          "bound": "at_least",
+          "stationId": "EGLL"
         },
         "extraLimitations": [
           "Reported by station EGLL for the site RIDGE-SITE-6; the distance from the station to the site is not on record.",

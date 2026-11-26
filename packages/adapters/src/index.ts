@@ -78,6 +78,25 @@ export {
   type MetarReading,
   type MetarStationSite,
 } from './published-metar.js';
+export {
+  type TafReading,
+  publishedTafAdapter,
+  publishedTafDescriptor,
+  readTaf,
+  tafDayHour,
+  translatePublishedTaf,
+} from './published-taf.js';
+export {
+  type RestrictionBinding,
+  type RestrictionRegion,
+  boundaryTouchesCircle,
+  parseRestrictionRegions,
+  publishedTfrAdapter,
+  publishedTfrDescriptor,
+  restrictionListItems,
+  translatePublishedTfr,
+} from './published-tfr.js';
+export { type XmlElement, XmlRefusal, readXmlElements } from './xml-elements.js';
 export const digest = (bytes: Uint8Array | string): string => createHash('sha256').update(bytes).digest('hex');
 const boundedKey = (value: string): string => (value.length > 150 ? `adapter:${digest(value)}` : value);
 

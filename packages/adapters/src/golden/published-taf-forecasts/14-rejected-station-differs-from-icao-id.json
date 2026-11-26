@@ -1,0 +1,22 @@
+{
+  "note": "Constructed for this test, not fetched: a forecast whose icaoId names another station than its text.",
+  "case": "rejected",
+  "message": {
+    "contentType": "application/json",
+    "transport": {
+      "method": "GET",
+      "path": "/api/data/taf"
+    },
+    "capturedAt": "2026-11-26T04:33:53.000Z",
+    "bodyText": "{\"icaoId\":\"KORD\",\"rawTAF\":\"TAF ZZZZ 260200Z 2603/2706 27010KT P6SM SKC\"}"
+  },
+  "expect": {
+    "observations": [],
+    "rejections": [
+      {
+        "reasonIncludes": "icaoId does not name the station the forecast text names (ZZZZ)"
+      }
+    ],
+    "unmapped": []
+  }
+}

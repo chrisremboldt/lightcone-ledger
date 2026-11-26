@@ -14,3 +14,5 @@ tools/verifier/evidence-cut.1.mjs
 *.md
 packages/pack-part108-nprm/resources/govinfo-fr-2025-14992.htm
 apps/web/src/autopilot/tapes/
+# Recorded service answers are kept as the service sent them.
+apps/emulators/recordings/published-tfr-2026-11-26/

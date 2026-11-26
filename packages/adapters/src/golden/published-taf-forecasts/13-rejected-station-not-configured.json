@@ -1,0 +1,22 @@
+{
+  "note": "Constructed for this test, not fetched: a forecast from a station the source does not map to a site.",
+  "case": "rejected",
+  "message": {
+    "contentType": "application/json",
+    "transport": {
+      "method": "GET",
+      "path": "/api/data/taf"
+    },
+    "capturedAt": "2026-11-26T04:33:53.000Z",
+    "bodyText": "{\"icaoId\":\"ZZZY\",\"rawTAF\":\"TAF ZZZY 260200Z 2603/2706 27010KT P6SM SKC\"}"
+  },
+  "expect": {
+    "observations": [],
+    "rejections": [
+      {
+        "reasonIncludes": "Station ZZZY is not configured to report for any site"
+      }
+    ],
+    "unmapped": []
+  }
+}

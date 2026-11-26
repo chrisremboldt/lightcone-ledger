@@ -1,0 +1,125 @@
+{
+  "note": "Fetched 2026-11-26T04:33:47.000Z from the Aviation Weather Center data API (aviationweather.gov), GET /api/data/taf?ids=KORD,KLAX,KLAS,KMIA,EGLL,LFPG,UUEE,EDDF&format=json: this forecast's object, cut from the response as sent. A published government weather forecast, kept as reference data.",
+  "case": "valid",
+  "message": {
+    "contentType": "application/json",
+    "transport": {
+      "method": "GET",
+      "path": "/api/data/taf"
+    },
+    "capturedAt": "2026-11-26T04:33:47.000Z",
+    "bodyText": "{\"icaoId\":\"UUEE\",\"dbPopTime\":\"2026-11-26T02:35:28.670Z\",\"bulletinTime\":\"2026-11-26T02:00:00.000Z\",\"issueTime\":\"2026-11-26T02:08:00.000Z\",\"validTimeFrom\":1795662000,\"validTimeTo\":1795748400,\"rawTAF\":\"TAF UUEE 260208Z 2603/2703 30008MPS 9000 BKN010 TXM02/2612Z TNM05/2703Z TEMPO 2603/2612 33010G16MPS 0800 +SHSN BLSN BKN005 BKN011CB\",\"mostRecent\":1,\"remarks\":\"\",\"lat\":55.973,\"lon\":37.415,\"elev\":186,\"prior\":0,\"name\":\"Moscow/Sheremetyevo Intl\",\"fcsts\":[{\"timeFrom\":1795662000,\"timeTo\":1795748400,\"timeBec\":null,\"fcstChange\":null,\"probability\":null,\"wdir\":300,\"wspd\":16,\"wgst\":null,\"wshearHgt\":null,\"wshearDir\":null,\"wshearSpd\":null,\"visib\":5.59,\"altim\":null,\"vertVis\":null,\"wxString\":null,\"notDecoded\":null,\"clouds\":[{\"cover\":\"BKN\",\"base\":1000,\"type\":null}],\"icgTurb\":[],\"temp\":[{\"validTime\":1795694400,\"surfaceTemp\":-2,\"maxOrMin\":\"MAX\"},{\"validTime\":1795662000,\"surfaceTemp\":-5,\"maxOrMin\":\"MIN\"}]},{\"timeFrom\":1795662000,\"timeTo\":1795694400,\"timeBec\":null,\"fcstChange\":\"TEMPO\",\"probability\":null,\"wdir\":330,\"wspd\":19,\"wgst\":31,\"wshearHgt\":null,\"wshearDir\":null,\"wshearSpd\":null,\"visib\":0.5,\"altim\":null,\"vertVis\":null,\"wxString\":\"+SHSN BLSN\",\"notDecoded\":null,\"clouds\":[{\"cover\":\"BKN\",\"base\":500,\"type\":null},{\"cover\":\"BKN\",\"base\":1100,\"type\":\"CB\"}],\"icgTurb\":[],\"temp\":[]}]}"
+  },
+  "expect": {
+    "observations": [
+      {
+        "type": "weather.forecast",
+        "version": 1,
+        "subject": {
+          "kind": "site",
+          "id": "RIDGE-SITE-8",
+          "scope": "source"
+        },
+        "occurredAt": "2026-11-26T02:08:00.000Z",
+        "interval": {
+          "start": "2026-11-26T03:00:00.000Z",
+          "end": "2026-11-27T03:00:00.000Z"
+        },
+        "sourceEventId": "UUEE 2026-11-26T02:08:00.000Z TAF for RIDGE-SITE-8",
+        "position": {
+          "latitudeDegrees": 55.973,
+          "longitudeDegrees": 37.415
+        },
+        "originalLocator": {
+          "kind": "json_pointer",
+          "value": "/rawTAF"
+        },
+        "values": {
+          "stationId": "UUEE",
+          "periods": [
+            {
+              "change": "base",
+              "startAt": "2026-11-26T03:00:00.000Z",
+              "endAt": "2026-11-27T03:00:00.000Z",
+              "text": "30008MPS 9000 BKN010 TXM02/2612Z TNM05/2703Z",
+              "wind": {
+                "speedMetersPerSecond": 8,
+                "directionFromDegrees": 300
+              },
+              "visibility": {
+                "visibilityMeters": 9000,
+                "bound": "stated"
+              }
+            },
+            {
+              "change": "temporary",
+              "startAt": "2026-11-26T03:00:00.000Z",
+              "endAt": "2026-11-26T12:00:00.000Z",
+              "text": "TEMPO 2603/2612 33010G16MPS 0800 +SHSN BLSN BKN005 BKN011CB",
+              "wind": {
+                "speedMetersPerSecond": 10,
+                "gustSpeedMetersPerSecond": 16,
+                "directionFromDegrees": 330
+              },
+              "visibility": {
+                "visibilityMeters": 800,
+                "bound": "stated"
+              }
+            }
+          ]
+        },
+        "extraLimitations": [
+          "Forecast for station UUEE, configured for the site RIDGE-SITE-8; the distance from the station to the site is not on record."
+        ]
+      }
+    ],
+    "rejections": [],
+    "unmapped": [
+      {
+        "kind": "json_pointer",
+        "value": "/bulletinTime"
+      },
+      {
+        "kind": "json_pointer",
+        "value": "/dbPopTime"
+      },
+      {
+        "kind": "json_pointer",
+        "value": "/elev"
+      },
+      {
+        "kind": "json_pointer",
+        "value": "/fcsts"
+      },
+      {
+        "kind": "json_pointer",
+        "value": "/issueTime"
+      },
+      {
+        "kind": "json_pointer",
+        "value": "/mostRecent"
+      },
+      {
+        "kind": "json_pointer",
+        "value": "/name"
+      },
+      {
+        "kind": "json_pointer",
+        "value": "/prior"
+      },
+      {
+        "kind": "json_pointer",
+        "value": "/remarks"
+      },
+      {
+        "kind": "json_pointer",
+        "value": "/validTimeFrom"
+      },
+      {
+        "kind": "json_pointer",
+        "value": "/validTimeTo"
+      }
+    ],
+    "conversions": []
+  }
+}

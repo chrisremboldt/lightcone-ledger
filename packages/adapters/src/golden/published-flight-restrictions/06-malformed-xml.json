@@ -1,0 +1,22 @@
+{
+  "note": "Constructed for this test, not fetched: a detail document cut off in the middle.",
+  "case": "malformed",
+  "message": {
+    "contentType": "application/xml",
+    "transport": {
+      "method": "GET",
+      "path": "/download/detail_6_0001.xml"
+    },
+    "capturedAt": "2026-11-26T04:34:40.000Z",
+    "bodyText": "<XNOTAM-Update><Group><Add><Not><NotUid>"
+  },
+  "expect": {
+    "observations": [],
+    "rejections": [
+      {
+        "reasonIncludes": "Invalid XML"
+      }
+    ],
+    "unmapped": []
+  }
+}

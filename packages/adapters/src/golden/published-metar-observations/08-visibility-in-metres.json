@@ -35,7 +35,9 @@
           "speedMetersPerSecond": 3.601111111111111,
           "directionFromDegrees": 30,
           "directionVariesFromDegrees": 10,
-          "directionVariesToDegrees": 80
+          "directionVariesToDegrees": 80,
+          "stationId": "LFPG",
+          "stationDistanceMeters": 5000
         },
         "extraLimitations": ["Reported by station LFPG for the site RIDGE-SITE-7, 5 km from the site as configured."]
       },
@@ -60,7 +62,9 @@
         "values": {
           "method": "observed",
           "visibilityMeters": 1800,
-          "bound": "stated"
+          "bound": "stated",
+          "stationId": "LFPG",
+          "stationDistanceMeters": 5000
         },
         "extraLimitations": ["Reported by station LFPG for the site RIDGE-SITE-7, 5 km from the site as configured."]
       }

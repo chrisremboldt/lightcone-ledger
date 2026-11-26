@@ -414,7 +414,9 @@ rules:
 
   # A value of each flight within a limit: what a source reported (wind measured at the flight's site), or else what
   # the operator's own flight record states (windAtTakeoffMetersPerSecond). The sentence says which was read. Limits
-  # are in the stored unit, here meters per second (11 m/s is about 21 knots).
+  # are in the stored unit, here meters per second (11 m/s is about 21 knots). A wind a weather station reported for
+  # the site names the station (stationField) and is read only when it is at most 90 minutes older than the takeoff;
+  # maxAgeSeconds: 3600 would set another greatest age, for the site's own measurements too.
   - id: wind-at-takeoff
     title: Wind at takeoff within 11 m/s, measured at the site or else in the flight record
     quote: No flight takes off in a wind above 11 meters per second, as measured at the site or, where the site measures none, as the crew logs it.
@@ -490,6 +492,7 @@ rules:
         windowEndField: values.takeoffAt
         includeValueAtStart: true
         unit: m/s
+        stationField: values.stationId
         recordedField: values.record.windAtTakeoffMetersPerSecond
         recordedAtField: values.record.takeoffAt
         recordedStartField: values.record.takeoffAt

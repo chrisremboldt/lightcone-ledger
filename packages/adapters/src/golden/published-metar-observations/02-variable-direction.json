@@ -33,7 +33,8 @@
         "values": {
           "method": "measured",
           "speedMetersPerSecond": 1.5433333333333332,
-          "directionVariable": true
+          "directionVariable": true,
+          "stationId": "KLAX"
         },
         "extraLimitations": [
           "Reported by station KLAX for the site RIDGE-SITE-3; the distance from the station to the site is not on record."
@@ -60,7 +61,8 @@
         "values": {
           "method": "observed",
           "visibilityMeters": 16093.44,
-          "bound": "stated"
+          "bound": "stated",
+          "stationId": "KLAX"
         },
         "extraLimitations": [
           "Reported by station KLAX for the site RIDGE-SITE-3; the distance from the station to the site is not on record."

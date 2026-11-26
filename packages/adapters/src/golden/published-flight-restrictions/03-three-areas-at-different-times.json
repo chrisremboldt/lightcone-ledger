@@ -1,0 +1,395 @@
+{
+  "note": "Fetched 2026-11-26T04:34:40.000Z from the FAA TFR service (tfr.faa.gov), GET /download/detail_6_9661.xml: the detail document as sent, except that contact names, contact organizations, telephone numbers and contact radio frequencies were replaced with neutral values, and named agencies and a company's venue with a neutral description, before it was committed (see the recording folder's README). Everything the adapter reads is as published. A published government airspace notice, kept as reference data.",
+  "case": "valid",
+  "message": {
+    "contentType": "application/xml",
+    "transport": {
+      "method": "GET",
+      "path": "/download/detail_6_9661.xml"
+    },
+    "capturedAt": "2026-11-26T04:34:40.000Z",
+    "bodyText": "﻿<XNOTAM-Update xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" version=\"0.1\" origin=\"\" created=\"2026-11-23T21:26:36\">\n  <Group>\n    <Add>\n      <Not>\n        <NotUid>\n          <txtNameAcctFac>FDC</txtNameAcctFac>\n          <dateIndexYear>2026</dateIndexYear>\n          <noSeqNo>9661</noSeqNo>\n          <dateIssued>2026-11-24T03:18:57</dateIssued>\n          <txtLocalName>261124-29 Cincinnati VIP Reissue </txtLocalName>\n          <codeGUID>8cc9ebd5-44ed-4a4a-9f22-6a4a74eca5b3</codeGUID>\n          <noUSNSWorkNo>TFR24bb87022422</noUSNSWorkNo>\n        </NotUid>\n        <codeDailyOper>false</codeDailyOper>\n        <dateEffective>2026-11-24T21:45:00</dateEffective>\n        <dateExpire>2026-11-29T22:00:00</dateExpire>\n        <codeTimeZone>EST</codeTimeZone>\n        <codeExpirationTimeZone>EST</codeExpirationTimeZone>\n        <AffLocGroup>\n          <txtNameCity>Cincinnati</txtNameCity>\n          <txtNameUSState>OHIO</txtNameUSState>\n        </AffLocGroup>\n        <codeFacility>ZID</codeFacility>\n        <TfrNot>\n          <codeType>91.141</codeType>\n          <TFRAreaGroup>\n            <aseTFRArea>\n              <AseUid>\n                <codeType>RAS</codeType>\n                <codeId>1005</codeId>\n              </AseUid>\n              <txtName>Area A</txtName>\n              <codeDistVerUpper>HEI</codeDistVerUpper>\n              <valDistVerUpper>4999</valDistVerUpper>\n              <uomDistVerUpper>FT</uomDistVerUpper>\n              <codeDistVerLower>HEI</codeDistVerLower>\n              <valDistVerLower>0</valDistVerLower>\n              <uomDistVerLower>FT</uomDistVerLower>\n              <Att>\n                <codeWorkHr>NOTAM</codeWorkHr>\n              </Att>\n              <codeExclVerUpper>INCLUDE</codeExclVerUpper>\n              <codeExclVerLower>INCLUDE</codeExclVerLower>\n              <isScheduledTfrArea>FALSE</isScheduledTfrArea>\n              <ScheduleGroup>\n                <isTimeSeparate>FALSE</isTimeSeparate>\n                <dateEffective>2026-11-24T21:45:00</dateEffective>\n                <dateExpire>2026-11-24T23:15:00</dateExpire>\n              </ScheduleGroup>\n            </aseTFRArea>\n            <Aac>\n              <AacUid>\n                <AseUidChi>\n                  <codeType>RAS</codeType>\n                  <codeId>1005</codeId>\n                </AseUidChi>\n                <AseUidPar>\n                  <codeType>PART</codeType>\n                  <codeId>1006</codeId>\n                </AseUidPar>\n              </AacUid>\n              <codeType>BOM</codeType>\n              <codeOpr>BASE</codeOpr>\n            </Aac>\n            <abdMergedArea>\n              <AbdUid>\n                <AseUid>\n                  <codeType>RAS</codeType>\n                  <codeId>1005</codeId>\n                </AseUid>\n              </AbdUid>\n              <txtRmk>1005</txtRmk>\n              <Avx>\n                <codeDatum>WGE</codeDatum>\n                <codeType>GRC</codeType>\n                <geoLat>39.1320216N</geoLat>\n                <geoLong>084.66777778W</geoLong>\n              </Avx>\n              <Avx>\n                <codeDatum>WGE</codeDatum>\n                <codeType>GRC</codeType>\n                <geoLat>39.13075294N</geoLat>\n                <geoLong>084.64918125W</geoLong>\n              </Avx>\n              <Avx>\n                <codeDatum>WGE</codeDatum>\n                <codeType>GRC</codeType>\n                <geoLat>39.12698562N</geoLat>\n                <geoLong>084.63115171W</geoLong>\n              </Avx>\n              <Avx>\n                <codeDatum>WGE</codeDatum>\n                <codeType>GRC</codeType>\n                <geoLat>39.1208345N</geoLat>\n                <geoLong>084.6142387W</geoLong>\n              </Avx>\n              <Avx>\n                <codeDatum>WGE</codeDatum>\n                <codeType>GRC</codeType>\n                <geoLat>39.11248707N</geoLat>\n                <geoLong>084.59895738W</geoLong>\n              </Avx>\n              <Avx>\n                <codeDatum>WGE</codeDatum>\n                <codeType>GRC</codeType>\n                <geoLat>39.10219766N</geoLat>\n                <geoLong>084.58577274W</geoLong>\n              </Avx>\n              <Avx>\n                <codeDatum>WGE</codeDatum>\n                <codeType>GRC</codeType>\n                <geoLat>39.09027969N</geoLat>\n                <geoLong>084.57508537W</geoLong>\n              </Avx>\n              <Avx>\n                <codeDatum>WGE</codeDatum>\n                <codeType>GRC</codeType>\n                <geoLat>39.07709597N</geoLat>\n                <geoLong>084.56721934W</geoLong>\n              </Avx>\n              <Avx>\n                <codeDatum>WGE</codeDatum>\n                <codeType>GRC</codeType>\n                <geoLat>39.06304769N</geoLat>\n                <geoLong>084.56241236W</geoLong>\n              </Avx>\n              <Avx>\n                <codeDatum>WGE</codeDatum>\n                <codeType>GRC</codeType>\n                <geoLat>39.04856206N</geoLat>\n                <geoLong>084.56080878W</geoLong>\n              </Avx>\n              <Avx>\n                <codeDatum>WGE</codeDatum>\n                <codeType>GRC</codeType>\n                <geoLat>39.03407935N</geoLat>\n                <geoLong>084.56245539W</geoLong>\n              </Avx>\n              <Avx>\n                <codeDatum>WGE</codeDatum>\n                <codeType>GRC</codeType>\n                <geoLat>39.02003948N</geoLat>\n                <geoLong>084.56730021W</geoLong>\n              </Avx>\n              <Avx>\n                <codeDatum>WGE</codeDatum>\n                <codeType>GRC</codeType>\n                <geoLat>39.00686866N</geoLat>\n                <geoLong>084.57519433W</geoLong>\n              </Avx>\n              <Avx>\n                <codeDatum>WGE</codeDatum>\n                <codeType>GRC</codeType>\n                <geoLat>38.99496649N</geoLat>\n                <geoLong>084.58589664W</geoLong>\n              </Avx>\n              <Avx>\n                <codeDatum>WGE</codeDatum>\n                <codeType>GRC</codeType>\n                <geoLat>38.98469392N</geoLat>\n                <geoLong>084.59908128W</geoLong>\n              </Avx>\n              <Avx>\n                <codeDatum>WGE</codeDatum>\n                <codeType>GRC</codeType>\n                <geoLat>38.97636229N</geoLat>\n                <geoLong>084.61434766W</geoLong>\n              </Avx>\n              <Avx>\n                <codeDatum>WGE</codeDatum>\n                <codeType>GRC</codeType>\n                <geoLat>38.97022406N</geoLat>\n                <geoLong>084.63123258W</geoLong>\n              </Avx>\n              <Avx>\n                <codeDatum>WGE</codeDatum>\n                <codeType>GRC</codeType>\n                <geoLat>38.96646516N</geoLat>\n                <geoLong>084.64922428W</geoLong>\n              </Avx>\n              <Avx>\n                <codeDatum>WGE</codeDatum>\n                <codeType>GRC</codeType>\n                <geoLat>38.96519942N</geoLat>\n                <geoLong>084.66777778W</geoLong>\n              </Avx>\n              <Avx>\n                <codeDatum>WGE</codeDatum>\n                <codeType>GRC</codeType>\n                <geoLat>38.96646516N</geoLat>\n                <geoLong>084.68633128W</geoLong>\n              </Avx>\n              <Avx>\n                <codeDatum>WGE</codeDatum>\n                <codeType>GRC</codeType>\n                <geoLat>38.97022406N</geoLat>\n                <geoLong>084.70432298W</geoLong>\n              </Avx>\n              <Avx>\n                <codeDatum>WGE</codeDatum>\n                <codeType>GRC</codeType>\n                <geoLat>38.97636229N</geoLat>\n                <geoLong>084.7212079W</geoLong>\n              </Avx>\n              <Avx>\n                <codeDatum>WGE</codeDatum>\n                <codeType>GRC</codeType>\n                <geoLat>38.98469392N</geoLat>\n                <geoLong>084.73647428W</geoLong>\n              </Avx>\n              <Avx>\n                <codeDatum>WGE</codeDatum>\n                <codeType>GRC</codeType>\n                <geoLat>38.99496649N</geoLat>\n                <geoLong>084.74965892W</geoLong>\n              </Avx>\n              <Avx>\n                <codeDatum>WGE</codeDatum>\n                <codeType>GRC</codeType>\n                <geoLat>39.00686866N</geoLat>\n                <geoLong>084.76036123W</geoLong>\n              </Avx>\n              <Avx>\n                <codeDatum>WGE</codeDatum>\n                <codeType>GRC</codeType>\n                <geoLat>39.02003948N</geoLat>\n                <geoLong>084.76825535W</geoLong>\n              </Avx>\n              <Avx>\n                <codeDatum>WGE</codeDatum>\n                <codeType>GRC</codeType>\n                <geoLat>39.03407935N</geoLat>\n                <geoLong>084.77310017W</geoLong>\n              </Avx>\n              <Avx>\n                <codeDatum>WGE</codeDatum>\n                <codeType>GRC</codeType>\n                <geoLat>39.04856206N</geoLat>\n                <geoLong>084.77474678W</geoLong>\n              </Avx>\n              <Avx>\n                <codeDatum>WGE</codeDatum>\n                <codeType>GRC</codeType>\n                <geoLat>39.06304769N</geoLat>\n                <geoLong>084.7731432W</geoLong>\n              </Avx>\n              <Avx>\n                <codeDatum>WGE</codeDatum>\n                <codeType>GRC</codeType>\n                <geoLat>39.07709597N</geoLat>\n                <geoLong>084.76833622W</geoLong>\n              </Avx>\n              <Avx>\n                <codeDatum>WGE</codeDatum>\n                <codeType>GRC</codeType>\n                <geoLat>39.09027969N</geoLat>\n                <geoLong>084.76047019W</geoLong>\n              </Avx>\n              <Avx>\n                <codeDatum>WGE</codeDatum>\n                <codeType>GRC</codeType>\n                <geoLat>39.10219766N</geoLat>\n                <geoLong>084.74978282W</geoLong>\n              </Avx>\n              <Avx>\n                <codeDatum>WGE</codeDatum>\n                <codeType>GRC</codeType>\n                <geoLat>39.11248707N</geoLat>\n                <geoLong>084.73659818W</geoLong>\n              </Avx>\n              <Avx>\n                <codeDatum>WGE</codeDatum>\n                <codeType>GRC</codeType>\n                <geoLat>39.1208345N</geoLat>\n                <geoLong>084.72131686W</geoLong>\n              </Avx>\n              <Avx>\n                <codeDatum>WGE</codeDatum>\n                <codeType>GRC</codeType>\n                <geoLat>39.12698562N</geoLat>\n                <geoLong>084.70440385W</geoLong>\n              </Avx>\n              <Avx>\n                <codeDatum>WGE</codeDatum>\n                <codeType>GRC</codeType>\n                <geoLat>39.13075294N</geoLat>\n                <geoLong>084.68637431W</geoLong>\n              </Avx>\n              <Avx>\n                <codeDatum>WGE</codeDatum>\n                <codeType>GRC</codeType>\n                <geoLat>39.1320216N</geoLat>\n                <geoLong>084.66777778W</geoLong>\n              </Avx>\n            </abdMergedArea>\n            <aseShapes>\n              <AseUid>\n                <codeType>PART</codeType>\n                <codeId>1006</codeId>\n              </AseUid>\n              <Att>\n                <codeWorkHr>NOTAM</codeWorkHr>\n              </Att>\n              <Abd>\n                <AbdUid>\n                  <AseUid>\n                    <codeType>PART</codeType>\n                    <codeId>1006</codeId>\n                  </AseUid>\n                </AbdUid>\n                <txtRmk>1006</txtRmk>\n                <Avx>\n                  <codeType>CIR</codeType>\n                  <geoLat>39.04861111N</geoLat>\n                  <geoLong>084.66777778W</geoLong>\n                  <codeDatum>WGE</codeDatum>\n                  <valRadiusArc>5.0</valRadiusArc>\n                  <uomRadiusArc>NM</uomRadiusArc>\n                  <Frd>\n                    <FrdUid>\n                      <DpnUid>\n                        <codeId>FLM29</codeId>\n                        <geoLat>39.04861111N</geoLat>\n                        <geoLong>084.66777778W</geoLong>\n                      </DpnUid>\n                    </FrdUid>\n                    <Ain>\n                      <VorUid>\n                        <codeId>FLM</codeId>\n                        <geoLat>38.64944142N</geoLat>\n                        <geoLong>084.31060167W</geoLong>\n                      </VorUid>\n                      <valAngleBrg>329.0</valAngleBrg>\n                    </Ain>\n                    <Din>\n                      <DmeUid>\n                        <codeId>FLM</codeId>\n                        <geoLat>38.64944142N</geoLat>\n                        <geoLong>084.31060167W</geoLong>\n                      </DmeUid>\n                      <valDist>29.2</valDist>\n                      <uomDist>NM</uomDist>\n                    </Din>\n                    <txtRmk>FALMOUTH</txtRmk>\n                  </Frd>\n                </Avx>\n              </Abd>\n            </aseShapes>\n            <InstructionsGroup>\n              <txtInstr>EXC THE FLT OPS LISTED BLW: </txtInstr>\n              <txtInstr>1. ACFT MUST BE SQUAWKING AN ATC DISCRETE BEACON CODE AT ALL TIMES WHILE IN THE TFR AND MUST REMAIN IN TWO-WAY RADIO COM WITH ATC. </txtInstr>\n              <txtInstr>2. LAW ENFORCEMENT, FIREFIGHTING, AND MEDEVAC/AIR AMBULANCE FLIGHTS ON ACT MISSIONS. </txtInstr>\n              <txtInstr>3. TRANSIENT OPS ARE AUTH FOR SAFETY OF FLT OR TO MEET OPERATIONAL DEMANDS. </txtInstr>\n              <txtInstr>4. ACFT MAY NOT LOITER.</txtInstr>\n              <txtInstr>5. UAS OPR WHO DO NOT COMPLY WITH APPLICABLE AIRSPACE RESTRICTIONS ARE WARNED THAT PURSUANT TO 10 U.S.C.SECTION 130I AND 6 U.S.C.SECTION 124N, A FEDERAL AGENCY MAY TAKE SECURITY ACTION THAT RESULTS IN THE INTERFERENCE, DISRUPTION, SEIZURE, DAMAGING, OR DESTRUCTION OF UNMANNED ACFT DEEMED TO POSE A CREDIBLE SAFETY OR SECURITY THREAT TO PROTECTED PERSONNEL, FAC, OR ASSETS. </txtInstr>\n              <txtInstr>6. THE SYSTEM OPERATIONS SUPPORT CENTER (SOSC), IS THE CDN FAC FOR UAS OPS, SUBMIT SGI WAIVER REQUEST VIA HTTPS://WAIVERS.FAA.GOV, FIRST RESPONDERS EMGERGENCY OPS CTC THE SOSC AT 000-000-0000.</txtInstr>\n              <txtInstr>7. THE FAA RECOMMENDS THAT ALL ACFT OPR CK NOTAMS FREQUENTLY FOR POSSIBLE CHANGES TO THIS TFR PRIOR TO OPS. OPR MAY REVIEW THE TFR DETAILS AT HTTPS://TFR.FAA.GOV/ OR HTTPS://WWW.1800WXBRIEF.COM.</txtInstr>\n            </InstructionsGroup>\n            <codeIncFRD>TRUE</codeIncFRD>\n            <codeShpPrt>COMPOSITE</codeShpPrt>\n            <codeLclTime>TRUE</codeLclTime>\n            <codeAuthATC>FALSE</codeAuthATC>\n          </TFRAreaGroup>\n          <TFRAreaGroup>\n            <aseTFRArea>\n              <AseUid>\n                <codeType>RAS</codeType>\n                <codeId>1007</codeId>\n              </AseUid>\n              <txtName>Area B</txtName>\n              <codeDistVerUpper>HEI</codeDistVerUpper>\n              <valDistVerUpper>4999</valDistVerUpper>\n              <uomDistVerUpper>FT</uomDistVerUpper>\n              <codeDistVerLower>HEI</codeDistVerLower>\n              <valDistVerLower>0</valDistVerLower>\n              <uomDistVerLower>FT</uomDistVerLower>\n              <Att>\n                <codeWorkHr>NOTAM</codeWorkHr>\n              </Att>\n              <codeExclVerUpper>INCLUDE</codeExclVerUpper>\n              <codeExclVerLower>INCLUDE</codeExclVerLower>\n              <isScheduledTfrArea>FALSE</isScheduledTfrArea>\n              <ScheduleGroup>\n                <isTimeSeparate>FALSE</isTimeSeparate>\n                <dateEffective>2026-11-24T22:15:00</dateEffective>\n                <dateExpire>2026-11-29T21:15:00</dateExpire>\n              </ScheduleGroup>\n            </aseTFRArea>\n            <Aac>\n              <AacUid>\n                <AseUidChi>\n                  <codeType>RAS</codeType>\n                  <codeId>1007</codeId>\n                </AseUidChi>\n                <AseUidPar>\n                  <codeType>PART</codeType>\n                  <codeId>1008</codeId>\n                </AseUidPar>\n              </AacUid>\n              <codeType>BOM</codeType>\n              <codeOpr>BASE</codeOpr>\n            </Aac>\n            <abdMergedArea>\n              <AbdUid>\n                <AseUid>\n                  <codeType>RAS</codeType>\n                  <codeId>1007</codeId>\n                </AseUid>\n              </AbdUid>\n              <txtRmk>1007</txtRmk>\n              <Avx>\n                <codeDatum>WGE</codeDatum>\n                <codeType>GRC</codeType>\n                <geoLat>39.20868717N</geoLat>\n                <geoLong>084.46361111W</geoLong>\n              </Avx>\n              <Avx>\n                <codeDatum>WGE</codeDatum>\n                <codeType>GRC</codeType>\n                <geoLat>39.20741852N</geoLat>\n                <geoLong>084.44499438W</geoLong>\n              </Avx>\n              <Avx>\n                <codeDatum>WGE</codeDatum>\n                <codeType>GRC</codeType>\n                <geoLat>39.20365124N</geoLat>\n                <geoLong>084.42694526W</geoLong>\n              </Avx>\n              <Avx>\n                <codeDatum>WGE</codeDatum>\n                <codeType>GRC</codeType>\n                <geoLat>39.19750019N</geoLat>\n                <geoLong>084.41001389W</geoLong>\n              </Avx>\n              <Avx>\n                <codeDatum>WGE</codeDatum>\n                <codeType>GRC</codeType>\n                <geoLat>39.18915284N</geoLat>\n                <geoLong>084.394716W</geoLong>\n              </Avx>\n              <Avx>\n                <codeDatum>WGE</codeDatum>\n                <codeType>GRC</codeType>\n                <geoLat>39.17886355N</geoLat>\n                <geoLong>084.38151708W</geoLong>\n              </Avx>\n              <Avx>\n                <codeDatum>WGE</codeDatum>\n                <codeType>GRC</codeType>\n                <geoLat>39.16694571N</geoLat>\n                <geoLong>084.37081816W</geoLong>\n              </Avx>\n              <Avx>\n                <codeDatum>WGE</codeDatum>\n                <codeType>GRC</codeType>\n                <geoLat>39.15376215N</geoLat>\n                <geoLong>084.36294364W</geoLong>\n              </Avx>\n              <Avx>\n                <codeDatum>WGE</codeDatum>\n                <codeType>GRC</codeType>\n                <geoLat>39.13971404N</geoLat>\n                <geoLong>084.35813151W</geoLong>\n              </Avx>\n              <Avx>\n                <codeDatum>WGE</codeDatum>\n                <codeType>GRC</codeType>\n                <geoLat>39.12522859N</geoLat>\n                <geoLong>084.35652625W</geoLong>\n              </Avx>\n              <Avx>\n                <codeDatum>WGE</codeDatum>\n                <codeType>GRC</codeType>\n                <geoLat>39.11074608N</geoLat>\n                <geoLong>084.3581747W</geoLong>\n              </Avx>\n              <Avx>\n                <codeDatum>WGE</codeDatum>\n                <codeType>GRC</codeType>\n                <geoLat>39.09670641N</geoLat>\n                <geoLong>084.36302482W</geoLong>\n              </Avx>\n              <Avx>\n                <codeDatum>WGE</codeDatum>\n                <codeType>GRC</codeType>\n                <geoLat>39.08353578N</geoLat>\n                <geoLong>084.37092753W</geoLong>\n              </Avx>\n              <Avx>\n                <codeDatum>WGE</codeDatum>\n                <codeType>GRC</codeType>\n                <geoLat>39.07163379N</geoLat>\n                <geoLong>084.38164145W</geoLong>\n              </Avx>\n              <Avx>\n                <codeDatum>WGE</codeDatum>\n                <codeType>GRC</codeType>\n                <geoLat>39.06136137N</geoLat>\n                <geoLong>084.39484037W</geoLong>\n              </Avx>\n              <Avx>\n                <codeDatum>WGE</codeDatum>\n                <codeType>GRC</codeType>\n                <geoLat>39.05302988N</geoLat>\n                <geoLong>084.41012327W</geoLong>\n              </Avx>\n              <Avx>\n                <codeDatum>WGE</codeDatum>\n                <codeType>GRC</codeType>\n                <geoLat>39.04689175N</geoLat>\n                <geoLong>084.42702644W</geoLong>\n              </Avx>\n              <Avx>\n                <codeDatum>WGE</codeDatum>\n                <codeType>GRC</codeType>\n                <geoLat>39.04313291N</geoLat>\n                <geoLong>084.44503757W</geoLong>\n              </Avx>\n              <Avx>\n                <codeDatum>WGE</codeDatum>\n                <codeType>GRC</codeType>\n                <geoLat>39.04186719N</geoLat>\n                <geoLong>084.46361111W</geoLong>\n              </Avx>\n              <Avx>\n                <codeDatum>WGE</codeDatum>\n                <codeType>GRC</codeType>\n                <geoLat>39.04313291N</geoLat>\n                <geoLong>084.48218465W</geoLong>\n              </Avx>\n              <Avx>\n                <codeDatum>WGE</codeDatum>\n                <codeType>GRC</codeType>\n                <geoLat>39.04689175N</geoLat>\n                <geoLong>084.50019578W</geoLong>\n              </Avx>\n              <Avx>\n                <codeDatum>WGE</codeDatum>\n                <codeType>GRC</codeType>\n                <geoLat>39.05302988N</geoLat>\n                <geoLong>084.51709895W</geoLong>\n              </Avx>\n              <Avx>\n                <codeDatum>WGE</codeDatum>\n                <codeType>GRC</codeType>\n                <geoLat>39.06136137N</geoLat>\n                <geoLong>084.53238185W</geoLong>\n              </Avx>\n              <Avx>\n                <codeDatum>WGE</codeDatum>\n                <codeType>GRC</codeType>\n                <geoLat>39.07163379N</geoLat>\n                <geoLong>084.54558077W</geoLong>\n              </Avx>\n              <Avx>\n                <codeDatum>WGE</codeDatum>\n                <codeType>GRC</codeType>\n                <geoLat>39.08353578N</geoLat>\n                <geoLong>084.55629469W</geoLong>\n              </Avx>\n              <Avx>\n                <codeDatum>WGE</codeDatum>\n                <codeType>GRC</codeType>\n                <geoLat>39.09670641N</geoLat>\n                <geoLong>084.5641974W</geoLong>\n              </Avx>\n              <Avx>\n                <codeDatum>WGE</codeDatum>\n                <codeType>GRC</codeType>\n                <geoLat>39.11074608N</geoLat>\n                <geoLong>084.56904752W</geoLong>\n              </Avx>\n              <Avx>\n                <codeDatum>WGE</codeDatum>\n                <codeType>GRC</codeType>\n                <geoLat>39.12522859N</geoLat>\n                <geoLong>084.57069597W</geoLong>\n              </Avx>\n              <Avx>\n                <codeDatum>WGE</codeDatum>\n                <codeType>GRC</codeType>\n                <geoLat>39.13971404N</geoLat>\n                <geoLong>084.56909071W</geoLong>\n              </Avx>\n              <Avx>\n                <codeDatum>WGE</codeDatum>\n                <codeType>GRC</codeType>\n                <geoLat>39.15376215N</geoLat>\n                <geoLong>084.56427858W</geoLong>\n              </Avx>\n              <Avx>\n                <codeDatum>WGE</codeDatum>\n                <codeType>GRC</codeType>\n                <geoLat>39.16694571N</geoLat>\n                <geoLong>084.55640406W</geoLong>\n              </Avx>\n              <Avx>\n                <codeDatum>WGE</codeDatum>\n                <codeType>GRC</codeType>\n                <geoLat>39.17886355N</geoLat>\n                <geoLong>084.54570514W</geoLong>\n              </Avx>\n              <Avx>\n                <codeDatum>WGE</codeDatum>\n                <codeType>GRC</codeType>\n                <geoLat>39.18915284N</geoLat>\n                <geoLong>084.53250622W</geoLong>\n              </Avx>\n              <Avx>\n                <codeDatum>WGE</codeDatum>\n                <codeType>GRC</codeType>\n                <geoLat>39.19750019N</geoLat>\n                <geoLong>084.51720833W</geoLong>\n              </Avx>\n              <Avx>\n                <codeDatum>WGE</codeDatum>\n                <codeType>GRC</codeType>\n                <geoLat>39.20365124N</geoLat>\n                <geoLong>084.50027696W</geoLong>\n              </Avx>\n              <Avx>\n                <codeDatum>WGE</codeDatum>\n                <codeType>GRC</codeType>\n                <geoLat>39.20741852N</geoLat>\n                <geoLong>084.48222784W</geoLong>\n              </Avx>\n              <Avx>\n                <codeDatum>WGE</codeDatum>\n                <codeType>GRC</codeType>\n                <geoLat>39.20868717N</geoLat>\n                <geoLong>084.46361111W</geoLong>\n              </Avx>\n            </abdMergedArea>\n            <aseShapes>\n              <AseUid>\n                <codeType>PART</codeType>\n                <codeId>1008</codeId>\n              </AseUid>\n              <Att>\n                <codeWorkHr>NOTAM</codeWorkHr>\n              </Att>\n              <Abd>\n                <AbdUid>\n                  <AseUid>\n                    <codeType>PART</codeType>\n                    <codeId>1008</codeId>\n                  </AseUid>\n                </AbdUid>\n                <txtRmk>1008</txtRmk>\n                <Avx>\n                  <codeType>CIR</codeType>\n                  <geoLat>39.12527778N</geoLat>\n                  <geoLong>084.46361111W</geoLong>\n                  <codeDatum>WGE</codeDatum>\n                  <valRadiusArc>5.0</valRadiusArc>\n                  <uomRadiusArc>NM</uomRadiusArc>\n                  <Frd>\n                    <FrdUid>\n                      <DpnUid>\n                        <codeId>FLM29</codeId>\n                        <geoLat>39.12527778N</geoLat>\n                        <geoLong>084.46361111W</geoLong>\n                      </DpnUid>\n                    </FrdUid>\n                    <Ain>\n                      <VorUid>\n                        <codeId>FLM</codeId>\n                        <geoLat>38.64944142N</geoLat>\n                        <geoLong>084.31060167W</geoLong>\n                      </VorUid>\n                      <valAngleBrg>350.0</valAngleBrg>\n                    </Ain>\n                    <Din>\n                      <DmeUid>\n                        <codeId>FLM</codeId>\n                        <geoLat>38.64944142N</geoLat>\n                        <geoLong>084.31060167W</geoLong>\n                      </DmeUid>\n                      <valDist>29.4</valDist>\n                      <uomDist>NM</uomDist>\n                    </Din>\n                    <txtRmk>FALMOUTH</txtRmk>\n                  </Frd>\n                </Avx>\n              </Abd>\n            </aseShapes>\n            <codeIncFRD>TRUE</codeIncFRD>\n            <codeShpPrt>COMPOSITE</codeShpPrt>\n            <codeLclTime>TRUE</codeLclTime>\n            <codeAuthATC>FALSE</codeAuthATC>\n          </TFRAreaGroup>\n          <TFRAreaGroup>\n            <aseTFRArea>\n              <AseUid>\n                <codeType>RAS</codeType>\n                <codeId>1009</codeId>\n              </AseUid>\n              <txtName>Area C</txtName>\n              <codeDistVerUpper>HEI</codeDistVerUpper>\n              <valDistVerUpper>4999</valDistVerUpper>\n              <uomDistVerUpper>FT</uomDistVerUpper>\n              <codeDistVerLower>HEI</codeDistVerLower>\n              <valDistVerLower>0</valDistVerLower>\n              <uomDistVerLower>FT</uomDistVerLower>\n              <Att>\n                <codeWorkHr>NOTAM</codeWorkHr>\n              </Att>\n              <codeExclVerUpper>INCLUDE</codeExclVerUpper>\n              <codeExclVerLower>INCLUDE</codeExclVerLower>\n              <isScheduledTfrArea>FALSE</isScheduledTfrArea>\n              <ScheduleGroup>\n                <isTimeSeparate>FALSE</isTimeSeparate>\n                <dateEffective>2026-11-29T20:15:00</dateEffective>\n                <dateExpire>2026-11-29T22:00:00</dateExpire>\n              </ScheduleGroup>\n            </aseTFRArea>\n            <Aac>\n              <AacUid>\n                <AseUidChi>\n                  <codeType>RAS</codeType>\n                  <codeId>1009</codeId>\n                </AseUidChi>\n                <AseUidPar>\n                  <codeType>PART</codeType>\n                  <codeId>1010</codeId>\n                </AseUidPar>\n              </AacUid>\n              <codeType>BOM</codeType>\n              <codeOpr>BASE</codeOpr>\n            </Aac>\n            <abdMergedArea>\n              <AbdUid>\n                <AseUid>\n                  <codeType>RAS</codeType>\n                  <codeId>1009</codeId>\n                </AseUid>\n              </AbdUid>\n              <txtRmk>1009</txtRmk>\n              <Avx>\n                <codeDatum>WGE</codeDatum>\n                <codeType>GRC</codeType>\n                <geoLat>39.1320216N</geoLat>\n                <geoLong>084.66777778W</geoLong>\n              </Avx>\n              <Avx>\n                <codeDatum>WGE</codeDatum>\n                <codeType>GRC</codeType>\n                <geoLat>39.13075294N</geoLat>\n                <geoLong>084.64918125W</geoLong>\n              </Avx>\n              <Avx>\n                <codeDatum>WGE</codeDatum>\n                <codeType>GRC</codeType>\n                <geoLat>39.12698562N</geoLat>\n                <geoLong>084.63115171W</geoLong>\n              </Avx>\n              <Avx>\n                <codeDatum>WGE</codeDatum>\n                <codeType>GRC</codeType>\n                <geoLat>39.1208345N</geoLat>\n                <geoLong>084.6142387W</geoLong>\n              </Avx>\n              <Avx>\n                <codeDatum>WGE</codeDatum>\n                <codeType>GRC</codeType>\n                <geoLat>39.11248707N</geoLat>\n                <geoLong>084.59895738W</geoLong>\n              </Avx>\n              <Avx>\n                <codeDatum>WGE</codeDatum>\n                <codeType>GRC</codeType>\n                <geoLat>39.10219766N</geoLat>\n                <geoLong>084.58577274W</geoLong>\n              </Avx>\n              <Avx>\n                <codeDatum>WGE</codeDatum>\n                <codeType>GRC</codeType>\n                <geoLat>39.09027969N</geoLat>\n                <geoLong>084.57508537W</geoLong>\n              </Avx>\n              <Avx>\n                <codeDatum>WGE</codeDatum>\n                <codeType>GRC</codeType>\n                <geoLat>39.07709597N</geoLat>\n                <geoLong>084.56721934W</geoLong>\n              </Avx>\n              <Avx>\n                <codeDatum>WGE</codeDatum>\n                <codeType>GRC</codeType>\n                <geoLat>39.06304769N</geoLat>\n                <geoLong>084.56241236W</geoLong>\n              </Avx>\n              <Avx>\n                <codeDatum>WGE</codeDatum>\n                <codeType>GRC</codeType>\n                <geoLat>39.04856206N</geoLat>\n                <geoLong>084.56080878W</geoLong>\n              </Avx>\n              <Avx>\n                <codeDatum>WGE</codeDatum>\n                <codeType>GRC</codeType>\n                <geoLat>39.03407935N</geoLat>\n                <geoLong>084.56245539W</geoLong>\n              </Avx>\n              <Avx>\n                <codeDatum>WGE</codeDatum>\n                <codeType>GRC</codeType>\n                <geoLat>39.02003948N</geoLat>\n                <geoLong>084.56730021W</geoLong>\n              </Avx>\n              <Avx>\n                <codeDatum>WGE</codeDatum>\n                <codeType>GRC</codeType>\n                <geoLat>39.00686866N</geoLat>\n                <geoLong>084.57519433W</geoLong>\n              </Avx>\n              <Avx>\n                <codeDatum>WGE</codeDatum>\n                <codeType>GRC</codeType>\n                <geoLat>38.99496649N</geoLat>\n                <geoLong>084.58589664W</geoLong>\n              </Avx>\n              <Avx>\n                <codeDatum>WGE</codeDatum>\n                <codeType>GRC</codeType>\n                <geoLat>38.98469392N</geoLat>\n                <geoLong>084.59908128W</geoLong>\n              </Avx>\n              <Avx>\n                <codeDatum>WGE</codeDatum>\n                <codeType>GRC</codeType>\n                <geoLat>38.97636229N</geoLat>\n                <geoLong>084.61434766W</geoLong>\n              </Avx>\n              <Avx>\n                <codeDatum>WGE</codeDatum>\n                <codeType>GRC</codeType>\n                <geoLat>38.97022406N</geoLat>\n                <geoLong>084.63123258W</geoLong>\n              </Avx>\n              <Avx>\n                <codeDatum>WGE</codeDatum>\n                <codeType>GRC</codeType>\n                <geoLat>38.96646516N</geoLat>\n                <geoLong>084.64922428W</geoLong>\n              </Avx>\n              <Avx>\n                <codeDatum>WGE</codeDatum>\n                <codeType>GRC</codeType>\n                <geoLat>38.96519942N</geoLat>\n                <geoLong>084.66777778W</geoLong>\n              </Avx>\n              <Avx>\n                <codeDatum>WGE</codeDatum>\n                <codeType>GRC</codeType>\n                <geoLat>38.96646516N</geoLat>\n                <geoLong>084.68633128W</geoLong>\n              </Avx>\n              <Avx>\n                <codeDatum>WGE</codeDatum>\n                <codeType>GRC</codeType>\n                <geoLat>38.97022406N</geoLat>\n                <geoLong>084.70432298W</geoLong>\n              </Avx>\n              <Avx>\n                <codeDatum>WGE</codeDatum>\n                <codeType>GRC</codeType>\n                <geoLat>38.97636229N</geoLat>\n                <geoLong>084.7212079W</geoLong>\n              </Avx>\n              <Avx>\n                <codeDatum>WGE</codeDatum>\n                <codeType>GRC</codeType>\n                <geoLat>38.98469392N</geoLat>\n                <geoLong>084.73647428W</geoLong>\n              </Avx>\n              <Avx>\n                <codeDatum>WGE</codeDatum>\n                <codeType>GRC</codeType>\n                <geoLat>38.99496649N</geoLat>\n                <geoLong>084.74965892W</geoLong>\n              </Avx>\n              <Avx>\n                <codeDatum>WGE</codeDatum>\n                <codeType>GRC</codeType>\n                <geoLat>39.00686866N</geoLat>\n                <geoLong>084.76036123W</geoLong>\n              </Avx>\n              <Avx>\n                <codeDatum>WGE</codeDatum>\n                <codeType>GRC</codeType>\n                <geoLat>39.02003948N</geoLat>\n                <geoLong>084.76825535W</geoLong>\n              </Avx>\n              <Avx>\n                <codeDatum>WGE</codeDatum>\n                <codeType>GRC</codeType>\n                <geoLat>39.03407935N</geoLat>\n                <geoLong>084.77310017W</geoLong>\n              </Avx>\n              <Avx>\n                <codeDatum>WGE</codeDatum>\n                <codeType>GRC</codeType>\n                <geoLat>39.04856206N</geoLat>\n                <geoLong>084.77474678W</geoLong>\n              </Avx>\n              <Avx>\n                <codeDatum>WGE</codeDatum>\n                <codeType>GRC</codeType>\n                <geoLat>39.06304769N</geoLat>\n                <geoLong>084.7731432W</geoLong>\n              </Avx>\n              <Avx>\n                <codeDatum>WGE</codeDatum>\n                <codeType>GRC</codeType>\n                <geoLat>39.07709597N</geoLat>\n                <geoLong>084.76833622W</geoLong>\n              </Avx>\n              <Avx>\n                <codeDatum>WGE</codeDatum>\n                <codeType>GRC</codeType>\n                <geoLat>39.09027969N</geoLat>\n                <geoLong>084.76047019W</geoLong>\n              </Avx>\n              <Avx>\n                <codeDatum>WGE</codeDatum>\n                <codeType>GRC</codeType>\n                <geoLat>39.10219766N</geoLat>\n                <geoLong>084.74978282W</geoLong>\n              </Avx>\n              <Avx>\n                <codeDatum>WGE</codeDatum>\n                <codeType>GRC</codeType>\n                <geoLat>39.11248707N</geoLat>\n                <geoLong>084.73659818W</geoLong>\n              </Avx>\n              <Avx>\n                <codeDatum>WGE</codeDatum>\n                <codeType>GRC</codeType>\n                <geoLat>39.1208345N</geoLat>\n                <geoLong>084.72131686W</geoLong>\n              </Avx>\n              <Avx>\n                <codeDatum>WGE</codeDatum>\n                <codeType>GRC</codeType>\n                <geoLat>39.12698562N</geoLat>\n                <geoLong>084.70440385W</geoLong>\n              </Avx>\n              <Avx>\n                <codeDatum>WGE</codeDatum>\n                <codeType>GRC</codeType>\n                <geoLat>39.13075294N</geoLat>\n                <geoLong>084.68637431W</geoLong>\n              </Avx>\n              <Avx>\n                <codeDatum>WGE</codeDatum>\n                <codeType>GRC</codeType>\n                <geoLat>39.1320216N</geoLat>\n                <geoLong>084.66777778W</geoLong>\n              </Avx>\n            </abdMergedArea>\n            <aseShapes>\n              <AseUid>\n                <codeType>PART</codeType>\n                <codeId>1010</codeId>\n              </AseUid>\n              <Att>\n                <codeWorkHr>NOTAM</codeWorkHr>\n              </Att>\n              <Abd>\n                <AbdUid>\n                  <AseUid>\n                    <codeType>PART</codeType>\n                    <codeId>1010</codeId>\n                  </AseUid>\n                </AbdUid>\n                <txtRmk>1010</txtRmk>\n                <Avx>\n                  <codeType>CIR</codeType>\n                  <geoLat>39.04861111N</geoLat>\n                  <geoLong>084.66777778W</geoLong>\n                  <codeDatum>WGE</codeDatum>\n                  <valRadiusArc>5.0</valRadiusArc>\n                  <uomRadiusArc>NM</uomRadiusArc>\n                  <Frd>\n                    <FrdUid>\n                      <DpnUid>\n                        <codeId>FLM29</codeId>\n                        <geoLat>39.04861111N</geoLat>\n                        <geoLong>084.66777778W</geoLong>\n                      </DpnUid>\n                    </FrdUid>\n                    <Ain>\n                      <VorUid>\n                        <codeId>FLM</codeId>\n                        <geoLat>38.64944142N</geoLat>\n                        <geoLong>084.31060167W</geoLong>\n                      </VorUid>\n                      <valAngleBrg>329.0</valAngleBrg>\n                    </Ain>\n                    <Din>\n                      <DmeUid>\n                        <codeId>FLM</codeId>\n                        <geoLat>38.64944142N</geoLat>\n                        <geoLong>084.31060167W</geoLong>\n                      </DmeUid>\n                      <valDist>29.2</valDist>\n                      <uomDist>NM</uomDist>\n                    </Din>\n                    <txtRmk>FALMOUTH</txtRmk>\n                  </Frd>\n                </Avx>\n              </Abd>\n            </aseShapes>\n            <codeIncFRD>TRUE</codeIncFRD>\n            <codeShpPrt>COMPOSITE</codeShpPrt>\n            <codeLclTime>TRUE</codeLclTime>\n            <codeAuthATC>FALSE</codeAuthATC>\n          </TFRAreaGroup>\n          <TemplateType>VPOTUS_Language</TemplateType>\n          <codeCtrlFacilityType>ARTCC</codeCtrlFacilityType>\n        </TfrNot>\n        <codeCoordFacilityType>ARTCC</codeCoordFacilityType>\n        <txtDescrUSNS>!FDC 6/9661 ZID OH..AIRSPACE CINCINNATI, OHIO..TEMPORARY FLIGHT RESTRICTIONS. NOVEMBER 24-29, 2026 LOCAL. THIS NOTAM REPLACES NOTAM 6/9446 DUE TO CHANGE IN TIMES . PURSUANT TO 49 USC 40103(B)(3), THE FEDERAL AVIATION ADMINISTRATION (FAA) CLASSIFIES THE AIRSPACE DEFINED IN THIS NOTAM AS 'NTL DEFENSE AIRSPACE'. PILOTS WHO DO NOT ADHERE TO THE FOLLOWING PROC MAY BE INTERCEPTED, DETAINED AND INTERVIEWED BY LAW ENFORCEMENT/SECURITY PERSONNEL. ANY OF THE FOLLOWING ADDITIONAL ACTIONS MAY ALSO BE TAKEN AGAINST A PILOT WHO DOES NOT COMPLY WITH THE RQMNTS OR ANY SPECIAL INSTRUCTIONS OR PROC ANNOUNCED IN THIS NOTAM: A) THE FAA MAY TAKE ADMINISTRATIVE ACTION, INCLUDING IMPOSING CIVIL PENALTIES AND THE SUSPENSION OR REVOCATION OF AIRMEN CERTIFICATES; OR B) THE UNITED STATES GOVERNMENT MAY PURSUE CRIMINAL CHARGES, INCLUDING CHARGES UNDER 49 USC SECTION 46307; OR C) THE UNITED STATES GOVERNMENT MAY USE DEADLY FORCE AGAINST THE AIRBORNE ACFT, IF IT IS DETERMINED THAT THE ACFT POSES AN IMMINENT SECURITY THREAT. PURSUANT TO 14 CFR 91.141, ALL ACFT FLT OPS INCLUDING REMOTE CONTROLLED ACFT OPS ARE PROHIBITED: WI AN AREA DEFINED AS 5NM RADIUS OF 390255N0844004W (FLM329029.2) SFC-4999FT AGL EFFECTIVE 2611242145 UTC (1645 LOCAL 11/24/26) UNTIL 2611242315 UTC (1815 LOCAL 11/24/26). WI AN AREA DEFINED AS 5NM RADIUS OF 390731N0842749W (FLM350029.4) SFC-4999FT AGL EFFECTIVE 2611242215 UTC (1715 LOCAL 11/24/26) UNTIL 2611292115 UTC (1615 LOCAL 11/29/26). WI AN AREA DEFINED AS 5NM RADIUS OF 390255N0844004W (FLM329029.2) SFC-4999FT AGL EFFECTIVE 2611292015 UTC (1515 LOCAL 11/29/26) UNTIL 2611292200 UTC (1700 LOCAL 11/29/26). EXC THE FLT OPS LISTED BLW: 1. ACFT MUST BE SQUAWKING AN ATC DISCRETE BEACON CODE AT ALL TIMES WHILE IN THE TFR AND MUST REMAIN IN TWO-WAY RADIO COM WITH ATC. 2. LAW ENFORCEMENT, FIREFIGHTING, AND MEDEVAC/AIR AMBULANCE FLIGHTS ON ACT MISSIONS. 3. TRANSIENT OPS ARE AUTH FOR SAFETY OF FLT OR TO MEET OPERATIONAL DEMANDS. 4. ACFT MAY NOT LOITER. 5. UAS OPR WHO DO NOT COMPLY WITH APPLICABLE AIRSPACE RESTRICTIONS ARE WARNED THAT PURSUANT TO 10 U.S.C.SECTION 130I AND 6 U.S.C.SECTION 124N, A FEDERAL AGENCY MAY TAKE SECURITY ACTION THAT RESULTS IN THE INTERFERENCE, DISRUPTION, SEIZURE, DAMAGING, OR DESTRUCTION OF UNMANNED ACFT DEEMED TO POSE A CREDIBLE SAFETY OR SECURITY THREAT TO PROTECTED PERSONNEL, FAC, OR ASSETS. 6. THE SYSTEM OPERATIONS SUPPORT CENTER (SOSC), IS THE CDN FAC FOR UAS OPS, SUBMIT SGI WAIVER REQUEST VIA HTTPS://WAIVERS.FAA.GOV, FIRST RESPONDERS EMGERGENCY OPS CTC THE SOSC AT 000-000-0000. 7. THE FAA RECOMMENDS THAT ALL ACFT OPR CK NOTAMS FREQUENTLY FOR POSSIBLE CHANGES TO THIS TFR PRIOR TO OPS. OPR MAY REVIEW THE TFR DETAILS AT HTTPS://TFR.FAA.GOV/ OR HTTPS://WWW.1800WXBRIEF.COM. 2611242145-2611292200</txtDescrUSNS>\n        <txtDescrTraditional>!FDC 6/9661 ZID OH..AIRSPACE CINCINNATI, OHIO..TEMPORARY FLIGHT RESTRICTIONS. NOVEMBER 24-29, 2026 LOCAL. THIS NOTAM REPLACES NOTAM 6/9446 DUE TO CHANGE IN TIMES . PURSUANT TO 49 USC 40103(B)(3), THE FEDERAL AVIATION ADMINISTRATION (FAA) CLASSIFIES THE AIRSPACE DEFINED IN THIS NOTAM AS 'NTL DEFENSE AIRSPACE'. PILOTS WHO DO NOT ADHERE TO THE FOLLOWING PROC MAY BE INTERCEPTED, DETAINED AND INTERVIEWED BY LAW ENFORCEMENT/SECURITY PERSONNEL. ANY OF THE FOLLOWING ADDITIONAL ACTIONS MAY ALSO BE TAKEN AGAINST A PILOT WHO DOES NOT COMPLY WITH THE RQMNTS OR ANY SPECIAL INSTRUCTIONS OR PROC ANNOUNCED IN THIS NOTAM:\nA) THE FAA MAY TAKE ADMINISTRATIVE ACTION, INCLUDING IMPOSING CIVIL PENALTIES AND THE SUSPENSION OR REVOCATION OF AIRMEN CERTIFICATES; OR \nB) THE UNITED STATES GOVERNMENT MAY PURSUE CRIMINAL CHARGES, INCLUDING CHARGES UNDER 49 USC SECTION 46307; OR \nC) THE UNITED STATES GOVERNMENT MAY USE DEADLY FORCE AGAINST THE AIRBORNE ACFT, IF IT IS DETERMINED THAT THE ACFT POSES AN IMMINENT SECURITY THREAT. \nPURSUANT TO 14 CFR 91.141, ALL ACFT FLT OPS INCLUDING REMOTE CONTROLLED ACFT OPS ARE PROHIBITED: WI AN AREA DEFINED AS 5NM RADIUS OF 390255N0844004W (FLM329029.2) SFC-4999FT AGL EFFECTIVE 2611242145 UTC (1645 LOCAL 11/24/26) UNTIL 2611242315 UTC (1815 LOCAL 11/24/26). WI AN AREA DEFINED AS 5NM RADIUS OF 390731N0842749W (FLM350029.4) SFC-4999FT AGL EFFECTIVE 2611242215 UTC (1715 LOCAL 11/24/26) UNTIL 2611292115 UTC (1615 LOCAL 11/29/26). WI AN AREA DEFINED AS 5NM RADIUS OF 390255N0844004W (FLM329029.2) SFC-4999FT AGL EFFECTIVE 2611292015 UTC (1515 LOCAL 11/29/26) UNTIL 2611292200 UTC (1700 LOCAL 11/29/26). EXC THE FLT OPS LISTED BLW: 1. ACFT MUST BE SQUAWKING AN ATC DISCRETE BEACON CODE AT ALL TIMES WHILE IN THE TFR AND MUST REMAIN IN TWO-WAY RADIO COM WITH ATC. 2. LAW ENFORCEMENT, FIREFIGHTING, AND MEDEVAC/AIR AMBULANCE FLIGHTS ON ACT MISSIONS. 3. TRANSIENT OPS ARE AUTH FOR SAFETY OF FLT OR TO MEET OPERATIONAL DEMANDS. 4. ACFT MAY NOT LOITER. 5. UAS OPR WHO DO NOT COMPLY WITH APPLICABLE AIRSPACE RESTRICTIONS ARE WARNED THAT PURSUANT TO 10 U.S.C.SECTION 130I AND 6 U.S.C.SECTION 124N, A FEDERAL AGENCY MAY TAKE SECURITY ACTION THAT RESULTS IN THE INTERFERENCE, DISRUPTION, SEIZURE, DAMAGING, OR DESTRUCTION OF UNMANNED ACFT DEEMED TO POSE A CREDIBLE SAFETY OR SECURITY THREAT TO PROTECTED PERSONNEL, FAC, OR ASSETS. 6. THE SYSTEM OPERATIONS SUPPORT CENTER (SOSC), IS THE CDN FAC FOR UAS OPS, SUBMIT SGI WAIVER REQUEST VIA HTTPS://WAIVERS.FAA.GOV, FIRST RESPONDERS EMGERGENCY OPS CTC THE SOSC AT 000-000-0000. 7. THE FAA RECOMMENDS THAT ALL ACFT OPR CK NOTAMS FREQUENTLY FOR POSSIBLE CHANGES TO THIS TFR PRIOR TO OPS. OPR MAY REVIEW THE TFR DETAILS AT HTTPS://TFR.FAA.GOV/ OR HTTPS://WWW.1800WXBRIEF.COM. 2611242145-2611292200</txtDescrTraditional>\n        <txtDescrModern>&lt;html&gt;\n  &lt;span style=\"Arial\" valign=\"Top\"&gt;\n    &lt;Body&gt;\n      &lt;Table cellpadding=\"1\" cellspacing=\"0\"&gt;\n        &lt;TR bgcolor=\"#1E90FF\"&gt;\n          &lt;TD colspan=\"3\" align=\"left\" valign=\"bottom\" width=\"250\"&gt;\n            &lt;b&gt;\n              &lt;font color=\"#FFFFFF\" size=\"3\" face=\"Arial\"&gt;NOTAM Number     :&lt;/font&gt;\n            &lt;/b&gt;\n          &lt;/TD&gt;\n          &lt;TD valign=\"bottom\" align=\"left\" width=\"320\"&gt;\n            &lt;b&gt;\n              &lt;font color=\"#FFFFFF\" size=\"3\" face=\"Arial\"&gt;FDC 6/9661&lt;/font&gt;\n            &lt;/b&gt;\n          &lt;/TD&gt;\n        &lt;/TR&gt;\n        &lt;TR&gt;\n          &lt;TD colspan=\"3\" align=\"left\" valign=\"top\"&gt;\n            &lt;font face=\"Arial\" size=\"2\"&gt;Issue Date     :&lt;/font&gt;\n          &lt;/TD&gt;\n          &lt;TD valign=\"top\"&gt;\n            &lt;font face=\"Arial\" size=\"2\"&gt;November 24, 2026 at 0318 UTC&lt;/font&gt;\n          &lt;/TD&gt;\n        &lt;/TR&gt;\n        &lt;TR&gt;\n          &lt;TD colspan=\"3\" align=\"left\" valign=\"top\"&gt;\n            &lt;font face=\"Arial\" size=\"2\"&gt;Location     :&lt;/font&gt;\n          &lt;/TD&gt;\n          &lt;TD&gt;\n            &lt;font face=\"Arial\" size=\"2\"&gt;Cincinnati, Ohio&lt;/font&gt;\n          &lt;/TD&gt;\n        &lt;/TR&gt;\n        &lt;TR&gt;\n          &lt;TD colspan=\"3\" align=\"left\" valign=\"top\"&gt;\n            &lt;font face=\"Arial\" size=\"2\"&gt;Beginning Date and Time     :&lt;/font&gt;\n          &lt;/TD&gt;\n          &lt;TD&gt;\n            &lt;font face=\"Arial\" size=\"2\"&gt;November 24, 2026 at 2145 UTC&lt;/font&gt;\n          &lt;/TD&gt;\n        &lt;/TR&gt;\n        &lt;TR&gt;\n          &lt;TD colspan=\"3\" align=\"left\" valign=\"top\"&gt;\n            &lt;font face=\"Arial\" size=\"2\"&gt;Ending Date and Time     :&lt;/font&gt;\n          &lt;/TD&gt;\n          &lt;TD&gt;\n            &lt;font face=\"Arial\" size=\"2\"&gt;November 29, 2026 at 2200 UTC&lt;/font&gt;\n          &lt;/TD&gt;\n        &lt;/TR&gt;\n        &lt;TR&gt;\n          &lt;TD colspan=\"3\" align=\"left\" valign=\"top\"&gt;\n            &lt;font face=\"Arial\" size=\"2\"&gt;Reason for NOTAM     :&lt;/font&gt;\n          &lt;/TD&gt;\n          &lt;TD&gt;\n            &lt;font face=\"Arial\" size=\"2\"&gt;Temporary flight restrictions for VIP Movement&lt;/font&gt;\n          &lt;/TD&gt;\n        &lt;/TR&gt;\n        &lt;TR&gt;\n          &lt;TD colspan=\"3\" align=\"left\" valign=\"top\"&gt;\n            &lt;font face=\"Arial\" size=\"2\"&gt;Type     :&lt;/font&gt;\n          &lt;/TD&gt;\n          &lt;TD&gt;\n            &lt;font face=\"Arial\" size=\"2\"&gt;VIP&lt;/font&gt;\n          &lt;/TD&gt;\n        &lt;/TR&gt;\n        &lt;TR&gt;\n          &lt;TD colspan=\"3\" align=\"left\" valign=\"top\"&gt;\n            &lt;font face=\"Arial\" size=\"2\"&gt;Replaced NOTAM(s)     :&lt;/font&gt;\n          &lt;/TD&gt;\n          &lt;TD&gt;\n            &lt;font face=\"Arial\" size=\"2\"&gt;6/9446: Due to change in times &lt;/font&gt;\n          &lt;/TD&gt;\n        &lt;/TR&gt;\n        &lt;TR&gt;\n          &lt;TD colspan=\"2\" height=\"20\"&gt;  &lt;/TD&gt;\n        &lt;/TR&gt;\n        &lt;TR&gt;\n          &lt;TD colspan=\"3\" align=\"right\" valign=\"top\"&gt;\n            &lt;font face=\"Arial\" size=\"2\"&gt;\n              &lt;b&gt;Jump To: &amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&lt;/b&gt;\n            &lt;/font&gt;\n          &lt;/TD&gt;\n          &lt;TD&gt;\n            &lt;font face=\"Arial\" size=\"2\"&gt;\n              &lt;b&gt;\n                &lt;a href=\"#areas\" class=\"internal\"&gt; Affected Areas &lt;/a&gt;&lt;br/&gt;&lt;a href=\"#restrictions\" class=\"internal\"&gt; Operating Restrictions and Requirements &lt;/a&gt;&lt;br/&gt;&lt;a href=\"#other\" class=\"internal\"&gt; Other Information &lt;/a&gt;&lt;br/&gt;&lt;/b&gt;\n            &lt;/font&gt;\n          &lt;/TD&gt;\n        &lt;/TR&gt;\n        &lt;TR&gt;\n          &lt;TD colspan=\"2\" height=\"20\"&gt;  &lt;/TD&gt;\n        &lt;/TR&gt;\n      &lt;/Table&gt;\n      &lt;Table cellpadding=\"1\" cellspacing=\"0\"&gt;\n        &lt;TR bgcolor=\"#1E90FF\"&gt;\n          &lt;TD colspan=\"5\"&gt;\n            &lt;a name=\"areas\"&gt;\n              &lt;b&gt;\n                &lt;font color=\"#FFFFFF\" size=\"3\" face=\"Arial\"&gt;Affected Area(s)&lt;/font&gt;\n              &lt;/b&gt;\n            &lt;/a&gt;\n          &lt;/TD&gt;\n          &lt;TD colspan=\"1\" align=\"right\"&gt;\n            &lt;a href=\"#\"&gt;\n              &lt;font color=\"#FFFFFF\" face=\"Arial\"&gt;\n                &lt;b&gt;Top&lt;/b&gt;\n              &lt;/font&gt;\n            &lt;/a&gt;\n          &lt;/TD&gt;\n        &lt;/TR&gt;\n        &lt;TR&gt;\n          &lt;TD colspan=\"2\" height=\"10\"&gt;  &lt;/TD&gt;\n        &lt;/TR&gt;\n        &lt;TR&gt;\n          &lt;TD colspan=\"3\"&gt;\n            &lt;font face=\"Arial\" size=\"2\"&gt;\n              &lt;b&gt;Area A&lt;/b&gt;\n            &lt;/font&gt;\n          &lt;/TD&gt;\n        &lt;/TR&gt;\n        &lt;TR&gt;\n          &lt;TD colspan=\"3\" width=\"200\"&gt;\n            &lt;font face=\"Arial\" size=\"2\"&gt;\n              &lt;b&gt;Airspace Definition:&lt;/b&gt;\n            &lt;/font&gt;\n          &lt;/TD&gt;\n        &lt;/TR&gt;\n        &lt;TR&gt;\n          &lt;TD&gt; &lt;/TD&gt;\n          &lt;TD&gt; &lt;/TD&gt;\n          &lt;TD colspan=\"3\"&gt;\n            &lt;font face=\"Arial\" size=\"2\"&gt;Center:&lt;/font&gt;\n          &lt;/TD&gt;\n          &lt;TD&gt;\n            &lt;font face=\"Arial\" size=\"2\"&gt; On the FALMOUTH VOR/DME (FLM) 329 degree radial at 29.2 nautical miles. (Latitude: 39&amp;#xBA;02'55\"N, Longitude: 84&amp;#xBA;40'04\"W)&lt;/font&gt;\n          &lt;/TD&gt;\n        &lt;/TR&gt;\n        &lt;TR&gt;\n          &lt;TD&gt; &lt;/TD&gt;\n          &lt;TD&gt; &lt;/TD&gt;\n          &lt;TD colspan=\"3\"&gt;\n            &lt;font face=\"Arial\" size=\"2\"&gt;Radius:&lt;/font&gt;\n          &lt;/TD&gt;\n          &lt;TD&gt;\n            &lt;font face=\"Arial\" size=\"2\"&gt; 5 nautical miles&lt;/font&gt;\n          &lt;/TD&gt;\n        &lt;/TR&gt;\n        &lt;TR&gt;\n          &lt;TD&gt; &lt;/TD&gt;\n          &lt;TD&gt; &lt;/TD&gt;\n          &lt;TD colspan=\"3\"&gt;\n            &lt;font face=\"Arial\" size=\"2\"&gt;Altitude:&lt;/font&gt;\n          &lt;/TD&gt;\n          &lt;TD&gt;\n            &lt;font face=\"Arial\" size=\"2\"&gt; From the surface  up to and including 4999 feet AGL &lt;/font&gt;\n          &lt;/TD&gt;\n        &lt;/TR&gt;\n        &lt;TR&gt;\n          &lt;TD colspan=\"5\"&gt;\n            &lt;font face=\"Arial\" size=\"2\"&gt;\n              &lt;b&gt;Effective Date(s):&lt;/b&gt;\n            &lt;/font&gt;\n          &lt;/TD&gt;\n        &lt;/TR&gt;\n        &lt;TR&gt;\n          &lt;TD&gt; &lt;/TD&gt;\n          &lt;TD&gt; &lt;/TD&gt;\n          &lt;TD colspan=\"5\" valign=\"top\"&gt;\n            &lt;font face=\"Arial\" size=\"2\"&gt;From November 24, 2026 at 2145 UTC (November 24, 2026 at 1645 EST)&lt;/font&gt;\n          &lt;/TD&gt;\n        &lt;/TR&gt;\n        &lt;TR&gt;\n          &lt;TD&gt; &lt;/TD&gt;\n          &lt;TD&gt; &lt;/TD&gt;\n          &lt;TD colspan=\"5\" valign=\"top\"&gt;\n            &lt;font face=\"Arial\" size=\"2\"&gt;To November 24, 2026 at 2315 UTC (November 24, 2026 at 1815 EST)&lt;/font&gt;\n          &lt;/TD&gt;\n        &lt;/TR&gt;\n        &lt;TR&gt;\n          &lt;TD colspan=\"2\" height=\"10\"&gt;  &lt;/TD&gt;\n        &lt;/TR&gt;\n        &lt;TR&gt;\n          &lt;TD colspan=\"3\"&gt;\n            &lt;font face=\"Arial\" size=\"2\"&gt;\n              &lt;b&gt;Area B&lt;/b&gt;\n            &lt;/font&gt;\n          &lt;/TD&gt;\n        &lt;/TR&gt;\n        &lt;TR&gt;\n          &lt;TD colspan=\"3\" width=\"200\"&gt;\n            &lt;font face=\"Arial\" size=\"2\"&gt;\n              &lt;b&gt;Airspace Definition:&lt;/b&gt;\n            &lt;/font&gt;\n          &lt;/TD&gt;\n        &lt;/TR&gt;\n        &lt;TR&gt;\n          &lt;TD&gt; &lt;/TD&gt;\n          &lt;TD&gt; &lt;/TD&gt;\n          &lt;TD colspan=\"3\"&gt;\n            &lt;font face=\"Arial\" size=\"2\"&gt;Center:&lt;/font&gt;\n          &lt;/TD&gt;\n          &lt;TD&gt;\n            &lt;font face=\"Arial\" size=\"2\"&gt; On the FALMOUTH VOR/DME (FLM) 350 degree radial at 29.4 nautical miles. (Latitude: 39&amp;#xBA;07'31\"N, Longitude: 84&amp;#xBA;27'49\"W)&lt;/font&gt;\n          &lt;/TD&gt;\n        &lt;/TR&gt;\n        &lt;TR&gt;\n          &lt;TD&gt; &lt;/TD&gt;\n          &lt;TD&gt; &lt;/TD&gt;\n          &lt;TD colspan=\"3\"&gt;\n            &lt;font face=\"Arial\" size=\"2\"&gt;Radius:&lt;/font&gt;\n          &lt;/TD&gt;\n          &lt;TD&gt;\n            &lt;font face=\"Arial\" size=\"2\"&gt; 5 nautical miles&lt;/font&gt;\n          &lt;/TD&gt;\n        &lt;/TR&gt;\n        &lt;TR&gt;\n          &lt;TD&gt; &lt;/TD&gt;\n          &lt;TD&gt; &lt;/TD&gt;\n          &lt;TD colspan=\"3\"&gt;\n            &lt;font face=\"Arial\" size=\"2\"&gt;Altitude:&lt;/font&gt;\n          &lt;/TD&gt;\n          &lt;TD&gt;\n            &lt;font face=\"Arial\" size=\"2\"&gt; From the surface  up to and including 4999 feet AGL &lt;/font&gt;\n          &lt;/TD&gt;\n        &lt;/TR&gt;\n        &lt;TR&gt;\n          &lt;TD colspan=\"5\"&gt;\n            &lt;font face=\"Arial\" size=\"2\"&gt;\n              &lt;b&gt;Effective Date(s):&lt;/b&gt;\n            &lt;/font&gt;\n          &lt;/TD&gt;\n        &lt;/TR&gt;\n        &lt;TR&gt;\n          &lt;TD&gt; &lt;/TD&gt;\n          &lt;TD&gt; &lt;/TD&gt;\n          &lt;TD colspan=\"5\" valign=\"top\"&gt;\n            &lt;font face=\"Arial\" size=\"2\"&gt;From November 24, 2026 at 2215 UTC (November 24, 2026 at 1715 EST)&lt;/font&gt;\n          &lt;/TD&gt;\n        &lt;/TR&gt;\n        &lt;TR&gt;\n          &lt;TD&gt; &lt;/TD&gt;\n          &lt;TD&gt; &lt;/TD&gt;\n          &lt;TD colspan=\"5\" valign=\"top\"&gt;\n            &lt;font face=\"Arial\" size=\"2\"&gt;To November 29, 2026 at 2115 UTC (November 29, 2026 at 1615 EST)&lt;/font&gt;\n          &lt;/TD&gt;\n        &lt;/TR&gt;\n        &lt;TR&gt;\n          &lt;TD colspan=\"2\" height=\"10\"&gt;  &lt;/TD&gt;\n        &lt;/TR&gt;\n        &lt;TR&gt;\n          &lt;TD colspan=\"3\"&gt;\n            &lt;font face=\"Arial\" size=\"2\"&gt;\n              &lt;b&gt;Area C&lt;/b&gt;\n            &lt;/font&gt;\n          &lt;/TD&gt;\n        &lt;/TR&gt;\n        &lt;TR&gt;\n          &lt;TD colspan=\"3\" width=\"200\"&gt;\n            &lt;font face=\"Arial\" size=\"2\"&gt;\n              &lt;b&gt;Airspace Definition:&lt;/b&gt;\n            &lt;/font&gt;\n          &lt;/TD&gt;\n        &lt;/TR&gt;\n        &lt;TR&gt;\n          &lt;TD&gt; &lt;/TD&gt;\n          &lt;TD&gt; &lt;/TD&gt;\n          &lt;TD colspan=\"3\"&gt;\n            &lt;font face=\"Arial\" size=\"2\"&gt;Center:&lt;/font&gt;\n          &lt;/TD&gt;\n          &lt;TD&gt;\n            &lt;font face=\"Arial\" size=\"2\"&gt; On the FALMOUTH VOR/DME (FLM) 329 degree radial at 29.2 nautical miles. (Latitude: 39&amp;#xBA;02'55\"N, Longitude: 84&amp;#xBA;40'04\"W)&lt;/font&gt;\n          &lt;/TD&gt;\n        &lt;/TR&gt;\n        &lt;TR&gt;\n          &lt;TD&gt; &lt;/TD&gt;\n          &lt;TD&gt; &lt;/TD&gt;\n          &lt;TD colspan=\"3\"&gt;\n            &lt;font face=\"Arial\" size=\"2\"&gt;Radius:&lt;/font&gt;\n          &lt;/TD&gt;\n          &lt;TD&gt;\n            &lt;font face=\"Arial\" size=\"2\"&gt; 5 nautical miles&lt;/font&gt;\n          &lt;/TD&gt;\n        &lt;/TR&gt;\n        &lt;TR&gt;\n          &lt;TD&gt; &lt;/TD&gt;\n          &lt;TD&gt; &lt;/TD&gt;\n          &lt;TD colspan=\"3\"&gt;\n            &lt;font face=\"Arial\" size=\"2\"&gt;Altitude:&lt;/font&gt;\n          &lt;/TD&gt;\n          &lt;TD&gt;\n            &lt;font face=\"Arial\" size=\"2\"&gt; From the surface  up to and including 4999 feet AGL &lt;/font&gt;\n          &lt;/TD&gt;\n        &lt;/TR&gt;\n        &lt;TR&gt;\n          &lt;TD colspan=\"5\"&gt;\n            &lt;font face=\"Arial\" size=\"2\"&gt;\n              &lt;b&gt;Effective Date(s):&lt;/b&gt;\n            &lt;/font&gt;\n          &lt;/TD&gt;\n        &lt;/TR&gt;\n        &lt;TR&gt;\n          &lt;TD&gt; &lt;/TD&gt;\n          &lt;TD&gt; &lt;/TD&gt;\n          &lt;TD colspan=\"5\" valign=\"top\"&gt;\n            &lt;font face=\"Arial\" size=\"2\"&gt;From November 29, 2026 at 2015 UTC (November 29, 2026 at 1515 EST)&lt;/font&gt;\n          &lt;/TD&gt;\n        &lt;/TR&gt;\n        &lt;TR&gt;\n          &lt;TD&gt; &lt;/TD&gt;\n          &lt;TD&gt; &lt;/TD&gt;\n          &lt;TD colspan=\"5\" valign=\"top\"&gt;\n            &lt;font face=\"Arial\" size=\"2\"&gt;To November 29, 2026 at 2200 UTC (November 29, 2026 at 1700 EST)&lt;/font&gt;\n          &lt;/TD&gt;\n        &lt;/TR&gt;\n        &lt;TR&gt;\n          &lt;TD colspan=\"2\" height=\"20\"&gt;  &lt;/TD&gt;\n        &lt;/TR&gt;\n      &lt;/Table&gt;\n      &lt;b&gt;ENDSECTION1&lt;/b&gt;\n      &lt;Table cellpadding=\"1\" cellspacing=\"0\"&gt;\n        &lt;TR bgcolor=\"#1E90FF\"&gt;\n          &lt;TD colspan=\"3\"&gt;\n            &lt;a name=\"restrictions\"&gt;\n              &lt;b&gt;\n                &lt;font color=\"#FFFFFF\" face=\"Arial\" size=\"3\"&gt;Operating Restrictions and Requirements&lt;/font&gt;\n              &lt;/b&gt;\n            &lt;/a&gt;\n          &lt;/TD&gt;\n          &lt;TD colspan=\"1\" align=\"right\"&gt;\n            &lt;a href=\"#\"&gt;\n              &lt;font color=\"#FFFFFF\" face=\"Arial\"&gt;\n                &lt;b&gt;Top&lt;/b&gt;\n              &lt;/font&gt;\n            &lt;/a&gt;\n          &lt;/TD&gt;\n        &lt;/TR&gt;\n        &lt;TR&gt;\n          &lt;TD colspan=\"2\" height=\"20\"&gt;  &lt;/TD&gt;\n        &lt;/TR&gt;\n        &lt;TR&gt;\n          &lt;TD colspan=\"3\"&gt;\n            &lt;font face=\"Arial\" size=\"2\"&gt;No pilots may operate an aircraft in the areas covered by this NOTAM (except as described).&lt;/font&gt;\n          &lt;/TD&gt;\n        &lt;/TR&gt;\n        &lt;TR&gt;\n          &lt;TD colspan=\"2\" height=\"20\"&gt;  &lt;/TD&gt;\n        &lt;/TR&gt;\n        &lt;TR&gt;\n          &lt;TD&gt;\n            &lt;font face=\"Arial\" size=\"2\"&gt;\n              &lt;DL&gt;\n                &lt;DT&gt;EXC THE FLT OPS LISTED BLW: &lt;/DT&gt;&lt;br/&gt;&lt;DD&gt;\n                  &lt;OL&gt;\n                    &lt;LI&gt; ACFT MUST BE SQUAWKING AN ATC DISCRETE BEACON CODE AT ALL TIMES WHILE IN THE TFR AND MUST REMAIN IN TWO-WAY RADIO COM WITH ATC. &lt;/LI&gt;&lt;br/&gt;&lt;LI&gt; LAW ENFORCEMENT, FIREFIGHTING, AND MEDEVAC/AIR AMBULANCE FLIGHTS ON ACT MISSIONS. &lt;/LI&gt;&lt;br/&gt;&lt;LI&gt; TRANSIENT OPS ARE AUTH FOR SAFETY OF FLT OR TO MEET OPERATIONAL DEMANDS. &lt;/LI&gt;&lt;br/&gt;&lt;LI&gt; ACFT MAY NOT LOITER.&lt;/LI&gt;&lt;br/&gt;&lt;LI&gt; UAS OPR WHO DO NOT COMPLY WITH APPLICABLE AIRSPACE RESTRICTIONS ARE WARNED THAT PURSUANT TO 10 U.S.C.SECTION 130I AND 6 U.S.C.SECTION 124N, A FEDERAL AGENCY MAY TAKE SECURITY ACTION THAT RESULTS IN THE INTERFERENCE, DISRUPTION, SEIZURE, DAMAGING, OR DESTRUCTION OF UNMANNED ACFT DEEMED TO POSE A CREDIBLE SAFETY OR SECURITY THREAT TO PROTECTED PERSONNEL, FAC, OR ASSETS. &lt;/LI&gt;&lt;br/&gt;&lt;LI&gt; THE SYSTEM OPERATIONS SUPPORT CENTER (SOSC), IS THE CDN FAC FOR UAS OPS, SUBMIT SGI WAIVER REQUEST VIA HTTPS://WAIVERS.FAA.GOV, FIRST RESPONDERS EMGERGENCY OPS CTC THE SOSC AT 000-000-0000.&lt;/LI&gt;&lt;br/&gt;&lt;LI&gt; THE FAA RECOMMENDS THAT ALL ACFT OPR CK NOTAMS FREQUENTLY FOR POSSIBLE CHANGES TO THIS TFR PRIOR TO OPS. OPR MAY REVIEW THE TFR DETAILS AT HTTPS://TFR.FAA.GOV/ OR HTTPS://WWW.1800WXBRIEF.COM.&lt;/LI&gt;&lt;br/&gt;&lt;/OL&gt;\n                &lt;/DD&gt;&lt;/DL&gt;\n            &lt;/font&gt;\n          &lt;/TD&gt;\n        &lt;/TR&gt;\n        &lt;TR&gt;\n          &lt;TD colspan=\"2\" height=\"10\"&gt;  &lt;/TD&gt;\n        &lt;/TR&gt;\n      &lt;/Table&gt;\n      &lt;Table cellpadding=\"1\" cellspacing=\"0\"&gt;\n        &lt;TR bgcolor=\"#1E90FF\"&gt;\n          &lt;TD colspan=\"3\"&gt;\n            &lt;a name=\"other\"&gt;\n              &lt;b&gt;\n                &lt;font color=\"#FFFFFF\" face=\"Arial\" size=\"3\"&gt;Other Information:&lt;/font&gt;\n              &lt;/b&gt;\n            &lt;/a&gt;\n          &lt;/TD&gt;\n          &lt;TD colspan=\"1\" align=\"right\"&gt;\n            &lt;a href=\"#\"&gt;\n              &lt;font color=\"#FFFFFF\" face=\"Arial\"&gt;\n                &lt;b&gt;Top&lt;/b&gt;\n              &lt;/font&gt;\n            &lt;/a&gt;\n          &lt;/TD&gt;\n        &lt;/TR&gt;\n        &lt;TR&gt;\n          &lt;TD colspan=\"2\"&gt;\n            &lt;font face=\"Arial\" size=\"2\"&gt;ARTCC:&lt;/font&gt;\n          &lt;/TD&gt;\n          &lt;TD&gt;\n            &lt;font face=\"Arial\" size=\"2\"&gt;ZID - Indianapolis Center&lt;/font&gt;\n          &lt;/TD&gt;\n        &lt;/TR&gt;\n        &lt;TR&gt;\n          &lt;TD colspan=\"2\"&gt;\n            &lt;font face=\"Arial\" size=\"2\"&gt;Authority:&lt;/font&gt;\n          &lt;/TD&gt;\n          &lt;TD&gt;\n            &lt;font face=\"Arial\" size=\"2\"&gt;Title 14 CFR section 91.141&lt;/font&gt;\n          &lt;/TD&gt;\n        &lt;/TR&gt;\n        &lt;TR&gt;\n          &lt;TD Width=\"40\" /&gt;\n          &lt;TD Width=\"152\" /&gt;\n          &lt;TD Width=\"318\" /&gt;\n        &lt;/TR&gt;\n      &lt;/Table&gt;\n    &lt;/Body&gt;\n  &lt;/span&gt;\n&lt;/html&gt;</txtDescrModern>\n        <codeFreeformText>false</codeFreeformText>\n        <NotUidMod>\n          <dateIndexYear>6</dateIndexYear>\n          <noSeqNo>9446</noSeqNo>\n        </NotUidMod>\n        <txtDescrMod>Due to change in times </txtDescrMod>\n      </Not>\n    </Add>\n  </Group>\n</XNOTAM-Update>"
+  },
+  "expect": {
+    "observations": [
+      {
+        "type": "airspace.restriction",
+        "version": 1,
+        "subject": {
+          "kind": "site",
+          "id": "RIDGE-SITE-3",
+          "scope": "source"
+        },
+        "occurredAt": "2026-11-24T03:18:57.000Z",
+        "interval": {
+          "start": "2026-11-24T21:45:00.000Z",
+          "end": "2026-11-24T23:15:00.000Z"
+        },
+        "sourceEventId": "6/9661 Area A touching RIDGE-AREA-3",
+        "originalLocator": {
+          "kind": "byte_range",
+          "value": {
+            "offsetBytes": 1078,
+            "lengthBytes": 13504
+          }
+        },
+        "values": {
+          "notamId": "6/9661",
+          "name": "261124-29 Cincinnati VIP Reissue",
+          "areaName": "Area A",
+          "sourceTypeCode": "91.141",
+          "floor": {
+            "meters": 0,
+            "datum": "ground_level"
+          },
+          "ceiling": {
+            "meters": 1523.6952,
+            "datum": "ground_level"
+          },
+          "area": {
+            "boundary": [
+              {
+                "latitudeDegrees": 39.1320216,
+                "longitudeDegrees": -84.66777778
+              },
+              {
+                "latitudeDegrees": 39.13075294,
+                "longitudeDegrees": -84.64918125
+              },
+              {
+                "latitudeDegrees": 39.12698562,
+                "longitudeDegrees": -84.63115171
+              },
+              {
+                "latitudeDegrees": 39.1208345,
+                "longitudeDegrees": -84.6142387
+              },
+              {
+                "latitudeDegrees": 39.11248707,
+                "longitudeDegrees": -84.59895738
+              },
+              {
+                "latitudeDegrees": 39.10219766,
+                "longitudeDegrees": -84.58577274
+              },
+              {
+                "latitudeDegrees": 39.09027969,
+                "longitudeDegrees": -84.57508537
+              },
+              {
+                "latitudeDegrees": 39.07709597,
+                "longitudeDegrees": -84.56721934
+              },
+              {
+                "latitudeDegrees": 39.06304769,
+                "longitudeDegrees": -84.56241236
+              },
+              {
+                "latitudeDegrees": 39.04856206,
+                "longitudeDegrees": -84.56080878
+              },
+              {
+                "latitudeDegrees": 39.03407935,
+                "longitudeDegrees": -84.56245539
+              },
+              {
+                "latitudeDegrees": 39.02003948,
+                "longitudeDegrees": -84.56730021
+              },
+              {
+                "latitudeDegrees": 39.00686866,
+                "longitudeDegrees": -84.57519433
+              },
+              {
+                "latitudeDegrees": 38.99496649,
+                "longitudeDegrees": -84.58589664
+              },
+              {
+                "latitudeDegrees": 38.98469392,
+                "longitudeDegrees": -84.59908128
+              },
+              {
+                "latitudeDegrees": 38.97636229,
+                "longitudeDegrees": -84.61434766
+              },
+              {
+                "latitudeDegrees": 38.97022406,
+                "longitudeDegrees": -84.63123258
+              },
+              {
+                "latitudeDegrees": 38.96646516,
+                "longitudeDegrees": -84.64922428
+              },
+              {
+                "latitudeDegrees": 38.96519942,
+                "longitudeDegrees": -84.66777778
+              },
+              {
+                "latitudeDegrees": 38.96646516,
+                "longitudeDegrees": -84.68633128
+              },
+              {
+                "latitudeDegrees": 38.97022406,
+                "longitudeDegrees": -84.70432298
+              },
+              {
+                "latitudeDegrees": 38.97636229,
+                "longitudeDegrees": -84.7212079
+              },
+              {
+                "latitudeDegrees": 38.98469392,
+                "longitudeDegrees": -84.73647428
+              },
+              {
+                "latitudeDegrees": 38.99496649,
+                "longitudeDegrees": -84.74965892
+              },
+              {
+                "latitudeDegrees": 39.00686866,
+                "longitudeDegrees": -84.76036123
+              },
+              {
+                "latitudeDegrees": 39.02003948,
+                "longitudeDegrees": -84.76825535
+              },
+              {
+                "latitudeDegrees": 39.03407935,
+                "longitudeDegrees": -84.77310017
+              },
+              {
+                "latitudeDegrees": 39.04856206,
+                "longitudeDegrees": -84.77474678
+              },
+              {
+                "latitudeDegrees": 39.06304769,
+                "longitudeDegrees": -84.7731432
+              },
+              {
+                "latitudeDegrees": 39.07709597,
+                "longitudeDegrees": -84.76833622
+              },
+              {
+                "latitudeDegrees": 39.09027969,
+                "longitudeDegrees": -84.76047019
+              },
+              {
+                "latitudeDegrees": 39.10219766,
+                "longitudeDegrees": -84.74978282
+              },
+              {
+                "latitudeDegrees": 39.11248707,
+                "longitudeDegrees": -84.73659818
+              },
+              {
+                "latitudeDegrees": 39.1208345,
+                "longitudeDegrees": -84.72131686
+              },
+              {
+                "latitudeDegrees": 39.12698562,
+                "longitudeDegrees": -84.70440385
+              },
+              {
+                "latitudeDegrees": 39.13075294,
+                "longitudeDegrees": -84.68637431
+              }
+            ]
+          },
+          "regionId": "RIDGE-AREA-3"
+        },
+        "extraLimitations": [
+          "The published area touches the region RIDGE-AREA-3, a circle of 100 m configured around the site RIDGE-SITE-3."
+        ]
+      },
+      {
+        "type": "airspace.restriction",
+        "version": 1,
+        "subject": {
+          "kind": "site",
+          "id": "RIDGE-SITE-3",
+          "scope": "source"
+        },
+        "occurredAt": "2026-11-24T03:18:57.000Z",
+        "interval": {
+          "start": "2026-11-29T20:15:00.000Z",
+          "end": "2026-11-29T22:00:00.000Z"
+        },
+        "sourceEventId": "6/9661 Area C touching RIDGE-AREA-3",
+        "originalLocator": {
+          "kind": "byte_range",
+          "value": {
+            "offsetBytes": 26655,
+            "lengthBytes": 12048
+          }
+        },
+        "values": {
+          "notamId": "6/9661",
+          "name": "261124-29 Cincinnati VIP Reissue",
+          "areaName": "Area C",
+          "sourceTypeCode": "91.141",
+          "floor": {
+            "meters": 0,
+            "datum": "ground_level"
+          },
+          "ceiling": {
+            "meters": 1523.6952,
+            "datum": "ground_level"
+          },
+          "area": {
+            "boundary": [
+              {
+                "latitudeDegrees": 39.1320216,
+                "longitudeDegrees": -84.66777778
+              },
+              {
+                "latitudeDegrees": 39.13075294,
+                "longitudeDegrees": -84.64918125
+              },
+              {
+                "latitudeDegrees": 39.12698562,
+                "longitudeDegrees": -84.63115171
+              },
+              {
+                "latitudeDegrees": 39.1208345,
+                "longitudeDegrees": -84.6142387
+              },
+              {
+                "latitudeDegrees": 39.11248707,
+                "longitudeDegrees": -84.59895738
+              },
+              {
+                "latitudeDegrees": 39.10219766,
+                "longitudeDegrees": -84.58577274
+              },
+              {
+                "latitudeDegrees": 39.09027969,
+                "longitudeDegrees": -84.57508537
+              },
+              {
+                "latitudeDegrees": 39.07709597,
+                "longitudeDegrees": -84.56721934
+              },
+              {
+                "latitudeDegrees": 39.06304769,
+                "longitudeDegrees": -84.56241236
+              },
+              {
+                "latitudeDegrees": 39.04856206,
+                "longitudeDegrees": -84.56080878
+              },
+              {
+                "latitudeDegrees": 39.03407935,
+                "longitudeDegrees": -84.56245539
+              },
+              {
+                "latitudeDegrees": 39.02003948,
+                "longitudeDegrees": -84.56730021
+              },
+              {
+                "latitudeDegrees": 39.00686866,
+                "longitudeDegrees": -84.57519433
+              },
+              {
+                "latitudeDegrees": 38.99496649,
+                "longitudeDegrees": -84.58589664
+              },
+              {
+                "latitudeDegrees": 38.98469392,
+                "longitudeDegrees": -84.59908128
+              },
+              {
+                "latitudeDegrees": 38.97636229,
+                "longitudeDegrees": -84.61434766
+              },
+              {
+                "latitudeDegrees": 38.97022406,
+                "longitudeDegrees": -84.63123258
+              },
+              {
+                "latitudeDegrees": 38.96646516,
+                "longitudeDegrees": -84.64922428
+              },
+              {
+                "latitudeDegrees": 38.96519942,
+                "longitudeDegrees": -84.66777778
+              },
+              {
+                "latitudeDegrees": 38.96646516,
+                "longitudeDegrees": -84.68633128
+              },
+              {
+                "latitudeDegrees": 38.97022406,
+                "longitudeDegrees": -84.70432298
+              },
+              {
+                "latitudeDegrees": 38.97636229,
+                "longitudeDegrees": -84.7212079
+              },
+              {
+                "latitudeDegrees": 38.98469392,
+                "longitudeDegrees": -84.73647428
+              },
+              {
+                "latitudeDegrees": 38.99496649,
+                "longitudeDegrees": -84.74965892
+              },
+              {
+                "latitudeDegrees": 39.00686866,
+                "longitudeDegrees": -84.76036123
+              },
+              {
+                "latitudeDegrees": 39.02003948,
+                "longitudeDegrees": -84.76825535
+              },
+              {
+                "latitudeDegrees": 39.03407935,
+                "longitudeDegrees": -84.77310017
+              },
+              {
+                "latitudeDegrees": 39.04856206,
+                "longitudeDegrees": -84.77474678
+              },
+              {
+                "latitudeDegrees": 39.06304769,
+                "longitudeDegrees": -84.7731432
+              },
+              {
+                "latitudeDegrees": 39.07709597,
+                "longitudeDegrees": -84.76833622
+              },
+              {
+                "latitudeDegrees": 39.09027969,
+                "longitudeDegrees": -84.76047019
+              },
+              {
+                "latitudeDegrees": 39.10219766,
+                "longitudeDegrees": -84.74978282
+              },
+              {
+                "latitudeDegrees": 39.11248707,
+                "longitudeDegrees": -84.73659818
+              },
+              {
+                "latitudeDegrees": 39.1208345,
+                "longitudeDegrees": -84.72131686
+              },
+              {
+                "latitudeDegrees": 39.12698562,
+                "longitudeDegrees": -84.70440385
+              },
+              {
+                "latitudeDegrees": 39.13075294,
+                "longitudeDegrees": -84.68637431
+              }
+            ]
+          },
+          "regionId": "RIDGE-AREA-3"
+        },
+        "extraLimitations": [
+          "The published area touches the region RIDGE-AREA-3, a circle of 100 m configured around the site RIDGE-SITE-3."
+        ]
+      }
+    ],
+    "rejections": [],
+    "unmapped": []
+  }
+}

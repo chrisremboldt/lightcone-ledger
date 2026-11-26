@@ -29,7 +29,8 @@
         "values": {
           "method": "observed",
           "visibilityMeters": 402.336,
-          "bound": "less_than"
+          "bound": "less_than",
+          "stationId": "ZZZZ"
         },
         "extraLimitations": [
           "Reported by station ZZZZ for the site RIDGE-SITE-10; the distance from the station to the site is not on record.",

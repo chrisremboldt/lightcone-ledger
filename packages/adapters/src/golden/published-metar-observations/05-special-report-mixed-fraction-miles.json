@@ -33,7 +33,9 @@
         "values": {
           "method": "measured",
           "speedMetersPerSecond": 1.5433333333333332,
-          "directionFromDegrees": 70
+          "directionFromDegrees": 70,
+          "stationId": "KMIA",
+          "stationDistanceMeters": 9600
         },
         "extraLimitations": ["Reported by station KMIA for the site RIDGE-SITE-5, 9.6 km from the site as configured."]
       },
@@ -58,7 +60,9 @@
         "values": {
           "method": "observed",
           "visibilityMeters": 4023.36,
-          "bound": "stated"
+          "bound": "stated",
+          "stationId": "KMIA",
+          "stationDistanceMeters": 9600
         },
         "extraLimitations": ["Reported by station KMIA for the site RIDGE-SITE-5, 9.6 km from the site as configured."]
       }

@@ -1,0 +1,73 @@
+{
+  "note": "Constructed for this test, not fetched: a forecast from an invented station with a wind group in kilometres per hour and a change group whose period cannot be placed.",
+  "case": "valid",
+  "message": {
+    "contentType": "application/json",
+    "transport": {
+      "method": "GET",
+      "path": "/api/data/taf"
+    },
+    "capturedAt": "2026-11-26T04:33:53.000Z",
+    "bodyText": "{\"icaoId\":\"ZZZZ\",\"rawTAF\":\"TAF ZZZZ 260200Z 2603/2706 27010KT P6SM SKC TEMPO 2604/2608 27015KMH BECMG 2699/2702 3SM\"}"
+  },
+  "expect": {
+    "observations": [
+      {
+        "type": "weather.forecast",
+        "version": 1,
+        "subject": {
+          "kind": "site",
+          "id": "RIDGE-SITE-10",
+          "scope": "source"
+        },
+        "occurredAt": "2026-11-26T02:00:00.000Z",
+        "interval": {
+          "start": "2026-11-26T03:00:00.000Z",
+          "end": "2026-11-27T06:00:00.000Z"
+        },
+        "sourceEventId": "ZZZZ 2026-11-26T02:00:00.000Z TAF for RIDGE-SITE-10",
+        "originalLocator": {
+          "kind": "json_pointer",
+          "value": "/rawTAF"
+        },
+        "values": {
+          "stationId": "ZZZZ",
+          "periods": [
+            {
+              "change": "base",
+              "startAt": "2026-11-26T03:00:00.000Z",
+              "endAt": "2026-11-27T06:00:00.000Z",
+              "text": "27010KT P6SM SKC",
+              "wind": {
+                "speedMetersPerSecond": 5.144444444444445,
+                "directionFromDegrees": 270
+              },
+              "visibility": {
+                "visibilityMeters": 9656.064,
+                "bound": "at_least"
+              }
+            },
+            {
+              "change": "temporary",
+              "startAt": "2026-11-26T04:00:00.000Z",
+              "endAt": "2026-11-26T08:00:00.000Z",
+              "text": "TEMPO 2604/2608 27015KMH"
+            }
+          ]
+        },
+        "extraLimitations": [
+          "Forecast for station ZZZZ, configured for the site RIDGE-SITE-10; the distance from the station to the site is not on record."
+        ]
+      }
+    ],
+    "rejections": [
+      {
+        "reasonIncludes": "The wind group 27015KMH could not be read (in TEMPO 2604/2608 27015KMH)"
+      },
+      {
+        "reasonIncludes": "The change group BECMG 2699/2702 3SM could not be read"
+      }
+    ],
+    "unmapped": []
+  }
+}
