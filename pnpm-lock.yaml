@@ -222,6 +222,9 @@ importers:
       '@ledger/contracts':
         specifier: workspace:*
         version: link:../contracts
+      '@ledger/flight-logs':
+        specifier: workspace:*
+        version: link:../flight-logs
       yaml:
         specifier: 2.8.1
         version: 2.8.1
@@ -270,6 +273,12 @@ importers:
       '@ledger/persistence':
         specifier: workspace:*
         version: link:../persistence
+
+  packages/flight-logs:
+    dependencies:
+      '@ledger/contracts':
+        specifier: workspace:*
+        version: link:../contracts
 
   packages/integrity: {}
 

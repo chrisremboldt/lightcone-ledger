@@ -16,6 +16,7 @@ import {
 import { listOperatorRecordTypes } from '../../domain/src/operator-record-import.js';
 import * as words from '../src/words.js';
 import type { RulePackVersion } from '@ledger/contracts';
+import { px4, px4Definitions, RIDGE, UlogWriter } from '../../flight-logs/tests/encoders.js';
 
 const folder = mkdtempSync(join(tmpdir(), 'ledger-cli-'));
 afterAll(() => rmSync(folder, { recursive: true, force: true }));
@@ -473,6 +474,86 @@ describe('Column mappings from the command line', () => {
       'Stated by the mapping for every row, not held by the export: heightNotes = none.',
       '  Row 4: left out by the mapping; Status is "Cancelled".',
     ]);
+  });
+});
+
+describe('Reading an aircraft’s log from the command line', () => {
+  const S = 1_000_000;
+  const UTC = Date.UTC(2026, 10, 10, 16, 5, 0) * 1000;
+  function writeLog(name: string, landing = true) {
+    const log = px4Definitions(new UlogWriter());
+    px4.gps(log, 5 * S, UTC + 5 * S, RIDGE);
+    px4.landed(log, 6 * S, true);
+    px4.status(log, 10 * S, true);
+    px4.global(log, 11 * S, RIDGE, 1850);
+    px4.landed(log, 12 * S, false);
+    px4.global(log, 30 * S, RIDGE, 1890);
+    if (landing) {
+      px4.landed(log, 70 * S, true);
+      px4.status(log, 72 * S, false);
+    }
+    writeFileSync(join(folder, name), log.done());
+  }
+  const noApi = (async () => {
+    throw new Error('read-log sent a request');
+  }) as unknown as typeof fetch;
+
+  it('reads a log offline into a flight.record CSV beside it, and never over a file already there', async () => {
+    writeLog('RIDGE-AC-1.ulg');
+    const read = await cli(['records', 'read-log', 'RIDGE-AC-1.ulg'], noApi, {});
+    expect(read.code, read.err).toBe(0);
+    expect(read.out).toContain('RIDGE-AC-1.ulg: PX4 ULog');
+    expect(read.out).toContain('2026-11-10T16:05:12Z to 2026-11-10T16:06:10Z, 58 s.');
+    expect(read.out).toContain(
+      'Then: pnpm ledger records check flight.record RIDGE-AC-1.flight.record.csv --original RIDGE-AC-1.ulg',
+    );
+    const csv = readFileSync(join(folder, 'RIDGE-AC-1.flight.record.csv'), 'utf8');
+    const digest = createHash('sha256')
+      .update(readFileSync(join(folder, 'RIDGE-AC-1.ulg')))
+      .digest('hex');
+    expect(csv).toContain(`,,2026-11-10T16:05:12Z,2026-11-10T16:06:10Z,"39.5012345, -105.2034567"`);
+    expect(csv).toContain(`RIDGE-AC-1.ulg (sha256 ${digest}), flight 1`);
+    const again = await cli(['records', 'read-log', 'RIDGE-AC-1.ulg'], noApi, {});
+    expect(again.code).toBe(2);
+    expect(again.err).toContain('already exists; nothing was written');
+  });
+
+  it('says when a flight is not whole, and refuses a file that is no log it reads', async () => {
+    writeLog('cut.ulg', false);
+    const cut = await cli(['records', 'read-log', 'cut.ulg', '--out', 'cut.csv'], noApi, {});
+    expect(cut.code).toBe(1);
+    expect(cut.out).toContain('No whole flight was read, so no file was written.');
+    expect(cut.out).toContain('the log ends while the aircraft is armed');
+    expect(existsSync(join(folder, 'cut.csv'))).toBe(false);
+    writeFileSync(join(folder, 'notes.txt'), 'not a log');
+    const other = await cli(['records', 'read-log', 'notes.txt'], noApi, {});
+    expect(other.code).toBe(2);
+    expect(other.err).toContain('does not begin as a PX4 ULog');
+    const format = await cli(['records', 'read-log', 'cut.ulg', '--format', 'kml'], noApi, {});
+    expect(format.err).toBe('--format is one of ulog, dataflash, tlog: kml');
+  });
+
+  it('takes --original on check and import, not with --mapping, and never a file larger than Ledger keeps', async () => {
+    const api = fakeApi({
+      'GET /v1/operator-records/types': {
+        body: {
+          types: [listOperatorRecordTypes().find((type) => type.recordType === 'flight.record')!],
+          sourceId: 'operator-records',
+        },
+      },
+      'GET /v1/me': { body: me },
+    });
+    writeFileSync(join(folder, 'big.ulg'), new Uint8Array(10 * 1024 * 1024 + 1));
+    writeFileSync(join(folder, 'rows.csv'), 'subjectId\n');
+    const both = await cli(
+      ['records', 'check', 'flight.record', 'rows.csv', '--original', 'big.ulg', '--mapping', 'm.yaml'],
+      api.fetcher,
+    );
+    expect(both.err).toContain('Give --mapping or --original, not both');
+    const big = await cli(['records', 'import', 'flight.record', 'rows.csv', '--original', 'big.ulg'], api.fetcher);
+    expect(big.code).toBe(2);
+    expect(big.err).toContain('big.ulg is 10.0 MB; Ledger keeps a file of at most 10 MB');
+    expect(api.sent.some((request) => request.method === 'POST')).toBe(false);
   });
 });
 

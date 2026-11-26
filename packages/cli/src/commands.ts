@@ -241,20 +241,43 @@ function readBytes(path: string): Buffer {
   }
 }
 
+/** The other files an import reads beside the file itself: a column mapping, or the original the file was read from. */
+export interface ImportFiles {
+  mapping?: string;
+  original?: string;
+}
+
+/** The largest file Ledger keeps as an upload. */
+const UPLOAD_LIMIT_BYTES = 10 * 1024 * 1024;
+
 async function sendFile(
   context: Context,
   name: string,
   path: string,
   commit: boolean,
-  mappingPath?: string,
-): Promise<{ response: ImportResponse; as: CurrentPrincipalResponse }> {
+  files: ImportFiles = {},
+): Promise<{ response: ImportResponse; as: CurrentPrincipalResponse; original?: string }> {
+  const { mapping: mappingPath, original: originalPath } = files;
+  if (mappingPath && originalPath)
+    throw new UsageError(
+      'Give --mapping or --original, not both: a file read from another file is already in Ledger’s own columns.',
+    );
   const type = await recordType(context.client, name);
   const bytes = readBytes(path);
   const mappingBytes = mappingPath === undefined ? undefined : readBytes(mappingPath);
+  const originalBytes = originalPath === undefined ? undefined : readBytes(originalPath);
+  if (originalBytes && originalBytes.byteLength > UPLOAD_LIMIT_BYTES)
+    throw new UsageError(
+      `${basename(originalPath!)} is ${(originalBytes.byteLength / 1024 / 1024).toFixed(1)} MB; Ledger keeps a file of at most 10 MB, so it cannot be kept as the original. Nothing was sent.`,
+    );
   const as = await recordedAs(context.client);
   const json = /\.json$/i.test(path);
-  const file = mappingPath ? `${basename(path)} with the mapping ${basename(mappingPath)}` : basename(path);
-  const kept = mappingPath ? 'the two files themselves as uploads' : 'the file itself as an upload';
+  const file = mappingPath
+    ? `${basename(path)} with the mapping ${basename(mappingPath)}`
+    : originalPath
+      ? `${basename(path)}, read from ${basename(originalPath)}`
+      : basename(path);
+  const kept = mappingPath || originalPath ? 'the two files themselves as uploads' : 'the file itself as an upload';
   context.say(
     commit
       ? `Importing ${file} as ${type.recordType} records, recorded as ${as.principal.name} (${as.principal.id}).`
@@ -277,6 +300,16 @@ async function sendFile(
         )
       ).artifact
     : undefined;
+  const original = originalBytes
+    ? (
+        await context.client.upload(
+          new Uint8Array(originalBytes),
+          'application/octet-stream',
+          `${key}:original`,
+          basename(originalPath!),
+        )
+      ).artifact
+    : undefined;
   const response = await context.client.request<ImportResponse>(
     `/v1/operator-records/imports${commit ? '' : '/preview'}`,
     {
@@ -286,15 +319,29 @@ async function sendFile(
         recordType: type.recordType,
         recordVersion: type.recordVersion,
         ...(mapping ? { mappingArtifactId: mapping.id } : {}),
+        ...(original ? { originalArtifactId: original.id } : {}),
       }),
     },
     `${key}:import`,
   );
-  return { response, as };
+  return { response, as, ...(original ? { original: original.id } : {}) };
 }
 
-export async function checkRecords(context: Context, name: string, path: string, mapping?: string): Promise<Output> {
-  const { response } = await sendFile(context, name, path, false, mapping);
+/** Which file each record cites as its original, when it is not the import file. */
+const originalLines = (original: string | undefined, files: ImportFiles) =>
+  original && files.original
+    ? [
+        `Each record cites ${basename(files.original)}, kept as file ${original}, as its original, and names the row of this file it was read through.`,
+      ]
+    : [];
+
+export async function checkRecords(
+  context: Context,
+  name: string,
+  path: string,
+  files: ImportFiles = {},
+): Promise<Output> {
+  const { response, original } = await sendFile(context, name, path, false, files);
   const preview = response as OperatorRecordPreviewResponse;
   const { summary } = preview;
   return {
@@ -303,6 +350,7 @@ export async function checkRecords(context: Context, name: string, path: string,
     lines: [
       ...preview.problems.map((problem) => `The file: ${problem}`),
       ...mappingLines(preview.mapping),
+      ...originalLines(original, files),
       `${plural(summary.rows, 'row')}: ${summary.acceptable} can be recorded (${summary.incomplete} of them incomplete), ${summary.alreadyRecorded} already recorded, ${summary.refused} refused.`,
       ...(preview.granted
         ? []
@@ -312,8 +360,13 @@ export async function checkRecords(context: Context, name: string, path: string,
   };
 }
 
-export async function importRecords(context: Context, name: string, path: string, mapping?: string): Promise<Output> {
-  const { response } = await sendFile(context, name, path, true, mapping);
+export async function importRecords(
+  context: Context,
+  name: string,
+  path: string,
+  files: ImportFiles = {},
+): Promise<Output> {
+  const { response, original } = await sendFile(context, name, path, true, files);
   const committed = response as OperatorRecordCommitResponse;
   const { summary } = committed;
   return {
@@ -322,6 +375,7 @@ export async function importRecords(context: Context, name: string, path: string
     lines: [
       ...committed.problems.map((problem) => `The file: ${problem}`),
       ...mappingLines(committed.mapping),
+      ...originalLines(original, files),
       `${plural(summary.rows, 'row')}: ${summary.recorded} recorded (${summary.incomplete} of them incomplete), ${summary.alreadyRecorded} already recorded, ${summary.refused} refused.`,
       ...(summary.recorded ? [] : ['Nothing was recorded from this file.']),
       ...importRowLines(committed),

@@ -27137,6 +27137,8 @@ export interface operations {
                     sourceId?: string;
                     /** @description A retained column mapping file (YAML, uploaded through /v1/uploads) that reads the file, an export in its own columns, as this record type. Each record cites the export as its original and names the mapping. */
                     mappingArtifactId?: string;
+                    /** @description A retained file (uploaded through /v1/uploads) the import file was read from, such as an aircraft’s own log read into Ledger’s columns. Each record cites it as its original and names the import file as the reading of it. Not given with a column mapping. */
+                    originalArtifactId?: string;
                 };
             };
         };
@@ -27414,6 +27416,8 @@ export interface operations {
                     sourceId?: string;
                     /** @description A retained column mapping file (YAML, uploaded through /v1/uploads) that reads the file, an export in its own columns, as this record type. Each record cites the export as its original and names the mapping. */
                     mappingArtifactId?: string;
+                    /** @description A retained file (uploaded through /v1/uploads) the import file was read from, such as an aircraft’s own log read into Ledger’s columns. Each record cites it as its original and names the import file as the reading of it. Not given with a column mapping. */
+                    originalArtifactId?: string;
                 };
             };
         };

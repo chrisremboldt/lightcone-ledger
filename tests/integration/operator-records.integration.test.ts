@@ -5,6 +5,8 @@ import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { createApp } from '../../apps/api/src/index.js';
 import { sha256 } from '../../packages/integrity/src/index.js';
 import { createPool, MemoryObjectStore, withScope } from '../../packages/persistence/src/index.js';
+import { flightRecordCsv, readUlog } from '../../packages/flight-logs/src/index.js';
+import { px4, px4Definitions, RIDGE, UlogWriter } from '../../packages/flight-logs/tests/encoders.js';
 import { lockWaitStarted, settleOwnedWork } from './worker-queue.js';
 
 const fixtures = join(import.meta.dirname, '..', '..', 'packages', 'contracts', 'fixtures', 'operator-records');
@@ -310,6 +312,50 @@ leaveOut:
     const refusedCommit = await commit('alpha', 'operator', { ...body, mappingArtifactId: wrong });
     expect(refusedCommit.statusCode).toBe(400);
     expect(refusedCommit.json().error.code).toBe('import_file_invalid');
+  });
+
+  it('keeps an aircraft’s log as the original of the records read from it', async () => {
+    const S = 1_000_000;
+    const log = px4Definitions(new UlogWriter());
+    px4.gps(log, 5 * S, Date.UTC(2026, 10, 10, 16, 5, 0) * 1000 + 5 * S, RIDGE);
+    px4.status(log, 10 * S, true);
+    px4.landed(log, 12 * S, false);
+    px4.global(log, 13 * S, RIDGE, 1850);
+    px4.landed(log, 70 * S, true);
+    px4.status(log, 72 * S, false);
+    const logBytes = Buffer.from(log.done());
+    const flight = `${run}-ALPHA-FLIGHT-LOGGED`;
+    const read = flightRecordCsv(await readUlog([logBytes]), { name: 'flight.ulg', sha256: sha256(logBytes) });
+    // What the log does not hold, a person writes: the flight's own id and the height above the ground.
+    const csv = read.replace(/\r\n,,(2026-[^,]+,[^,]+,"[^"]+","[^"]+"),,/, `\r\n${flight},,$1,30,`);
+    const original = await upload('alpha', 'operator', logBytes, 'application/octet-stream');
+    const file = await upload('alpha', 'operator', Buffer.from(csv), 'text/csv');
+    const body = { artifactId: file, originalArtifactId: original, recordType: 'flight.record', recordVersion: 1 };
+
+    const shown = await preview('alpha', 'operator', body);
+    expect(shown.statusCode, shown.body).toBe(200);
+    expect(shown.json().summary).toMatchObject({ rows: 1, acceptable: 1, refused: 0 });
+    const committed = await commit('alpha', 'operator', body);
+    expect(committed.statusCode, committed.body).toBe(201);
+    const [record] = await records('alpha', { recordType: 'flight.record', subjectId: flight });
+    expect(record).toMatchObject({
+      record: { takeoffAt: '2026-11-10T16:05:12Z', landingAt: '2026-11-10T16:06:10Z' },
+      origin: { artifactId: original, contentType: 'application/octet-stream' },
+    });
+    expect(record.origin).not.toHaveProperty('locator');
+    expect(record.limitations[0]).toBe(
+      `Read from its original file, retained as file ${original}, through row 1 of file ${file}, which holds what was read from the original in Ledger’s own columns. A value in that file the original does not hold was added to it, not read from the original.`,
+    );
+    expect((await commit('alpha', 'operator', body)).json().summary).toMatchObject({ alreadyRecorded: 1 });
+
+    // Another organization's file is not found, and a mapping is not given with an original.
+    const beta = await upload('beta', 'operator', Buffer.from(csv), 'text/csv');
+    const elsewhere = await preview('beta', 'operator', { ...body, artifactId: beta });
+    expect(elsewhere.statusCode).toBe(404);
+    const both = await preview('alpha', 'operator', { ...body, mappingArtifactId: original });
+    expect(both.json().problems).toEqual([
+      'A file read from another file is already in Ledger’s own columns: give a column mapping or the original file, not both.',
+    ]);
   });
 
   it('answers 200 with the same body when every row of a file is refused', async () => {

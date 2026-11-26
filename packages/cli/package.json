@@ -12,6 +12,7 @@
   },
   "dependencies": {
     "@ledger/contracts": "workspace:*",
+    "@ledger/flight-logs": "workspace:*",
     "yaml": "2.8.1"
   }
 }

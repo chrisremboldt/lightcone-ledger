@@ -27,7 +27,8 @@ A layout that works:
 organization/
   received/       the spreadsheets and documents as the operator gave them; you never edit these
   records/        one import file per record type, named <record type>.csv, and a column mapping per export
-                  read as it is, named <export>.mapping.yaml
+                  read as it is, named <export>.mapping.yaml, and the flights read from each aircraft log,
+                  named <log>.flight.record.csv (the logs themselves stay in received/)
   waiver/         source.txt and pack.yaml
   packs/          the pack files you build; LEDGER_PACKS_DIR points here
 ```
@@ -175,6 +176,33 @@ An occurrence the operator determined needs no report to the authority (a bird s
 Import what flights name before the flights: aircraft and people first, then plans, assignments, notices, assessments, flight records and occurrences. `pnpm ledger records list flight.plan --subject <id>` shows what is on file, with each record's Ledger id.
 
 **A correction** is a new row whose `replaces` column holds the Ledger id of the record it corrects. Nothing is edited or deleted; the earlier record stays, marked as replaced.
+
+### From an autopilot's log
+
+When the operator's flights are in the aircraft's own logs rather than in a logbook, read each log with `records read-log`. It reads a PX4 log (`.ulg`), an ArduPilot DataFlash log (`.bin`) or a MAVLink telemetry log a ground station saved (`.tlog`), tells which from the file's own first bytes (or take `--format ulog|dataflash|tlog`), runs offline and sends nothing to Ledger:
+
+```sh
+pnpm ledger records read-log organization/received/logs/2026-11-10-ridge.ulg --out organization/records/2026-11-10-ridge.flight.record.csv
+pnpm ledger records check flight.record organization/records/2026-11-10-ridge.flight.record.csv --original organization/received/logs/2026-11-10-ridge.ulg
+pnpm ledger records import flight.record organization/records/2026-11-10-ridge.flight.record.csv --original organization/received/logs/2026-11-10-ridge.ulg
+```
+
+It writes one `flight.record` row per whole flight in the log, in the import template's columns, and prints per flight what it read and what it could not. A flight runs from the moment the log's land detector says the aircraft left the ground after arming to the last moment it says it is on the ground again before disarming; a log with no land detector (a PX4 log without `vehicle_land_detected`, an ArduPilot log without its landing events, a telemetry log without `EXTENDED_SYS_STATE`) gives flights from arming to disarming, and the printout says which rule each flight used. Arming and disarming without leaving the ground is not a flight. What it fills in, and only when the log holds it:
+
+- `takeoffAt` and `landingAt` in UTC, from the log's absolute time: the GPS receiver's UTC time in a PX4 log, the GPS week and time less leap seconds in an ArduPilot log, and the ground station's clock in a telemetry log. A log with no absolute time (no GPS, as on a bench test) gives no times, and the printout says so; the duration is still printed, from the log's own clock. A row without `takeoffAt` is refused by `check` until a person writes the time.
+- `takeoffLocation` and `landingLocations` as latitude, longitude: the estimator's position, or the GPS receiver's with a 3D fix when the log has no estimate. Every touchdown of the flight is listed, the last one where it landed.
+- `heightNotes`: the greatest height with the reference the log states (above home in an ArduPilot or telemetry log; above the takeoff point, the greatest altitude less the altitude at takeoff, in a PX4 log) and the greatest altitude above mean sea level. No log holds the height above the ground, so `maxHeightFlownAboveGroundMeters` is left empty and the row is incomplete until a person writes it.
+- `flightPathReference`: the log's file name, its SHA-256, the flight's number and where its messages are in the file.
+
+The flight's own id (`subjectId`), the aircraft (`secondarySubjectId`), the wind, the battery and everything else are left empty: ask the person and write them in the CSV before `check`. A PX4 log may name the vehicle by its processor id (`sys_uuid`) and a telemetry log by the autopilot's `uid`; the printout shows it, but it is not the operator's own id for the aircraft. A log that ends early or is damaged is read up to that point: the printout says where the reader stopped and which flights before it are whole, and a flight it does not hold to its end is not written. With `--original`, Ledger keeps the log itself as each record's original and the CSV as the reading of it, as it keeps an export beside its mapping; a log larger than 10 MB cannot be kept yet. `--original` and `--mapping` are not given together.
+
+**How far each reader has been checked.** Each was built from the format's published description (the PX4 "ULog File Format" page, ArduPilot's `LogStructure.h` and `AP_Logger.h`, and the MAVLink serialization and common message set), and its unit tests read logs built by encoders written from the same descriptions, with invented coordinates. On 2026-11-25 each was also run against public sample logs, kept out of this repository:
+
+- PX4 ULog: four samples from the `pyulog` project's tests. `sample_px4_events.ulg` gave one flight of 11.4 s from the land detector, with UTC from `vehicle_gps_position` and positions from `vehicle_global_position`; `sample_log_small.ulg` gave one 1.1 s flight (the land detector said in the air for that long) and the vehicle's `sys_uuid`; `sample.ulg` and `sample_appended_multiple.ulg` never show the vehicle armed (no flight; the first has no GPS and so no absolute time, the second has appended data). Not checked: a log from PX4 1.14 or later with `sensor_gps`, a multi-flight log, a plane or VTOL log.
+- ArduPilot DataFlash: a 5 MB ArduCopter log from the ArduPilot Methodic Configurator's vehicle templates gave one flight of 1 min 57 s from the landing events, with UTC times that match the local time in the log's file name, and heights above home from `POS`. The file ends part-way through its last message, which the reader reports. The `pymavlink` test file `test.BIN` (64 KB of an ArduPlane log, cut short) gave no flight. Not checked: ArduPlane or Rover flights, logs older than the `TimeUS` clock (read from the description only), a log with more than one GPS.
+- MAVLink telemetry log: `vtol.tlog` from the UAV Log Viewer project gave one flight of 2 min 56 s, and `flight.tlog` from `pymavlink`'s test data gave 11 flights, all from arming to disarming because neither holds `EXTENDED_SYS_STATE`; every packet the reader decodes passed its checksum, including the one `AUTOPILOT_VERSION` in `vtol.tlog`, whose `uid` is zero, so no vehicle identifier was read. Both are MAVLink 1. Not checked: a log with `EXTENDED_SYS_STATE` or a nonzero `uid`, MAVLink 2 packets (built from the description and the unit tests only), a signed stream.
+
+No reader has read a log from the operator's own aircraft. Read the printout of the first log against the operator's own logbook for that day before importing many.
 
 ## 6. The waiver as a rule pack
 
@@ -334,9 +362,10 @@ It saves the .zip after checking it against its recorded SHA-256 and prints the 
 | --- | --- | --- |
 | `pnpm ledger me` | Who the credential is, its organization and time zone, what it may do | Any credential |
 | `pnpm ledger records types` / `columns <type>` / `template <type>` | The record types, their columns, an empty CSV file | `evidence:read` |
-| `pnpm ledger records check <type> <file> [--mapping <file>]` | What importing the file would record; makes no record (the file is kept as an upload). With `--mapping`, the file is an export read through its column mapping | `input:write` |
-| `pnpm ledger records import <type> <file> [--mapping <file>]` | Imports a CSV or JSON file, or an export through its column mapping, keeping the export and the mapping | `input:write` and the `operator-records:operator.record` grant |
+| `pnpm ledger records check <type> <file> [--mapping <file> \| --original <file>]` | What importing the file would record; makes no record (the file is kept as an upload). With `--mapping`, the file is an export read through its column mapping | `input:write` |
+| `pnpm ledger records import <type> <file> [--mapping <file> \| --original <file>]` | Imports a CSV or JSON file, or an export through its column mapping, keeping the export and the mapping, or a file read from a log, keeping the log as the original | `input:write` and the `operator-records:operator.record` grant |
 | `pnpm ledger records mapping <type> <export.csv> [--out <file>]` | Starts a column mapping from an export's header row: every column listed and unassigned | `evidence:read` |
+| `pnpm ledger records read-log <log> [--format ulog\|dataflash\|tlog] [--out <file.csv>]` | Reads an aircraft's log into a `flight.record` CSV, one row per whole flight with only what the log holds, and prints what it could not read; offline | Nothing: it sends nothing |
 | `pnpm ledger records list <type> [--subject <id>]` | The records on file, newest first | `evidence:read` |
 | `pnpm ledger packs list [--all]` / `show <pack>` | The latest version of each pack this Ledger offers (`--all`: earlier versions too), and a pack's rules; for the organization's own pack file, the fields each rule reads | `flight:read` |
 | `pnpm ledger packs adopt <pack> ...` | Prints the adoption, with a waiver's stated dates, and what it replaces: an earlier version adopted over the dates, or the same version, which it revises; sends it only with `--reason` and a person's credential | `pack:adopt`, a person |

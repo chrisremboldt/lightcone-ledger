@@ -21,6 +21,7 @@ import {
 } from './commands.js';
 import { ConfigurationError, readConnection } from './config.js';
 import { findingGroups, openFindings, treatFindingSet } from './findings.js';
+import { readFlightLog } from './read-log.js';
 import { startRecordMapping } from './record-mapping.js';
 import { draftPlan, produceRecords } from './records-plan.js';
 import { addPerson, listPeople, listPresets } from './people.js';
@@ -34,14 +35,20 @@ export const usage = `Usage: pnpm ledger <noun> <verb> [options]
   records types                          the record types and what each is about
   records columns <type>                 each column of a record type, what it holds and what it means
   records template <type> [--out <file>] an empty CSV file with the header row
-  records check <type> <file> [--mapping <file>]
+  records check <type> <file> [--mapping <file> | --original <file>]
                                          what importing a CSV or JSON file would record; makes no record (the file is
                                          kept as an upload). With --mapping, the file is an export in its own columns,
                                          read through a column mapping: what each column became, what was not read,
-                                         and each refused row
-  records import <type> <file> [--mapping <file>]
+                                         and each refused row. With --original, the file was read from another file,
+                                         such as an aircraft's log, and each record cites that file as its original
+  records import <type> <file> [--mapping <file> | --original <file>]
                                          import a CSV or JSON file, or an export through its column mapping; Ledger
-                                         keeps the export as received and the mapping with the records
+                                         keeps the export as received and the mapping with the records, or the
+                                         original the file was read from
+  records read-log <log> [--format ulog|dataflash|tlog] [--out <file.csv>]
+                                         read an aircraft's own log (PX4 .ulg, ArduPilot .bin, MAVLink .tlog) into a
+                                         flight.record CSV: one row per whole flight, only what the log holds, and
+                                         what it could not read; works offline and sends nothing
   records mapping <type> <export.csv> [--out <file>]
                                          start a column mapping from an export: every column listed, none assigned,
                                          and the record type's fields as comments; nothing is guessed
@@ -140,6 +147,8 @@ const options = {
   help: { type: 'boolean', short: 'h' },
   out: { type: 'string' },
   mapping: { type: 'string' },
+  original: { type: 'string' },
+  format: { type: 'string' },
   subject: { type: 'string', multiple: true },
   type: { type: 'string', multiple: true },
   to: { type: 'string' },
@@ -200,8 +209,9 @@ const commandOptions: Record<string, readonly string[]> = {
   'records types': [],
   'records columns': [],
   'records template': ['out'],
-  'records check': ['mapping'],
-  'records import': ['mapping'],
+  'records check': ['mapping', 'original'],
+  'records import': ['mapping', 'original'],
+  'records read-log': ['format', 'out'],
   'records mapping': ['out'],
   'records list': ['subject', 'limit'],
   'records produce': [
@@ -275,7 +285,8 @@ async function dispatch(
   const text = (name: string) => values[name] as string | undefined;
   const list = (name: string) => (values[name] as string[] | undefined) ?? [];
   const command = `${noun ?? ''} ${verb ?? ''}`.trim();
-  const mapping = () => (text('mapping') === undefined ? undefined : path(text('mapping')!));
+  const optionalPath = (name: string) => (text(name) === undefined ? undefined : path(text(name)!));
+  const files = () => ({ mapping: optionalPath('mapping'), original: optionalPath('original') });
   refuseUnread(command, values);
   if (noun === 'safety')
     return runSafety(context, {
@@ -306,11 +317,11 @@ async function dispatch(
     }
     case 'records check': {
       const [type, file] = needs(rest, 2, 'a record type and a file');
-      return checkRecords(context, type!, path(file!), mapping());
+      return checkRecords(context, type!, path(file!), files());
     }
     case 'records import': {
       const [type, file] = needs(rest, 2, 'a record type and a file');
-      return importRecords(context, type!, path(file!), mapping());
+      return importRecords(context, type!, path(file!), files());
     }
     case 'records mapping': {
       const [type, file] = needs(rest, 2, 'a record type and the export file');
@@ -463,6 +474,18 @@ export async function runCli(argv: string[], io: CliIo): Promise<number> {
   const [noun, verb, ...rest] = positionals;
   const path = (relative: string) => resolve(io.folders[0] ?? '.', relative);
   try {
+    if (noun === 'records' && verb === 'read-log') {
+      // Reading a log needs no Ledger: it runs offline, before any credential is read.
+      refuseUnread('records read-log', values);
+      const output = await readFlightLog(path(needs(rest, 1, 'one log file')[0]!), {
+        format: values.format,
+        out: values.out === undefined ? undefined : path(values.out),
+        folder: io.folders[0] ?? resolve('.'),
+      });
+      if (json) io.out(JSON.stringify(output.data, null, 2));
+      else for (const line of output.lines) io.out(line);
+      return output.refused ? 1 : 0;
+    }
     const connection = readConnection(io.env, io.folders);
     const client = new LedgerClient(connection.apiUrl, connection.token, io.fetcher);
     const context: Context = {

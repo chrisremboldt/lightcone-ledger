@@ -109,6 +109,21 @@ async function readRetainedFile(client: PoolClient, store: ObjectStore, artifact
   return { artifactId, contentType: row.content_type, bytes };
 }
 
+/** The id of a retained file within the principal's scope, without reading its bytes. */
+async function requireRetainedArtifact(client: PoolClient, artifactId: string): Promise<string> {
+  await requireRow(client, 'artifacts', artifactId).catch((error: unknown) => {
+    if (error instanceof DomainError && error.status === 404)
+      throw new DomainError(404, 'artifact_not_found', 'The original file was not found within your scope');
+    throw error;
+  });
+  return artifactId;
+}
+
+/** A sentence for a record read from another file, kept with it so a later reader can find the row it came from. */
+function readFromLimitation(original: string, importFile: string, row: number): string {
+  return `Read from its original file, retained as file ${original}, through row ${row} of file ${importFile}, which holds what was read from the original in Ledger’s own columns. A value in that file the original does not hold was added to it, not read from the original.`;
+}
+
 async function hasGrant(client: PoolClient, principal: AuthContext, sourceId: string): Promise<boolean> {
   if (!principal.capabilities.includes('input:write')) return false;
   const granted = await client.query(
@@ -187,6 +202,20 @@ async function evaluate(
   const file = await readRetainedFile(client, store, request.artifactId);
   const format = recordFileFormat(file.contentType, file.bytes);
   const parsed = parseRecordFile(file.bytes, format);
+  if (request.mappingArtifactId && request.originalArtifactId)
+    return {
+      definition,
+      timeZone,
+      sourceId,
+      format,
+      problems: [
+        'A file read from another file is already in Ledger’s own columns: give a column mapping or the original file, not both.',
+      ],
+      rows: [],
+    };
+  const original = request.originalArtifactId
+    ? await requireRetainedArtifact(client, request.originalArtifactId)
+    : undefined;
   if (request.mappingArtifactId)
     return evaluateMapped(client, principal, store, request, recordedAt, {
       definition,
@@ -213,11 +242,19 @@ async function evaluate(
     const reading = row.problem ? undefined : interpretRecordRow(definition, row.cells, { timeZone });
     const evaluated = !reading
       ? refused(row, [row.problem!])
-      : await evaluateRow(client, principal, definition, file, sourceId, row, reading, recordedAt, {
-          replacedInFile,
-          fileRecords,
-          ownIds,
-        });
+      : await evaluateRow(
+          client,
+          principal,
+          definition,
+          file,
+          sourceId,
+          row,
+          reading,
+          recordedAt,
+          { replacedInFile, fileRecords, ownIds },
+          original ? readFromLimitation(original, file.artifactId, row.row) : undefined,
+          original,
+        );
     rows.push(evaluated);
     if (reading?.recordId && !fileRecords.has(reading.recordId)) fileRecords.set(reading.recordId, evaluated);
   }
@@ -297,6 +334,8 @@ async function evaluateRow(
   },
   /** Said of every record of the file, such as the mapping that read it. */
   readWith?: string,
+  /** The retained file the import file was read from, cited as the record's original in its place. */
+  original?: string,
 ): Promise<EvaluatedRow> {
   const { replacedInFile, fileRecords } = inFile;
   const missingRequired = named(definition, missingRequiredFields(definition, reading.record));
@@ -362,8 +401,9 @@ async function evaluateRow(
       ...reading.timeConversions.map((conversion) => describeTimeConversion(definition, conversion)),
       ...reading.conversions.map((conversion) => describeConversion(definition, conversion)),
     ],
-    originalArtifactId: file.artifactId,
-    originalLocator: parsed.locator,
+    originalArtifactId: original ?? file.artifactId,
+    // A row of the import file is no place within the file it was read from; the limitation names the row instead.
+    ...(original ? {} : { originalLocator: parsed.locator }),
     values: observed
       ? observedRecordValues(definition, reading.record)
       : {
