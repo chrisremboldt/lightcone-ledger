@@ -8,7 +8,8 @@ import {
 } from '@ledger/domain';
 
 type SubjectReference = RuleEvaluationTask['subject'];
-import { DomainError, isDatabaseUnavailable, withScope, type Pool, type PoolClient } from '@ledger/persistence';
+import { DomainError, withScope, type Pool, type PoolClient } from '@ledger/persistence';
+import { readySince, runLeases, type WorkObserver } from './work-metrics.js';
 
 interface RuleEvaluationWorkRow {
   id: string;
@@ -46,6 +47,7 @@ export interface RuleEvaluationLeaseOptions {
   owner?: string;
   limit?: number;
   leaseSeconds?: number;
+  observer?: WorkObserver;
 }
 
 interface RuleEvaluationProcessingOptions {
@@ -174,16 +176,12 @@ async function retryRuleEvaluation(pool: Pool, lease: RuleEvaluationLease, error
 /** The generic evaluation worker: leases due rule evaluations, from accepted observations and deadlines, and runs them. */
 export async function runDueRuleEvaluations(pool: Pool, options: RuleEvaluationLeaseOptions = {}): Promise<number> {
   const leases = await leaseRuleEvaluations(pool, options);
-  let completed = 0;
-  for (const lease of leases) {
-    try {
-      if (await processRuleEvaluationLease(pool, lease)) completed++;
-    } catch (error) {
-      // A lost connection is not recorded as the work's error: the worker waits for the database, and the work is
-      // leased again once its lease runs out.
-      if (isDatabaseUnavailable(error)) throw error;
-      await retryRuleEvaluation(pool, lease, error);
-    }
-  }
-  return completed;
+  return runLeases(
+    'rule_evaluation',
+    leases,
+    options.observer,
+    (lease) => processRuleEvaluationLease(pool, lease),
+    (lease, error) => retryRuleEvaluation(pool, lease, error),
+    readySince,
+  );
 }

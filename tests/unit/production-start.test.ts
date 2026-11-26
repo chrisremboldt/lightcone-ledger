@@ -143,6 +143,9 @@ describe('a production start', () => {
     await startCoreServices(processes, waitForReady, { emulators: emulatorsRequested(env) });
     expect(processes.start.mock.calls.map(([name]) => name)).toEqual(['api', 'workers']);
     expect(waitForReady.mock.calls.map(([url]) => url)).toEqual(['http://127.0.0.1:4000/readyz']);
+    // The API keeps LEDGER_METRICS_LISTEN; the workers beside it never take the same port.
+    expect(processes.start.mock.calls[0]![3]).not.toHaveProperty('LEDGER_METRICS_LISTEN');
+    expect(processes.start.mock.calls[1]![3]).toMatchObject({ LEDGER_METRICS_LISTEN: '' });
   });
 
   it('runs Ledger Lite from the same image in one process, with files on a volume and sign-in as in a deployment', () => {

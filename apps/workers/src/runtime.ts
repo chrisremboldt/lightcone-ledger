@@ -9,8 +9,10 @@ import {
   type ObjectStore,
 } from '@ledger/persistence';
 import { configureNoticeChannels, noticeDeployment } from '@ledger/domain';
+import { registerPoolMetrics, type MetricsRegistry } from '@ledger/metrics';
 import { examplePacksEnabled, registerPackFolder, registerStandardPacks } from '@ledger/standard-packs';
 import { runOnce } from './index.js';
+import { registerQueueDepth, workerMetrics } from './work-metrics.js';
 
 export interface WorkerRuntime {
   /** Asks the loop to stop after the work it holds, and waits for it. */
@@ -23,6 +25,8 @@ export interface WorkerRuntimeOptions {
   env?: NodeJS.ProcessEnv;
   objectStore?: ObjectStore;
   trace?: (entry: unknown) => void;
+  /** The process's metrics; unset, the loop measures nothing. */
+  metrics?: MetricsRegistry;
 }
 
 /**
@@ -43,6 +47,11 @@ export function startWorkers(options: WorkerRuntimeOptions = {}): WorkerRuntime 
   // The same folder the API reads, so both hold the same packs.
   registerPackFolder(env.LEDGER_PACKS_DIR);
   const pool = createPool(env.WORKER_DATABASE_URL);
+  const observer = options.metrics ? workerMetrics(options.metrics) : undefined;
+  if (options.metrics) {
+    registerPoolMetrics(options.metrics, 'workers', pool);
+    registerQueueDepth(options.metrics, pool);
+  }
   const trace = options.trace ?? ((entry: unknown) => console.log(JSON.stringify(entry)));
   let stopping = false;
   let wake: (() => void) | undefined;
@@ -63,11 +72,13 @@ export function startWorkers(options: WorkerRuntimeOptions = {}): WorkerRuntime 
       let failures = 0;
       while (!stopping) {
         try {
-          const completed = await runOnce(pool, { objectStore, notices, trace });
+          const completed = await runOnce(pool, { objectStore, notices, trace, observer });
+          observer?.passed(true);
           failures = 0;
           if (!completed) await pause(250);
         } catch (error: any) {
           failures++;
+          observer?.passed(false);
           console.error('Worker database operation failed', { code: error.code ?? 'unknown' });
           await pause(databaseRetryDelay(failures));
         }

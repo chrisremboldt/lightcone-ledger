@@ -11,6 +11,10 @@ const EXCEPTIONS = new Map<string, string>([
     'Starts the API and reads public routes; it creates no organization and queues no work.',
   ],
   [
+    'tests/integration/queue-figures.integration.test.ts',
+    'Reads the queue counting function and the tables it counts; it creates no organization and queues no work.',
+  ],
+  [
     'tests/integration/one-process.integration.test.ts',
     'Starts the one process and reads /readyz; it creates no organization and queues no work, and every earlier file settled its own.',
   ],

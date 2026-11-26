@@ -38,6 +38,43 @@ describe('The one-process start', () => {
     await expect(running.workers.done).resolves.toBeUndefined();
   });
 
+  it('serves one metrics endpoint for the API and the workers, on a listener apart from the API', async () => {
+    const running = await startOneProcess({
+      port: 0,
+      host: '127.0.0.1',
+      env: { ...process.env, LEDGER_METRICS_LISTEN: '127.0.0.1:0' },
+      app: { env: 'test', objectStore: new MemoryObjectStore(), logger: false },
+    });
+    try {
+      const { port } = running.app.server.address() as AddressInfo;
+      expect(running.metrics!.server.port).not.toBe(port);
+      expect((await fetch(`http://127.0.0.1:${port}/metrics`)).status).not.toBe(200);
+      expect((await fetch(`http://127.0.0.1:${port}/healthz`)).status).toBe(200);
+      const scrape = `http://127.0.0.1:${running.metrics!.server.port}/metrics`;
+      let text = '';
+      for (
+        let attempt = 0;
+        attempt < 100 && !/ledger_worker_passes_total\{outcome="completed"\} [1-9]/.test(text);
+        attempt++
+      ) {
+        text = await (await fetch(scrape)).text();
+        if (!/ledger_worker_passes_total\{outcome="completed"\} [1-9]/.test(text))
+          await new Promise((resolve) => setTimeout(resolve, 100));
+      }
+      expect(text).toContain('ledger_http_requests_total{method="GET",route="/healthz",status_class="2xx"} 1');
+      expect(text).toMatch(/ledger_worker_passes_total\{outcome="completed"\} [1-9]/);
+      expect(text).toContain('ledger_database_pool_connections{pool="api",state="idle"}');
+      expect(text).toContain('ledger_database_pool_connections{pool="workers",state="idle"}');
+      expect(text).toContain('# TYPE ledger_evaluation_lag_seconds gauge');
+      expect(text).toMatch(/^ledger_queue_ready_items\{queue="notice_delivery"\} \d+$/m);
+      expect(text).toMatch(/^ledger_evaluation_lag_seconds [\d.]+$/m);
+      expect(text.match(/# TYPE ledger_process_cpu_seconds_total counter/g)).toHaveLength(1);
+    } finally {
+      await running.stop();
+    }
+    await expect(running.workers.done).resolves.toBeUndefined();
+  });
+
   it('gives that worker role no rows outside an organization and no way to change history', async () => {
     const roles = await admin.query(
       "SELECT rolname,rolsuper,rolbypassrls FROM pg_roles WHERE rolname IN ('ledger_app','ledger_worker') ORDER BY rolname",

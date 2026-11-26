@@ -2,7 +2,6 @@ import { randomUUID } from 'node:crypto';
 import {
   appendLiveChange,
   DomainError,
-  isDatabaseUnavailable,
   withScope,
   type JournalEvent,
   type ObjectStore,
@@ -13,7 +12,16 @@ import { runDueEvaluations } from './evaluations.js';
 import { runDueRuleEvaluations } from './rule-evaluations.js';
 import { runDueRuleSelections } from './rule-selections.js';
 import { runDueNotices, type NoticeWorkerOptions } from './notices.js';
+import { runLeases, type WorkObserver } from './work-metrics.js';
 export { startWorkers, type WorkerRuntime, type WorkerRuntimeOptions } from './runtime.js';
+export {
+  WORK_QUEUES,
+  registerQueueDepth,
+  runLeases,
+  workerMetrics,
+  type WorkObserver,
+  type WorkQueue,
+} from './work-metrics.js';
 export {
   leaseEvaluations,
   processEvaluationLease,
@@ -76,6 +84,7 @@ export interface WorkCompletionTrace {
   flightIds: string[];
 }
 interface WorkerOptions {
+  observer?: WorkObserver;
   beforeCommit?: () => Promise<void>;
   trace?: (entry: WorkCompletionTrace) => void;
   objectStore?: ObjectStore;
@@ -109,6 +118,7 @@ export async function processLease(pool: Pool, lease: WorkLease, options: Worker
       )
         return false;
       if (new Date(current.lease_until).getTime() < Date.now()) return false;
+      options.observer?.waited('projection', new Date(current.available_at));
       const event = (await client.query('SELECT * FROM journal_events WHERE id=$1', [lease.event_id]))
         .rows[0] as JournalEvent;
       await projectEvent(client, principal, event, { objectStore: options.objectStore });
@@ -152,6 +162,38 @@ export async function processLease(pool: Pool, lease: WorkLease, options: Worker
   } catch {}
   return true;
 }
+/** Records a failed projection for another attempt, and gives up on it after five. */
+async function retryProjection(pool: Pool, lease: WorkLease, error: any): Promise<void> {
+  await withScope(pool, { id: lease.worker_id, tenantId: lease.tenant_id }, async (client) => {
+    const current = (await client.query('SELECT * FROM work_items WHERE id=$1 FOR UPDATE', [lease.id])).rows[0];
+    if (!current || current.state !== 'leased' || String(current.generation) !== String(lease.generation)) return;
+    await client.query(
+      "UPDATE work_items SET state=CASE WHEN attempts>=5 THEN 'failed' ELSE 'pending' END,error=$1,available_at=clock_timestamp()+make_interval(secs=>LEAST(attempts,10)),lease_until=NULL WHERE id=$2 AND generation=$3 AND state='leased'",
+      [String(error.message ?? error).slice(0, 500), lease.id, lease.generation],
+    );
+    const receipt = (await client.query('SELECT id,flight_id,kind FROM receipts WHERE event_id=$1', [lease.event_id]))
+      .rows[0];
+    if (receipt?.flight_id)
+      await appendLiveChange(
+        client,
+        lease.tenant_id,
+        receipt.flight_id,
+        lease.event_id,
+        receipt.kind === 'telemetry.segment' ? 'telemetry.updated' : 'flight.updated',
+        receipt.id,
+      );
+    if (current.attempts >= 5) {
+      await client.query(
+        'INSERT INTO projection_offsets(tenant_id,stream_id,sequence) VALUES($1,$2,$3) ON CONFLICT(tenant_id,stream_id) DO UPDATE SET sequence=EXCLUDED.sequence WHERE projection_offsets.sequence=EXCLUDED.sequence-1',
+        [lease.tenant_id, lease.stream_id, lease.stream_sequence],
+      );
+      await client.query('INSERT INTO view_changes(tenant_id,event_id) VALUES($1,$2)', [
+        lease.tenant_id,
+        lease.event_id,
+      ]);
+    }
+  });
+}
 export async function runOnce(
   pool: Pool,
   options: WorkerOptions & {
@@ -163,49 +205,16 @@ export async function runOnce(
   } = {},
 ): Promise<number> {
   const leases = await leaseWork(pool, options);
-  let completed = 0;
-  for (const lease of leases) {
-    try {
-      if (await processLease(pool, lease, options)) completed++;
-    } catch (error: any) {
-      // A lost connection is not recorded as the work's error: the worker waits for the database, and the work is
-      // leased again once its lease runs out.
-      if (isDatabaseUnavailable(error)) throw error;
-      await withScope(pool, { id: lease.worker_id, tenantId: lease.tenant_id }, async (client) => {
-        const current = (await client.query('SELECT * FROM work_items WHERE id=$1 FOR UPDATE', [lease.id])).rows[0];
-        if (!current || current.state !== 'leased' || String(current.generation) !== String(lease.generation)) return;
-        await client.query(
-          "UPDATE work_items SET state=CASE WHEN attempts>=5 THEN 'failed' ELSE 'pending' END,error=$1,available_at=clock_timestamp()+make_interval(secs=>LEAST(attempts,10)),lease_until=NULL WHERE id=$2 AND generation=$3 AND state='leased'",
-          [String(error.message ?? error).slice(0, 500), lease.id, lease.generation],
-        );
-        const receipt = (
-          await client.query('SELECT id,flight_id,kind FROM receipts WHERE event_id=$1', [lease.event_id])
-        ).rows[0];
-        if (receipt?.flight_id)
-          await appendLiveChange(
-            client,
-            lease.tenant_id,
-            receipt.flight_id,
-            lease.event_id,
-            receipt.kind === 'telemetry.segment' ? 'telemetry.updated' : 'flight.updated',
-            receipt.id,
-          );
-        if (current.attempts >= 5) {
-          await client.query(
-            'INSERT INTO projection_offsets(tenant_id,stream_id,sequence) VALUES($1,$2,$3) ON CONFLICT(tenant_id,stream_id) DO UPDATE SET sequence=EXCLUDED.sequence WHERE projection_offsets.sequence=EXCLUDED.sequence-1',
-            [lease.tenant_id, lease.stream_id, lease.stream_sequence],
-          );
-          await client.query('INSERT INTO view_changes(tenant_id,event_id) VALUES($1,$2)', [
-            lease.tenant_id,
-            lease.event_id,
-          ]);
-        }
-      });
-    }
-  }
+  let completed = await runLeases(
+    'projection',
+    leases,
+    options.observer,
+    (lease) => processLease(pool, lease, options),
+    (lease, error) => retryProjection(pool, lease, error),
+  );
   completed += await runDueRuleSelections(pool, options);
   completed += await runDueEvaluations(pool, options);
   completed += await runDueRuleEvaluations(pool, options);
-  if (options.notices) completed += await runDueNotices(pool, options.notices);
+  if (options.notices) completed += await runDueNotices(pool, { ...options.notices, observer: options.observer });
   return completed;
 }

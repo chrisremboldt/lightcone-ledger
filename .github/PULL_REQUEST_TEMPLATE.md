@@ -7,6 +7,7 @@
 - [ ] `pnpm verify`
 - [ ] `pnpm test:integration` (needed for a change to `packages/domain`, `packages/persistence`, `apps/api` or `apps/workers`)
 - [ ] `pnpm test:browser` (needed for a change to a screen)
+- [ ] `CHANGELOG.md` under Unreleased, with what a deployment must do under Upgrading (needed for a change a deployment would notice)
 
 <!-- Say what you could not run or check. -->
 

@@ -26,7 +26,12 @@ export async function startCoreServices(processes, waitForReady = waitForHttpRea
   if (processes.stopping) return;
   if (emulators) await startEmulators(processes, waitForReady);
   if (processes.stopping) return;
-  processes.start('workers', process.execPath, ['apps/workers/dist/main.js'], packs);
+  // Two processes cannot listen on one port: the workers serve their metrics where LEDGER_WORKER_METRICS_LISTEN says,
+  // or not at all, while the API serves its own at LEDGER_METRICS_LISTEN.
+  processes.start('workers', process.execPath, ['apps/workers/dist/main.js'], {
+    ...packs,
+    LEDGER_METRICS_LISTEN: process.env.LEDGER_WORKER_METRICS_LISTEN ?? '',
+  });
 }
 
 async function startEmulators(processes, waitForReady) {

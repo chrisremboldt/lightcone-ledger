@@ -14,6 +14,7 @@
   },
   "dependencies": {
     "@ledger/domain": "workspace:*",
+    "@ledger/metrics": "workspace:*",
     "@ledger/persistence": "workspace:*",
     "@ledger/projections": "workspace:*",
     "@ledger/standard-packs": "workspace:*",

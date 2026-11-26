@@ -15,7 +15,8 @@
   "dependencies": {
     "@ledger/adapters": "workspace:*",
     "@ledger/contracts": "workspace:*",
-    "@ledger/integrity": "workspace:*"
+    "@ledger/integrity": "workspace:*",
+    "@ledger/metrics": "workspace:*"
   },
   "types": "./dist/host.d.ts"
 }

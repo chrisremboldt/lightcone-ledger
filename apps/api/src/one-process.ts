@@ -1,6 +1,7 @@
 import 'dotenv/config';
 import { resolve } from 'node:path';
 import { pathToFileURL } from 'node:url';
+import { startMetrics, type RunningMetrics } from '@ledger/metrics';
 import { assertObjectStoreReady, refuseOwnerConnection } from '@ledger/persistence';
 import { startWorkers, type WorkerRuntime } from '@ledger/workers';
 import { createApp, type AppOptions } from './index.js';
@@ -10,6 +11,8 @@ import { setupEnvironment } from './organization-setup.js';
 export interface OneProcess {
   app: Awaited<ReturnType<typeof createApp>>;
   workers: WorkerRuntime;
+  /** The one metrics listener of the process, covering the API and the workers; undefined when the metrics are off. */
+  metrics?: RunningMetrics;
   /** Stops the workers after the work they hold, then the API. */
   stop(): Promise<void>;
 }
@@ -26,13 +29,31 @@ export async function startOneProcess(
   refuseOwnerConnection('API', env);
   refuseOwnerConnection('workers', env);
   if (!options.app?.objectStore) await assertObjectStoreReady(env);
-  const app = await createApp({ logger: true, ...options.app });
+  const port = options.port ?? Number(env.PORT ?? 4000);
+  const metrics = await startMetrics(env, { servicePort: port });
+  let app: OneProcess['app'];
+  try {
+    app = await createApp({
+      logger: true,
+      metrics: metrics?.registry,
+      ...options.app,
+    });
+  } catch (error) {
+    await metrics?.server.close();
+    throw error;
+  }
+  if (metrics) app.addHook('onClose', () => metrics.server.close());
   const notice = developmentSignInNotice(setupEnvironment(env));
   if (notice) app.log.warn(notice);
-  await app.listen({ port: options.port ?? Number(env.PORT ?? 4000), host: options.host ?? env.HOST ?? '0.0.0.0' });
+  try {
+    await app.listen({ port, host: options.host ?? env.HOST ?? '0.0.0.0' });
+  } catch (error) {
+    await app.close();
+    throw error;
+  }
   let workers: WorkerRuntime;
   try {
-    workers = startWorkers({ env, objectStore: options.app?.objectStore });
+    workers = startWorkers({ env, objectStore: options.app?.objectStore, metrics: metrics?.registry });
   } catch (error) {
     await app.close();
     throw error;
@@ -43,7 +64,7 @@ export async function startOneProcess(
       await workers.stop();
       await app.close();
     })());
-  return { app, workers, stop };
+  return { app, workers, metrics, stop };
 }
 
 /** The one-process start, as `node apps/api/dist/one-process.js` and the image's `one-process` command run it. */

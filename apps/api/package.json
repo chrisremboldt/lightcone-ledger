@@ -18,6 +18,7 @@
     "@ledger/domain": "workspace:*",
     "@ledger/evidence": "workspace:*",
     "@ledger/integrity": "workspace:*",
+    "@ledger/metrics": "workspace:*",
     "@ledger/persistence": "workspace:*",
     "@ledger/standard-packs": "workspace:*",
     "@ledger/workers": "workspace:*",

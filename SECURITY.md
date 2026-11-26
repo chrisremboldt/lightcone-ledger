@@ -15,7 +15,7 @@ We will acknowledge a report, tell you whether we can reproduce it, and credit y
 
 ## Supported versions
 
-Ledger is pre-release. Only the current `main` branch receives security fixes.
+Ledger is pre-release. Only the current `main` branch receives security fixes. A release that fixes one says so in its upgrade note in [CHANGELOG.md](CHANGELOG.md); [docs/upgrading.md](docs/upgrading.md) says what a release may change.
 
 ## What matters most
 

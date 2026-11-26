@@ -50,3 +50,10 @@ pnpm test:browser       # with the seeded pnpm dev stack running
 
 - Small, runnable commits. The message says what changed in plain words.
 - Describe what you ran and anything you could not check.
+- A change a deployment would notice goes under **Unreleased** in [CHANGELOG.md](CHANGELOG.md), with what to do about it under its **Upgrading** part: a database to recreate, a setting that is new or now on by default, something retired. [docs/upgrading.md](docs/upgrading.md) says what a release may change.
+
+## Making a release
+
+1. Rename **Unreleased** in `CHANGELOG.md` to the release's tag and date (`## v0.2.0 (2027-01-04)`), check that its **Upgrading** part is complete, and start a new **Unreleased** section above it whose **Upgrading** part says "Nothing yet." (the unit tests check that every section has one).
+2. `node tools/check-release-notes.mjs v0.2.0` passes.
+3. Publish the release on GitHub with that tag. The image workflow runs the same check and publishes nothing for a release without its note.

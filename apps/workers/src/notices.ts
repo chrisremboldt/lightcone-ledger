@@ -12,6 +12,7 @@ import {
   type NoticeDeployment,
 } from '@ledger/domain';
 import { DomainError, isDatabaseUnavailable, withScope, type Pool } from '@ledger/persistence';
+import { runLeases, type WorkObserver } from './work-metrics.js';
 
 /**
  * Sending notices (docs/design/notices.md). A worker leases a notice, sends it, and records the attempt only while it
@@ -56,6 +57,8 @@ export interface NoticeWorkerOptions {
   retryDelays?: number[];
   scheduleSeconds?: number;
   digestHour?: number;
+  /** The process's metrics, told what is leased and sent; never a recipient or an address. */
+  observer?: WorkObserver;
 }
 
 export interface NoticeLease {
@@ -145,7 +148,7 @@ export async function leaseNotices(
   ).rows;
 }
 
-const leaseHeld = `SELECT 1 FROM notice_deliveries WHERE tenant_id=$1 AND notice_id=$2 AND state='leased'
+const leaseHeld = `SELECT available_at FROM notice_deliveries WHERE tenant_id=$1 AND notice_id=$2 AND state='leased'
   AND generation=$3 AND lease_owner=$4 AND lease_until>clock_timestamp()`;
 
 interface Prepared {
@@ -161,8 +164,14 @@ interface Prepared {
 export async function sendLeasedNotice(pool: Pool, lease: NoticeLease, options: NoticeWorkerOptions): Promise<boolean> {
   const scope = { id: lease.worker_id, tenantId: lease.tenant_id };
   const prepared = await withScope(pool, scope, async (client): Promise<Prepared | null> => {
-    const held = await client.query(leaseHeld, [lease.tenant_id, lease.notice_id, lease.generation, lease.lease_owner]);
+    const held = await client.query<{ available_at: Date }>(leaseHeld, [
+      lease.tenant_id,
+      lease.notice_id,
+      lease.generation,
+      lease.lease_owner,
+    ]);
     if (!held.rowCount) return null;
+    options.observer?.waited('notice_delivery', held.rows[0]!.available_at);
     const notice = (
       await client.query<{
         channel: 'email' | 'webhook';
@@ -217,7 +226,16 @@ export async function sendLeasedNotice(pool: Pool, lease: NoticeLease, options: 
       outcome = attempt >= ATTEMPT_LIMIT ? 'given_up' : 'failed';
     }
   }
-  return recordAttempt(pool, lease, attempt, outcome, reason, options.retryDelays ?? NOTICE_RETRY_DELAYS);
+  const recorded = await recordAttempt(
+    pool,
+    lease,
+    attempt,
+    outcome,
+    reason,
+    options.retryDelays ?? NOTICE_RETRY_DELAYS,
+  );
+  if (recorded) options.observer?.noticeAttempted(prepared.channel, outcome);
+  return recorded;
 }
 
 function unsendableReason(prepared: Prepared, options: NoticeWorkerOptions): string | null {
@@ -309,15 +327,16 @@ export async function leaseNoticeSchedules(
 export async function processNoticeSchedule(
   pool: Pool,
   lease: ScheduleLease,
-  options: Pick<NoticeWorkerOptions, 'scheduleSeconds' | 'digestHour'> = {},
+  options: Pick<NoticeWorkerOptions, 'scheduleSeconds' | 'digestHour' | 'observer'> = {},
 ): Promise<number | null> {
   return withScope(pool, { id: lease.worker_id, tenantId: lease.tenant_id }, async (client) => {
-    const held = await client.query(
-      `SELECT 1 FROM notice_schedules WHERE tenant_id=$1 AND generation=$2 AND lease_owner=$3
+    const held = await client.query<{ available_at: Date }>(
+      `SELECT available_at FROM notice_schedules WHERE tenant_id=$1 AND generation=$2 AND lease_owner=$3
        AND lease_until>clock_timestamp() FOR UPDATE`,
       [lease.tenant_id, lease.generation, lease.lease_owner],
     );
     if (!held.rowCount) return null;
+    options.observer?.waited('notice_schedule', held.rows[0]!.available_at);
     const written = await writeDatedNotices(client, lease.tenant_id, { digestHour: options.digestHour });
     const done = await client.query(
       `UPDATE notice_schedules SET lease_owner=NULL,lease_until=NULL,
@@ -342,22 +361,20 @@ async function releaseSchedule(pool: Pool, lease: ScheduleLease): Promise<void> 
 
 /** One pass: the organizations whose dated notices are due, then the notices waiting to be sent. */
 export async function runDueNotices(pool: Pool, options: NoticeWorkerOptions): Promise<number> {
-  let completed = 0;
-  for (const lease of await leaseNoticeSchedules(pool, options)) {
-    try {
-      if ((await processNoticeSchedule(pool, lease, options)) !== null) completed++;
-    } catch (error) {
-      if (isDatabaseUnavailable(error)) throw error;
-      await releaseSchedule(pool, lease);
-    }
-  }
-  for (const lease of await leaseNotices(pool, options)) {
-    try {
-      if (await sendLeasedNotice(pool, lease, options)) completed++;
-    } catch (error) {
-      // An unrecorded attempt is leased again once its lease runs out.
-      if (isDatabaseUnavailable(error)) throw error;
-    }
-  }
-  return completed;
+  const scheduled = await runLeases(
+    'notice_schedule',
+    await leaseNoticeSchedules(pool, options),
+    options.observer,
+    async (lease) => (await processNoticeSchedule(pool, lease, options)) !== null,
+    (lease) => releaseSchedule(pool, lease),
+  );
+  // An attempt that failed before it was recorded is leased again once its lease runs out.
+  const sent = await runLeases(
+    'notice_delivery',
+    await leaseNotices(pool, options),
+    options.observer,
+    (lease) => sendLeasedNotice(pool, lease, options),
+    async () => undefined,
+  );
+  return scheduled + sent;
 }

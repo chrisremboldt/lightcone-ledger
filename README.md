@@ -26,6 +26,7 @@ This is early software. Read [Status and limits](#status-and-limits) before rely
 - **Record types your own pack declares.** A record no built-in type holds is declared in the organization's pack file, as data: its fields, units, options and what it is about. Once the pack is adopted it has an import file, an entry form, browse, production and checks, as a built-in type does, and other organizations do not see it. [examples/declared-record-type](examples/declared-record-type) is one to copy.
 - **A command line, and a guide for a coding agent.** `pnpm ledger` adds people, imports records, reads coverage and findings, prepares an adoption for a person, drafts safety records from files, produces records and drafts the plan, over the public API, and reads one finding with the evaluations, the records and what is not on file behind it. `pnpm ledger mcp` offers the same reading commands, checks and imports as tools to an agent that speaks the Model Context Protocol; a person's decision is prepared there, never sent. [Set up Ledger with a coding agent](docs/guides/set-up-with-a-coding-agent.md) is written to the agent an operator asks to do the setup.
 - **Evidence.** Exports can be verified offline with `tools/verifier`, which needs only Node and imports no Ledger packages.
+- **For a deployment.** Metrics in the Prometheus text format from the API, the workers and the adapter process, each on a listener of its own and off unless configured; no label names an organization, a person or a record. A request limit per credential. A [changelog](CHANGELOG.md) with an upgrade note for each release, and [a rule for what a release may change](docs/upgrading.md). See [Deploy Ledger](docs/guides/deploy.md#8-health-checks-and-metrics).
 
 ## Using Ledger for a safety management system
 
@@ -91,6 +92,7 @@ One TypeScript codebase. PostgreSQL 17, with no extension, holds the journal, pr
 | `packages/integrity`, `packages/evidence`, `tools/verifier`                               | Hash chains, exports, offline verification                   |
 | `packages/adapters`                                                                       | Source mappings into Ledger inputs                           |
 | `packages/flight-logs`                                                                    | Readers for aircraft logs, into flight records               |
+| `packages/metrics`                                                                        | Metrics registry and listener, in the Prometheus text format |
 | `apps/simulator`, `apps/emulators`, `packages/simulation-models`                          | A simulated flight operation used for development and demos  |
 | `infra`                                                                                   | Local Compose stack, the container image, deployment files   |
 
@@ -304,7 +306,7 @@ A pack's digest is pinned in code, so changing a published pack without a new ve
 
 ## Status and limits
 
-- Pre-release. Interfaces, schemas and export formats can change.
+- Pre-release. Interfaces, schemas and export formats can change, and a release may need the database recreated; its note in [CHANGELOG.md](CHANGELOG.md) says so. [docs/upgrading.md](docs/upgrading.md) states what will stay stable once Ledger leaves pre-release.
 - Not certified or approved by any regulator. Ledger records what an organization did; the regulator decides what it means.
 - Not a safety management system by itself, and not a route to conformity with 14 CFR Part 5. It is built to be used as infrastructure for one; the policy, the people and the practice are the organization's.
 - The Part 108 material tracks a notice of proposed rulemaking. It will change when a final rule is published.
@@ -345,6 +347,7 @@ Known gaps:
 - **An indicator's limit.** A limit is drawn only where an indicator's definition sets one; no shipped indicator does yet, since setting one is a new version of the definition.
 - **Flights an order source reports, in the summary.** A summary counts flights from their flight records; a flight known only from an order source's reports is not counted until its flight record is on file.
 - **Aircraft-estimated wind.** The aircraft adapter does not map the aircraft's own wind estimate, because its unit is not documented.
+- **One request limit across API processes.** The limit per credential is held by each API process, so two processes allow twice as much; requests without a credential are still the proxy's to limit.
 
 ## Work with Lightcone Systems
 

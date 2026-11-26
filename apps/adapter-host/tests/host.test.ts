@@ -37,6 +37,14 @@ describe('the adapter process settings', () => {
     expect(() => parseHostOptions([...airspace, ...operation], { ...env, LEDGER_API_CREDENTIAL: '' })).toThrow(
       'LEDGER_API_CREDENTIAL is required',
     );
+    expect(parseHostOptions([...airspace, ...operation], env).metrics).toBeUndefined();
+    expect(parseHostOptions([...airspace, ...operation], { ...env, LEDGER_METRICS_LISTEN: '9465' }).metrics).toEqual({
+      host: '127.0.0.1',
+      port: 9465,
+    });
+    expect(() => parseHostOptions([...airspace, ...operation, '--metrics-listen', 'everywhere'], env)).toThrow(
+      UsageError,
+    );
   });
 
   it('reads a public weather service with no secret, naming only this client, for the stations configured', () => {
@@ -187,6 +195,31 @@ describe('the adapter process', () => {
       },
     });
     expect(lines.join('\n')).not.toMatch(/fictional-secret-value|fictional-service-token/);
+  });
+
+  it('serves its counts at /metrics on a listener of its own when asked to', async () => {
+    const { fetcher, inputs } = fakes();
+    const lines: string[] = [];
+    const stop = new AbortController();
+    const running = runAdapterHost([...airspace, ...operation, '--metrics-listen', '0'], env, {
+      out: (line) => lines.push(line),
+      stop: stop.signal,
+      fetcher,
+    });
+    const deadline = Date.now() + 10_000;
+    while (!inputs.length && Date.now() < deadline) await new Promise((resolve) => setTimeout(resolve, 10));
+    try {
+      const serving = lines.map((line) => JSON.parse(line)).find((event) => event.event === 'serving_metrics');
+      expect(serving.message).toMatch(/^Serving metrics at http:\/\/127\.0\.0\.1:\d+\/metrics\.$/);
+      const text = await (await fetch(`http://127.0.0.1:${serving.port}/metrics`)).text();
+      expect(text).toContain('ledger_adapter_messages_total{outcome="submitted"} 1');
+      expect(text).toContain('ledger_adapter_observations_submitted_total 1');
+      expect(text).toContain('ledger_adapter_messages_total{outcome="refused"} 0');
+      expect(text).not.toMatch(/op-1|flight-fictional-1|fictional-airspace/);
+    } finally {
+      stop.abort();
+    }
+    expect(await running).toBe(0);
   });
 
   it('cuts the weather service’s answer into reports and submits each one’s observations about its sites', async () => {

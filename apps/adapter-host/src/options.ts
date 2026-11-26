@@ -1,5 +1,6 @@
 import { parseArgs } from 'node:util';
 import { transportUrl } from '@ledger/adapters';
+import { metricsListen, type MetricsListen } from '@ledger/metrics';
 import { bindingProblem, runnableAdapters, type BindingOption, type RunnableAdapter } from './runnable.js';
 
 export interface HostOptions {
@@ -20,6 +21,8 @@ export interface HostOptions {
   readonly queueLimit: number;
   readonly shutdownMs: number;
   readonly privateNetwork: boolean;
+  /** Where the process serves its metrics; unset, it serves none. */
+  readonly metrics?: MetricsListen;
 }
 
 /** Each setting's environment variable with its flag. A flag wins over the environment. */
@@ -42,6 +45,7 @@ const settings = {
   ADAPTER_POLL_SECONDS: 'poll-seconds',
   ADAPTER_QUEUE_LIMIT: 'queue-limit',
   ADAPTER_SHUTDOWN_SECONDS: 'shutdown-seconds',
+  LEDGER_METRICS_LISTEN: 'metrics-listen',
 } as const;
 type Variable = keyof typeof settings;
 type Flag = (typeof settings)[Variable];
@@ -110,6 +114,8 @@ Every flag can be given as the environment variable after it instead; the flag w
   --shutdown-seconds <n>     ADAPTER_SHUTDOWN_SECONDS  How long a stop waits to submit what it holds (default 10)
   --private-network          ADAPTER_PRIVATE_NETWORK=1 Allow http:// and mqtt:// to another host on a network you
                                                        control
+  --metrics-listen <where>   LEDGER_METRICS_LISTEN     Serve metrics at /metrics on this port (loopback) or
+                                                       address:port (default: none)
 
 Secrets, from the environment only:
   LEDGER_API_CREDENTIAL      The source's API credential, as issued
@@ -240,6 +246,12 @@ export function parseHostOptions(argv: readonly string[], env: NodeJS.ProcessEnv
     };
   }
   const sourceId = setting('LEDGER_SOURCE_ID');
+  let metrics: MetricsListen | undefined;
+  try {
+    metrics = metricsListen(setting('LEDGER_METRICS_LISTEN'));
+  } catch (error) {
+    throw new UsageError((error as Error).message);
+  }
   return {
     adapterId,
     runnable,
@@ -253,5 +265,6 @@ export function parseHostOptions(argv: readonly string[], env: NodeJS.ProcessEnv
     queueLimit: positiveInteger(setting('ADAPTER_QUEUE_LIMIT') ?? '10000', '--queue-limit', 1, 1_000_000),
     shutdownMs: positiveInteger(setting('ADAPTER_SHUTDOWN_SECONDS') ?? '10', '--shutdown-seconds', 1, 600) * 1000,
     privateNetwork,
+    ...(metrics ? { metrics } : {}),
   };
 }

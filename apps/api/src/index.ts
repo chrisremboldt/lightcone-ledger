@@ -211,6 +211,14 @@ import {
   UNATTRIBUTED_PATHS,
   UNAUTHENTICATED_REPORT_PATHS,
 } from './safety-report-submission.js';
+import type { MetricsRegistry } from '@ledger/metrics';
+import { instrumentRequests } from './request-metrics.js';
+import {
+  RequestLimiter,
+  requestLimitRefusal,
+  requestLimitSettings,
+  type RequestLimitSettings,
+} from './request-limit.js';
 
 export interface AppOptions {
   db?: Pool;
@@ -232,6 +240,14 @@ export interface AppOptions {
   noticeEmail?: boolean;
   /** Called with every route as it is registered, before any; a test reads the whole route table through it. */
   onRoute?: (route: { method: string | string[]; url: string }) => void;
+  /** The process's metrics; unset, the API measures nothing. */
+  metrics?: MetricsRegistry;
+  /** The request limit per credential; defaults to the LEDGER_REQUEST_* variables. */
+  requestLimit?: RequestLimitSettings;
+}
+/** What a credential's bucket is kept under: a digest of the token, or of the account a sign-in token names. */
+function credentialKey(bearer: string, identity: RequestIdentity): string {
+  return sha256(identity.issuer && identity.subject ? `${identity.issuer}\n${identity.subject}` : bearer);
 }
 /**
  * The routes other than reads that a principal who holds only reads may still send (docs/design/shared-links.md):
@@ -449,6 +465,9 @@ export async function createApp(options: AppOptions = {}) {
     const onRoute = options.onRoute;
     app.addHook('onRoute', (route) => onRoute({ method: route.method, url: route.url }));
   }
+  const apiMetrics = options.metrics ? instrumentRequests(app, options.metrics, pool) : undefined;
+  const limits = options.requestLimit ?? requestLimitSettings(process.env, env);
+  const limiter = limits.enabled ? new RequestLimiter(limits) : undefined;
   // The API starts while its database is still starting or restarting, and answers 503 until it is back.
   app.addHook('onReady', async () =>
     untilDatabaseReachable(
@@ -513,6 +532,12 @@ export async function createApp(options: AppOptions = {}) {
     }
     if (!principal)
       throw new DomainError(401, 'unauthenticated', 'Credential is invalid or has no current Ledger membership');
+    const waitSeconds = limiter?.admit(credentialKey(bearer, identity), principal.kind);
+    if (waitSeconds !== undefined) {
+      apiMetrics?.limited(principal.kind ?? 'unknown');
+      reply.header('Retry-After', String(waitSeconds));
+      throw requestLimitRefusal(waitSeconds, limiter!.settingsFor(principal.kind));
+    }
     // Before the body is read: a principal who holds only reads sends nothing that changes a record.
     if (
       readsOnly(principal.capabilities) &&

@@ -1,8 +1,9 @@
 name: Image
 # Builds infra/Dockerfile for linux/amd64 and linux/arm64 and publishes it to the GitHub Container Registry, at
 # ghcr.io/<owner>/<repository> in lower case. A published release publishes it tagged with the release's tag, and as
-# latest unless the release is a pre-release. Run by hand, it builds both platforms and publishes nothing unless the
-# publish input is set; then it is tagged sha-<commit> only.
+# latest unless the release is a pre-release; a release whose upgrade note is missing from CHANGELOG.md fails before
+# anything is built. Run by hand, it builds both platforms and publishes nothing unless the publish input is set; then
+# it is tagged sha-<commit> only.
 on:
   release:
     types: [published]
@@ -31,6 +32,12 @@ jobs:
       - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
         with:
           persist-credentials: false
+      # A release carries its upgrade note: CHANGELOG.md has a section for its tag with an Upgrading part.
+      - name: Check the release's upgrade note
+        if: github.event_name == 'release'
+        env:
+          TAG: ${{ github.event.release.tag_name }}
+        run: node tools/check-release-notes.mjs "$TAG"
       - name: Name the image after the repository, in lower case
         run: echo "IMAGE=ghcr.io/${GITHUB_REPOSITORY,,}" >> "$GITHUB_ENV"
       - uses: docker/setup-qemu-action@99012661954931238ded8c8b007157a8430204e1 # v4.4.0

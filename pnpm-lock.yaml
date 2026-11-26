@@ -53,6 +53,9 @@ importers:
       '@ledger/integrity':
         specifier: workspace:*
         version: link:../../packages/integrity
+      '@ledger/metrics':
+        specifier: workspace:*
+        version: link:../../packages/metrics
 
   apps/api:
     dependencies:
@@ -71,6 +74,9 @@ importers:
       '@ledger/integrity':
         specifier: workspace:*
         version: link:../../packages/integrity
+      '@ledger/metrics':
+        specifier: workspace:*
+        version: link:../../packages/metrics
       '@ledger/persistence':
         specifier: workspace:*
         version: link:../../packages/persistence
@@ -183,6 +189,9 @@ importers:
       '@ledger/domain':
         specifier: workspace:*
         version: link:../../packages/domain
+      '@ledger/metrics':
+        specifier: workspace:*
+        version: link:../../packages/metrics
       '@ledger/persistence':
         specifier: workspace:*
         version: link:../../packages/persistence
@@ -291,6 +300,8 @@ importers:
         version: link:../contracts
 
   packages/integrity: {}
+
+  packages/metrics: {}
 
   packages/pack-example-airspace:
     dependencies:

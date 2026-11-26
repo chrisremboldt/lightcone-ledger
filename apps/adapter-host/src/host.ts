@@ -12,10 +12,13 @@ import {
   SourceLoop,
   type AdapterDescriptor,
   type SourceLoopEvent,
+  type SourceLoopStats,
 } from '@ledger/adapters';
 import type { Fidelity } from '@ledger/contracts';
+import { MetricsRegistry, registerProcessMetrics, serveMetrics, type MetricsServer } from '@ledger/metrics';
 import { sha256 } from '@ledger/integrity';
 import { hostUsage, parseHostOptions, UsageError, type HostOptions } from './options.js';
+import { registerAdapterMetrics } from './metrics.js';
 
 export { hostUsage, parseHostOptions, UsageError, type HostOptions } from './options.js';
 export { runnableAdapters, type RunnableAdapter } from './runnable.js';
@@ -153,6 +156,44 @@ export async function runAdapterHost(
   const log = (event: SourceLoopEvent) =>
     out(JSON.stringify({ at: new Date().toISOString(), adapter: descriptor.id, ...event }));
   const stop = dependencies.stop ?? signalFromProcess();
+  let stats: (() => SourceLoopStats) | undefined;
+  let metrics: MetricsServer | undefined;
+  if (options.metrics) {
+    const registry = new MetricsRegistry();
+    registerProcessMetrics(registry);
+    registerAdapterMetrics(registry, () => stats?.());
+    try {
+      metrics = await serveMetrics(registry, options.metrics);
+    } catch (error) {
+      log({
+        event: 'cannot_start',
+        message: `Cannot serve metrics on ${options.metrics.host}:${options.metrics.port}: ${(error as Error).message}`,
+      });
+      return 1;
+    }
+    log({
+      event: 'serving_metrics',
+      message: `Serving metrics at http://${metrics.host.includes(':') ? `[${metrics.host}]` : metrics.host}:${metrics.port}/metrics.`,
+      port: metrics.port,
+    });
+  }
+  try {
+    return await runSource(options, log, stop, dependencies, (read) => (stats = read));
+  } finally {
+    await metrics?.close();
+  }
+}
+
+/** Signs in, then reads the source and submits what it sends until stopped. Returns the exit code. */
+async function runSource(
+  options: HostOptions,
+  log: (event: SourceLoopEvent) => void,
+  stop: AbortSignal,
+  dependencies: HostDependencies,
+  measure: (stats: () => SourceLoopStats) => void,
+): Promise<number> {
+  const { runnable } = options;
+  const { descriptor } = runnable.adapter;
 
   log({
     event: 'starting',
@@ -190,6 +231,7 @@ export async function runAdapterHost(
     queueLimit: options.queueLimit,
     log,
   });
+  measure(() => loop.stats);
   const receive = (message: Parameters<typeof loop.offer>[0]) => loop.offer(message);
   let transport: BrokerSubscription | ServicePoll;
   let transportFailed: Promise<unknown>;

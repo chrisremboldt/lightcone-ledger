@@ -1,6 +1,7 @@
 import { randomUUID } from 'node:crypto';
 import { queueAdoptedRuleEvaluations } from '@ledger/domain';
-import { DomainError, isDatabaseUnavailable, withScope, type Pool, type PoolClient } from '@ledger/persistence';
+import { DomainError, withScope, type Pool, type PoolClient } from '@ledger/persistence';
+import { readySince, runLeases, type WorkObserver } from './work-metrics.js';
 
 interface EvaluationDeadlineRow {
   id: string;
@@ -32,6 +33,7 @@ export interface EvaluationLeaseOptions {
   owner?: string;
   limit?: number;
   leaseSeconds?: number;
+  observer?: WorkObserver;
 }
 
 interface EvaluationProcessingOptions {
@@ -124,16 +126,12 @@ async function retryEvaluation(pool: Pool, lease: EvaluationLease, error: unknow
 
 export async function runDueEvaluations(pool: Pool, options: EvaluationLeaseOptions = {}): Promise<number> {
   const leases = await leaseEvaluations(pool, options);
-  let completed = 0;
-  for (const lease of leases) {
-    try {
-      if (await processEvaluationLease(pool, lease)) completed++;
-    } catch (error) {
-      // A lost connection is not recorded as the work's error: the worker waits for the database, and the work is
-      // leased again once its lease runs out.
-      if (isDatabaseUnavailable(error)) throw error;
-      await retryEvaluation(pool, lease, error);
-    }
-  }
-  return completed;
+  return runLeases(
+    'evaluation_deadline',
+    leases,
+    options.observer,
+    (lease) => processEvaluationLease(pool, lease),
+    (lease, error) => retryEvaluation(pool, lease, error),
+    readySince,
+  );
 }

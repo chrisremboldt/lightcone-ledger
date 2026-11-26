@@ -1,6 +1,7 @@
 import { randomUUID } from 'node:crypto';
 import { refreshFlightRuleSelection } from '@ledger/domain';
-import { DomainError, isDatabaseUnavailable, withScope, type Pool, type PoolClient } from '@ledger/persistence';
+import { DomainError, withScope, type Pool, type PoolClient } from '@ledger/persistence';
+import { readySince, runLeases, type WorkObserver } from './work-metrics.js';
 
 interface RuleSelectionWorkRow {
   id: string;
@@ -33,6 +34,7 @@ export interface RuleSelectionLeaseOptions {
   owner?: string;
   limit?: number;
   leaseSeconds?: number;
+  observer?: WorkObserver;
 }
 
 interface RuleSelectionProcessingOptions {
@@ -235,16 +237,12 @@ async function retryRuleSelection(pool: Pool, lease: RuleSelectionLease, error: 
 
 export async function runDueRuleSelections(pool: Pool, options: RuleSelectionLeaseOptions = {}): Promise<number> {
   const leases = await leaseRuleSelections(pool, options);
-  let completed = 0;
-  for (const lease of leases) {
-    try {
-      if (await processRuleSelectionLease(pool, lease)) completed++;
-    } catch (error) {
-      // A lost connection is not recorded as the work's error: the worker waits for the database, and the work is
-      // leased again once its lease runs out.
-      if (isDatabaseUnavailable(error)) throw error;
-      await retryRuleSelection(pool, lease, error);
-    }
-  }
-  return completed;
+  return runLeases(
+    'rule_selection',
+    leases,
+    options.observer,
+    (lease) => processRuleSelectionLease(pool, lease),
+    (lease, error) => retryRuleSelection(pool, lease, error),
+    readySince,
+  );
 }

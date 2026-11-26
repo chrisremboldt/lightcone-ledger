@@ -84,7 +84,7 @@ From a checkout without Docker, the same process is `node apps/api/dist/one-proc
 | Part | What it is | How it starts |
 | --- | --- | --- |
 | API and web app | Fastify server: every read and write, including the web app's. In the image it also serves the built web app from its own origin, so browsers reach both at one address. Listens on `PORT` (4000). Connects as the database role `ledger_app`. | The image, or `node apps/api/dist/main.js` |
-| Workers | Leased, fenced background work: projections, rule evaluations, deadlines. No HTTP port. Connects as the database role `ledger_worker`. | The image, or `node apps/workers/dist/main.js` |
+| Workers | Leased, fenced background work: projections, rule evaluations, deadlines. No HTTP port but an optional metrics listener ([Metrics](#metrics)). Connects as the database role `ledger_worker`. | The image, or `node apps/workers/dist/main.js` |
 | PostgreSQL 17 | The journal, projections, work queue and outbox. No extension is needed. | Your database service |
 | Object storage (S3-compatible), or a folder on disk | The original bytes of every upload and import. | Your storage service, or a disk or volume ([Files on disk](#files-on-disk)) |
 | MQTT broker (optional) | Only for sources that report over MQTT, such as DJI Cloud API telemetry. Its accounts come from your sources on record; see [The message broker](#the-message-broker). | Mosquitto, as its own service |
@@ -284,6 +284,9 @@ Set these for the API, the workers, migrations and the setup commands. One env f
 | `DATABASE_APP_PASSWORD` | migrations | The password `ledger_app` is created with. Required with `LEDGER_ENV=staging` (`LEDGER_APP_PASSWORD` is read too). |
 | `DATABASE_WORKER_PASSWORD` | migrations | The password `ledger_worker` is created with. Required with `LEDGER_ENV=staging`. |
 | `DATABASE_POOL_SIZE` | API, workers | Connections per process. Default 10. |
+| `LEDGER_METRICS_LISTEN` | API, workers, adapter process | Where the process serves its metrics: a port alone (loopback), or `address:port`. Unset: no metrics. See [Metrics](#metrics). |
+| `LEDGER_WORKER_METRICS_LISTEN` | the image's supervisor | Where the workers serve theirs when the image's default start runs them beside the API in one container. Unset: they serve none. |
+| `LEDGER_REQUEST_LIMIT`, `LEDGER_REQUEST_RATE`, `LEDGER_REQUEST_BURST`, `LEDGER_SOURCE_REQUEST_RATE`, `LEDGER_SOURCE_REQUEST_BURST` | API | The request limit per credential: see [The request limit](#the-request-limit). On by default with `LEDGER_ENV=staging`. |
 | `OBJECT_STORE` | API, workers | `s3` or `disk`. Unset, `s3` with `LEDGER_ENV=staging`. (`OBJECT_STORAGE_BACKEND` is read too.) |
 | `OBJECT_STORAGE_DIR` | API, workers | With `disk`, the folder for the files, an absolute path that exists and is writable; in the image `/data/ledger/files` ([Files on disk](#files-on-disk)). Required with `disk`. |
 | `S3_BUCKET`, `S3_ACCESS_KEY_ID`, `S3_SECRET_ACCESS_KEY` | API, workers | The bucket and its key. Required with `s3`. |
@@ -692,15 +695,109 @@ SELECT a.outcome, count(*) FROM notices n LEFT JOIN LATERAL (SELECT outcome FROM
 
 On a local stack, `pnpm dev` starts stand-ins for both: `.env.example` points `LEDGER_SMTP_HOST` at the emulators' mail server stand-in on port 4025, and `http://127.0.0.1:4002/_notices/webhook` receives webhook calls. Open `http://127.0.0.1:4002/_notices` to see what arrived. A recipient at `refused.example`, or a webhook address ending in `?status=500`, shows a failing server.
 
-## 8. Health checks
+## 8. Health checks and metrics
 
 - `GET /healthz` answers `{"status":"ok",...}` without touching the database: use it for liveness.
 - `GET /readyz` answers `{"status":"ready","role":"ledger_app"}` only when the database answers and the API is connected as the non-owner `ledger_app` role; otherwise 503. Use it for readiness and to gate traffic.
-- The workers have no HTTP endpoint. They log one JSON line per piece of work and log `Worker database operation failed` with a database error code when a pass fails. Watch for a worker process exiting, and for work that stays pending; with the owner connection:
+- The workers answer no HTTP request but their metrics ([Metrics](#metrics)). They log one JSON line per piece of work and log `Worker database operation failed` with a database error code when a pass fails. Watch for a worker process exiting, and for work that stays pending: `ledger_queue_ready_items` and `ledger_queue_oldest_ready_seconds` count it in every queue, or, with the owner connection, `SELECT * FROM ledger_queue_figures();`.
 
-  ```sql
-  SELECT state, count(*) FROM work_items GROUP BY state;
-  ```
+### Metrics
+
+Each process serves its figures in the Prometheus text format at `GET /metrics`, on a listener of its own, when `LEDGER_METRICS_LISTEN` names one: `9464` listens on `127.0.0.1:9464`, `0.0.0.0:9464` on every address. Unset, the process serves none and measures nothing. It is never the port that serves the API and the web app (the API refuses to start if they are the same), so a proxy in front of Ledger cannot publish it by accident; publish it to your monitoring network only.
+
+- **The image's default start** runs the API and the workers as two processes in one container: the API serves at `LEDGER_METRICS_LISTEN`, the workers at `LEDGER_WORKER_METRICS_LISTEN` (unset: none). Publish each port to your monitoring network, not to the world.
+- **The one-process start** (Ledger Lite) serves one endpoint at `LEDGER_METRICS_LISTEN` for the API and the workers together.
+- **Separate containers** each read `LEDGER_METRICS_LISTEN` from their own environment.
+- **An adapter process** takes `--metrics-listen` or `LEDGER_METRICS_LISTEN`, and logs `serving_metrics` with the address. Under the image's supervisor the adapter serves none.
+
+What is measured. No label names an organization, a person, a credential, a record or an address: label names come from a fixed list (`method`, `route`, `status_class`, `queue`, `outcome`, `kind`, `pool`, `state`), a request is counted by its route's template (`/v1/flights/:id`), and a unit test fails on any other.
+
+| Metric | What it is |
+| --- | --- |
+| `ledger_http_requests_total`, `ledger_http_request_duration_seconds` | API requests by method, route template and status class (`2xx` ... `5xx`), and how long they took. A live feed counts once, when it closes. |
+| `ledger_http_requests_limited_total` | Requests answered 429 by [the request limit](#the-request-limit), by kind of credential (`human`, `service`, `source`). |
+| `ledger_observations_total` | Observations sent to `POST /v1/inputs`: `accepted`, `refused` as they were, or `failed`. |
+| `ledger_queue_ready_items`, `ledger_queue_leased_items`, `ledger_queue_oldest_ready_seconds` | Each queue's depth across every organization: the items ready to run now (due, or with a lease run out), the items held under a live lease, and how long the longest-ready item has waited. Queues: `projection`, `rule_selection`, `evaluation_deadline`, `rule_evaluation`, `notice_delivery`, `notice_schedule`. Read from the database at each scrape; `ledger_queue_figures_timestamp_seconds` says when they were last read. |
+| `ledger_evaluation_lag_seconds` | How far evaluation is behind: the longest wait among the ready items of the three evaluation queues. |
+| `ledger_queue_leased_total`, `ledger_queue_leased_last_pass` | Items this worker process leased from each queue; a pass leases at most 20 from a queue. |
+| `ledger_queue_oldest_wait_seconds`, `ledger_queue_wait_seconds` | How long the longest-waiting item this process leased in its last pass had been ready to run, per queue, and a histogram of every leased item's wait. |
+| `ledger_notices_total` | Attempts to send a notice, by channel (`kind`: `email`, `webhook`) and `outcome`: `sent`, `failed` (tried again later) or `given_up`. Never a recipient or an address. |
+| `ledger_worker_leases_held`, `ledger_worker_leases_total` | Leases the process holds now, and leased items by outcome: `completed`, `lost` (another worker, or the lease running out, took it) or `failed` (retried later). |
+| `ledger_worker_passes_total`, `ledger_worker_last_pass_timestamp_seconds` | Passes over the queues, `completed` or `failed` (the database could not be reached), and when the last one ended. |
+| `ledger_database_pool_connections`, `ledger_database_pool_waiting_requests`, `ledger_database_pool_max_connections` | Each pool's connections in use and idle, the queries waiting for one, and its size, by pool (`api`, `workers`). |
+| `ledger_adapter_messages_total`, `ledger_adapter_observations_submitted_total`, `ledger_adapter_retries_total`, `ledger_adapter_queued_messages` | An adapter process's messages by outcome (`received`, `submitted`, `rejected` by its translation, `refused` by Ledger, `dropped` from a full queue), the observations submitted, the retries and the messages waiting. |
+| `ledger_process_*` | The process's CPU time, resident memory, heap, event loop delay and start time. |
+
+Where the depth comes from. The workers run as `ledger_worker` under row-level security, which shows them one organization's rows at a time. The depth is read through one database function, `ledger_queue_figures()`, which counts every organization's queues and returns only a queue name, two counts and an age; only `ledger_worker` may run it. Every worker process reports the same depth, so take the maximum over them, not the sum.
+
+An example scrape configuration for Prometheus, with the image's default start publishing `9464` (the API) and `9465` (the workers) to the monitoring host only:
+
+```yaml
+scrape_configs:
+  - job_name: ledger
+    scrape_interval: 30s
+    static_configs:
+      - targets: ['ledger.internal:9464', 'ledger.internal:9465']
+```
+
+with, in `ledger.env`, `LEDGER_METRICS_LISTEN=0.0.0.0:9464` and `LEDGER_WORKER_METRICS_LISTEN=0.0.0.0:9465`, and the container's ports published as `-p <monitoring address>:9464:9464 -p <monitoring address>:9465:9465`.
+
+Example alerts. The thresholds are a start; set them from what your deployment shows on an ordinary day:
+
+```yaml
+groups:
+  - name: ledger
+    rules:
+      - alert: LedgerEvaluationBehind
+        expr: max(ledger_evaluation_lag_seconds) > 300
+        for: 10m
+        annotations:
+          summary: Rule evaluation is more than five minutes behind.
+      - alert: LedgerQueueWaiting
+        expr: max by (queue) (ledger_queue_oldest_ready_seconds) > 600
+        for: 10m
+        annotations:
+          summary: 'Work in the {{ $labels.queue }} queue has waited more than ten minutes.'
+      - alert: LedgerWorkersStopped
+        expr: time() - max(ledger_worker_last_pass_timestamp_seconds) > 120
+        for: 5m
+        annotations:
+          summary: No worker has finished a pass over the queues for two minutes.
+      - alert: LedgerNoticesGivenUp
+        expr: sum(increase(ledger_notices_total{outcome="given_up"}[1h])) > 0
+        annotations:
+          summary: A notice was given up after its last attempt; People, Notices sent, names the reason.
+      - alert: LedgerLeasesFailing
+        expr: sum(rate(ledger_worker_leases_total{outcome="failed"}[15m])) > 0
+        for: 15m
+        annotations:
+          summary: Leased work keeps failing; the workers' log names the error.
+      - alert: LedgerServerErrors
+        expr: sum(rate(ledger_http_requests_total{status_class="5xx"}[5m])) > 0.1
+        for: 10m
+      - alert: LedgerDatabasePoolExhausted
+        expr: max(ledger_database_pool_waiting_requests) > 0
+        for: 5m
+      - alert: LedgerMetricsDown
+        expr: up{job="ledger"} == 0
+        for: 5m
+```
+
+**Unverified**: the metrics were read in tests (the unit tests, and the one-process start in the integration suite), not scraped by a running Prometheus, and the alerts were not loaded into one.
+
+### The request limit
+
+Each API process holds a token bucket per credential, in memory: a credential may send a burst of requests at once, then a steady rate. The bucket is kept under a digest of the credential (of the account, for a person's sign-in), never the credential itself.
+
+| | Steady | At once | Settings |
+| --- | --- | --- | --- |
+| A person, a service or an operator's agent | 20 a second | 300 | `LEDGER_REQUEST_RATE`, `LEDGER_REQUEST_BURST` |
+| A source (an adapter delivering observations) | 200 a second | 2,000 | `LEDGER_SOURCE_REQUEST_RATE`, `LEDGER_SOURCE_REQUEST_BURST` |
+
+The defaults are meant never to be met by a person or an operator's agent in ordinary use. A request over the limit is answered `429` with `Retry-After` (seconds) and the API's usual error shape, code `request_limit`, and is counted in `ledger_http_requests_limited_total`; the adapter process holds the payload and sends it again. It is on by default with `LEDGER_ENV=staging` and off with `LEDGER_ENV=local` or `test`, so the simulated day, the demonstration recorder and the browser and integration tests are never throttled; `LEDGER_REQUEST_LIMIT=on` or `off` overrides either.
+
+- **The limit is per process.** Two API processes behind one proxy allow twice as much.
+- **Requests with no credential are the proxy's to limit**: a person's sign-in (`GET /v1/sign-in`, and the identity provider's own pages, which are the provider's to limit), the safety report page a reporting link opens (`/report`) and its two routes (`POST /v1/safety-report-links/submissions` and `/v1/safety-reports/receipt`), a link to a produced set of records (the page `/shared` and its routes `POST /v1/shared-records`, `/v1/shared-records/file` and `/v1/shared-records/archive`), and the web app's files. Limit them per client address at the proxy, for example 60 requests a minute to `/v1/sign-in`, 10 a minute to each of the two report routes, and 60 a minute to the shared-record routes (a person reading a set opens a file per request), each with a burst of a few. Caddy 2.10 has no request limit without a plugin; nginx has `limit_req`, and most load balancers have one. The proxy's limit must not log the addresses it counts for the reporting routes ([Your first day](#your-first-day)). **Unverified**: no proxy limit was configured for this guide.
 
 ## 9. Backups and restoring
 
@@ -970,5 +1067,5 @@ Then open the flight in the web app: the adopted rules' results name the flown v
 
 - **The emulators and the simulator** are development tools for a simulated flight operation. They are not hardened for exposure to a network and a production start never runs them. If you set `LEDGER_EMULATORS=1`, they listen on the container's loopback address only; do not publish port 4002.
 - **The MQTT broker** that `pnpm broker:files` configures listens without TLS. Put it on a private network, or add a TLS listener to the generated configuration yourself (**unverified**: this guide gives no steps for it, and `pnpm broker:files` overwrites the file on each run, so a listener you add must be added again). Restart it after each run of the command.
-- **Credentials** are not rate limited, and Ledger does not record when one was last used.
-- **The API has no TLS and no rate limiting of its own** beyond bounded request sizes and connection limits, and the per-link limit on reports sent through a reporting link; put it behind a proxy that terminates TLS.
+- **Credentials** are limited per API process ([The request limit](#the-request-limit)), not across processes, and Ledger does not record when one was last used.
+- **The API has no TLS**, and no limit of its own on requests without a credential beyond bounded request sizes, connection limits and the per-link limit on reports sent through a reporting link; put it behind a proxy that terminates TLS and limits those.
