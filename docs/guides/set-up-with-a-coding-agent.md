@@ -1,6 +1,6 @@
 # Set up Ledger with a coding agent
 
-This guide is written to you, the coding agent an operator asked to set Ledger up for their organization. Follow it in order. You need nothing else from this repository: every command is here, and `pnpm ledger --help` lists the client's commands.
+This guide is written to you, the coding agent an operator asked to set Ledger up for their organization. Follow it in order. You need nothing else from this repository: every command is here, and `pnpm ledger --help` lists the client's commands. If you speak the Model Context Protocol, `pnpm ledger mcp` offers the same commands as tools under the same credential ([AGENTS.md](../../AGENTS.md#an-agent-that-speaks-mcp)); the steps and the rules below are the same either way, and a tool named `prepare_` gives you the command the person runs.
 
 Ledger keeps an operator's records and reports, rule by rule, what is on file and what is not. It never says an operation is compliant, authorized, safe or may fly. Neither do you: a named person with the authority decides, and Ledger keeps what they saw. Ledger is not a safety management system and does not make anyone conform to a regulation.
 

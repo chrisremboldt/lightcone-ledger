@@ -13,6 +13,8 @@
   "dependencies": {
     "@ledger/contracts": "workspace:*",
     "@ledger/flight-logs": "workspace:*",
+    "@modelcontextprotocol/sdk": "1.32.2",
+    "@sinclair/typebox": "0.34.52",
     "yaml": "2.8.1"
   }
 }

@@ -268,11 +268,6 @@ export const routeDescriptions: Record<string, { summary: string; description: s
     summary: 'List the findings of one flight',
     description: 'Returns the findings recorded for one flight and the evaluations behind them. Needs `flight:read`.',
   },
-  investigateFinding: {
-    summary: 'Ask the host investigation runner about one finding',
-    description:
-      'Returns a short-lived advisory proposal for the exact finding and displayed evaluation, from an investigation runner the host has turned on. It records nothing, does not accept a treatment and uses no idempotency key; a person decides what to do. Needs `flight:read` and `evidence:read`, and the caller must be a person.',
-  },
   flightRuleSelection: {
     summary: 'Read the current rule selection of one flight',
     description:

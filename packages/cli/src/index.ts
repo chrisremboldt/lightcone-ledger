@@ -25,6 +25,7 @@ export { dayIn } from './format.js';
 export {
   findingGroups,
   openFindings,
+  showFinding,
   treatFindingSet,
   type FindingFilters,
   type FindingSetRequest,
@@ -40,3 +41,5 @@ export {
   type SafetyRequest,
 } from './safety.js';
 export * from './safety-files.js';
+export { createMcpServer, serveMcp, MCP_INSTRUCTIONS, type McpServerOptions } from './mcp.js';
+export { tools as mcpTools, type LedgerTool } from './mcp-tools.js';

@@ -727,8 +727,6 @@ export * from './credentials.js';
 export * from './assurance-history.js';
 export * from './simulation-avoidance-demo.js';
 export * from './area-controls.js';
-export * from './investigation.js';
-export * from './investigation-collector.js';
 
 export * from './flight-predeparture.js';
 export * from './sms.js';

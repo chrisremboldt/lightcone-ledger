@@ -1,6 +1,9 @@
 import { randomUUID } from 'node:crypto';
 import {
   FINDING_SET_LIMIT,
+  OPERATOR_RECORD_SOURCE_ID,
+  isCheckedRuleLeaf,
+  type AcceptedObservation,
   type AdoptionRuleCoverageResponse,
   type Command,
   type CurrentPrincipalResponse,
@@ -11,10 +14,22 @@ import {
   type OpenFindingGroupsResponse,
   type OpenFindingsQuery,
   type OpenFindingsResponse,
+  type NamedSubject,
+  type RuleEvaluationRecord,
+  type SubjectFindingListResponse,
+  type SubjectFindingRecord,
+  type SubjectReference,
 } from '@ledger/contracts';
 import { ApiError } from '@ledger/contracts/client';
-import { RefusalError, standingAdoptions, UsageError, type Context, type Output } from './commands.js';
-import { dayIn, plural, shortRuleId, subjectWords, table, withIndefiniteArticle } from './format.js';
+import {
+  RefusalError,
+  standingAdoptions,
+  subjectReference,
+  UsageError,
+  type Context,
+  type Output,
+} from './commands.js';
+import { cell, dayIn, plural, shortRuleId, subjectWords, table, withIndefiniteArticle } from './format.js';
 import { isPerson, personSendsIt, refuseUnlessPerson } from './persons-decision.js';
 
 /** Which open findings a command reads: the tab, and the filters a person narrows them by. */
@@ -365,5 +380,220 @@ export async function treatFindingSet(context: Context, request: FindingSetReque
       ...lines,
       `${request.action === 'take' ? 'Taken' : 'Closed'}: ${plural(findings.length, 'finding')} of ${named}, as one decision, ${sent.command.id}. Each finding shows it.`,
     ],
+  };
+}
+
+/** Where a finding is read from: the subject it is about, by the reference its records name. */
+type FindingSubject = Pick<SubjectReference, 'scope' | 'kind' | 'id' | 'sourceId'>;
+
+/** The subject an open finding is about, found by paging the open findings, counted and proposed. */
+async function openFindingSubject(context: Context, findingId: string): Promise<FindingSubject | undefined> {
+  for (const shown of ['counted', 'proposed'] as const) {
+    const { findings } = await everyFinding(context, { shown });
+    const found = findings.find((item) => item.id === findingId);
+    if (found) return found.subject;
+  }
+  return undefined;
+}
+
+/** The pages of findings about one subject Ledger is read for, at most, before the finding is said not found. */
+const SUBJECT_FINDING_PAGES = 20;
+
+async function findingAbout(
+  context: Context,
+  findingId: string,
+  subject: FindingSubject,
+): Promise<{ finding: SubjectFindingRecord; read: SubjectFindingListResponse } | undefined> {
+  let cursor: string | undefined;
+  for (let page = 0; page < SUBJECT_FINDING_PAGES; page++) {
+    const read = await context.client.subjectFindings({
+      subjectKind: subject.kind,
+      subjectId: subject.id,
+      ...(subject.scope === 'source' ? { subjectScope: 'source' as const, sourceId: subject.sourceId } : {}),
+      limit: 100,
+      ...(cursor ? { cursor } : {}),
+    });
+    const finding = read.findings.find((item) => item.id === findingId);
+    if (finding) return { finding, read };
+    if (!read.page.hasMore || !read.page.nextCursor) return undefined;
+    cursor = read.page.nextCursor;
+  }
+  return undefined;
+}
+
+/** The pages of one observation read, at most, before the records an evaluation cites stop being looked for. */
+const OBSERVATION_PAGES = 20;
+/** Every time a record can be about: a cited record's own time need not fall inside the span it is about. */
+const ALL_TIME = { from: '1970-01-01T00:00:00.000Z', to: '9999-12-31T23:59:59.999Z' } as const;
+
+/**
+ * The records an evaluation read, through the ordinary observation reads: one read per subject and type, replaced and
+ * withdrawn ones included, each under the subject its input was about, paged until every record it cites is found.
+ */
+async function recordsRead(
+  context: Context,
+  subject: FindingSubject,
+  evaluation: RuleEvaluationRecord,
+  inputSubjects: readonly NamedSubject[] | undefined,
+): Promise<AcceptedObservation[]> {
+  const aboutOf = new Map<string, FindingSubject>();
+  evaluation.inputs.forEach((input, index) => {
+    for (const id of input.observationIds) aboutOf.set(id, inputSubjects?.[index] ?? input.subject ?? subject);
+  });
+  const groups = new Map<string, { about: FindingSubject; items: RuleEvaluationRecord['evidence'] }>();
+  for (const item of evaluation.evidence) {
+    const about = aboutOf.get(item.observationId) ?? subject;
+    const key = `${about.scope}/${about.sourceId ?? ''}/${about.kind}/${about.id} ${item.type}@${item.version}`;
+    const group = groups.get(key) ?? { about, items: [] };
+    group.items.push(item);
+    groups.set(key, group);
+  }
+  const found = new Map<string, AcceptedObservation>();
+  for (const { about, items } of groups.values()) {
+    const wanted = new Set(items.map((item) => item.observationId));
+    let cursor: string | undefined;
+    for (let page = 0; page < OBSERVATION_PAGES && wanted.size; page++) {
+      const read = await context.client.observations({
+        subjectKind: about.kind,
+        subjectId: about.id,
+        ...(about.scope === 'source' ? { subjectScope: 'source' as const, sourceId: about.sourceId } : {}),
+        type: items[0]!.type,
+        version: items[0]!.version,
+        ...ALL_TIME,
+        include: 'all',
+        limit: 500,
+        ...(cursor ? { cursor } : {}),
+      });
+      for (const observation of read.observations)
+        if (wanted.delete(observation.id)) found.set(observation.id, observation);
+      if (!read.page.hasMore || !read.page.nextCursor) break;
+      cursor = read.page.nextCursor;
+    }
+  }
+  return evaluation.evidence.flatMap((item) => found.get(item.observationId) ?? []);
+}
+
+/** What an evaluation's rule requires that it found nothing of, in the words the rule gives the record. */
+export interface NotOnFile {
+  input: string;
+  type: string;
+  record: string;
+  /** A record of the input about a later time, which the rule reads from then. */
+  later?: { from: string; observationId: string };
+}
+
+async function notOnFile(context: Context, evaluation: RuleEvaluationRecord): Promise<NotOnFile[]> {
+  const empty = evaluation.inputs.filter((input) => input.required && !input.observationIds.length);
+  if (!empty.length) return [];
+  let reads: { name: string; onFile?: string }[] = [];
+  try {
+    const { pack } = await context.client.rulePackVersion(evaluation.pack.id, evaluation.pack.version);
+    const leaf = pack.leaves.find((item) => item.id === evaluation.rule.id);
+    reads = leaf && isCheckedRuleLeaf(leaf) ? leaf.reads : [];
+  } catch (error) {
+    if (!(error instanceof ApiError)) throw error;
+  }
+  return empty.map((input) => ({
+    input: input.name,
+    type: input.type,
+    record: reads.find((read) => read.name === input.name)?.onFile ?? `a ${input.type} record`,
+    ...(input.later ? { later: { from: input.later.from, observationId: input.later.observationIds[0]! } } : {}),
+  }));
+}
+
+function observationLine(observation: AcceptedObservation): string {
+  const when = observation.interval
+    ? `${observation.interval.start} to ${observation.interval.end ?? 'open'}`
+    : observation.occurredAt;
+  const state = observation.replacedBy ? ' (replaced)' : observation.withdrawal ? ' (withdrawn)' : '';
+  return `    ${observation.id}, ${observation.type}, ${when}${state}: ${cell(JSON.stringify(observation.observation), 160)}`;
+}
+
+async function evaluationBehind(
+  context: Context,
+  subject: FindingSubject,
+  evaluation: RuleEvaluationRecord,
+  inputSubjects: readonly NamedSubject[] | undefined,
+  heading: string,
+): Promise<{ data: unknown; lines: string[] }> {
+  const records = await recordsRead(context, subject, evaluation, inputSubjects);
+  const missing = await notOnFile(context, evaluation);
+  const lines = [
+    `${heading} ${evaluation.id}, recorded ${evaluation.recordedAt}: ${evaluation.summary}`,
+    `  The evidence: ${evaluation.evidenceState}. Rule version ${evaluation.rule.version}, check ${evaluation.check.kind} version ${evaluation.check.version}.`,
+    records.length ? `  The records it read (${records.length}):` : '  It read no record.',
+    ...records.map(observationLine),
+    ...(missing.length
+      ? [
+          '  Not on file when it was evaluated:',
+          ...missing.map(
+            (item) =>
+              `    ${item.record} (${item.input}, ${item.type})${item.later ? `; a record about a later time is on file, ${item.later.observationId}, read from ${item.later.from}` : ''}.`,
+          ),
+        ]
+      : []),
+  ];
+  return { data: { evaluation, records, notOnFile: missing }, lines };
+}
+
+/**
+ * One finding: what it is about, its status and owner, the evaluation that opened it and the latest, the records each
+ * read and what each found not on file, and the decisions recorded about it. It records nothing.
+ */
+export async function showFinding(context: Context, request: { finding: string; subject?: string }): Promise<Output> {
+  const findingId = request.finding.trim();
+  if (!findingId) throw new UsageError('Give the finding id: pnpm ledger findings list --all lists them.');
+  const subject: FindingSubject | undefined = request.subject
+    ? { scope: 'source', sourceId: OPERATOR_RECORD_SOURCE_ID, ...subjectReference(request.subject, '--subject') }
+    : await openFindingSubject(context, findingId);
+  if (!subject)
+    throw new UsageError(
+      `No open finding ${findingId}. A finding no longer open is read with --subject <kind>:<id>, the subject it is about.`,
+    );
+  const found = await findingAbout(context, findingId, subject);
+  if (!found) throw new UsageError(`No finding ${findingId} about ${subject.kind} ${subject.id}.`);
+  const { finding, read } = found;
+  const latest = finding.latestEvaluation;
+  const named = read.inputSubjects[latest.id]?.find((item) => item.id === finding.subject.id) ?? finding.subject;
+  const behind = [await evaluationBehind(context, subject, latest, read.inputSubjects[latest.id], 'Latest evaluation')];
+  if (finding.initialEvaluation.id !== latest.id)
+    behind.push(
+      await evaluationBehind(
+        context,
+        subject,
+        finding.initialEvaluation,
+        read.inputSubjects[finding.initialEvaluation.id],
+        'It opened on evaluation',
+      ),
+    );
+  const closure = finding.closure
+    ? finding.closure.by === 'record'
+      ? [`Closed by a record, ${finding.closure.closedAt}: ${finding.closure.summary}`]
+      : [
+          `Closed by ${finding.closure.actorName}, ${finding.closure.closedAt}, as ${finding.closure.reason}: ${finding.closure.note}`,
+        ]
+    : [];
+  const lines = [
+    `Finding ${finding.id} about ${subjectWords(named)}${finding.related ? `, for ${finding.related.subject.kind} ${finding.related.subject.id}` : ''}: ${latest.rule.title} (${shortRuleId(finding.packId, finding.ruleId)}, ${latest.rule.source.reference}, ${finding.packId} version ${latest.pack.version}).`,
+    `Status: ${finding.status}; ${finding.owner ? `owner ${finding.owner.name}` : 'no owner'}; opened ${finding.openedAt}${finding.mode === 'shadow' ? '; from a rule in shadow: recorded, never counted' : ''}${finding.ruleNoLongerAdopted ? '; its rule is no longer adopted' : ''}.`,
+    ...(finding.action
+      ? [`Action: ${finding.action.note}, due ${finding.action.dueOn}${finding.action.overdue ? ', overdue' : ''}.`]
+      : []),
+    ...behind.flatMap((item) => ['', ...item.lines]),
+    '',
+    ...(finding.treatments.length
+      ? [
+          `Decisions about it${finding.hasOlderTreatments ? ', the latest' : ''}:`,
+          ...finding.treatments.map(
+            (treatment) =>
+              `  ${treatment.recordedAt} ${treatment.actorName}: ${treatment.action}${treatment.reason ? ` as ${treatment.reason}` : ''}${treatment.note ? `, “${treatment.note}”` : ''}`,
+          ),
+        ]
+      : ['No decision about it is recorded.']),
+    ...closure,
+  ];
+  return {
+    data: { finding, evaluations: behind.map((item) => item.data), inputSubjects: read.inputSubjects },
+    lines,
   };
 }

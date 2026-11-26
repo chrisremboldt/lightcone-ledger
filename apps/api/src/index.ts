@@ -188,7 +188,6 @@ import {
   registerSimulationAvoidanceDemoRoutes,
   simulationAvoidanceDemoConfiguration,
 } from './simulation-avoidance-demo.js';
-import { registerInvestigationRoutes, type InvestigationOptions } from './investigation.js';
 import { reauthenticator, registerSmsRoutes, type RequestIdentity } from './sms.js';
 import {
   createTokenVerifier,
@@ -216,7 +215,6 @@ export interface AppOptions {
   objectStore?: ObjectStore;
   env?: 'local' | 'test' | 'staging';
   logger?: FastifyServerOptions['logger'];
-  investigation?: InvestigationOptions;
   simulationAvoidanceDemo?: SimulationAvoidanceDemoConfig;
   flightPredeparture?: FlightPredepartureConfig;
   /** The folder of the organization's pack files; defaults to LEDGER_PACKS_DIR. */
@@ -234,7 +232,7 @@ export interface AppOptions {
 }
 /**
  * The routes other than reads that a principal who holds only reads may still send (docs/design/shared-links.md):
- * reporting a safety concern, which Ledger takes from anyone; two reads sent as a POST, which check their own
+ * reporting a safety concern, which Ledger takes from anyone; a read sent as a POST, which checks its own
  * capabilities; a person's own choice of which notices reach them, which changes no record; and the commands, of which
  * such a principal may send only an acknowledgement of what was issued to them.
  */
@@ -242,7 +240,6 @@ export const OPEN_TO_READERS: ReadonlySet<string> = new Set([
   'POST /v1/safety-reports',
   'PUT /v1/notices/settings',
   'POST /v1/flights/:id/mission/route-suggestion',
-  'POST /v1/flights/:id/findings/:findingId/investigation',
   'POST /v1/commands',
 ]);
 /** The commands a principal who holds only reads may send: acknowledging a document or a briefing issued to them. */
@@ -596,7 +593,6 @@ export async function createApp(options: AppOptions = {}) {
   registerSafetyReportRoutes(app, { pool, store, principal, key });
   registerFlightPredepartureRoutes(app, { pool, principal, config: flightPredeparture });
   registerSimulationAvoidanceDemoRoutes(app, { pool, principal, config: simulationAvoidanceDemo });
-  registerInvestigationRoutes(app, { pool, principal, token, investigation: options.investigation });
   registerSmsRoutes(app, {
     pool,
     store,

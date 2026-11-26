@@ -4,7 +4,9 @@ import { basename } from 'node:path';
 import {
   adoptionStands,
   isCheckedRuleLeaf,
+  observationSubjectKindValues,
   ruleFieldPaths,
+  type ObservationSubjectKind,
   type AdoptionRuleCoverageResponse,
   type CoverageResult,
   type CurrentPrincipalResponse,
@@ -15,6 +17,7 @@ import {
   type OperatorRecordTypesResponse,
   type OrganizationCoverageResponse,
   type PackAdoptionRecord,
+  type RecordSubjectFile,
   type RuleCoverageSubject,
   type RulePackVersion,
 } from '@ledger/contracts';
@@ -391,6 +394,30 @@ function shownTime(record: OperatorRecordListResponse['records'][number], value:
   return field ? record.dayOnly![field]!.day : value;
 }
 
+/** Records as a table, one row each, with the Ledger id a replacement names. */
+function recordTable(records: OperatorRecordListResponse['records']): string[] {
+  return table(
+    ['Subject', 'When', 'Complete', 'Record', 'Ledger id (for replaces)'],
+    records.map((record) => [
+      `${record.subject.id}${record.secondarySubject ? ` / ${record.secondarySubject.id}` : ''}`,
+      record.interval
+        ? `${shownTime(record, record.interval.start)} to ${record.interval.end ? shownTime(record, record.interval.end) : 'open'}`
+        : shownTime(record, record.occurredAt),
+      record.complete ? 'yes' : `no: nothing in ${record.missingRequired.map((field) => field.name).join(', ')}`,
+      cell(
+        Object.entries(record.record)
+          .map(
+            ([field, value]) =>
+              `${field}=${record.dayOnly?.[field]?.day ?? (typeof value === 'string' ? value : JSON.stringify(value))}`,
+          )
+          .join('; ') + (record.replacedBy ? ' (replaced)' : ''),
+        90,
+      ),
+      record.observationId,
+    ]),
+  );
+}
+
 export async function listRecords(
   context: Context,
   name: string,
@@ -404,29 +431,77 @@ export async function listRecords(
   return {
     data: read,
     lines: [
-      ...table(
-        ['Subject', 'When', 'Complete', 'Record', 'Ledger id (for replaces)'],
-        read.records.map((record) => [
-          `${record.subject.id}${record.secondarySubject ? ` / ${record.secondarySubject.id}` : ''}`,
-          record.interval
-            ? `${shownTime(record, record.interval.start)} to ${record.interval.end ? shownTime(record, record.interval.end) : 'open'}`
-            : shownTime(record, record.occurredAt),
-          record.complete ? 'yes' : `no: nothing in ${record.missingRequired.map((field) => field.name).join(', ')}`,
-          cell(
-            Object.entries(record.record)
-              .map(
-                ([field, value]) =>
-                  `${field}=${record.dayOnly?.[field]?.day ?? (typeof value === 'string' ? value : JSON.stringify(value))}`,
-              )
-              .join('; ') + (record.replacedBy ? ' (replaced)' : ''),
-            90,
-          ),
-          record.observationId,
-        ]),
-      ),
+      ...recordTable(read.records),
       ...(read.page.hasMore ? [`The newest ${read.page.returned} are shown; give --subject to see older ones.`] : []),
     ],
   };
+}
+
+/** A subject as a person names it on the command line: `<kind>:<id>`, such as person:PIL-1. */
+export function subjectReference(text: string, flag: string): { kind: ObservationSubjectKind; id: string } {
+  const split = text.indexOf(':');
+  const kind = text.slice(0, split).trim();
+  const id = text.slice(split + 1).trim();
+  if (split < 1 || !id || !(observationSubjectKindValues as readonly string[]).includes(kind))
+    throw new UsageError(
+      `${flag} is <kind>:<your id>, such as person:PIL-1 or aircraft:AC-1: ${text}. Kinds: ${observationSubjectKindValues.join(', ')}.`,
+    );
+  return { kind: kind as ObservationSubjectKind, id };
+}
+
+/** What is on file about one subject: its records by type, the rules that have read it and its open findings. */
+export async function subjectFile(context: Context, subject: string): Promise<Output> {
+  const { kind, id } = subjectReference(subject, 'The subject');
+  const read = await context.client.request<RecordSubjectFile>(
+    `/v1/operator-records/subjects/${encodeURIComponent(kind)}/${encodeURIComponent(id)}`,
+  );
+  const lines = [
+    `${subjectWords(read.subject)}, ${read.subject.kind}${read.named ? '' : ': no record gives it a name'}.`,
+    '',
+    read.groups.length
+      ? `Records on file about it: ${plural(read.records.shown, 'record')}${read.records.truncated ? ', the newest only; records list reads older ones by type and subject' : ''}.`
+      : 'No record about it is on file.',
+  ];
+  for (const group of read.groups)
+    lines.push(
+      '',
+      `${group.title} (${group.recordType} version ${group.recordVersion})`,
+      ...recordTable(group.records),
+    );
+  lines.push(
+    '',
+    ...(read.rules.length
+      ? [
+          'Rules that have read it, with their latest result:',
+          ...table(
+            ['Rule', 'Pack', 'Result', 'What the latest evaluation said'],
+            read.rules.map((rule) => [
+              `${rule.title} (${shortRuleId(rule.packId, rule.leafId)})`,
+              `${rule.packId}${rule.mode === 'shadow' ? ', shadow' : ''}`,
+              coverageResultLabels[rule.result],
+              cell(rule.evaluation.summary, 120),
+            ]),
+          ),
+        ]
+      : ['No adopted rule has read it yet.']),
+    '',
+    ...(read.findings.length
+      ? [
+          'Findings about it not yet resolved:',
+          ...table(
+            ['Finding', 'Rule', 'Status', 'Opened'],
+            read.findings.map((finding) => [
+              finding.id,
+              `${finding.title} (${shortRuleId(finding.packId, finding.leafId)})${finding.mode === 'shadow' ? ', shadow' : ''}`,
+              finding.status,
+              finding.openedAt,
+            ]),
+          ),
+          'One finding, with the evaluations and records behind it: pnpm ledger findings show <finding>',
+        ]
+      : ['No finding about it is open.']),
+  );
+  return { data: read, lines };
 }
 
 /** The packs on offer, newest version first within each pack; only the latest of each unless every version is asked for. */
@@ -530,6 +605,29 @@ export function standingAdoptions(shown: OrganizationCoverageResponse, packId?: 
       `Your organization has not adopted ${packId}. pnpm ledger coverage lists what it has adopted.`,
     );
   return adoptions;
+}
+
+/** The adoptions in effect: each pack the organization has adopted, its version, mode and dates. */
+export async function adoptedPacks(context: Context): Promise<Output> {
+  const shown = await context.client.organizationCoverage();
+  const adoptions = standingAdoptions(shown);
+  return {
+    data: { asOf: shown.asOf, adoptions },
+    lines: adoptions.length
+      ? table(
+          ['Pack', 'Version', 'Mode', 'State', 'From', 'Until', 'Adoption'],
+          adoptions.map((adoption) => [
+            adoption.pack.packId,
+            String(adoption.pack.version),
+            adoption.mode,
+            adoption.state,
+            adoption.effectiveInterval.start,
+            adoption.effectiveInterval.end,
+            adoption.id,
+          ]),
+        )
+      : ['Your organization has adopted no rule pack yet. pnpm ledger packs list shows the packs on offer.'],
+  };
 }
 
 function ruleFor(coverage: AdoptionRuleCoverageResponse, wanted: string) {

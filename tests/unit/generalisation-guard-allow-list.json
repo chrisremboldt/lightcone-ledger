@@ -41,11 +41,6 @@
       "issue": 27
     },
     {
-      "file": "apps/api/src/investigation.ts",
-      "match": "commandLinkSources",
-      "issue": 5
-    },
-    {
       "file": "packages/domain/src/assurance-history.ts",
       "wholeFile": true,
       "issue": 27,

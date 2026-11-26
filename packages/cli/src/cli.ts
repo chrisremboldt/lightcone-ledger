@@ -2,8 +2,10 @@ import { writeFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { parseArgs } from 'node:util';
 import { ApiError, LedgerClient } from '@ledger/contracts/client';
+import type { Readable, Writable } from 'node:stream';
 import { adoptPack } from './adoption.js';
 import {
+  adoptedPacks,
   checkRecords,
   coverage,
   importRecords,
@@ -15,12 +17,15 @@ import {
   recordTemplate,
   RefusalError,
   showPack,
+  subjectFile,
   UsageError,
   type Context,
   type Output,
 } from './commands.js';
 import { ConfigurationError, readConnection } from './config.js';
-import { findingGroups, openFindings, treatFindingSet } from './findings.js';
+import { findingGroups, openFindings, showFinding, treatFindingSet } from './findings.js';
+import { refusalWords } from './format.js';
+import { serveMcp } from './mcp.js';
 import { readFlightLog } from './read-log.js';
 import { startRecordMapping } from './record-mapping.js';
 import { draftPlan, produceRecords } from './records-plan.js';
@@ -53,12 +58,15 @@ export const usage = `Usage: pnpm ledger <noun> <verb> [options]
                                          start a column mapping from an export: every column listed, none assigned,
                                          and the record type's fields as comments; nothing is guessed
   records list <type> [--subject <id>] [--limit <n>]
+  records subject <kind>:<id>            what is on file about one subject: its records by type, the rules that have
+                                         read it with their latest result, and its open findings
   records produce --reason "<why>" --requested-by "<who asked>" --out <file.zip>
               [--subject <kind>:<id>]... [--type <type>]... [--from <date>] [--until <date>] [--originals]
               [--with-flights]           produce records on request as one .zip you can verify offline; a person's
                                          flights are listed, and --with-flights includes their records
   packs list [--all]                     the latest version of each rule pack this Ledger offers; --all lists
                                          earlier versions too
+  packs adopted                          the packs your organization has adopted, each version, mode and dates
   packs show <pack> [--version <n>]      a pack's rules, how each is checked, the fields each reads and what it
                                          asks on adoption
   packs adopt <pack> [--version <n>] [--mode active|shadow] [--from <date>] [--until <date>]
@@ -78,6 +86,10 @@ export const usage = `Usage: pnpm ledger <noun> <verb> [options]
                                          --from and --until are the days the findings are about. The list ends with
                                          each adopted pack's results that say a record is not on file, which open no
                                          finding, and the command that lists them
+  findings show <finding> [--subject <kind>:<id>]
+                                         one finding: the evaluation that opened it and the latest, the records each
+                                         read, what each found not on file, and the decisions about it; a finding no
+                                         longer open is found by the subject it is about
   findings take --rule <rule> [--pack <pack>] [--subject-kind <kind>] [--from <date>] [--until <date>]
               [--reason "<why>"]         prints every open finding of the rule; takes them all as one decision
                                          only with --reason, with a person's credential
@@ -98,6 +110,9 @@ export const usage = `Usage: pnpm ledger <noun> <verb> [options]
   people token <person> [--reason "<why>"]
                                          on a local Ledger, prints the issue of a development token for the person;
                                          issues it, shown once, only with --reason, with a person's credential
+  mcp                                    serve these reading commands, checks and imports as tools to an agent that
+                                         speaks the Model Context Protocol, on standard input and output; a person's
+                                         decision is prepared, never sent
   safety home                            what safety records are on file and what is not, what waits for a person,
                                          actions due and overdue
   safety control-types                   every control type and what a control of it needs
@@ -140,7 +155,12 @@ export interface CliIo {
   fetcher?: typeof fetch;
   /** Replaces the wait before a command is sent again, as a test does to not wait. */
   pause?: (milliseconds: number) => Promise<void>;
+  /** The streams `mcp` serves on; standard input and output unless a test gives others. */
+  input?: Readable;
+  output?: Writable;
 }
+
+export { refusalWords };
 
 const options = {
   json: { type: 'boolean' },
@@ -195,17 +215,10 @@ function needs(positionals: string[], count: number, what: string): string[] {
   return positionals;
 }
 
-/** The API's own sentence for a refusal, with its status and code. */
-export function refusalWords(error: ApiError): string {
-  const body = error.body as { error?: { code?: string; message?: string } } | string;
-  const inner = typeof body === 'object' && body ? body.error : undefined;
-  const sentence = inner?.message ?? (typeof body === 'string' && body ? body : error.message);
-  return `Ledger refused this (${error.status}${inner?.code ? ` ${inner.code}` : ''}): ${sentence}`;
-}
-
 /** The options each command reads, besides --json and --help. A command refuses any other. */
 const commandOptions: Record<string, readonly string[]> = {
   me: [],
+  mcp: [],
   'records types': [],
   'records columns': [],
   'records template': ['out'],
@@ -214,6 +227,7 @@ const commandOptions: Record<string, readonly string[]> = {
   'records read-log': ['format', 'out'],
   'records mapping': ['out'],
   'records list': ['subject', 'limit'],
+  'records subject': [],
   'records produce': [
     'subject',
     'type',
@@ -228,10 +242,12 @@ const commandOptions: Record<string, readonly string[]> = {
   ],
   'plan draft': ['out', 'open'],
   'packs list': ['all'],
+  'packs adopted': [],
   'packs show': ['version'],
   'packs adopt': ['version', 'mode', 'from', 'until', 'set', 'set-all', 'reason'],
   coverage: ['pack', 'rule', 'result'],
   findings: ['pack', 'rule', 'all', 'proposed', 'subject-kind', 'from', 'until'],
+  'findings show': ['subject'],
   'findings take': ['pack', 'rule', 'subject-kind', 'from', 'until', 'reason'],
   'findings close': ['pack', 'rule', 'subject-kind', 'from', 'until', 'as', 'reason'],
   'people list': [],
@@ -361,8 +377,13 @@ async function dispatch(
         out: text('out') === undefined ? undefined : path(text('out')!),
         open: values.open === true,
       });
+    case 'records subject':
+      return subjectFile(context, needs(rest, 1, 'one subject as <kind>:<id>, such as person:PIL-1')[0]!);
     case 'packs list':
       return listPacks(context, { all: values.all === true });
+    case 'packs adopted':
+      if (rest.length) throw new UsageError(`packs adopted takes no arguments: ${rest.join(' ')}`);
+      return adoptedPacks(context);
     case 'packs show':
       return showPack(context, needs(rest, 1, 'one pack id')[0]!, positiveInteger(text('version'), '--version'));
     case 'packs adopt':
@@ -398,6 +419,11 @@ async function dispatch(
       };
       if (filters.rule && values.all === true) throw new UsageError('Give --rule or --all, not both.');
       return filters.rule || values.all === true ? openFindings(context, filters) : findingGroups(context, filters);
+    }
+    case 'findings show': {
+      const subjects = list('subject');
+      if (subjects.length > 1) throw new UsageError('findings show takes one --subject.');
+      return showFinding(context, { finding: needs(rest, 1, 'one finding id')[0]!, subject: subjects[0] });
     }
     case 'findings take':
     case 'findings close':
@@ -487,6 +513,19 @@ export async function runCli(argv: string[], io: CliIo): Promise<number> {
       return output.refused ? 1 : 0;
     }
     const connection = readConnection(io.env, io.folders);
+    if (noun === 'mcp') {
+      // Standard output carries the protocol: nothing else may be written to it while the server runs.
+      refuseUnread('mcp', values);
+      if (verb !== undefined || json) throw new UsageError('mcp takes no arguments and no --json.');
+      await serveMcp({
+        connection,
+        folder: io.folders[0] ?? resolve('.'),
+        fetcher: io.fetcher,
+        input: io.input ?? process.stdin,
+        output: io.output ?? process.stdout,
+      });
+      return 0;
+    }
     const client = new LedgerClient(connection.apiUrl, connection.token, io.fetcher);
     const context: Context = {
       client,

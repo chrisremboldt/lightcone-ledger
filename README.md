@@ -23,7 +23,7 @@ This is early software. Read [Status and limits](#status-and-limits) before rely
 - **Notices.** A person is told by email when a finding or an action is assigned to them, when an action of theirs is due within three days or overdue, and when a document waits for their acknowledgement, and gets a daily or weekly digest if they ask. An organization can have the same posted to its own signed webhook. Both are off until configured; every notice and every attempt to send it is on record. A safety report or a restricted record is named by its reference and link only.
 - **Records for an inspector.** Each pilot, aircraft and flight has a file of everything on record about it. Records are produced on request, by subject, type and date, as one .zip with a readable index, a CSV per record type and a manifest that verifies offline. An inspector can look for themselves: signed in as a reader, who opens records, coverage, findings and controlled documents and changes nothing, or through a link to one produced set that needs no sign-in, expires, is revoked at once and keeps each time it was opened. Each adopted pack lists the records its text requires with the retention the text states, and a recordkeeping plan is drafted from that list as a controlled document.
 - **Record types your own pack declares.** A record no built-in type holds is declared in the organization's pack file, as data: its fields, units, options and what it is about. Once the pack is adopted it has an import file, an entry form, browse, production and checks, as a built-in type does, and other organizations do not see it. [examples/declared-record-type](examples/declared-record-type) is one to copy.
-- **A command line, and a guide for a coding agent.** `pnpm ledger` adds people, imports records, reads coverage and findings, prepares an adoption for a person, drafts safety records from files, produces records and drafts the plan, over the public API. [Set up Ledger with a coding agent](docs/guides/set-up-with-a-coding-agent.md) is written to the agent an operator asks to do the setup.
+- **A command line, and a guide for a coding agent.** `pnpm ledger` adds people, imports records, reads coverage and findings, prepares an adoption for a person, drafts safety records from files, produces records and drafts the plan, over the public API, and reads one finding with the evaluations, the records and what is not on file behind it. `pnpm ledger mcp` offers the same reading commands, checks and imports as tools to an agent that speaks the Model Context Protocol; a person's decision is prepared there, never sent. [Set up Ledger with a coding agent](docs/guides/set-up-with-a-coding-agent.md) is written to the agent an operator asks to do the setup.
 - **Evidence.** Exports can be verified offline with `tools/verifier`, which needs only Node and imports no Ledger packages.
 
 ## Using Ledger for a safety management system
@@ -61,7 +61,7 @@ A new kind of problem is added through four extension points, with no change to 
 
 **Deterministic, not generative.** Rule checks are ordinary code over retained records. The same inputs give the same result, and each recorded evaluation names the rule version and the input digest it used. No language model produces a finding, an evaluation result or a decision, and none is called anywhere in this codebase. Where rule text was drafted with AI assistance, the pack says so (`review: 'ai_drafted'`) and it stays unadopted until a person adopts it.
 
-The API has a seam for an assistant that drafts an investigation proposal about a finding a person is already reviewing. It is off by default (`LEDGER_INVESTIGATOR_ENABLED=0`), and `packages/investigator` is a placeholder that refuses every request. A proposal would never be a finding, a result or a decision.
+An assistant is the operator's own, outside Ledger: a coding agent reads and checks through the command-line client or its MCP server and never sends a decision. [docs/design/assistants.md](docs/design/assistants.md) says why.
 
 ## Architecture
 
@@ -91,7 +91,6 @@ One TypeScript codebase. PostgreSQL 17, with no extension, holds the journal, pr
 | `packages/adapters`                                                                       | Source mappings into Ledger inputs                           |
 | `packages/flight-logs`                                                                    | Readers for aircraft logs, into flight records               |
 | `apps/simulator`, `apps/emulators`, `packages/simulation-models`                          | A simulated flight operation used for development and demos  |
-| `packages/investigator`                                                                   | Placeholder for the investigation-proposal seam              |
 | `infra`                                                                                   | Local Compose stack, the container image, deployment files   |
 
 Invariants every change keeps:
@@ -212,7 +211,7 @@ On a local database the administrator gets a development token, printed once: wi
 
 From there, the path to seeing where your own operation stands. There are two ways to walk it, and none of it needs code:
 
-- **With a coding agent.** [Set up Ledger with a coding agent](docs/guides/set-up-with-a-coding-agent.md) is written to the agent: every command, what it may do alone, and what only a person does. [examples/first-operator](examples/first-operator) is the whole path for an invented operator, from its waiver and its spreadsheets to coverage, with one script.
+- **With a coding agent.** [Set up Ledger with a coding agent](docs/guides/set-up-with-a-coding-agent.md) is written to the agent: every command, what it may do alone, and what only a person does. An agent that speaks the Model Context Protocol can call the same commands as tools through `pnpm ledger mcp`. [examples/first-operator](examples/first-operator) is the whole path for an invented operator, from its waiver and its spreadsheets to coverage, with one script.
 - **By hand, in the browser.** [Set up Ledger for your organization](docs/guides/set-up-your-organization.md) walks each step in full.
 
 The steps are the same either way:
@@ -325,7 +324,8 @@ Known gaps:
 - **Flights dated before an adoption starts.** A flight on file before an adoption is made, and dated before its first day, is not checked; the same flight imported afterwards, or still on file when a newer version replaces the adoption, is. Until that is made one rule, adopt from a day on or before your earliest record, which checks every flight either way. [docs/design/rule-coverage.md](docs/design/rule-coverage.md) has the detail.
 - **Records an old log never held.** A rule about a record your log did not keep, such as when a notice was requested or the gust at takeoff, finds it missing on every flight, and a notice cannot be recorded without the time it was made. A person closes those findings by rule and dates; nothing fills them in.
 - **Other flight log formats.** `records read-log` reads PX4 ULog, ArduPilot DataFlash and MAVLink telemetry logs, checked against a few public sample logs only. A manufacturer's own flight log and a log service's export have no reader yet (an export can be read through a column mapping); each needs someone with a real file. A log larger than 10 MB cannot yet be kept as the original, so it cannot be imported this way.
-- **One finding from the command line.** The client takes and closes findings by rule, subject kind and dates. Working a single finding is done in the browser.
+- **One finding from the command line.** The client reads one finding (`findings show`), but takes and closes findings only by rule, subject kind and dates. Taking or closing a single finding is done in the browser.
+- **Safety files over MCP.** The MCP server prepares a person's safety decisions, but has no tool for the safety record templates, checks and drafts; an agent runs `pnpm ledger safety` for those.
 - **Visibility under § 107.51(c).** The Part 107 rule reads the visibility a preflight assessment states and not the visibility at takeoff on the flight record.
 - **Replacing a version from its first day in the browser.** The command line and the API do it; the Rules screen's form replaces from a later day only.
 - **An adoption sent right after another.** While the rules of one adoption are still being queued, a second adoption can be refused as a concurrent change. The command-line client waits and sends it again; the cause on the server is not yet found.

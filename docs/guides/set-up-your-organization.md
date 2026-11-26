@@ -4,7 +4,7 @@ This guide takes one organization from nothing to seeing where its own operation
 
 It says for every step where the work is done and what kind of person can do it. Nothing here asks you to write code. The last section lists what does.
 
-If a coding agent is doing the setup for you from the command line, give it [Set up Ledger with a coding agent](set-up-with-a-coding-agent.md) instead. It takes the same steps with `pnpm ledger`, a client over the public API: importing records, preparing each adoption for the person who decides, and reading coverage and open findings. It says what the agent may do alone and what stays with a person, and where your own files are kept so they are never committed. `examples/first-operator` is that path run for an invented operator.
+If a coding agent is doing the setup for you from the command line, give it [Set up Ledger with a coding agent](set-up-with-a-coding-agent.md) instead. It takes the same steps with `pnpm ledger`, a client over the public API: importing records, preparing each adoption for the person who decides, and reading coverage and open findings. An agent that speaks the Model Context Protocol can use the same commands as tools through `pnpm ledger mcp` ([AGENTS.md](../../AGENTS.md) says how to start it). Ledger itself calls no language model; the agent is yours. The guide says what the agent may do alone and what stays with a person, and where your own files are kept so they are never committed. `examples/first-operator` is that path run for an invented operator.
 
 ## Who does what
 

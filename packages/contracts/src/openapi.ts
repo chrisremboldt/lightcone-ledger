@@ -201,9 +201,6 @@ import {
   FlightRuleSelectionRecordResponseSchema,
   FlightRuleSelectionConvergenceSchema,
   EvaluationRecordSchema,
-  INVESTIGATION_ROUTE,
-  InvestigationRequestSchema,
-  InvestigationResponseSchema,
   HazardParamsSchema,
   TelemetryDataSchema,
   TelemetryQuerySchema,
@@ -796,8 +793,6 @@ export const openApiDocument = {
     securitySchemes: { bearerAuth: { type: 'http', scheme: 'bearer' } },
     schemas: {
       Alias: AliasSchema,
-      InvestigationRequest: InvestigationRequestSchema,
-      InvestigationResponse: InvestigationResponseSchema,
       TelemetrySegment: TelemetrySegmentSchema,
       DecisionPacketCreate: DecisionPacketCreateSchema,
       DecisionPacketRecord: DecisionPacketRecordSchema,
@@ -1191,36 +1186,6 @@ export const openApiDocument = {
     },
     '/v1/flights/{id}/findings': {
       get: operation('flightFindings', FindingsResponseSchema, 200, undefined, [identifier('id')]),
-    },
-    [INVESTIGATION_ROUTE]: {
-      post: {
-        ...operation('investigateFinding', InvestigationResponseSchema, 200, InvestigationRequestSchema, [
-          identifier('id'),
-          identifier('findingId'),
-        ]),
-        description:
-          'Generate an ephemeral advisory proposal for the exact finding and displayed evaluation/basis through an opt-in host runner. Host configuration fixes the Ledger API origin and runner. This does not accept a treatment, append a record or use an idempotency key.',
-        responses: {
-          ...operation('investigateFinding', InvestigationResponseSchema).responses,
-          200: {
-            ...response(
-              InvestigationResponseSchema,
-              'Ephemeral advisory proposal with host-observed execution metadata',
-            ),
-            headers: {
-              'Cache-Control': {
-                description: 'The advisory response is private and must not be stored in a cache.',
-                schema: { type: 'string', const: 'private, no-store' },
-              },
-            },
-          },
-          409: response(ErrorResponseSchema, 'Finding, evaluation or displayed basis changed'),
-          413: response(ErrorResponseSchema, 'Investigation context or advice exceeds its bound'),
-          502: response(ErrorResponseSchema, 'The investigation runner returned an unavailable or invalid result'),
-          503: response(ErrorResponseSchema, 'Investigation runner is unavailable'),
-          504: response(ErrorResponseSchema, 'Investigation deadline exceeded'),
-        },
-      },
     },
     '/v1/flights/{id}/rule-selection': {
       get: operation('flightRuleSelection', FlightRuleSelectionResponseSchema, 200, undefined, [identifier('id')]),

@@ -178,10 +178,9 @@ describe.runIf(process.env.LEDGER_ENV !== 'staging')('A reader looks and changes
   });
 
   it('may send only what is open to everyone who signs in, and what its own grants refuse', async () => {
-    // These five are the whole list; a route added to it is a decision this test makes someone see.
+    // These four are the whole list; a route added to it is a decision this test makes someone see.
     expect([...OPEN_TO_READERS].sort()).toEqual([
       'POST /v1/commands',
-      'POST /v1/flights/:id/findings/:findingId/investigation',
       'POST /v1/flights/:id/mission/route-suggestion',
       'POST /v1/safety-reports',
       'PUT /v1/notices/settings',
@@ -193,11 +192,8 @@ describe.runIf(process.env.LEDGER_ENV !== 'staging')('A reader looks and changes
     }
     const acknowledgement = await call(reader, 'POST', '/v1/commands', { kind: 'sms.document.acknowledge' });
     expect(acknowledgement.json().error?.code).not.toBe('reads_only');
-    // The reads sent as a POST need flight:read, which a reader does not hold.
-    for (const url of [
-      fill('/v1/flights/:id/mission/route-suggestion'),
-      fill('/v1/flights/:id/findings/:findingId/investigation'),
-    ]) {
+    // The read sent as a POST needs flight:read, which a reader does not hold.
+    for (const url of [fill('/v1/flights/:id/mission/route-suggestion')]) {
       const response = await call(reader, 'POST', url, {});
       expect(response.statusCode, `${url}: ${response.body}`).not.toBe(200);
       expect(response.statusCode).not.toBe(201);

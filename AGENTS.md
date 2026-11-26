@@ -2,8 +2,29 @@
 
 ## Which of these are you doing?
 
-- **Setting Ledger up for an organization**: an operator asked you to install Ledger, enter or import its records, describe its waiver or procedures, or read where its records stand. Follow [Set up Ledger with a coding agent](docs/guides/set-up-with-a-coding-agent.md) and nothing below. It says where the organization's own files go (outside this checkout, or in the git-ignored `organization/` folder), what you may do yourself, and what only a person does. Never commit the organization's files to this repository.
+- **Setting Ledger up for an organization**: an operator asked you to install Ledger, enter or import its records, describe its waiver or procedures, or read where its records stand. Follow [Set up Ledger with a coding agent](docs/guides/set-up-with-a-coding-agent.md) and nothing below, except [An agent that speaks MCP](#an-agent-that-speaks-mcp) when you call Ledger through the Model Context Protocol. It says where the organization's own files go (outside this checkout, or in the git-ignored `organization/` folder), what you may do yourself, and what only a person does. Never commit the organization's files to this repository.
 - **Working on Ledger itself**: you are changing this repository's code, documents or tests, usually to take an issue. Read the rest of this file.
+
+## An agent that speaks MCP
+
+`pnpm ledger mcp` starts a Model Context Protocol server on standard input and output. It is the command-line client: the same credential (`LEDGER_TOKEN` and `LEDGER_API_URL`, or `.ledger/credentials`), the same commands and the same rules, offered as tools with described inputs and structured results. Ledger itself calls no language model; the agent is the operator's own. A client configuration, with the path of the checkout filled in:
+
+```json
+{
+  "mcpServers": {
+    "ledger": {
+      "command": "pnpm",
+      "args": ["--dir", "<path of the Ledger checkout>", "ledger", "mcp"]
+    }
+  }
+}
+```
+
+A relative file path given to a tool is read from the folder the agent started the server in.
+
+- **Reading**, marked read-only: `who_am_i`, `record_types`, `record_columns`, `record_template`, `start_mapping`, `list_records`, `subject_file` (what is on file about one subject), `list_packs`, `adopted_packs`, `show_pack`, `coverage`, `list_findings`, `show_finding` (one finding, the evaluations behind it, the records they read and what is not on file), `list_people`, `role_presets` and `draft_recordkeeping_plan`.
+- **Checking and importing**, not read-only: `check_records` (Ledger keeps the files as uploads and records nothing a rule reads), `import_records` (records rows under the client's credential, as `records import` does) and `read_flight_log` (writes a CSV beside the log and sends nothing).
+- **A person's decision**: `prepare_adoption`, `prepare_findings_decision`, `prepare_person_addition`, `prepare_person_change` and `prepare_safety_decision` print what the client prints without `--reason` and send nothing. The result's `personRuns` is the command the person runs with their own credential and reason. No tool takes a credential or a reason; the server refuses any argument a tool does not describe.
 
 # Work on Ledger itself
 

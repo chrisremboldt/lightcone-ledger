@@ -1,3 +1,4 @@
+import type { ApiError } from '@ledger/contracts/client';
 /** A plain text table: one header row, columns padded to their widest cell. */
 export function table(headers: readonly string[], rows: readonly (readonly string[])[]): string[] {
   const widths = headers.map((header, column) =>
@@ -111,4 +112,12 @@ export function dayIn(instant: string, zone: string): string {
       .map((part) => [part.type, part.value]),
   );
   return `${parts.year}-${parts.month}-${parts.day}`;
+}
+
+/** The API's own sentence for a refusal, with its status and code. */
+export function refusalWords(error: ApiError): string {
+  const body = error.body as { error?: { code?: string; message?: string } } | string;
+  const inner = typeof body === 'object' && body ? body.error : undefined;
+  const sentence = inner?.message ?? (typeof body === 'string' && body ? body : error.message);
+  return `Ledger refused this (${error.status}${inner?.code ? ` ${inner.code}` : ''}): ${sentence}`;
 }

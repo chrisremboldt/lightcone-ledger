@@ -4,7 +4,6 @@ import { pathToFileURL } from 'node:url';
 import { assertObjectStoreReady, refuseOwnerConnection } from '@ledger/persistence';
 import { startWorkers, type WorkerRuntime } from '@ledger/workers';
 import { createApp, type AppOptions } from './index.js';
-import { localInvestigationOptions } from './investigation-startup.js';
 import { developmentSignInNotice } from './openid-connect.js';
 import { setupEnvironment } from './organization-setup.js';
 
@@ -27,7 +26,7 @@ export async function startOneProcess(
   refuseOwnerConnection('API', env);
   refuseOwnerConnection('workers', env);
   if (!options.app?.objectStore) await assertObjectStoreReady(env);
-  const app = await createApp({ logger: true, investigation: localInvestigationOptions(env), ...options.app });
+  const app = await createApp({ logger: true, ...options.app });
   const notice = developmentSignInNotice(setupEnvironment(env));
   if (notice) app.log.warn(notice);
   await app.listen({ port: options.port ?? Number(env.PORT ?? 4000), host: options.host ?? env.HOST ?? '0.0.0.0' });

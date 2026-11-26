@@ -32,8 +32,6 @@ import type {
   OrderQuery,
   ReceiptQuery,
   FindingsResponse,
-  InvestigationRequest,
-  InvestigationResponse,
   FlightPredepartureResponse,
   FlightPredepartureProgress,
   FlightPredepartureProgressResponse,
@@ -336,17 +334,6 @@ export class LedgerClient {
   }
   findings(id: string) {
     return this.request<FindingsResponse>(`/v1/flights/${encodeURIComponent(id)}/findings`);
-  }
-  investigateFinding(
-    flightId: string,
-    findingId: string,
-    input: InvestigationRequest,
-    signal?: AbortSignal,
-  ): Promise<InvestigationResponse> {
-    return this.request<InvestigationResponse>(
-      `/v1/flights/${encodeURIComponent(flightId)}/findings/${encodeURIComponent(findingId)}/investigation`,
-      { method: 'POST', body: JSON.stringify(input), signal },
-    );
   }
   flightMission(id: string) {
     return this.request<FlightMissionResponse>(`/v1/flights/${encodeURIComponent(id)}/mission`);
