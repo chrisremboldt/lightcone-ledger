@@ -98,7 +98,7 @@ export function AssuranceRegister({
             searchHint="Search finds a record by its title or your reference for it."
             statuses={assuranceStatuses}
             types={assuranceTypeChoices}
-            orders={['newest', 'oldest']}
+            orders={['newest', 'oldest', 'owner']}
           />
         )}
         {recording && mayWrite ? (

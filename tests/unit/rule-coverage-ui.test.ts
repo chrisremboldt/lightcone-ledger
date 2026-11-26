@@ -254,6 +254,10 @@ describe('a rule that counts nothing yet', () => {
   it('names the record type as a person picks it under Records', () => {
     expect(recordTypeName('occurrence.security')).toBe('Security occurrence');
     expect(recordTypeName('fictional.unknown-type')).toBe('fictional.unknown-type');
+    // A type a pack declares is named by the organization's catalog, which lists it.
+    const catalog = [{ recordType: 'fictional.dock-check', recordVersion: 1, title: 'Dock check' }];
+    expect(recordTypeName('fictional.dock-check', catalog)).toBe('Dock check');
+    expect(recordTypeName('occurrence.security', catalog)).toBe('Security occurrence');
     const rule = {
       subjectKind: 'organization',
       populationSize: 0,

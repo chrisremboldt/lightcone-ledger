@@ -1314,7 +1314,7 @@ export const SmsSigningPreviewQuerySchema = strict({
 });
 export type SmsSigningPreviewQuery = Static<typeof SmsSigningPreviewQuerySchema>;
 /** How a register is ordered: by when each record was opened, newest or oldest first, or soonest due first. */
-export const smsRegisterOrderValues = ['newest', 'oldest', 'due'] as const;
+export const smsRegisterOrderValues = ['newest', 'oldest', 'due', 'owner'] as const;
 export type SmsRegisterOrder = (typeof smsRegisterOrderValues)[number];
 const RegisterDay = (description: string) => Type.String({ pattern: '^[0-9]{4}-[0-9]{2}-[0-9]{2}$', description });
 export const SmsRegisterQuerySchema = strict({
@@ -1330,7 +1330,7 @@ export const SmsRegisterQuerySchema = strict({
   order: Type.Optional(
     literals(smsRegisterOrderValues, {
       description:
-        'newest (the default) or oldest: by when each record was opened, then by id. due: the soonest due date first, records with none last, then by id.',
+        'newest (the default) or oldest: by when each record was opened, then by id. due: the soonest due date first, records with none last, then by id. owner: by the owner’s name, then by id.',
     }),
   ),
   search: Type.Optional(

@@ -1,0 +1,272 @@
+/*
+ * The reports and their charts. A chart draws in the theme's own colours, so it reads in light, in dark and on paper;
+ * what a colour tells is also told by shape, hatching or a label.
+ */
+.report-page {
+  max-width: 980px;
+}
+.report-made {
+  color: var(--ink-2);
+  font-size: 13px;
+}
+.report-entry a,
+.report-made a {
+  color: var(--magenta-ink);
+}
+.report-card {
+  margin: 0 0 18px;
+  padding: 14px 16px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--sheet);
+}
+.report-card h3 {
+  margin-top: 0;
+}
+.report-period {
+  display: grid;
+  gap: 8px;
+  margin: 8px 0 16px;
+}
+.report-period-choices {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.report-period-choices a[aria-current='page'] {
+  border-color: var(--line-2);
+  background: var(--side);
+}
+.report-period-days {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 8px 12px;
+}
+.report-period-days label {
+  display: grid;
+  gap: 2px;
+  font-size: 12px;
+  color: var(--ink-2);
+}
+.records-order {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin: 4px 0 10px;
+  font-size: 12px;
+  color: var(--ink-2);
+}
+.report-facts {
+  display: grid;
+  gap: 6px;
+  margin: 0 0 8px;
+}
+.report-facts > div {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 12px;
+  justify-content: space-between;
+  padding: 6px 0;
+  border-bottom: 1px solid var(--line);
+}
+.report-facts dt {
+  color: var(--ink-2);
+}
+.report-facts dd {
+  margin: 0;
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+}
+.report-count {
+  color: var(--magenta-ink);
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+.report-numbers {
+  width: 100%;
+  margin: 0 0 10px;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+.report-numbers th,
+.report-numbers td {
+  padding: 6px 8px;
+  border-bottom: 1px solid var(--line);
+  text-align: left;
+  vertical-align: top;
+}
+.report-numbers td {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+.report-numbers thead th:not(:first-child) {
+  text-align: right;
+}
+.report-numbers tbody th small {
+  display: block;
+  color: var(--muted);
+  font-weight: 400;
+}
+.report-numbers tfoot th,
+.report-numbers tfoot td {
+  border-bottom: 0;
+  font-weight: 700;
+}
+.report-not-yours {
+  padding: 8px 10px;
+  border: 1px dashed var(--line-2);
+  border-radius: 6px;
+}
+.report-limits {
+  margin-top: 18px;
+}
+.report-record,
+.report-rule {
+  margin: 0 0 12px;
+  padding: 0 0 10px;
+  border-bottom: 1px solid var(--line);
+}
+
+/* A chart: a sentence, the drawing, its legend and its numbers. */
+.report-chart {
+  margin: 8px 0 18px;
+}
+.report-chart-sentence {
+  margin: 0 0 8px;
+  color: var(--ink);
+}
+.report-chart-svg {
+  display: block;
+  width: 100%;
+  height: auto;
+  max-width: 900px;
+  overflow: visible;
+  font-family: var(--sans);
+}
+.report-chart-svg text {
+  fill: var(--ink-2);
+  font-size: 11px;
+}
+.report-chart-grid line {
+  stroke: var(--line);
+  stroke-width: 1;
+}
+.report-chart-baseline {
+  stroke: var(--line-2);
+  stroke-width: 1.25;
+}
+.report-chart-axis-label {
+  font-weight: 600;
+}
+.report-chart-gap rect {
+  fill: var(--side);
+  stroke: var(--line);
+  stroke-dasharray: 3 3;
+}
+.report-chart-gap text {
+  fill: var(--muted);
+}
+.report-chart-limit line,
+.report-chart-limit-line {
+  stroke: var(--alert);
+  stroke-width: 1.5;
+  stroke-dasharray: 6 4;
+}
+.report-chart-limit text {
+  fill: var(--alert);
+  font-weight: 600;
+}
+.report-chart-window {
+  stroke: var(--plan);
+  stroke-width: 2;
+  stroke-linecap: round;
+}
+.report-chart-stated {
+  fill: var(--plan);
+  stroke: var(--sheet);
+  stroke-width: 1.5;
+}
+.report-chart-none {
+  fill: var(--sheet);
+  stroke: var(--ink-2);
+  stroke-width: 1.5;
+}
+.report-chart-point:focus-visible {
+  outline: none;
+}
+.report-chart-point:focus-visible .report-chart-stated,
+.report-chart-point:focus-visible .report-chart-none,
+.report-chart-point:hover .report-chart-stated,
+.report-chart-point:hover .report-chart-none {
+  stroke: var(--magenta);
+  stroke-width: 3;
+}
+.report-chart-opened {
+  fill: var(--ink-2);
+}
+.report-chart-closed {
+  stroke: var(--ink-2);
+  stroke-width: 1;
+}
+.report-chart-hatch {
+  stroke: var(--ink-2);
+  stroke-width: 2;
+}
+.report-chart-value {
+  font-variant-numeric: tabular-nums;
+}
+.report-chart-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 16px;
+  margin: 6px 0 8px;
+  padding: 0;
+  list-style: none;
+  font-size: 12px;
+  color: var(--ink-2);
+}
+.report-chart-legend li {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.report-chart-legend svg {
+  width: 14px;
+  height: 14px;
+  flex: none;
+}
+.report-table {
+  overflow-x: auto;
+}
+.report-table table {
+  min-width: 100%;
+  border-collapse: collapse;
+  font-size: 12px;
+}
+.report-table th,
+.report-table td {
+  padding: 5px 8px;
+  border-bottom: 1px solid var(--line);
+  text-align: left;
+  white-space: nowrap;
+}
+.report-table tr:target {
+  background: var(--magenta-soft);
+}
+
+@media (max-width: 719.98px) {
+  .report-chart-svg text {
+    font-size: 14px;
+  }
+  .report-facts > div {
+    display: grid;
+  }
+  .report-table th,
+  .report-table td {
+    white-space: normal;
+  }
+}

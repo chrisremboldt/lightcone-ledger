@@ -7,7 +7,8 @@ const Time = Type.String({ format: 'date-time' });
 export const CREDENTIAL_SECRET_PREFIX = 'ledger-service-';
 /** 32 bytes from the system random source, base64url without padding. */
 export const CREDENTIAL_SECRET_PATTERN = '^ledger-service-[A-Za-z0-9_-]{43}$';
-export const CREDENTIAL_LIST_LIMIT = 1000;
+/** The most credentials one page of the list holds. */
+export const CREDENTIAL_LIST_LIMIT = 200;
 
 export const CredentialIssueCommandSchema = Type.Object(
   {
@@ -97,14 +98,28 @@ export const CredentialEntrySchema = Type.Object(
 );
 export type CredentialEntry = Static<typeof CredentialEntrySchema>;
 
+export const CredentialListQuerySchema = Type.Object(
+  {
+    cursor: Type.Optional(
+      Type.String({ minLength: 1, maxLength: 1000, description: 'The nextCursor of the previous page.' }),
+    ),
+    limit: Type.Optional(Type.Integer({ minimum: 1, maximum: CREDENTIAL_LIST_LIMIT })),
+  },
+  { additionalProperties: false },
+);
+export type CredentialListQuery = Static<typeof CredentialListQuerySchema>;
+
 export const CredentialListResponseSchema = Type.Object(
   {
     credentials: Type.Array(CredentialEntrySchema, { maxItems: CREDENTIAL_LIST_LIMIT }),
     hasMore: Type.Boolean(),
+    nextCursor: Type.Union([Type.String(), Type.Null()], {
+      description: 'Send as cursor to read the next page; null on the last page.',
+    }),
   },
   {
     additionalProperties: false,
-    description: `Every credential of the organization's sources and services, usable ones first, newest first. Requires authority:write. Private, no-store. At most ${CREDENTIAL_LIST_LIMIT} entries; hasMore says whether more exist.`,
+    description: `Every credential of the organization's sources and services, usable ones first, newest first, then by id, a page at a time. Requires authority:write. Private, no-store. At most ${CREDENTIAL_LIST_LIMIT} entries a page; hasMore says whether more exist.`,
   },
 );
 export type CredentialListResponse = Static<typeof CredentialListResponseSchema>;

@@ -31,7 +31,7 @@ import {
   FlightPredepartureResponseSchema,
 } from './flight-predeparture.js';
 import { FlightOperationSummarySchema } from './operation.js';
-import { CredentialListResponseSchema, IssuedCredentialSchema } from './credentials.js';
+import { CredentialListQuerySchema, CredentialListResponseSchema, IssuedCredentialSchema } from './credentials.js';
 import { DevelopmentTokenRequestSchema, DevelopmentTokenResponseSchema } from './development-tokens.js';
 import { RolePresetListResponseSchema } from './people.js';
 import {
@@ -69,6 +69,14 @@ import {
   REAUTHENTICATION_HEADER,
 } from './sms.js';
 import { routeDescriptions } from './route-descriptions.js';
+import {
+  FindingsByMonthQuerySchema,
+  FindingsByMonthSchema,
+  IndicatorHistorySchema,
+  PeriodSummarySchema,
+  ReportIndicatorListSchema,
+  ReportPeriodQuerySchema,
+} from './reports.js';
 import {
   LinkSafetyReportSchema,
   SafetyReportLinkIssuedSchema,
@@ -971,7 +979,13 @@ export const openApiDocument = {
       ),
     },
     '/v1/authority/credentials': {
-      get: operation('credentials', CredentialListResponseSchema),
+      get: operation(
+        'credentials',
+        CredentialListResponseSchema,
+        200,
+        undefined,
+        queryParameters(CredentialListQuerySchema),
+      ),
     },
     '/v1/authority/presets': {
       get: operation('rolePresets', RolePresetListResponseSchema),
@@ -1640,6 +1654,33 @@ export const openApiDocument = {
         description:
           'One recorded result, and whether gathering its request again reads the same inputs. Requires evidence:read.',
       },
+    },
+    '/v1/reports/summary': {
+      get: operation(
+        'periodSummary',
+        PeriodSummarySchema,
+        200,
+        undefined,
+        queryParameters(ReportPeriodQuerySchema).map((parameter) => ({ ...parameter, required: true })),
+      ),
+    },
+    '/v1/reports/findings-by-month': {
+      get: operation(
+        'findingsByMonth',
+        FindingsByMonthSchema,
+        200,
+        undefined,
+        queryParameters(FindingsByMonthQuerySchema),
+      ),
+    },
+    '/v1/reports/indicators': {
+      get: operation('reportIndicators', ReportIndicatorListSchema),
+    },
+    '/v1/reports/indicators/{indicatorId}/versions/{version}': {
+      get: operation('indicatorHistory', IndicatorHistorySchema, 200, undefined, [
+        identifier('indicatorId'),
+        identifier('version'),
+      ]),
     },
     '/v1/control-indicator-reviews': {
       post: {

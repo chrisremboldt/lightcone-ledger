@@ -132,6 +132,22 @@ const RECORD_COLUMNS = `o.id,o.receipt_id,o.event_id,o.source_id,o.principal_id,
   (SELECT r.id FROM observations r WHERE r.tenant_id=o.tenant_id AND r.replaces_observation_id=o.id) AS replaced_by,
   ${historyPrecise('o.span_start')} AS page_time`;
 
+export type OperatorRecordOrder = NonNullable<OperatorRecordQuery['order']>;
+
+/**
+ * Where a page resumes after the record at $9 (its time) and $10 (its id), and the order itself. A record's subject
+ * never changes, so the subject order reads the anchor's subject from the record.
+ */
+const recordOrders: Record<OperatorRecordOrder, { after: string; by: string }> = {
+  newest: { after: '(o.span_start,o.id)<($9::timestamptz,$10::text)', by: 'span_start DESC,id DESC' },
+  subject: {
+    after: `(o.subject_id>(SELECT c.subject_id FROM observations c WHERE c.tenant_id=$1 AND c.id=$10)
+      OR (o.subject_id=(SELECT c.subject_id FROM observations c WHERE c.tenant_id=$1 AND c.id=$10)
+        AND (o.span_start,o.id)<($9::timestamptz,$10::text)))`,
+    by: 'subject_id,span_start DESC,id DESC',
+  },
+};
+
 /**
  * Records matching a filter, newest first by the time they are about and then by id, after a position, at most
  * `limit` rows. With subjects, each row says how it is about the first subject it matches.
@@ -142,6 +158,7 @@ export async function readRecordRows(
   filter: RecordFilter,
   limit: number,
   after?: { time: string; id: string },
+  order: OperatorRecordOrder = 'newest',
 ): Promise<RecordRow[]> {
   const subjects = filter.subjects ?? [];
   const references = referenceFieldsOf(undefined);
@@ -194,9 +211,9 @@ export async function readRecordRows(
          AND ($6::text IS NULL OR o.subject_kind=$6)
          AND ($7::timestamptz IS NULL OR COALESCE(o.interval_end,o.span_start)>=$7)
          AND ($8::timestamptz IS NULL OR o.span_start<$8)
-         AND ($9::timestamptz IS NULL OR (o.span_start,o.id)<($9::timestamptz,$10::text))
+         AND ($9::timestamptz IS NULL OR ${recordOrders[order].after})
      ) AS rows WHERE ${subjects.length ? 'about IS NOT NULL' : 'true'}
-     ORDER BY span_start DESC,id DESC LIMIT $11`,
+     ORDER BY ${recordOrders[order].by} LIMIT $11`,
     params,
   );
   return rows.rows;
@@ -301,7 +318,7 @@ export function requireRecordRead(principal: AuthContext): void {
     throw new DomainError(403, 'capability_required', 'Reading operator records requires evidence:read');
 }
 
-/** GET /v1/operator-records: records by type, subject and time, newest first, a page at a time. */
+/** GET /v1/operator-records: records by type, subject and time, newest first or by subject, a page at a time. */
 export async function listOperatorRecords(
   client: PoolClient,
   principal: AuthContext,
@@ -320,6 +337,7 @@ export async function listOperatorRecords(
     from: query.from,
     to: query.to,
     sourceId,
+    order: query.order && query.order !== 'newest' ? query.order : undefined,
   };
   const prior = historyCursor(query.cursor, principal, 'operator-records', filters, true);
   const subjects = query.subjectId
@@ -346,6 +364,7 @@ export async function listOperatorRecords(
     },
     limit + 1,
     prior ? { time: prior.position.time!, id: prior.position.id } : undefined,
+    query.order ?? 'newest',
   );
   const visible = rows.slice(0, limit);
   const hasMore = rows.length > limit;

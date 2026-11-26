@@ -14893,7 +14893,7 @@
       },
       "PrincipalAuthorityListResponse": {
         "additionalProperties": false,
-        "description": "Every person, source and service of the organization, active and inactive, with their current complete authority, ordered by name and then id, a page at a time. Workers are not listed. Requires authority:write. Private, no-store. At most 1000 entries a page; hasMore says whether more exist.",
+        "description": "Every person, source and service of the organization, active and inactive, with their current complete authority, ordered by name and then id (or most recently added first), a page at a time. Workers are not listed. Requires authority:write. Private, no-store. At most 1000 entries a page; hasMore says whether more exist.",
         "type": "object",
         "required": [
           "principals",
@@ -15165,15 +15165,16 @@
       },
       "CredentialListResponse": {
         "additionalProperties": false,
-        "description": "Every credential of the organization's sources and services, usable ones first, newest first. Requires authority:write. Private, no-store. At most 1000 entries; hasMore says whether more exist.",
+        "description": "Every credential of the organization's sources and services, usable ones first, newest first, then by id, a page at a time. Requires authority:write. Private, no-store. At most 200 entries a page; hasMore says whether more exist.",
         "type": "object",
         "required": [
           "credentials",
-          "hasMore"
+          "hasMore",
+          "nextCursor"
         ],
         "properties": {
           "credentials": {
-            "maxItems": 1000,
+            "maxItems": 200,
             "type": "array",
             "items": {
               "additionalProperties": false,
@@ -15298,6 +15299,17 @@
           },
           "hasMore": {
             "type": "boolean"
+          },
+          "nextCursor": {
+            "description": "Send as cursor to read the next page; null on the last page.",
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
           }
         }
       },
@@ -60874,6 +60886,23 @@
               "default": 1000,
               "type": "integer"
             }
+          },
+          {
+            "name": "order",
+            "in": "query",
+            "schema": {
+              "description": "name (the default): by name, then id. recent: the most recently added first, by when Ledger recorded the addition; those it recorded none for (put on file by a seed) last, by id.",
+              "anyOf": [
+                {
+                  "const": "name",
+                  "type": "string"
+                },
+                {
+                  "const": "recent",
+                  "type": "string"
+                }
+              ]
+            }
           }
         ],
         "responses": {
@@ -60883,7 +60912,7 @@
               "application/json": {
                 "schema": {
                   "additionalProperties": false,
-                  "description": "Every person, source and service of the organization, active and inactive, with their current complete authority, ordered by name and then id, a page at a time. Workers are not listed. Requires authority:write. Private, no-store. At most 1000 entries a page; hasMore says whether more exist.",
+                  "description": "Every person, source and service of the organization, active and inactive, with their current complete authority, ordered by name and then id (or most recently added first), a page at a time. Workers are not listed. Requires authority:write. Private, no-store. At most 1000 entries a page; hasMore says whether more exist.",
                   "type": "object",
                   "required": [
                     "principals",
@@ -61409,7 +61438,28 @@
             "bearerAuth": []
           }
         ],
-        "parameters": [],
+        "parameters": [
+          {
+            "name": "cursor",
+            "in": "query",
+            "schema": {
+              "minLength": 1,
+              "maxLength": 1000,
+              "description": "The nextCursor of the previous page.",
+              "type": "string"
+            },
+            "description": "Opaque continuation scoped to tenant, principal authority, route and filters. Current read models, not a frozen historical snapshot."
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": {
+              "minimum": 1,
+              "maximum": 200,
+              "type": "integer"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "description": "Success",
@@ -61417,15 +61467,16 @@
               "application/json": {
                 "schema": {
                   "additionalProperties": false,
-                  "description": "Every credential of the organization's sources and services, usable ones first, newest first. Requires authority:write. Private, no-store. At most 1000 entries; hasMore says whether more exist.",
+                  "description": "Every credential of the organization's sources and services, usable ones first, newest first, then by id, a page at a time. Requires authority:write. Private, no-store. At most 200 entries a page; hasMore says whether more exist.",
                   "type": "object",
                   "required": [
                     "credentials",
-                    "hasMore"
+                    "hasMore",
+                    "nextCursor"
                   ],
                   "properties": {
                     "credentials": {
-                      "maxItems": 1000,
+                      "maxItems": 200,
                       "type": "array",
                       "items": {
                         "additionalProperties": false,
@@ -61550,6 +61601,17 @@
                     },
                     "hasMore": {
                       "type": "boolean"
+                    },
+                    "nextCursor": {
+                      "description": "Send as cursor to read the next page; null on the last page.",
+                      "anyOf": [
+                        {
+                          "type": "string"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
                     }
                   }
                 }
@@ -113389,6 +113451,23 @@
             }
           },
           {
+            "name": "order",
+            "in": "query",
+            "schema": {
+              "description": "newest (the default): by the time each record is about, the most recent first, then by id. subject: by the operator’s own id for the subject, then the most recent first.",
+              "anyOf": [
+                {
+                  "const": "newest",
+                  "type": "string"
+                },
+                {
+                  "const": "subject",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          {
             "name": "cursor",
             "in": "query",
             "schema": {
@@ -127839,6 +127918,1924 @@
                           }
                         }
                       }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "error",
+                    "requestId"
+                  ],
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "required": [
+                        "code",
+                        "message"
+                      ],
+                      "properties": {
+                        "code": {
+                          "type": "string"
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "details": {
+                          "type": "object",
+                          "patternProperties": {
+                            "^(.*)$": {}
+                          }
+                        }
+                      }
+                    },
+                    "requestId": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Authentication required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "error",
+                    "requestId"
+                  ],
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "required": [
+                        "code",
+                        "message"
+                      ],
+                      "properties": {
+                        "code": {
+                          "type": "string"
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "details": {
+                          "type": "object",
+                          "patternProperties": {
+                            "^(.*)$": {}
+                          }
+                        }
+                      }
+                    },
+                    "requestId": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Missing capability",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "error",
+                    "requestId"
+                  ],
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "required": [
+                        "code",
+                        "message"
+                      ],
+                      "properties": {
+                        "code": {
+                          "type": "string"
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "details": {
+                          "type": "object",
+                          "patternProperties": {
+                            "^(.*)$": {}
+                          }
+                        }
+                      }
+                    },
+                    "requestId": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Scoped object unavailable",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "error",
+                    "requestId"
+                  ],
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "required": [
+                        "code",
+                        "message"
+                      ],
+                      "properties": {
+                        "code": {
+                          "type": "string"
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "details": {
+                          "type": "object",
+                          "patternProperties": {
+                            "^(.*)$": {}
+                          }
+                        }
+                      }
+                    },
+                    "requestId": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Stale basis or conflicting idempotency content",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "error",
+                    "requestId"
+                  ],
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "required": [
+                        "code",
+                        "message"
+                      ],
+                      "properties": {
+                        "code": {
+                          "type": "string"
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "details": {
+                          "type": "object",
+                          "patternProperties": {
+                            "^(.*)$": {}
+                          }
+                        }
+                      }
+                    },
+                    "requestId": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Bounded intake exceeded",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "error",
+                    "requestId"
+                  ],
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "required": [
+                        "code",
+                        "message"
+                      ],
+                      "properties": {
+                        "code": {
+                          "type": "string"
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "details": {
+                          "type": "object",
+                          "patternProperties": {
+                            "^(.*)$": {}
+                          }
+                        }
+                      }
+                    },
+                    "requestId": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/reports/summary": {
+      "get": {
+        "operationId": "periodSummary",
+        "summary": "Count what is on file for one period",
+        "description": "Returns the counts of one period, from its first day to its last in the organization’s time zone: flights and flight time from the flight records on file, counted findings by rule (opened and closed in the period, open at its end), actions on findings and of safety assurance records open and overdue at its end, and hazards open at its end by level. Each count is of recorded things; what is not counted is counted apart. A part the reader may not read says so instead of a number. No score and no rating. Needs `evidence:read` or `sms:read`; the flights, findings and their actions need `evidence:read`, the hazards and assurance actions `sms:read`.",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "from",
+            "in": "query",
+            "schema": {
+              "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}$",
+              "type": "string",
+              "description": "The first day of the period, in the organization’s time zone."
+            },
+            "required": true
+          },
+          {
+            "name": "until",
+            "in": "query",
+            "schema": {
+              "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}$",
+              "type": "string",
+              "description": "The last day of the period, included."
+            },
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": false,
+                  "description": "A summary of one period: counts of recorded things only, each part the reader may read. No score, no rating.",
+                  "type": "object",
+                  "required": [
+                    "period",
+                    "flights",
+                    "findings",
+                    "findingActions",
+                    "assuranceActions",
+                    "hazards",
+                    "computedAt"
+                  ],
+                  "properties": {
+                    "period": {
+                      "additionalProperties": false,
+                      "type": "object",
+                      "required": [
+                        "from",
+                        "until",
+                        "timeZone",
+                        "start",
+                        "end",
+                        "asOf",
+                        "ended"
+                      ],
+                      "properties": {
+                        "from": {
+                          "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}$",
+                          "type": "string"
+                        },
+                        "until": {
+                          "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}$",
+                          "type": "string"
+                        },
+                        "timeZone": {
+                          "type": "string"
+                        },
+                        "start": {
+                          "format": "date-time",
+                          "type": "string"
+                        },
+                        "end": {
+                          "format": "date-time",
+                          "type": "string"
+                        },
+                        "asOf": {
+                          "format": "date-time",
+                          "description": "What “at the end” is counted at: the end of the period, or now when it has not ended.",
+                          "type": "string"
+                        },
+                        "ended": {
+                          "type": "boolean"
+                        }
+                      }
+                    },
+                    "flights": {
+                      "description": "Flights and flight time from the flight records on file. Needs evidence:read.",
+                      "anyOf": [
+                        {
+                          "additionalProperties": false,
+                          "type": "object",
+                          "required": [
+                            "readable",
+                            "flights",
+                            "flightSeconds",
+                            "withoutDuration",
+                            "plannedWithoutRecord"
+                          ],
+                          "properties": {
+                            "readable": {
+                              "const": true,
+                              "type": "boolean"
+                            },
+                            "flights": {
+                              "minimum": 0,
+                              "description": "Flights with a current flight record whose takeoff is in the period.",
+                              "type": "integer"
+                            },
+                            "flightSeconds": {
+                              "minimum": 0,
+                              "description": "Their recorded takeoff to landing time, added up, in seconds.",
+                              "type": "integer"
+                            },
+                            "withoutDuration": {
+                              "minimum": 0,
+                              "description": "Of those flights, the ones whose recorded landing is not after their takeoff: not in the time.",
+                              "type": "integer"
+                            },
+                            "plannedWithoutRecord": {
+                              "minimum": 0,
+                              "description": "Flights with a current plan starting in the period and no flight record: not counted above.",
+                              "type": "integer"
+                            }
+                          }
+                        },
+                        {
+                          "additionalProperties": false,
+                          "type": "object",
+                          "required": [
+                            "readable",
+                            "capability"
+                          ],
+                          "properties": {
+                            "readable": {
+                              "const": false,
+                              "type": "boolean"
+                            },
+                            "capability": {
+                              "description": "What reading this part needs, which the reader does not hold.",
+                              "type": "string"
+                            }
+                          }
+                        }
+                      ]
+                    },
+                    "findings": {
+                      "description": "Counted findings by rule: opened and closed in the period, and open at its end. Needs evidence:read.",
+                      "anyOf": [
+                        {
+                          "additionalProperties": false,
+                          "type": "object",
+                          "required": [
+                            "readable",
+                            "rules",
+                            "total",
+                            "proposed",
+                            "relieved"
+                          ],
+                          "properties": {
+                            "readable": {
+                              "const": true,
+                              "type": "boolean"
+                            },
+                            "rules": {
+                              "type": "array",
+                              "items": {
+                                "additionalProperties": false,
+                                "type": "object",
+                                "required": [
+                                  "packId",
+                                  "packTitle",
+                                  "ruleId",
+                                  "ruleTitle",
+                                  "opened",
+                                  "closed",
+                                  "openAtEnd"
+                                ],
+                                "properties": {
+                                  "packId": {
+                                    "minLength": 1,
+                                    "maxLength": 200,
+                                    "type": "string"
+                                  },
+                                  "packTitle": {
+                                    "type": "string"
+                                  },
+                                  "ruleId": {
+                                    "minLength": 1,
+                                    "maxLength": 200,
+                                    "type": "string"
+                                  },
+                                  "ruleTitle": {
+                                    "type": "string"
+                                  },
+                                  "opened": {
+                                    "minimum": 0,
+                                    "type": "integer"
+                                  },
+                                  "closed": {
+                                    "minimum": 0,
+                                    "type": "integer"
+                                  },
+                                  "openAtEnd": {
+                                    "minimum": 0,
+                                    "type": "integer"
+                                  }
+                                }
+                              }
+                            },
+                            "total": {
+                              "additionalProperties": false,
+                              "type": "object",
+                              "required": [
+                                "opened",
+                                "closed",
+                                "openAtEnd"
+                              ],
+                              "properties": {
+                                "opened": {
+                                  "minimum": 0,
+                                  "type": "integer"
+                                },
+                                "closed": {
+                                  "minimum": 0,
+                                  "type": "integer"
+                                },
+                                "openAtEnd": {
+                                  "minimum": 0,
+                                  "type": "integer"
+                                }
+                              }
+                            },
+                            "proposed": {
+                              "minimum": 0,
+                              "description": "Findings opened in the period by rules adopted to propose only: recorded, never counted.",
+                              "type": "integer"
+                            },
+                            "relieved": {
+                              "minimum": 0,
+                              "description": "Findings opened in the period whose latest result a waiver relieves: not counted.",
+                              "type": "integer"
+                            }
+                          }
+                        },
+                        {
+                          "additionalProperties": false,
+                          "type": "object",
+                          "required": [
+                            "readable",
+                            "capability"
+                          ],
+                          "properties": {
+                            "readable": {
+                              "const": false,
+                              "type": "boolean"
+                            },
+                            "capability": {
+                              "description": "What reading this part needs, which the reader does not hold.",
+                              "type": "string"
+                            }
+                          }
+                        }
+                      ]
+                    },
+                    "findingActions": {
+                      "description": "Actions planned on counted findings, open at the end of the period and of those overdue. Needs evidence:read.",
+                      "anyOf": [
+                        {
+                          "additionalProperties": false,
+                          "type": "object",
+                          "required": [
+                            "readable",
+                            "open",
+                            "overdue"
+                          ],
+                          "properties": {
+                            "readable": {
+                              "const": true,
+                              "type": "boolean"
+                            },
+                            "open": {
+                              "minimum": 0,
+                              "type": "integer"
+                            },
+                            "overdue": {
+                              "minimum": 0,
+                              "type": "integer"
+                            }
+                          }
+                        },
+                        {
+                          "additionalProperties": false,
+                          "type": "object",
+                          "required": [
+                            "readable",
+                            "capability"
+                          ],
+                          "properties": {
+                            "readable": {
+                              "const": false,
+                              "type": "boolean"
+                            },
+                            "capability": {
+                              "description": "What reading this part needs, which the reader does not hold.",
+                              "type": "string"
+                            }
+                          }
+                        }
+                      ]
+                    },
+                    "assuranceActions": {
+                      "description": "Actions of signed safety assurance records, open at the end of the period and of those overdue. Needs sms:read.",
+                      "anyOf": [
+                        {
+                          "additionalProperties": false,
+                          "type": "object",
+                          "required": [
+                            "readable",
+                            "open",
+                            "overdue"
+                          ],
+                          "properties": {
+                            "readable": {
+                              "const": true,
+                              "type": "boolean"
+                            },
+                            "open": {
+                              "minimum": 0,
+                              "type": "integer"
+                            },
+                            "overdue": {
+                              "minimum": 0,
+                              "type": "integer"
+                            }
+                          }
+                        },
+                        {
+                          "additionalProperties": false,
+                          "type": "object",
+                          "required": [
+                            "readable",
+                            "capability"
+                          ],
+                          "properties": {
+                            "readable": {
+                              "const": false,
+                              "type": "boolean"
+                            },
+                            "capability": {
+                              "description": "What reading this part needs, which the reader does not hold.",
+                              "type": "string"
+                            }
+                          }
+                        }
+                      ]
+                    },
+                    "hazards": {
+                      "description": "Hazards open at the end of the period, by level. Needs sms:read.",
+                      "anyOf": [
+                        {
+                          "additionalProperties": false,
+                          "type": "object",
+                          "required": [
+                            "readable",
+                            "levels",
+                            "notAssessed",
+                            "total"
+                          ],
+                          "properties": {
+                            "readable": {
+                              "const": true,
+                              "type": "boolean"
+                            },
+                            "levels": {
+                              "description": "Hazards open at the end by the residual level of their latest assessment, least first.",
+                              "type": "array",
+                              "items": {
+                                "additionalProperties": false,
+                                "type": "object",
+                                "required": [
+                                  "level",
+                                  "label",
+                                  "count"
+                                ],
+                                "properties": {
+                                  "level": {
+                                    "minLength": 1,
+                                    "maxLength": 200,
+                                    "type": "string"
+                                  },
+                                  "label": {
+                                    "type": "string"
+                                  },
+                                  "count": {
+                                    "minimum": 0,
+                                    "type": "integer"
+                                  }
+                                }
+                              }
+                            },
+                            "notAssessed": {
+                              "minimum": 0,
+                              "type": "integer"
+                            },
+                            "total": {
+                              "minimum": 0,
+                              "type": "integer"
+                            }
+                          }
+                        },
+                        {
+                          "additionalProperties": false,
+                          "type": "object",
+                          "required": [
+                            "readable",
+                            "capability"
+                          ],
+                          "properties": {
+                            "readable": {
+                              "const": false,
+                              "type": "boolean"
+                            },
+                            "capability": {
+                              "description": "What reading this part needs, which the reader does not hold.",
+                              "type": "string"
+                            }
+                          }
+                        }
+                      ]
+                    },
+                    "computedAt": {
+                      "format": "date-time",
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "error",
+                    "requestId"
+                  ],
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "required": [
+                        "code",
+                        "message"
+                      ],
+                      "properties": {
+                        "code": {
+                          "type": "string"
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "details": {
+                          "type": "object",
+                          "patternProperties": {
+                            "^(.*)$": {}
+                          }
+                        }
+                      }
+                    },
+                    "requestId": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Authentication required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "error",
+                    "requestId"
+                  ],
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "required": [
+                        "code",
+                        "message"
+                      ],
+                      "properties": {
+                        "code": {
+                          "type": "string"
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "details": {
+                          "type": "object",
+                          "patternProperties": {
+                            "^(.*)$": {}
+                          }
+                        }
+                      }
+                    },
+                    "requestId": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Missing capability",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "error",
+                    "requestId"
+                  ],
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "required": [
+                        "code",
+                        "message"
+                      ],
+                      "properties": {
+                        "code": {
+                          "type": "string"
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "details": {
+                          "type": "object",
+                          "patternProperties": {
+                            "^(.*)$": {}
+                          }
+                        }
+                      }
+                    },
+                    "requestId": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Scoped object unavailable",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "error",
+                    "requestId"
+                  ],
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "required": [
+                        "code",
+                        "message"
+                      ],
+                      "properties": {
+                        "code": {
+                          "type": "string"
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "details": {
+                          "type": "object",
+                          "patternProperties": {
+                            "^(.*)$": {}
+                          }
+                        }
+                      }
+                    },
+                    "requestId": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Stale basis or conflicting idempotency content",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "error",
+                    "requestId"
+                  ],
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "required": [
+                        "code",
+                        "message"
+                      ],
+                      "properties": {
+                        "code": {
+                          "type": "string"
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "details": {
+                          "type": "object",
+                          "patternProperties": {
+                            "^(.*)$": {}
+                          }
+                        }
+                      }
+                    },
+                    "requestId": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Bounded intake exceeded",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "error",
+                    "requestId"
+                  ],
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "required": [
+                        "code",
+                        "message"
+                      ],
+                      "properties": {
+                        "code": {
+                          "type": "string"
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "details": {
+                          "type": "object",
+                          "patternProperties": {
+                            "^(.*)$": {}
+                          }
+                        }
+                      }
+                    },
+                    "requestId": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/reports/findings-by-month": {
+      "get": {
+        "operationId": "findingsByMonth",
+        "summary": "Count findings opened and closed each month, by rule",
+        "description": "Returns, for each rule as its pack names it, how many counted findings opened and how many closed in each month of the period, months in the organization’s time zone; the twelve months ending with the current one unless a period is given. Needs `evidence:read`.",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "from",
+            "in": "query",
+            "schema": {
+              "pattern": "^[0-9]{4}-(0[1-9]|1[0-2])$",
+              "type": "string",
+              "description": "The first month, such as 2026-01."
+            }
+          },
+          {
+            "name": "until",
+            "in": "query",
+            "schema": {
+              "pattern": "^[0-9]{4}-(0[1-9]|1[0-2])$",
+              "type": "string",
+              "description": "The last month, included. Both left out: the twelve months that end with the current one."
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": false,
+                  "description": "Counted findings opened and closed in each month, in the organization’s time zone, by rule. A rule with none in the period is not listed.",
+                  "type": "object",
+                  "required": [
+                    "period",
+                    "months",
+                    "rules",
+                    "total",
+                    "computedAt"
+                  ],
+                  "properties": {
+                    "period": {
+                      "additionalProperties": false,
+                      "type": "object",
+                      "required": [
+                        "from",
+                        "until",
+                        "timeZone"
+                      ],
+                      "properties": {
+                        "from": {
+                          "pattern": "^[0-9]{4}-(0[1-9]|1[0-2])$",
+                          "type": "string"
+                        },
+                        "until": {
+                          "pattern": "^[0-9]{4}-(0[1-9]|1[0-2])$",
+                          "type": "string"
+                        },
+                        "timeZone": {
+                          "type": "string"
+                        }
+                      }
+                    },
+                    "months": {
+                      "type": "array",
+                      "items": {
+                        "pattern": "^[0-9]{4}-(0[1-9]|1[0-2])$",
+                        "type": "string"
+                      }
+                    },
+                    "rules": {
+                      "type": "array",
+                      "items": {
+                        "additionalProperties": false,
+                        "type": "object",
+                        "required": [
+                          "packId",
+                          "packTitle",
+                          "ruleId",
+                          "ruleTitle",
+                          "opened",
+                          "closed"
+                        ],
+                        "properties": {
+                          "packId": {
+                            "minLength": 1,
+                            "maxLength": 200,
+                            "type": "string"
+                          },
+                          "packTitle": {
+                            "type": "string"
+                          },
+                          "ruleId": {
+                            "minLength": 1,
+                            "maxLength": 200,
+                            "type": "string"
+                          },
+                          "ruleTitle": {
+                            "type": "string"
+                          },
+                          "opened": {
+                            "description": "One count per month, in the order of months.",
+                            "type": "array",
+                            "items": {
+                              "minimum": 0,
+                              "type": "integer"
+                            }
+                          },
+                          "closed": {
+                            "type": "array",
+                            "items": {
+                              "minimum": 0,
+                              "type": "integer"
+                            }
+                          }
+                        }
+                      }
+                    },
+                    "total": {
+                      "additionalProperties": false,
+                      "type": "object",
+                      "required": [
+                        "opened",
+                        "closed"
+                      ],
+                      "properties": {
+                        "opened": {
+                          "type": "array",
+                          "items": {
+                            "minimum": 0,
+                            "type": "integer"
+                          }
+                        },
+                        "closed": {
+                          "type": "array",
+                          "items": {
+                            "minimum": 0,
+                            "type": "integer"
+                          }
+                        }
+                      }
+                    },
+                    "computedAt": {
+                      "format": "date-time",
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "error",
+                    "requestId"
+                  ],
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "required": [
+                        "code",
+                        "message"
+                      ],
+                      "properties": {
+                        "code": {
+                          "type": "string"
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "details": {
+                          "type": "object",
+                          "patternProperties": {
+                            "^(.*)$": {}
+                          }
+                        }
+                      }
+                    },
+                    "requestId": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Authentication required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "error",
+                    "requestId"
+                  ],
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "required": [
+                        "code",
+                        "message"
+                      ],
+                      "properties": {
+                        "code": {
+                          "type": "string"
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "details": {
+                          "type": "object",
+                          "patternProperties": {
+                            "^(.*)$": {}
+                          }
+                        }
+                      }
+                    },
+                    "requestId": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Missing capability",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "error",
+                    "requestId"
+                  ],
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "required": [
+                        "code",
+                        "message"
+                      ],
+                      "properties": {
+                        "code": {
+                          "type": "string"
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "details": {
+                          "type": "object",
+                          "patternProperties": {
+                            "^(.*)$": {}
+                          }
+                        }
+                      }
+                    },
+                    "requestId": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Scoped object unavailable",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "error",
+                    "requestId"
+                  ],
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "required": [
+                        "code",
+                        "message"
+                      ],
+                      "properties": {
+                        "code": {
+                          "type": "string"
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "details": {
+                          "type": "object",
+                          "patternProperties": {
+                            "^(.*)$": {}
+                          }
+                        }
+                      }
+                    },
+                    "requestId": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Stale basis or conflicting idempotency content",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "error",
+                    "requestId"
+                  ],
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "required": [
+                        "code",
+                        "message"
+                      ],
+                      "properties": {
+                        "code": {
+                          "type": "string"
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "details": {
+                          "type": "object",
+                          "patternProperties": {
+                            "^(.*)$": {}
+                          }
+                        }
+                      }
+                    },
+                    "requestId": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Bounded intake exceeded",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "error",
+                    "requestId"
+                  ],
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "required": [
+                        "code",
+                        "message"
+                      ],
+                      "properties": {
+                        "code": {
+                          "type": "string"
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "details": {
+                          "type": "object",
+                          "patternProperties": {
+                            "^(.*)$": {}
+                          }
+                        }
+                      }
+                    },
+                    "requestId": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/reports/indicators": {
+      "get": {
+        "operationId": "reportIndicators",
+        "summary": "List the indicators with recorded results",
+        "description": "Returns each indicator definition version with at least one recorded result: its title, how many results and the windows they cover. Needs `evidence:read`.",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": false,
+                  "description": "Each indicator definition with at least one recorded result, by title.",
+                  "type": "object",
+                  "required": [
+                    "indicators"
+                  ],
+                  "properties": {
+                    "indicators": {
+                      "type": "array",
+                      "items": {
+                        "additionalProperties": false,
+                        "type": "object",
+                        "required": [
+                          "id",
+                          "version",
+                          "title",
+                          "results",
+                          "firstWindowStart",
+                          "lastWindowEnd"
+                        ],
+                        "properties": {
+                          "id": {
+                            "minLength": 1,
+                            "maxLength": 200,
+                            "type": "string"
+                          },
+                          "version": {
+                            "minimum": 1,
+                            "type": "integer"
+                          },
+                          "title": {
+                            "anyOf": [
+                              {
+                                "type": "string"
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ]
+                          },
+                          "results": {
+                            "minimum": 0,
+                            "type": "integer"
+                          },
+                          "firstWindowStart": {
+                            "format": "date-time",
+                            "type": "string"
+                          },
+                          "lastWindowEnd": {
+                            "format": "date-time",
+                            "type": "string"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "error",
+                    "requestId"
+                  ],
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "required": [
+                        "code",
+                        "message"
+                      ],
+                      "properties": {
+                        "code": {
+                          "type": "string"
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "details": {
+                          "type": "object",
+                          "patternProperties": {
+                            "^(.*)$": {}
+                          }
+                        }
+                      }
+                    },
+                    "requestId": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Authentication required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "error",
+                    "requestId"
+                  ],
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "required": [
+                        "code",
+                        "message"
+                      ],
+                      "properties": {
+                        "code": {
+                          "type": "string"
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "details": {
+                          "type": "object",
+                          "patternProperties": {
+                            "^(.*)$": {}
+                          }
+                        }
+                      }
+                    },
+                    "requestId": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Missing capability",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "error",
+                    "requestId"
+                  ],
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "required": [
+                        "code",
+                        "message"
+                      ],
+                      "properties": {
+                        "code": {
+                          "type": "string"
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "details": {
+                          "type": "object",
+                          "patternProperties": {
+                            "^(.*)$": {}
+                          }
+                        }
+                      }
+                    },
+                    "requestId": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Scoped object unavailable",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "error",
+                    "requestId"
+                  ],
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "required": [
+                        "code",
+                        "message"
+                      ],
+                      "properties": {
+                        "code": {
+                          "type": "string"
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "details": {
+                          "type": "object",
+                          "patternProperties": {
+                            "^(.*)$": {}
+                          }
+                        }
+                      }
+                    },
+                    "requestId": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Stale basis or conflicting idempotency content",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "error",
+                    "requestId"
+                  ],
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "required": [
+                        "code",
+                        "message"
+                      ],
+                      "properties": {
+                        "code": {
+                          "type": "string"
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "details": {
+                          "type": "object",
+                          "patternProperties": {
+                            "^(.*)$": {}
+                          }
+                        }
+                      }
+                    },
+                    "requestId": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Bounded intake exceeded",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "error",
+                    "requestId"
+                  ],
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "required": [
+                        "code",
+                        "message"
+                      ],
+                      "properties": {
+                        "code": {
+                          "type": "string"
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "details": {
+                          "type": "object",
+                          "patternProperties": {
+                            "^(.*)$": {}
+                          }
+                        }
+                      }
+                    },
+                    "requestId": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/reports/indicators/{indicatorId}/versions/{version}": {
+      "get": {
+        "operationId": "indicatorHistory",
+        "summary": "Read one indicator’s recorded results over time",
+        "description": "Returns every recorded result of one indicator definition version, across its control windows, ordered by window: the rate each states or that it states none, its counts, and the limit the definition sets, if any. Needs `evidence:read`.",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "indicatorId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "version",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": false,
+                  "description": "Every recorded result of one indicator definition version, across its control windows, by window then by when it was recorded.",
+                  "type": "object",
+                  "required": [
+                    "definition",
+                    "results",
+                    "truncated",
+                    "computedAt"
+                  ],
+                  "properties": {
+                    "definition": {
+                      "additionalProperties": false,
+                      "description": "As the registered definition states it; null where no registered one does.",
+                      "type": "object",
+                      "required": [
+                        "id",
+                        "version",
+                        "title",
+                        "description",
+                        "unitLabel",
+                        "limit"
+                      ],
+                      "properties": {
+                        "id": {
+                          "minLength": 1,
+                          "maxLength": 200,
+                          "type": "string"
+                        },
+                        "version": {
+                          "minimum": 1,
+                          "type": "integer"
+                        },
+                        "title": {
+                          "anyOf": [
+                            {
+                              "type": "string"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "description": {
+                          "anyOf": [
+                            {
+                              "type": "string"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "unitLabel": {
+                          "anyOf": [
+                            {
+                              "type": "string"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "limit": {
+                          "description": "The level the definition sets for a person to compare a rate with, or null when it sets none.",
+                          "anyOf": [
+                            {
+                              "additionalProperties": false,
+                              "type": "object",
+                              "required": [
+                                "rate",
+                                "label"
+                              ],
+                              "properties": {
+                                "rate": {
+                                  "pattern": "^(0|[1-9][0-9]{0,17})(\\.[0-9]{1,12})?$",
+                                  "type": "string"
+                                },
+                                "label": {
+                                  "type": "string"
+                                }
+                              }
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        }
+                      }
+                    },
+                    "results": {
+                      "maxItems": 500,
+                      "type": "array",
+                      "items": {
+                        "additionalProperties": false,
+                        "type": "object",
+                        "required": [
+                          "id",
+                          "digest",
+                          "windowId",
+                          "hazardId",
+                          "window",
+                          "recordedAt",
+                          "recordedThrough",
+                          "status",
+                          "eventCount",
+                          "exposure",
+                          "rate"
+                        ],
+                        "properties": {
+                          "id": {
+                            "minLength": 1,
+                            "maxLength": 200,
+                            "type": "string"
+                          },
+                          "digest": {
+                            "pattern": "^[a-f0-9]{64}$",
+                            "type": "string"
+                          },
+                          "windowId": {
+                            "minLength": 1,
+                            "maxLength": 200,
+                            "type": "string"
+                          },
+                          "hazardId": {
+                            "minLength": 1,
+                            "maxLength": 200,
+                            "type": "string"
+                          },
+                          "window": {
+                            "additionalProperties": false,
+                            "type": "object",
+                            "required": [
+                              "start",
+                              "end"
+                            ],
+                            "properties": {
+                              "start": {
+                                "format": "date-time",
+                                "type": "string"
+                              },
+                              "end": {
+                                "format": "date-time",
+                                "type": "string"
+                              }
+                            }
+                          },
+                          "recordedAt": {
+                            "format": "date-time",
+                            "type": "string"
+                          },
+                          "recordedThrough": {
+                            "format": "date-time",
+                            "type": "string"
+                          },
+                          "status": {
+                            "anyOf": [
+                              {
+                                "const": "supported",
+                                "type": "string"
+                              },
+                              {
+                                "const": "insufficient",
+                                "type": "string"
+                              },
+                              {
+                                "const": "conflicting",
+                                "type": "string"
+                              }
+                            ]
+                          },
+                          "eventCount": {
+                            "minimum": 0,
+                            "type": "integer"
+                          },
+                          "exposure": {
+                            "additionalProperties": false,
+                            "type": "object",
+                            "required": [
+                              "decimal",
+                              "unit"
+                            ],
+                            "properties": {
+                              "decimal": {
+                                "pattern": "^(0|[1-9][0-9]{0,17})(\\.[0-9]{1,12})?$",
+                                "type": "string"
+                              },
+                              "unit": {
+                                "type": "string"
+                              }
+                            }
+                          },
+                          "rate": {
+                            "description": "The rate the result states, or null when the evidence supported none.",
+                            "anyOf": [
+                              {
+                                "additionalProperties": false,
+                                "type": "object",
+                                "required": [
+                                  "decimal",
+                                  "label"
+                                ],
+                                "properties": {
+                                  "decimal": {
+                                    "type": "string"
+                                  },
+                                  "label": {
+                                    "type": "string"
+                                  }
+                                }
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ]
+                          }
+                        }
+                      }
+                    },
+                    "truncated": {
+                      "description": "More results are recorded than are listed: the newest are listed.",
+                      "type": "boolean"
+                    },
+                    "computedAt": {
+                      "format": "date-time",
+                      "type": "string"
                     }
                   }
                 }
@@ -146167,7 +148164,7 @@
             "name": "order",
             "in": "query",
             "schema": {
-              "description": "newest (the default) or oldest: by when each record was opened, then by id. due: the soonest due date first, records with none last, then by id.",
+              "description": "newest (the default) or oldest: by when each record was opened, then by id. due: the soonest due date first, records with none last, then by id. owner: by the owner’s name, then by id.",
               "anyOf": [
                 {
                   "const": "newest",
@@ -146179,6 +148176,10 @@
                 },
                 {
                   "const": "due",
+                  "type": "string"
+                },
+                {
+                  "const": "owner",
                   "type": "string"
                 }
               ]

@@ -546,6 +546,13 @@ const registerOrders: Record<
     },
     by: 'r.due_at NULLS LAST,r.id',
   },
+  // A person's name can change between pages; the next page starts after the cursor record's owner as named now.
+  owner: {
+    after: (cursor, at) =>
+      `(o.name,r.id)>(SELECT n.name,c.id FROM sms_records c JOIN principals n ON n.tenant_id=c.tenant_id
+        AND n.id=c.owner_id WHERE c.tenant_id=r.tenant_id AND c.id=${at(cursor.id)})`,
+    by: 'o.name,r.id',
+  },
 };
 
 /** A search's words as a case-insensitive LIKE pattern that matches them literally. */

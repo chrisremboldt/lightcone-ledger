@@ -29,7 +29,7 @@ import { AssuranceActionsDue, AssuranceRegister } from './SmsAssurance.js';
 import type { FlightFinding, FlightLinks } from './safety-navigation.js';
 import { readFailureOutcome } from './read-failure.js';
 import { barSection, goTo, placeTitle, usePlace, type Place } from './place.js';
-import { offeredSections, TopBar } from './TopBar.js';
+import { offeredSections, PlaceLink, TopBar } from './TopBar.js';
 import { SectionArea, SectionUnavailable } from './SectionArea.js';
 
 /** Whether a person reads the controlled documents and no other safety record. */
@@ -705,6 +705,10 @@ function SafetyHome({
         </div>
         <p className="safety-intro">
           Decisions, document reading and safety work that need attention across your organization.
+        </p>
+        <p className="safety-intro report-entry">
+          <PlaceLink place={{ section: 'reports', report: 'home' }}>Reports</PlaceLink>: a summary of a period to print
+          or save, findings by month and indicators over time.
         </p>
         <FirstSteps home={home} documents={documents} reports={reports} principal={principal} onStart={onStart} />
         <MyDocumentReading

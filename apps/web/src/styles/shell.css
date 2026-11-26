@@ -778,6 +778,19 @@
   .topbar-user small {
     display: none;
   }
+  /* Room for Reports: the organization's name stands without its shown label (still read out), and the sections sit
+     closer. */
+  .topbar:not(.topbar--narrow) .topbar-label {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+  .topbar:not(.topbar--narrow) .topbar-sections .button {
+    padding-inline: 9px;
+  }
 }
 @media (max-width: 1360px) {
   .workspace {

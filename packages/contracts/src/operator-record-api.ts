@@ -408,12 +408,18 @@ export const OperatorRecordQuerySchema = Type.Object(
       Type.String({ format: 'date-time', description: 'Records whose time starts before this instant.' }),
     ),
     sourceId: Type.Optional(Id),
+    order: Type.Optional(
+      Type.Union([Type.Literal('newest'), Type.Literal('subject')], {
+        description:
+          'newest (the default): by the time each record is about, the most recent first, then by id. subject: by the operator’s own id for the subject, then the most recent first.',
+      }),
+    ),
     cursor: Type.Optional(Type.String({ maxLength: 4096, description: 'The nextCursor of the previous page.' })),
     limit: Type.Optional(Type.Integer({ minimum: 1, maximum: OPERATOR_RECORD_PAGE_LIMIT })),
   },
   {
     ...Closed,
-    description: `Records by type, subject and the time they are about, newest first and then by id, a page at a time. Replaced records are included and carry replacedBy. sourceId defaults to ${OPERATOR_RECORD_SOURCE_ID}.`,
+    description: `Records by type, subject and the time they are about, newest first and then by id (or by subject when asked), a page at a time. Replaced records are included and carry replacedBy. sourceId defaults to ${OPERATOR_RECORD_SOURCE_ID}.`,
   },
 );
 export type OperatorRecordQuery = Static<typeof OperatorRecordQuerySchema>;

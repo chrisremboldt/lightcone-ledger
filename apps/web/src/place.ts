@@ -30,6 +30,8 @@ export type Place =
   | { section: 'people'; personId?: string }
   /** The organization's notices, and its webhook for them. */
   | { section: 'people'; pane: NoticesPane }
+  /** The reports: their list, a period's summary, findings per month, indicators over time and one flight's file. */
+  | ({ section: 'reports' } & ReportView)
   /** An address that names no place here. */
   | { section: 'unknown'; path: string };
 
@@ -37,6 +39,16 @@ export type Section = Place['section'];
 export type SafetyView = 'home' | 'hazards' | 'documents' | 'reports' | 'assurance' | 'new-risk-matrix';
 export type RecordTypePane = 'browse' | 'import' | 'enter';
 export type NoticesPane = 'notices' | 'webhook';
+/**
+ * A report and what it is of. A period is two calendar days (or months) in the organization's time zone, in the
+ * address, so a link to a summary opens the same summary.
+ */
+export type ReportView =
+  | { report: 'home' }
+  | { report: 'summary'; from: string; until: string }
+  | { report: 'findings'; from?: string; until?: string }
+  | { report: 'indicators'; id?: string; version?: number }
+  | { report: 'flight'; flightId: string };
 /**
  * The plain choices a safety register is narrowed by: its state, its type and its order. A search's text and the days
  * are typed, and never go in the address.
@@ -62,6 +74,7 @@ export const sections = [
   ['safety', 'Safety'],
   ['records', 'Records'],
   ['rules', 'Rules'],
+  ['reports', 'Reports'],
   ['people', 'People'],
 ] as const;
 export type BarSection = (typeof sections)[number][0];
@@ -147,9 +160,56 @@ export function placeAddress(place: Place): { path: string; query: Record<string
       if ('pane' in place)
         return { path: place.pane === 'notices' ? '/people/notices' : '/people/notices/webhook', query: {} };
       return { path: place.personId ? at('people', place.personId) : '/people', query: {} };
+    case 'reports':
+      return { path: reportPath(place, at), query: {} };
     case 'unknown':
       return { path: place.path, query: {} };
   }
+}
+
+function reportPath(place: ReportView, at: (...parts: string[]) => string): string {
+  switch (place.report) {
+    case 'home':
+      return '/reports';
+    case 'summary':
+      return at('reports', 'summary', place.from, place.until);
+    case 'findings':
+      return place.from && place.until ? at('reports', 'findings', place.from, place.until) : '/reports/findings';
+    case 'indicators':
+      return place.id && place.version
+        ? at('reports', 'indicators', place.id, String(place.version))
+        : '/reports/indicators';
+    case 'flight':
+      return at('reports', 'flights', place.flightId);
+  }
+}
+
+/** Whether a text is a calendar day, YYYY-MM-DD. */
+export function calendarDay(text: string): boolean {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(text)) return false;
+  const date = new Date(`${text}T00:00:00Z`);
+  return !Number.isNaN(date.getTime()) && date.toISOString().slice(0, 10) === text;
+}
+/** Whether a text is a calendar month, YYYY-MM. */
+export function calendarMonth(text: string): boolean {
+  return /^\d{4}-(0[1-9]|1[0-2])$/.test(text);
+}
+
+function reportsPlace(rest: string[]): Place | null {
+  const [first, one, two, ...more] = rest;
+  const reports = (view: ReportView): Place => ({ section: 'reports', ...view });
+  if (rest.length === 0) return reports({ report: 'home' });
+  if (more.length) return null;
+  if (first === 'summary' && one && two && calendarDay(one) && calendarDay(two) && one <= two)
+    return reports({ report: 'summary', from: one, until: two });
+  if (first === 'findings' && !one) return reports({ report: 'findings' });
+  if (first === 'findings' && one && two && calendarMonth(one) && calendarMonth(two) && one <= two)
+    return reports({ report: 'findings', from: one, until: two });
+  if (first === 'indicators' && !one) return reports({ report: 'indicators' });
+  if (first === 'indicators' && one && two && /^[1-9][0-9]{0,8}$/.test(two))
+    return reports({ report: 'indicators', id: one, version: Number(two) });
+  if (first === 'flights' && one && !two) return reports({ report: 'flight', flightId: one });
+  return null;
 }
 
 /** The path of a place, with its own query when it has one. */
@@ -193,6 +253,8 @@ export function placeFromAddress(pathname: string, search = ''): Place {
       return recordsPlace(rest) ?? unknown;
     case 'rules':
       return rulesPlace(rest, query) ?? unknown;
+    case 'reports':
+      return reportsPlace(rest) ?? unknown;
     case 'people':
       if (rest.length === 0) return { section: 'people' };
       // A person's id never is "notices": people are person-<uuid>, and other principals have prefixes of their own.
@@ -350,6 +412,22 @@ export function placeTitle(place: Place, thing?: string): string {
     case 'people':
       if ('pane' in place) return title(place.pane === 'notices' ? 'Notices' : 'Webhook for notices', 'People');
       return place.personId ? title(thing ?? 'Person', 'People') : title('People');
+    case 'reports':
+      switch (place.report) {
+        case 'home':
+          return title('Reports');
+        case 'summary':
+          return title(`Summary ${place.from} to ${place.until}`, 'Reports');
+        case 'findings':
+          return title(
+            place.from ? `Findings by month ${place.from} to ${place.until}` : 'Findings by month',
+            'Reports',
+          );
+        case 'indicators':
+          return title(place.id ? (thing ?? `Indicator ${place.id}`) : 'Indicators over time', 'Reports');
+        case 'flight':
+          return title(thing ?? `Flight ${place.flightId}`, 'Reports');
+      }
   }
 }
 

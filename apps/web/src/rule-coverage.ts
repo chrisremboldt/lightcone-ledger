@@ -100,9 +100,18 @@ export function oneSubject(kind: ObservationSubjectKind | undefined): string {
   return `${/^[aeiou]/.test(noun) ? 'An' : 'A'} ${noun}`;
 }
 
-/** A record type by the name a person picks it by under Records, from the same definitions; its id if none. */
-export function recordTypeName(recordType: string): string {
-  const definitions = Object.values(standardObservationRegistry.recordTypes).filter(isOperatorRecordDefinition);
+/** A record type as the organization's catalog under Records lists it: its id, version and title. */
+export type CatalogType = { recordType: string; recordVersion: number; title: string };
+
+/**
+ * A record type by the name a person picks it by under Records: from the organization's own catalog when it is read,
+ * which holds the types its packs declare, else from the standard definitions; its id if neither names it.
+ */
+export function recordTypeName(recordType: string, catalog: readonly CatalogType[] = []): string {
+  const definitions = [
+    ...catalog,
+    ...Object.values(standardObservationRegistry.recordTypes).filter(isOperatorRecordDefinition),
+  ];
   const named = definitions
     .filter((definition) => definition.recordType === recordType)
     .sort((one, other) => other.recordVersion - one.recordVersion)[0];
@@ -113,7 +122,7 @@ export function recordTypeName(recordType: string): string {
  * What to tell a person when a rule covers no one yet: a subject is on record once a record is about it, which is not
  * the same as a person who may sign in.
  */
-export function emptyPopulationHint(rule: RuleCoverage): string | null {
+export function emptyPopulationHint(rule: RuleCoverage, catalog: readonly CatalogType[] = []): string | null {
   if (rule.populationSize !== 0) return null;
   const one = oneSubject(rule.subjectKind);
   const them = rule.subjectKind === 'person' ? 'them' : 'it';
@@ -121,7 +130,7 @@ export function emptyPopulationHint(rule: RuleCoverage): string | null {
     // The record types whose records name the rule's subjects, as the rule itself declares them.
     const types = (rule.population.by.where ?? []).flatMap((condition) =>
       condition.field === 'values.recordType' && 'oneOf' in condition
-        ? condition.oneOf.map((value) => recordTypeName(String(value)))
+        ? condition.oneOf.map((value) => recordTypeName(String(value), catalog))
         : [],
     );
     const named = types.length ? `a record of type ${types.join(' or ')}` : 'a record this rule reads for it';

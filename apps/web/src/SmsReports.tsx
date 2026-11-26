@@ -78,7 +78,7 @@ export function ReportsRegister({
             searchLabel="Your reference for the report"
             searchHint="Search finds a report by your reference for it only. What a report says and who sent it are never searched."
             statuses={reportStatuses}
-            orders={['newest', 'oldest']}
+            orders={['newest', 'oldest', 'owner']}
             openedLabel="Recorded as received"
           />
         )}

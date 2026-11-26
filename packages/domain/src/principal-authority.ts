@@ -270,25 +270,54 @@ export async function createOrganization(
   };
 }
 
-/** A page's position in the list: the name and id of its last entry, as the order compares them. */
-function principalCursor(name: string, id: string): string {
-  return Buffer.from(JSON.stringify([name, id])).toString('base64url');
+type PeopleOrder = NonNullable<PrincipalAuthorityListQuery['order']>;
+
+/**
+ * A page's position in the list: its order, and the name (or when it was added, empty when not recorded) and id of
+ * its last entry, as the order compares them.
+ */
+function principalCursor(order: PeopleOrder, first: string, id: string): string {
+  return Buffer.from(JSON.stringify([order, first, id])).toString('base64url');
 }
-function readPrincipalCursor(cursor: string): [string, string] {
+function readPrincipalCursor(order: PeopleOrder, cursor: string): [string, string] {
   try {
     const position: unknown = JSON.parse(Buffer.from(cursor, 'base64url').toString('utf8'));
     if (
       Array.isArray(position) &&
-      position.length === 2 &&
+      position.length === 3 &&
       position.every((part) => typeof part === 'string') &&
-      principalCursor(position[0], position[1]) === cursor
+      position[0] === order &&
+      principalCursor(order, position[1], position[2]) === cursor
     )
-      return [position[0], position[1]];
+      return [position[1], position[2]];
   } catch {
     // Refused below, like any other cursor this list did not give.
   }
   throw new DomainError(400, 'invalid_cursor', 'The people list cursor is not one this list gave');
 }
+
+/**
+ * When Ledger first recorded each principal: the first event of its authority stream, which adding a person writes.
+ * Text with microseconds, so a page boundary compares exactly; null for one put on file another way, such as a seed.
+ */
+const ADDED_AT = `(SELECT to_char(e.received_at AT TIME ZONE 'UTC','YYYY-MM-DD"T"HH24:MI:SS.US"Z"')
+  FROM streams s JOIN journal_events e ON e.tenant_id=s.tenant_id AND e.stream_id=s.id
+  WHERE s.tenant_id=p.tenant_id AND s.name='authority:'||p.id ORDER BY e.stream_sequence LIMIT 1)`;
+
+/** Where each order resumes after $3 (the name, or when added) and $4 (the id), and the order itself. */
+const peopleOrders: Record<PeopleOrder, { after: string; by: string }> = {
+  name: {
+    after: '(name COLLATE "C",id COLLATE "C")>($3::text COLLATE "C",$4::text COLLATE "C")',
+    by: 'name COLLATE "C",id COLLATE "C"',
+  },
+  // The most recently added first; those with no recorded addition last, by id.
+  recent: {
+    after: `(CASE WHEN $3::text='' THEN added_at IS NULL AND id COLLATE "C">$4::text COLLATE "C"
+      ELSE added_at IS NULL OR added_at::timestamptz<NULLIF($3::text,'')::timestamptz
+        OR (added_at::timestamptz=NULLIF($3::text,'')::timestamptz AND id COLLATE "C">$4::text COLLATE "C") END)`,
+    by: 'added_at::timestamptz DESC NULLS LAST,id COLLATE "C"',
+  },
+};
 
 /**
  * Everyone in the organization but its worker and its reporting channel, active or not, with their current authority,
@@ -302,13 +331,15 @@ export async function listPrincipalAuthority(
   if (!principal.capabilities.includes('authority:write'))
     throw new DomainError(403, 'capability_required', 'Reading principal authority requires authority:write');
   const limit = Math.min(query.limit ?? PRINCIPAL_AUTHORITY_LIST_LIMIT, PRINCIPAL_AUTHORITY_LIST_LIMIT);
-  const after = query.cursor ? readPrincipalCursor(query.cursor) : null;
+  const order = query.order ?? 'name';
+  const after = query.cursor ? readPrincipalCursor(order, query.cursor) : null;
   const rows = (
-    await client.query<AuthorityPrincipalRow & { sign_in_linked: boolean }>(
-      `SELECT ${AUTHORITY_PRINCIPAL_COLUMNS},sign_in_subject IS NOT NULL AS sign_in_linked
-       FROM principals WHERE tenant_id=$1 AND kind NOT IN ('worker','intake')
-         AND ($3::text IS NULL OR (name COLLATE "C",id COLLATE "C")>($3::text COLLATE "C",$4::text COLLATE "C"))
-       ORDER BY name COLLATE "C",id COLLATE "C" LIMIT $2`,
+    await client.query<AuthorityPrincipalRow & { sign_in_linked: boolean; added_at: string | null }>(
+      `SELECT * FROM (SELECT ${AUTHORITY_PRINCIPAL_COLUMNS},sign_in_subject IS NOT NULL AS sign_in_linked,
+           ${ADDED_AT} AS added_at
+         FROM principals p WHERE tenant_id=$1 AND kind NOT IN ('worker','intake')) AS listed
+       WHERE ($4::text IS NULL OR ${peopleOrders[order].after})
+       ORDER BY ${peopleOrders[order].by} LIMIT $2`,
       [principal.tenantId, limit + 1, after?.[0] ?? null, after?.[1] ?? null],
     )
   ).rows;
@@ -337,5 +368,6 @@ export async function listPrincipalAuthority(
   }));
   const hasMore = rows.length > limit;
   const last = shown.at(-1);
-  return { principals, hasMore, nextCursor: hasMore && last ? principalCursor(last.name, last.id) : null };
+  const position = (row: typeof last & {}) => (order === 'name' ? row.name : (row.added_at ?? ''));
+  return { principals, hasMore, nextCursor: hasMore && last ? principalCursor(order, position(last), last.id) : null };
 }

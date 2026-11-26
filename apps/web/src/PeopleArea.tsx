@@ -6,6 +6,7 @@ import {
   type Capability,
   type Principal,
   type PrincipalAuthorityEntry,
+  type PrincipalAuthorityListQuery,
   type PrincipalAuthorityListResponse,
   type SignInConfiguration,
 } from '@ledger/contracts';
@@ -53,11 +54,12 @@ export function PeopleArea({
   // How many pages are shown: reading again after a change reads as many, so the person changed stays in view.
   const [pageCount, setPageCount] = useState(1);
   const [reading, setReading] = useState(false);
+  const [order, setOrder] = useState<PeopleOrder>('name');
 
   useEffect(() => {
     let stopped = false;
     setReading(true);
-    readPeoplePages(client, pageCount)
+    readPeoplePages(client, pageCount, order)
       .then((response) => {
         if (stopped) return;
         setList(response);
@@ -68,7 +70,7 @@ export function PeopleArea({
     return () => {
       stopped = true;
     };
-  }, [client, reload, pageCount]);
+  }, [client, reload, pageCount, order]);
 
   const signIn = useSignInConfiguration(client);
   const changed = useCallback(
@@ -102,6 +104,22 @@ export function PeopleArea({
             Notices sent
           </PlaceLink>
         </div>
+        <label className="records-order">
+          Order{' '}
+          <select
+            value={order}
+            onChange={(event) => {
+              setOrder(event.target.value as PeopleOrder);
+              setPageCount(1);
+            }}
+          >
+            {(Object.keys(peopleOrderLabels) as PeopleOrder[]).map((value) => (
+              <option key={value} value={value}>
+                {peopleOrderLabels[value]}
+              </option>
+            ))}
+          </select>
+        </label>
         {!list && !error && <Spinner label="Loading people" />}
         <ul className="records-items people-list">
           {list?.principals.map((person) => (
@@ -182,11 +200,22 @@ export function PeopleArea({
   );
 }
 
-/** The first pages of everyone in the organization, as one list. */
-async function readPeoplePages(client: LedgerClient, count: number): Promise<PrincipalAuthorityListResponse> {
-  let shown = await client.principalAuthorities();
+type PeopleOrder = NonNullable<PrincipalAuthorityListQuery['order']>;
+const peopleOrderLabels: Record<PeopleOrder, string> = {
+  name: 'By name',
+  recent: 'Most recently added first',
+};
+
+/** The first pages of everyone in the organization, in one order, as one list. */
+async function readPeoplePages(
+  client: LedgerClient,
+  count: number,
+  order: PeopleOrder,
+): Promise<PrincipalAuthorityListResponse> {
+  const ordered = order === 'name' ? {} : { order };
+  let shown = await client.principalAuthorities(ordered);
   for (let page = 1; page < count && shown.nextCursor; page += 1) {
-    const next = await client.principalAuthorities({ cursor: shown.nextCursor });
+    const next = await client.principalAuthorities({ ...ordered, cursor: shown.nextCursor });
     shown = { ...next, principals: [...shown.principals, ...next.principals] };
   }
   return shown;

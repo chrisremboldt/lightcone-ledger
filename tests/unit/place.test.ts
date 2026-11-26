@@ -54,6 +54,13 @@ const places: Place[] = [
   { section: 'rules', pane: 'subjects' },
   { section: 'people' },
   { section: 'people', personId: 'principal-7' },
+  { section: 'reports', report: 'home' },
+  { section: 'reports', report: 'summary', from: '2026-11-01', until: '2026-11-30' },
+  { section: 'reports', report: 'findings' },
+  { section: 'reports', report: 'findings', from: '2025-12', until: '2026-11' },
+  { section: 'reports', report: 'indicators' },
+  { section: 'reports', report: 'indicators', id: 'example-airspace.excursions-per-flight-hour', version: 2 },
+  { section: 'reports', report: 'flight', flightId: 'RIDGE-FLT-1' },
 ];
 
 function roundTrip(place: Place): Place {
@@ -106,6 +113,15 @@ describe('places and their addresses', () => {
     '/setup/more',
     '/flights//x',
     '/flights/%E0%A4%A',
+    '/reports/summary/2026-11-01',
+    '/reports/summary/2026-11-30/2026-11-01',
+    '/reports/summary/2026-02-30/2026-03-01',
+    '/reports/findings/2026-13/2026-12',
+    '/reports/findings/2026-01',
+    '/reports/indicators/one/zero',
+    '/reports/flights',
+    '/reports/flights/a/b',
+    '/reports/elsewhere',
   ])('%s goes to the place that says nothing is here', (path) => {
     expect(placeFromAddress(path)).toEqual({ section: 'unknown', path });
     expect(placeTitle(placeFromAddress(path))).toBe('Not found here · Ledger');
@@ -142,6 +158,19 @@ describe('page titles', () => {
     expect(placeTitle({ section: 'rules', pane: 'open' })).toBe('Open findings · Rules · Ledger');
     expect(placeTitle({ section: 'people' })).toBe('People · Ledger');
     expect(placeTitle({ section: 'setup' })).toBe('Setup · Ledger');
+    expect(placeTitle({ section: 'reports', report: 'summary', from: '2026-11-01', until: '2026-11-30' })).toBe(
+      'Summary 2026-11-01 to 2026-11-30 · Reports · Ledger',
+    );
+    expect(placeTitle({ section: 'reports', report: 'flight', flightId: 'RIDGE-FLT-1' })).toBe(
+      'Flight RIDGE-FLT-1 · Reports · Ledger',
+    );
+  });
+
+  test('a report carries its period in its address, and belongs to Reports in the bar', () => {
+    expect(placePath({ section: 'reports', report: 'summary', from: '2026-11-01', until: '2026-11-30' })).toBe(
+      '/reports/summary/2026-11-01/2026-11-30',
+    );
+    expect(barSection({ section: 'reports', report: 'flight', flightId: 'RIDGE-FLT-1' })).toBe('reports');
   });
 
   test('never name a safety report', () => {

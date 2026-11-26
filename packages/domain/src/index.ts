@@ -1424,3 +1424,15 @@ export {
   type NoticeRecord,
 } from './notice-content.js';
 export { writeDatedNotices, type DatedNoticeOptions } from './notice-schedule.js';
+export {
+  actionsOpenAt,
+  checkPeriod,
+  findingsByMonth,
+  getFindingsByMonth,
+  getIndicatorHistory,
+  getPeriodSummary,
+  hazardLevels,
+  listReportIndicators,
+  monthBefore,
+  monthsBetween,
+} from './reports.js';

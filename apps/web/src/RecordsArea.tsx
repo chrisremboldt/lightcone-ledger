@@ -5,6 +5,7 @@ import {
   readsOnly,
   type OperatorRecordCommitResponse,
   type OperatorRecordListResponse,
+  type OperatorRecordQuery,
   type OperatorRecordPreviewResponse,
   type OperatorRecordTypesResponse,
   type OperatorRecordView,
@@ -37,6 +38,7 @@ import {
 import { time, timeRange, timeZoneLabel } from './format.js';
 import { plainError, saveBytes } from './sms-labels.js';
 import { goTo, usePlace, type Place } from './place.js';
+import { PlaceLink } from './TopBar.js';
 
 type RecordsPlace = Extract<Place, { section: 'records' }>;
 
@@ -163,6 +165,7 @@ export function RecordsArea({
             <button aria-current={pane === 'required' ? 'page' : undefined} onClick={() => setPane('required')}>
               Records your rules require
             </button>
+            <PlaceLink place={{ section: 'reports', report: 'home' }}>Reports</PlaceLink>
           </nav>
           <label className="records-field" htmlFor="records-type">
             Record type
@@ -381,6 +384,12 @@ function Completeness({ record }: { record: Pick<OperatorRecordView, 'complete' 
   );
 }
 
+type RecordOrder = NonNullable<OperatorRecordQuery['order']>;
+const recordOrderLabels: Record<RecordOrder, string> = {
+  newest: 'Most recent first',
+  subject: 'By subject id',
+};
+
 function RecordList({
   client,
   type,
@@ -403,12 +412,14 @@ function RecordList({
   const [error, setError] = useState<string | null>(null);
   const [reading, setReading] = useState(false);
   const [open, setOpen] = useState<string | null>(null);
+  const [order, setOrder] = useState<RecordOrder>('newest');
   const path = (cursor?: string) =>
     `/v1/operator-records?${new URLSearchParams({
       recordType: type.recordType,
       recordVersion: String(type.recordVersion),
       sourceId,
       ...(subjectId ? { subjectId } : {}),
+      ...(order !== 'newest' ? { order } : {}),
       ...(cursor ? { cursor } : {}),
     })}`;
   useEffect(() => {
@@ -420,7 +431,7 @@ function RecordList({
     return () => {
       stopped = true;
     };
-  }, [client, type, sourceId, subjectId]);
+  }, [client, type, sourceId, subjectId, order]);
   async function more() {
     const cursor = pages.at(-1)?.page.nextCursor;
     if (!cursor) return;
@@ -467,7 +478,20 @@ function RecordList({
           {list.page.hasMore ? '+' : ''}
         </span>
       </h2>
-      <p className="records-note">Newest first.</p>
+      {subjectId ? (
+        <p className="records-note">{recordOrderLabels.newest}.</p>
+      ) : (
+        <label className="records-order">
+          Order{' '}
+          <select value={order} onChange={(event) => setOrder(event.target.value as RecordOrder)}>
+            {(Object.keys(recordOrderLabels) as RecordOrder[]).map((value) => (
+              <option key={value} value={value}>
+                {recordOrderLabels[value]}
+              </option>
+            ))}
+          </select>
+        </label>
+      )}
       {!list.records.length && (
         <p className="records-note">
           No {type.title.toLowerCase()} records{subjectId ? ` for ${subjectId}` : ''} yet. Import a file or enter one.

@@ -147,6 +147,38 @@
     break-after: avoid;
   }
 
+  /* A report's chart keeps its drawing and its legend; its numbers are printed under it, unfolded. */
+  .report-page {
+    max-width: none;
+  }
+  .report-chart {
+    break-inside: avoid;
+  }
+  .report-chart-svg {
+    max-width: 100%;
+  }
+  .report-chart-svg text {
+    font-size: 10px;
+  }
+  .report-table {
+    overflow: visible !important;
+  }
+  .report-table summary {
+    margin: 4px 0;
+  }
+  .report-card {
+    border: 0;
+    padding: 0;
+  }
+  /* The choice of period, order or rule is the screen's; the page says which it shows. */
+  .report-period,
+  .records-order {
+    display: none !important;
+  }
+  .report-count {
+    color: var(--ink) !important;
+  }
+
   /* A link that leaves Ledger shows where it goes; a link inside Ledger is just text on paper. */
   a {
     color: var(--ink) !important;

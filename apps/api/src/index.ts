@@ -40,6 +40,7 @@ import {
   OrganizationPeopleQuerySchema,
   AuthorityPrincipalParamsSchema,
   PrincipalAuthorityListQuerySchema,
+  CredentialListQuerySchema,
   AcceptedAreaControlParamsSchema,
   FlightMissionParamsSchema,
   FlightMissionRevisionParamsSchema,
@@ -62,6 +63,7 @@ import {
   type OrganizationPeopleQuery,
   type AuthorityPrincipalParams,
   type PrincipalAuthorityListQuery,
+  type CredentialListQuery,
   type AcceptedAreaControlParams,
   type FlightMissionParams,
   type FlightMissionRevisionParams,
@@ -200,6 +202,7 @@ import { registerOperatorRecordRoutes } from './operator-records.js';
 import { registerRecordSubjectRoutes } from './operator-record-subjects.js';
 import { registerRequiredRecordRoutes } from './required-records.js';
 import { registerRecordProductionRoutes, SHARED_RECORDS_PATHS } from './record-productions.js';
+import { registerReportRoutes } from './report-routes.js';
 import { registerControlWindowRoutes } from './control-windows.js';
 import { registerPeopleRoutes } from './people-routes.js';
 import { registerNoticeRoutes } from './notice-routes.js';
@@ -588,6 +591,7 @@ export async function createApp(options: AppOptions = {}) {
   registerRequiredRecordRoutes(app, { pool, principal });
   registerRecordProductionRoutes(app, { pool, store, principal, key, boundedOperation: boundedExport });
   registerControlWindowRoutes(app, { pool, principal, key });
+  registerReportRoutes(app, { pool, principal });
   registerPeopleRoutes(app, { pool, env, principal });
   registerNoticeRoutes(app, { pool, env, principal });
   registerSafetyReportRoutes(app, { pool, store, principal, key });
@@ -658,15 +662,16 @@ export async function createApp(options: AppOptions = {}) {
     async (request) =>
       read(request, 'authority:write', (client, who) => listPrincipalAuthority(client, who, request.query)),
   );
-  app.get(
+  app.get<{ Querystring: CredentialListQuery }>(
     '/v1/authority/credentials',
     {
+      schema: { querystring: CredentialListQuerySchema },
       async onSend(_request, reply, payload) {
         reply.header('Cache-Control', 'private, no-store');
         return payload;
       },
     },
-    async (request) => read(request, 'authority:write', (client, who) => listCredentials(client, who)),
+    async (request) => read(request, 'authority:write', (client, who) => listCredentials(client, who, request.query)),
   );
   app.get<{ Params: AuthorityPrincipalParams }>(
     '/v1/authority/principals/:id',

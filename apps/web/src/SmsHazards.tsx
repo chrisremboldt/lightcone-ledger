@@ -113,7 +113,7 @@ export function HazardRegister({
             searchLabel="Title or reference"
             searchHint="Search finds a hazard by its title or your reference for it."
             statuses={hazardStatuses}
-            orders={['newest', 'oldest', 'due']}
+            orders={['newest', 'oldest', 'due', 'owner']}
           />
         )}
         {!list.records ? (

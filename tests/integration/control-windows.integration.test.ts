@@ -94,6 +94,7 @@ describe.runIf(process.env.LEDGER_ENV !== 'staging')('Control windows on Postgre
     window: { maxMilliseconds: 24 * 60 * 60 * 1000 },
     completeness: { exposureMustExceed: '0', populationDeclaredComplete: true, coverageWithoutGaps: true },
     unit: { per: 100, label: 'per 100 flights', fractionDigits: 2 },
+    limit: { rate: '50', label: 'Alert level' },
   });
   const expectedObservations = [
     { type: 'battery.state', versions: [1] },
@@ -599,6 +600,30 @@ describe.runIf(process.env.LEDGER_ENV !== 'staging')('Control windows on Postgre
       results: [{ digest: result.digest, wording: calculated.wording }],
       reviews: [{ record: { conclusion: 'effective' } }],
     });
+    // The indicator's results over time hold the same recorded result, with the level its definition sets.
+    const history = await call(who.safety, 'GET', `/v1/reports/indicators/${lowReserveRate.id}/versions/1`);
+    expect(history.statusCode, history.body).toBe(200);
+    expect(history.json()).toMatchObject({
+      definition: { id: lowReserveRate.id, title: lowReserveRate.title, limit: { rate: '50', label: 'Alert level' } },
+      results: [
+        {
+          id: result.record.id,
+          digest: result.digest,
+          windowId: window.id,
+          hazardId: control.hazardId,
+          window: result.record.result.window,
+          status: result.record.result.status,
+          eventCount: result.record.result.eventCount,
+          rate: result.record.result.rate
+            ? { decimal: result.record.result.rate.decimal, label: 'per 100 flights' }
+            : null,
+        },
+      ],
+    });
+    const indicators = await call(who.safety, 'GET', '/v1/reports/indicators');
+    expect(indicators.json().indicators).toContainEqual(
+      expect.objectContaining({ id: lowReserveRate.id, version: 1, results: 1, title: lowReserveRate.title }),
+    );
 
     // The hazard's owner may close it citing that review, exactly as recorded and of a control the hazard binds.
     const review = reviewed.json() as { record: { id: string }; digest: string };

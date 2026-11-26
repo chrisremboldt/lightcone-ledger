@@ -394,6 +394,27 @@ export const routeDescriptions: Record<string, { summary: string; description: s
     description:
       'Returns the recorded results for the window and the reviews of them, newest first. Needs `evidence:read`.',
   },
+  // Reports
+  periodSummary: {
+    summary: 'Count what is on file for one period',
+    description:
+      'Returns the counts of one period, from its first day to its last in the organization’s time zone: flights and flight time from the flight records on file, counted findings by rule (opened and closed in the period, open at its end), actions on findings and of safety assurance records open and overdue at its end, and hazards open at its end by level. Each count is of recorded things; what is not counted is counted apart. A part the reader may not read says so instead of a number. No score and no rating. Needs `evidence:read` or `sms:read`; the flights, findings and their actions need `evidence:read`, the hazards and assurance actions `sms:read`.',
+  },
+  findingsByMonth: {
+    summary: 'Count findings opened and closed each month, by rule',
+    description:
+      'Returns, for each rule as its pack names it, how many counted findings opened and how many closed in each month of the period, months in the organization’s time zone; the twelve months ending with the current one unless a period is given. Needs `evidence:read`.',
+  },
+  reportIndicators: {
+    summary: 'List the indicators with recorded results',
+    description:
+      'Returns each indicator definition version with at least one recorded result: its title, how many results and the windows they cover. Needs `evidence:read`.',
+  },
+  indicatorHistory: {
+    summary: 'Read one indicator’s recorded results over time',
+    description:
+      'Returns every recorded result of one indicator definition version, across its control windows, ordered by window: the rate each states or that it states none, its counts, and the limit the definition sets, if any. Needs `evidence:read`.',
+  },
   getControlIndicatorResult: {
     summary: 'Read one recorded indicator result',
     description:

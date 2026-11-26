@@ -49,6 +49,7 @@ export const orderLabels: Record<SmsRegisterOrder, string> = {
   newest: 'Newest first',
   oldest: 'Oldest first',
   due: 'Soonest due first',
+  owner: 'By owner',
 };
 
 /** The register's count: how many are shown, with + while more can be read, and whether they match a narrowing. */

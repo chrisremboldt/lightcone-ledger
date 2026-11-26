@@ -171,6 +171,12 @@ export const PrincipalAuthorityListQuerySchema = Type.Object(
     limit: Type.Optional(
       Type.Integer({ minimum: 1, maximum: PRINCIPAL_AUTHORITY_LIST_LIMIT, default: PRINCIPAL_AUTHORITY_LIST_LIMIT }),
     ),
+    order: Type.Optional(
+      Type.Union([Type.Literal('name'), Type.Literal('recent')], {
+        description:
+          'name (the default): by name, then id. recent: the most recently added first, by when Ledger recorded the addition; those it recorded none for (put on file by a seed) last, by id.',
+      }),
+    ),
   },
   { additionalProperties: false },
 );
@@ -185,7 +191,7 @@ export const PrincipalAuthorityListResponseSchema = Type.Object(
   },
   {
     additionalProperties: false,
-    description: `Every person, source and service of the organization, active and inactive, with their current complete authority, ordered by name and then id, a page at a time. Workers are not listed. Requires authority:write. Private, no-store. At most ${PRINCIPAL_AUTHORITY_LIST_LIMIT} entries a page; hasMore says whether more exist.`,
+    description: `Every person, source and service of the organization, active and inactive, with their current complete authority, ordered by name and then id (or most recently added first), a page at a time. Workers are not listed. Requires authority:write. Private, no-store. At most ${PRINCIPAL_AUTHORITY_LIST_LIMIT} entries a page; hasMore says whether more exist.`,
   },
 );
 export type PrincipalAuthorityListResponse = Static<typeof PrincipalAuthorityListResponseSchema>;
@@ -746,4 +752,5 @@ export * from './record-production-links.js';
 export * from './indicators.js';
 export * from './control-windows.js';
 export * from './control-indicator-results.js';
+export * from './reports.js';
 export * from './operating-areas.js';

@@ -2,6 +2,7 @@ import type { FlightOnRecord, FlightsOnRecordResponse, NamedSubject } from '@led
 import { Badge, Button, Spinner } from '@ledger/ui';
 import { time, timeRange, timeZoneLabel } from './format.js';
 import { subjectLabel } from './subject-label.js';
+import { PlaceLink } from './TopBar.js';
 
 /**
  * The home of an organization with no order source on record: its flights as its own flight plan records give them,
@@ -31,6 +32,10 @@ export function RecordsHome({
           <p className="overview-purpose">
             The flights your own flight plan records give, with the aircraft and the pilot in command your records name.
             Open one to see its file: its records, the rules that cover it and its open findings.
+          </p>
+          <p className="overview-purpose report-entry">
+            <PlaceLink place={{ section: 'reports', report: 'home' }}>Reports</PlaceLink>: a summary of a period to
+            print or save, findings by month, indicators over time and one flight’s file.
           </p>
           {!home && !error && <Spinner label="Reading the flights on record" />}
           {error && <p className="records-note">The flights on record could not be read: {error}</p>}

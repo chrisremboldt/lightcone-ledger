@@ -1,0 +1,32 @@
+# Reports
+
+Ledger gives out pages a person reads, prints or saves: a summary of a period, findings opened and closed per month by rule, an indicator's recorded results over time, and one flight's file. This note records what they count, how, and what was left out.
+
+## Every number is a count of recorded things
+
+The counts are made by the database, under the reader's own row-level security, through four read routes: `GET /v1/reports/summary`, `/v1/reports/findings-by-month`, `/v1/reports/indicators` and `/v1/reports/indicators/{id}/versions/{version}` (`packages/domain/src/reports.ts`). No count is made in the browser, and none from the first page of a list. There is no score, rating or verdict word: a count says how many recorded things there are, and what it leaves out is counted apart and said.
+
+- **Flights** are the flights with a current flight record (`flight.record`, neither replaced nor withdrawn, the newest for each flight) whose takeoff is in the period. Their time is the recorded takeoff to landing, added up. A record whose landing is not after its takeoff is counted as a flight and left out of the time. A flight with a current plan starting in the period and no flight record is counted apart, as planned with no record: a plan is not a record that a flight took place. A flight known only from an order source's reports has no flight record and is not counted; reading flight reports was considered and left out, because two reports may disagree and the summary would have to choose.
+- **Findings** are those the generic evaluator opened, by pack and rule, as the pack names them. Each is put on a tab by its latest result, as the open findings list does: counted, proposed (a shadow adoption) or relieved (a waiver relieves the rule). Only counted ones are in the numbers; the others opened in the period are named in a sentence. Opened is when the finding opened. Closed is the finding's recorded closing. Open at the end is opened before the end and not closed, or closed after it. A finding closed and later opened again counts by its current state, as open; its earlier closing stays in its own history. Counting from the evaluation history instead was considered and left for later, since a closing by a later record is told apart in the history only by reading each evaluation.
+- **Actions on findings** are open at the end when they were planned before it, not done by then, and their finding not closed by then; overdue when their due day is before the end's day. **Actions of safety assurance records** are open when a signature set them before the end and no closing was recorded by then.
+- **Hazards** are open at the end when they were opened before it and their latest closing or reopening by then is not a closing. Each is counted by the residual level of its latest assessment by then, named as the matrix version that assessed it names the level, least serious first; one not yet assessed is counted as such.
+
+"At the end" of a period that has not ended is now, and the page says so.
+
+## Parts a person may not read
+
+A summary is open to whoever reads records and findings (`evidence:read`) or safety records (`sms:read`). Each part checks its own: flights, findings and their actions need `evidence:read`; hazards and assurance actions need `sms:read`. A part the reader may not read comes back as `{ readable: false, capability }` and the page names it as not theirs to read. It is never a zero, since a zero would say there is nothing. Findings by month and indicators need `evidence:read`, so a person holding the Reader preset opens them; the reader access test lists the four routes with the reason. No report shows a safety report's content.
+
+## Charts
+
+Charts are hand-drawn SVG with no dependency, in the theme's own colours (`apps/web/src/styles/reports.css`), so each reads in light, in dark and on paper. The geometry is a set of pure functions from recorded numbers to points (`apps/web/src/report-charts.ts`), tested on its own; the components only draw. Every chart has a one-sentence summary and its numbers as a table under it, folded on screen and opened for printing by the ordinary print rule. Nothing is told by colour alone: a result that states no rate is a hollow square on the baseline, a closed finding's bar is hatched, counts are written on the bars, and the legend says which is which.
+
+Nothing is interpolated. An indicator's result is drawn at the middle of its window with a line over the window; two results are never joined. Time between windows that no result covers is a shaded gap labelled "No result", and the sentence counts the gaps. Each point is a link, reachable by keyboard, to its row in the table.
+
+## An indicator's limit
+
+An indicator definition may set `limit: { rate, label }`, a level in the rate's own unit that the chart draws and names, such as "Alert level". It belongs to the definition because the definition is what states the unit and how the rate is made, and because a new problem type is added by its indicator definitions. It is part of the definition's digest. It changes no result and is not a verdict: a rate above it says no more than its number. No shipped indicator sets one, since adding it would move a shipped definition's digest; setting one is a new version of a definition. A limit kept per organization or per control window, which an organization could set itself, was considered and left out: it would change the window's shape.
+
+## Addresses
+
+Reports are a section of their own (`apps/web/src/place.ts`): `/reports`, `/reports/summary/{first day}/{last day}`, `/reports/findings` or `/reports/findings/{first month}/{last month}`, `/reports/indicators` and `/reports/indicators/{id}/{version}`, and `/reports/flights/{flight id}`. A period is two calendar days, or months, in the organization's time zone, never a time of day, so the address alone names what the page counts. Reports sits in the bar; below 1600 px the bar shows the organization's name without its visible label, still read out, and its sections sit closer, so the buttons stay on one row down to 1360 px, where the bar wraps as before.

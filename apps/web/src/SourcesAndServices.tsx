@@ -45,20 +45,25 @@ export function SourcesAndServices({
   const [reload, setReload] = useState(0);
   const holders = principals.filter((item) => item.kind === 'source' || item.kind === 'service');
 
+  // How many pages are shown: reading again after a change reads as many, so the credential changed stays in view.
+  const [pageCount, setPageCount] = useState(1);
+  const [reading, setReading] = useState(false);
+
   useEffect(() => {
     let stopped = false;
-    client
-      .credentials()
+    setReading(true);
+    readCredentialPages(client, pageCount)
       .then((response) => {
         if (stopped) return;
         setList(response);
         setError(null);
       })
-      .catch((failure) => !stopped && setError(plainError(failure).message));
+      .catch((failure) => !stopped && setError(plainError(failure).message))
+      .finally(() => !stopped && setReading(false));
     return () => {
       stopped = true;
     };
-  }, [client, reload]);
+  }, [client, reload, pageCount]);
 
   return (
     <section className="people-credentials" aria-label="Sources and services">
@@ -101,9 +106,23 @@ export function SourcesAndServices({
           }}
         />
       )}
-      {list?.hasMore && <p className="records-note">Only the first {list.credentials.length} are listed.</p>}
+      {list?.hasMore && (
+        <Button kind="secondary" disabled={reading} onClick={() => setPageCount((count) => count + 1)}>
+          {reading ? 'Reading…' : 'More credentials'}
+        </Button>
+      )}
     </section>
   );
+}
+
+/** The first pages of the credentials, as one list. */
+async function readCredentialPages(client: LedgerClient, count: number): Promise<CredentialListResponse> {
+  let shown = await client.credentials();
+  for (let page = 1; page < count && shown.nextCursor; page += 1) {
+    const next = await client.credentials({ cursor: shown.nextCursor });
+    shown = { ...next, credentials: [...shown.credentials, ...next.credentials] };
+  }
+  return shown;
 }
 
 function IssuedSecret({ issued, onDone }: { issued: IssuedCredential & { name: string }; onDone: () => void }) {

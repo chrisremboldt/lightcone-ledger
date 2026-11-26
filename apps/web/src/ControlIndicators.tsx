@@ -9,6 +9,7 @@ import type {
 } from '@ledger/contracts';
 import { Badge, Button, Notice, Spinner } from '@ledger/ui';
 import { errorMessage, json, time, timeZoneLabel } from './format.js';
+import { PlaceLink } from './TopBar.js';
 
 type Loaded<T> = { state: 'loading' } | { state: 'failed'; message: string } | { state: 'loaded'; value: T };
 
@@ -172,6 +173,11 @@ function WindowIndicator({
       {loaded.state === 'loaded' && loaded.value.wording.description ? (
         <p className="muted">{loaded.value.wording.description}</p>
       ) : null}
+      <p>
+        <PlaceLink place={{ section: 'reports', report: 'indicators', id: indicator.id, version: indicator.version }}>
+          Its recorded results over time
+        </PlaceLink>
+      </p>
       {loaded.state === 'loading' ? (
         <Spinner label="Calculating the indicator" />
       ) : loaded.state === 'failed' ? (

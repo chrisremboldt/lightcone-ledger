@@ -1,6 +1,7 @@
 import { randomBytes, randomUUID } from 'node:crypto';
 import {
   CREDENTIAL_LIST_LIMIT,
+  type CredentialListQuery,
   CREDENTIAL_SECRET_PREFIX,
   type CredentialEntry,
   type CredentialIssueCommand,
@@ -235,27 +236,69 @@ function credentialEntry(row: CredentialRow): CredentialEntry {
 }
 
 /** Every credential of the organization's sources and services, without secrets or hashes. */
-export async function listCredentials(client: PoolClient, actor: AuthContext): Promise<CredentialListResponse> {
+/**
+ * A page's position: whether its last credential was usable when read, when it was issued (empty when not recorded,
+ * with microseconds so the boundary compares exactly) and its id. Usable can change with the clock between pages;
+ * the next page starts after the position as it was read.
+ */
+function credentialCursor(usable: boolean, issued: string, id: string): string {
+  return Buffer.from(JSON.stringify([usable, issued, id])).toString('base64url');
+}
+function readCredentialCursor(cursor: string): [boolean, string, string] {
+  try {
+    const position: unknown = JSON.parse(Buffer.from(cursor, 'base64url').toString('utf8'));
+    if (
+      Array.isArray(position) &&
+      position.length === 3 &&
+      typeof position[0] === 'boolean' &&
+      typeof position[1] === 'string' &&
+      typeof position[2] === 'string' &&
+      credentialCursor(position[0], position[1], position[2]) === cursor
+    )
+      return [position[0], position[1], position[2]];
+  } catch {
+    // Refused below, like any other cursor this list did not give.
+  }
+  throw new DomainError(400, 'invalid_cursor', 'The credentials list cursor is not one this list gave');
+}
+
+export async function listCredentials(
+  client: PoolClient,
+  actor: AuthContext,
+  query: CredentialListQuery = {},
+): Promise<CredentialListResponse> {
   if (!actor.capabilities.includes('authority:write'))
     throw new DomainError(403, 'capability_required', 'Reading credentials requires authority:write');
+  const limit = Math.min(query.limit ?? CREDENTIAL_LIST_LIMIT, CREDENTIAL_LIST_LIMIT);
+  const after = query.cursor ? readCredentialCursor(query.cursor) : null;
   const rows = (
-    await client.query<CredentialRow>(
-      `SELECT c.id,c.principal_id,p.name AS principal_name,p.kind AS principal_kind,p.active AS principal_active,c.label,
-         c.issued_by,issuer.name AS issuer_name,c.issued_at,c.expires_at,c.revoked_by,revoker.name AS revoker_name,
-         c.revoked_at,(c.expires_at IS NOT NULL AND c.expires_at<=clock_timestamp()) AS expired
-       FROM api_credentials c
-       JOIN principals p ON p.tenant_id=c.tenant_id AND p.id=c.principal_id
-       LEFT JOIN principals issuer ON issuer.tenant_id=c.tenant_id AND issuer.id=c.issued_by
-       LEFT JOIN principals revoker ON revoker.tenant_id=c.tenant_id AND revoker.id=c.revoked_by
-       WHERE c.tenant_id=$1 AND p.kind IN ('source','service')
-       ORDER BY (c.revoked_at IS NULL AND (c.expires_at IS NULL OR c.expires_at>clock_timestamp())) DESC,
-         c.issued_at DESC NULLS LAST,c.id COLLATE "C"
+    await client.query<CredentialRow & { usable: boolean; issued_key: string | null }>(
+      `SELECT * FROM (
+         SELECT c.id,c.principal_id,p.name AS principal_name,p.kind AS principal_kind,p.active AS principal_active,
+           c.label,c.issued_by,issuer.name AS issuer_name,c.issued_at,c.expires_at,c.revoked_by,
+           revoker.name AS revoker_name,c.revoked_at,(c.expires_at IS NOT NULL AND c.expires_at<=clock_timestamp()) AS expired,
+           (c.revoked_at IS NULL AND (c.expires_at IS NULL OR c.expires_at>clock_timestamp())) AS usable,
+           to_char(c.issued_at AT TIME ZONE 'UTC','YYYY-MM-DD"T"HH24:MI:SS.US"Z"') AS issued_key
+         FROM api_credentials c
+         JOIN principals p ON p.tenant_id=c.tenant_id AND p.id=c.principal_id
+         LEFT JOIN principals issuer ON issuer.tenant_id=c.tenant_id AND issuer.id=c.issued_by
+         LEFT JOIN principals revoker ON revoker.tenant_id=c.tenant_id AND revoker.id=c.revoked_by
+         WHERE c.tenant_id=$1 AND p.kind IN ('source','service')) AS listed
+       WHERE ($3::boolean IS NULL OR usable<$3::boolean OR (usable=$3::boolean AND (CASE WHEN $4::text=''
+         THEN issued_at IS NULL AND id COLLATE "C">$5::text COLLATE "C"
+         ELSE issued_at IS NULL OR issued_at<NULLIF($4::text,'')::timestamptz
+           OR (issued_at=NULLIF($4::text,'')::timestamptz AND id COLLATE "C">$5::text COLLATE "C") END)))
+       ORDER BY usable DESC,issued_at DESC NULLS LAST,id COLLATE "C"
        LIMIT $2`,
-      [actor.tenantId, CREDENTIAL_LIST_LIMIT + 1],
+      [actor.tenantId, limit + 1, after?.[0] ?? null, after?.[1] ?? null, after?.[2] ?? null],
     )
   ).rows;
+  const shown = rows.slice(0, limit);
+  const last = shown.at(-1);
+  const hasMore = rows.length > limit;
   return {
-    credentials: rows.slice(0, CREDENTIAL_LIST_LIMIT).map(credentialEntry),
-    hasMore: rows.length > CREDENTIAL_LIST_LIMIT,
+    credentials: shown.map(credentialEntry),
+    hasMore,
+    nextCursor: hasMore && last ? credentialCursor(last.usable, last.issued_key ?? '', last.id) : null,
   };
 }

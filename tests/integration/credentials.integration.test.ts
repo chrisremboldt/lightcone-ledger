@@ -311,4 +311,59 @@ describe.runIf(process.env.LEDGER_ENV !== 'staging')('Credentials for sources an
       'There is no organization',
     );
   });
+
+  it('pages the credentials, and the people by name or most recently added, past the first page', async () => {
+    const org = await organization('pages');
+    const sourceId = await add(org.token, 'Fictional dock adapter', 'source');
+    const ids: string[] = [];
+    for (let index = 0; index < 3; index++) ids.push((await issue(org.token, sourceId)).json().credential.id);
+    const revoked = await call(org.token, 'POST', '/v1/commands', { kind: 'credential.revoke', credentialId: ids[1] });
+    expect(revoked.statusCode, revoked.body).toBe(201);
+    const whole = (await list(org.token)).json();
+    expect(whole.nextCursor).toBeNull();
+    // Usable ones first, newest first; the revoked one last.
+    expect(whole.credentials.map((entry: { id: string }) => entry.id)).toEqual([ids[2], ids[0], ids[1]]);
+    async function pages(path: string, key: string) {
+      const seen: string[] = [];
+      let cursor: string | null = null;
+      do {
+        const response = await call(
+          org.token,
+          'GET',
+          `${path}${path.includes('?') ? '&' : '?'}limit=1${cursor ? `&cursor=${encodeURIComponent(cursor)}` : ''}`,
+        );
+        expect(response.statusCode, response.body).toBe(200);
+        const body = response.json();
+        seen.push(...body[key].map((entry: { id: string }) => entry.id));
+        cursor = body.nextCursor;
+      } while (cursor && seen.length < 20);
+      return seen;
+    }
+    expect(await pages('/v1/authority/credentials', 'credentials')).toEqual([ids[2], ids[0], ids[1]]);
+    const refused = await call(org.token, 'GET', '/v1/authority/credentials?cursor=bm90LWEtY3Vyc29y');
+    expect(refused.statusCode).toBe(400);
+
+    const zed = await add(org.token, 'Zed Example', 'human');
+    const amy = await add(org.token, 'Amy Example', 'human');
+    const byName = (await call(org.token, 'GET', '/v1/authority/principals')).json();
+    const named = byName.principals.map((entry: { id: string }) => entry.id);
+    expect(byName.principals.map((entry: { name: string }) => entry.name).slice(0, 2)).toEqual([
+      'Amy Example',
+      'Fictional dock adapter',
+    ]);
+    expect(await pages('/v1/authority/principals', 'principals')).toEqual(named);
+    const recent = (await call(org.token, 'GET', '/v1/authority/principals?order=recent')).json();
+    const latest = recent.principals.map((entry: { id: string }) => entry.id);
+    expect(latest.slice(0, 3)).toEqual([amy, zed, sourceId]);
+    expect(latest.at(-1)).toBe(org.administratorId);
+    expect(await pages('/v1/authority/principals?order=recent', 'principals')).toEqual(latest);
+    // A cursor of one order is not one of the other.
+    const first = (await call(org.token, 'GET', '/v1/authority/principals?limit=1')).json();
+    const mixed = await call(
+      org.token,
+      'GET',
+      `/v1/authority/principals?order=recent&cursor=${encodeURIComponent(first.nextCursor)}`,
+    );
+    expect(mixed.statusCode).toBe(400);
+  });
 });

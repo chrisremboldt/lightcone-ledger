@@ -7,13 +7,14 @@ import { FirstDay } from './FirstDay.js';
 import { NoticesArea } from './NoticesArea.js';
 import { PeopleArea } from './PeopleArea.js';
 import { RecordsArea } from './RecordsArea.js';
+import { ReportsArea } from './ReportsArea.js';
 import { RulesArea } from './RulesArea.js';
 import { PlaceLink } from './TopBar.js';
 import { barSection, sections, type BarSection, type Place } from './place.js';
 
-/** Whether a place is one every shell shows the same way: Setup, Records, Rules, People, or no place. */
+/** Whether a place is one every shell shows the same way: Setup, Records, Rules, Reports, People, or no place. */
 export function sharedSection(place: Place): boolean {
-  return ['setup', 'records', 'rules', 'people', 'unknown'].includes(place.section);
+  return ['setup', 'records', 'rules', 'reports', 'people', 'unknown'].includes(place.section);
 }
 
 /**
@@ -54,6 +55,7 @@ export function SectionArea({
       rules
     );
   }
+  if (place.section === 'reports') return <ReportsArea client={client} principal={principal} place={place} />;
   if (place.section === 'people')
     return 'pane' in place ? (
       <NoticesArea client={client} pane={place.pane} />

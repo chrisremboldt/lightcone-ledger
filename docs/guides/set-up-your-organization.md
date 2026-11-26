@@ -298,6 +298,17 @@ Each opening is kept on the set's screen beside its link: when, and whether it w
 
 A produced set never holds a safety report or a restricted attachment, so any set can be shared this way.
 
+### Reports to print or save
+
+**Reports**, in the bar, and linked from the Safety home and from **Records**, holds pages to read, print or save as a PDF. Each counts recorded things only, says when it was made in your organization's time zone, says what it does not count, and has an address of its own: a link to a summary opens the same period for whoever may read it.
+
+- **Summary of a period**: for the days you choose (this month, last month, this year, last year, or any two days up to two years apart), the flights with a flight record taking off in the period and their recorded time from takeoff to landing; the counted findings of each rule, opened and closed in the period and open at its end; the actions on findings and of safety assurance records open at its end and how many of them are overdue; and the hazards open at its end by the level of their latest assessment. A flight that has only a plan, a finding of a rule adopted to propose only, and a finding a waiver relieves are counted apart. Each number opens the list it counts.
+- **Findings by month**: how many counted findings opened and how many closed in each month, for every rule or one rule, the last twelve months unless you choose others. The chart is told in a sentence, and its numbers are in a table under it, which prints unfolded.
+- **Indicators over time**: each indicator with recorded results, one point per result over the window it covers, the level its definition sets drawn and named when it sets one, and a stretch with no recorded result shown as a gap. Each point leads to its row in the table under the chart.
+- **One flight's file**: the flight's own records, the records that name it, each rule's latest result with what it read, and its findings, on one page. Open it from **Reports** or from the flight's file under **Records**.
+
+A person sees the parts they may read. A reader sees the flights and findings and is told the hazards and safety assurance actions are not theirs to read; a person who reads only safety records sees the opposite. No report shows the content of a safety report.
+
 ## 10. Connect aircraft, docks and airspace services
 
 Everything above works from records people enter and import. To also check what an aircraft or an airspace service reported, add the source on the **People** screen, issue its credential there, and start an adapter process for it with `pnpm adapter:run`. [Deploy Ledger, section 10](deploy.md#10-connect-a-source-run-an-adapter) has the steps, and says how far each shipped adapter has been checked: none has been run against real equipment yet.

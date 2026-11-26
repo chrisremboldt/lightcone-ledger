@@ -21,6 +21,7 @@ import './styles/mission.css';
 import './styles/spatial.css';
 import './styles/sms.css';
 import './styles/records.css';
+import './styles/reports.css';
 import './styles/print.css';
 import { App, type AppProps } from './App.js';
 import { SmsApp, type ConfirmIdentity } from './SmsApp.js';

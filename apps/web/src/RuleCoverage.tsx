@@ -7,6 +7,7 @@ import type {
   RuleCoverage,
   RuleCoverageSubjectsResponse,
   SubjectsOnRecordResponse,
+  OperatorRecordTypesResponse,
 } from '@ledger/contracts';
 import type { LedgerClient } from '@ledger/contracts/client';
 import { Badge, Button, Notice, Spinner } from '@ledger/ui';
@@ -21,6 +22,7 @@ import {
   coverageGroups,
   coverageResultLabels,
   emptyPopulationHint,
+  type CatalogType,
   filterCounts,
   missingWords,
   nothingYetIn,
@@ -49,6 +51,18 @@ export function RuleCoverageTable({ client, adoptionId }: { client: LedgerClient
   const [folds, setFolds] = useState<Record<string, boolean>>({});
   const failedInARow = useRef(0);
   const refresh = useCallback(() => setReload((value) => value + 1), []);
+  // The organization's record types, with those its packs declare, so a rule's hint names each by its title.
+  const [catalog, setCatalog] = useState<CatalogType[]>([]);
+  useEffect(() => {
+    let current = true;
+    client
+      .request<OperatorRecordTypesResponse>('/v1/operator-records/types')
+      .then((response) => current && setCatalog(response.types))
+      .catch(() => undefined);
+    return () => {
+      current = false;
+    };
+  }, [client]);
   useEffect(() => {
     let current = true;
     let later: ReturnType<typeof setTimeout> | undefined;
@@ -149,7 +163,9 @@ export function RuleCoverageTable({ client, adoptionId }: { client: LedgerClient
                     <td>{checkedByLabels[item.checkedBy]}</td>
                     <td>
                       {item.populationSize === null ? '—' : `${populationWords(item)}: ${item.populationSize}`}
-                      {emptyPopulationHint(item) && <p className="rail-muted">{emptyPopulationHint(item)}</p>}
+                      {emptyPopulationHint(item, catalog) && (
+                        <p className="rail-muted">{emptyPopulationHint(item, catalog)}</p>
+                      )}
                     </td>
                     <td>
                       {item.counts &&

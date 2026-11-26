@@ -225,6 +225,14 @@ export function SubjectFile({
         {file && !file.named && !own ? ' · no personnel file, identity or plan names it yet' : ''}
       </p>
       {onProduce && <Button onClick={() => onProduce(subject)}>Produce these records</Button>}
+      {subject.kind === 'flight' && (
+        <PlaceLink
+          className="button button--quiet"
+          place={{ section: 'reports', report: 'flight', flightId: subject.id }}
+        >
+          This flight’s file to print
+        </PlaceLink>
+      )}
       {error && (
         <Notice tone="alert" title="This file could not be read">
           {error}

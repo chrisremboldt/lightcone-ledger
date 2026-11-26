@@ -1,5 +1,13 @@
 import type { DevelopmentTokenResponse } from './development-tokens.js';
 import type {
+  FindingsByMonth,
+  FindingsByMonthQuery,
+  IndicatorHistory,
+  PeriodSummary,
+  ReportIndicatorList,
+  ReportPeriodQuery,
+} from './reports.js';
+import type {
   ControlIndicatorRecord,
   ControlIndicatorResultListResponse,
   ControlIndicatorResultResponse,
@@ -47,6 +55,7 @@ import type {
   AuthorityPrincipalResponse,
   PrincipalAuthorityListQuery,
   PrincipalAuthorityListResponse,
+  CredentialListQuery,
   CredentialListResponse,
   RolePresetListResponse,
   SubjectExportCreate,
@@ -464,8 +473,10 @@ export class LedgerClient {
       body: JSON.stringify({ url }),
     });
   }
-  credentials() {
-    return this.request<CredentialListResponse>('/v1/authority/credentials', { cache: 'no-store' });
+  credentials(query: CredentialListQuery = {}) {
+    return this.request<CredentialListResponse>(`/v1/authority/credentials${queryString(query)}`, {
+      cache: 'no-store',
+    });
   }
   rolePresets() {
     return this.request<RolePresetListResponse>('/v1/authority/presets');
@@ -582,6 +593,22 @@ export class LedgerClient {
     return this.request<OpenFindingGroupsResponse>(`/v1/organization/open-findings/groups${queryString(query)}`);
   }
   /** The flights the organization's own flight plan records give, for an organization without an order source. */
+  /** The counts of one period, from its first day to its last, each part the reader may read. */
+  periodSummary(query: ReportPeriodQuery) {
+    return this.request<PeriodSummary>(`/v1/reports/summary${queryString(query)}`, { cache: 'no-store' });
+  }
+  findingsByMonth(query: FindingsByMonthQuery = {}) {
+    return this.request<FindingsByMonth>(`/v1/reports/findings-by-month${queryString(query)}`, { cache: 'no-store' });
+  }
+  reportIndicators() {
+    return this.request<ReportIndicatorList>('/v1/reports/indicators', { cache: 'no-store' });
+  }
+  indicatorHistory(indicatorId: string, version: number) {
+    return this.request<IndicatorHistory>(
+      `/v1/reports/indicators/${encodeURIComponent(indicatorId)}/versions/${version}`,
+      { cache: 'no-store' },
+    );
+  }
   flightsOnRecord() {
     return this.request<FlightsOnRecordResponse>('/v1/organization/flights-on-record');
   }

@@ -1511,6 +1511,86 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/reports/summary": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Count what is on file for one period
+         * @description Returns the counts of one period, from its first day to its last in the organization’s time zone: flights and flight time from the flight records on file, counted findings by rule (opened and closed in the period, open at its end), actions on findings and of safety assurance records open and overdue at its end, and hazards open at its end by level. Each count is of recorded things; what is not counted is counted apart. A part the reader may not read says so instead of a number. No score and no rating. Needs `evidence:read` or `sms:read`; the flights, findings and their actions need `evidence:read`, the hazards and assurance actions `sms:read`.
+         */
+        get: operations["periodSummary"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/reports/findings-by-month": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Count findings opened and closed each month, by rule
+         * @description Returns, for each rule as its pack names it, how many counted findings opened and how many closed in each month of the period, months in the organization’s time zone; the twelve months ending with the current one unless a period is given. Needs `evidence:read`.
+         */
+        get: operations["findingsByMonth"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/reports/indicators": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List the indicators with recorded results
+         * @description Returns each indicator definition version with at least one recorded result: its title, how many results and the windows they cover. Needs `evidence:read`.
+         */
+        get: operations["reportIndicators"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/reports/indicators/{indicatorId}/versions/{version}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Read one indicator’s recorded results over time
+         * @description Returns every recorded result of one indicator definition version, across its control windows, ordered by window: the rate each states or that it states none, its counts, and the limit the definition sets, if any. Needs `evidence:read`.
+         */
+        get: operations["indicatorHistory"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/control-indicator-reviews": {
         parameters: {
             query?: never;
@@ -5523,7 +5603,7 @@ export interface components {
                 }[];
             };
         };
-        /** @description Every person, source and service of the organization, active and inactive, with their current complete authority, ordered by name and then id, a page at a time. Workers are not listed. Requires authority:write. Private, no-store. At most 1000 entries a page; hasMore says whether more exist. */
+        /** @description Every person, source and service of the organization, active and inactive, with their current complete authority, ordered by name and then id (or most recently added first), a page at a time. Workers are not listed. Requires authority:write. Private, no-store. At most 1000 entries a page; hasMore says whether more exist. */
         PrincipalAuthorityListResponse: {
             principals: {
                 id: string;
@@ -5551,7 +5631,7 @@ export interface components {
             /** @description Send as cursor to read the next page; null on the last page. */
             nextCursor: string | null;
         };
-        /** @description Every credential of the organization's sources and services, usable ones first, newest first. Requires authority:write. Private, no-store. At most 1000 entries; hasMore says whether more exist. */
+        /** @description Every credential of the organization's sources and services, usable ones first, newest first, then by id, a page at a time. Requires authority:write. Private, no-store. At most 200 entries a page; hasMore says whether more exist. */
         CredentialListResponse: {
             credentials: {
                 id: string;
@@ -5580,6 +5660,8 @@ export interface components {
                 state: "usable" | "expired" | "revoked";
             }[];
             hasMore: boolean;
+            /** @description Send as cursor to read the next page; null on the last page. */
+            nextCursor: string | null;
         };
         /** @description The role presets a person can be added from, each with exactly the capabilities and observation grants it gives. A preset is a starting point: person.add takes the capabilities themselves. Requires authority:write. */
         RolePresetListResponse: {
@@ -14936,6 +15018,7 @@ export interface operations {
                 /** @description Opaque continuation scoped to tenant, principal authority, route and filters. Current read models, not a frozen historical snapshot. */
                 cursor?: string;
                 limit?: number;
+                order?: "name" | "recent";
             };
             header?: never;
             path?: never;
@@ -15090,7 +15173,11 @@ export interface operations {
     };
     credentials: {
         parameters: {
-            query?: never;
+            query?: {
+                /** @description Opaque continuation scoped to tenant, principal authority, route and filters. Current read models, not a frozen historical snapshot. */
+                cursor?: string;
+                limit?: number;
+            };
             header?: never;
             path?: never;
             cookie?: never;
@@ -15131,6 +15218,8 @@ export interface operations {
                             state: "usable" | "expired" | "revoked";
                         }[];
                         hasMore: boolean;
+                        /** @description Send as cursor to read the next page; null on the last page. */
+                        nextCursor: string | null;
                     };
                 };
             };
@@ -28707,6 +28796,7 @@ export interface operations {
                 from?: string;
                 to?: string;
                 sourceId?: string;
+                order?: "newest" | "subject";
                 /** @description Opaque continuation scoped to tenant, principal authority, route and filters. Current read models, not a frozen historical snapshot. */
                 cursor?: string;
                 limit?: number;
@@ -32800,6 +32890,711 @@ export interface operations {
                                 count: number;
                             }[];
                         };
+                    };
+                };
+            };
+            /** @description Invalid request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        error: {
+                            code: string;
+                            message: string;
+                            details?: {
+                                [key: string]: unknown;
+                            };
+                        };
+                        requestId: string;
+                    };
+                };
+            };
+            /** @description Authentication required */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        error: {
+                            code: string;
+                            message: string;
+                            details?: {
+                                [key: string]: unknown;
+                            };
+                        };
+                        requestId: string;
+                    };
+                };
+            };
+            /** @description Missing capability */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        error: {
+                            code: string;
+                            message: string;
+                            details?: {
+                                [key: string]: unknown;
+                            };
+                        };
+                        requestId: string;
+                    };
+                };
+            };
+            /** @description Scoped object unavailable */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        error: {
+                            code: string;
+                            message: string;
+                            details?: {
+                                [key: string]: unknown;
+                            };
+                        };
+                        requestId: string;
+                    };
+                };
+            };
+            /** @description Stale basis or conflicting idempotency content */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        error: {
+                            code: string;
+                            message: string;
+                            details?: {
+                                [key: string]: unknown;
+                            };
+                        };
+                        requestId: string;
+                    };
+                };
+            };
+            /** @description Bounded intake exceeded */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        error: {
+                            code: string;
+                            message: string;
+                            details?: {
+                                [key: string]: unknown;
+                            };
+                        };
+                        requestId: string;
+                    };
+                };
+            };
+        };
+    };
+    periodSummary: {
+        parameters: {
+            query: {
+                from: string;
+                until: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Success */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        period: {
+                            from: string;
+                            until: string;
+                            timeZone: string;
+                            /** Format: date-time */
+                            start: string;
+                            /** Format: date-time */
+                            end: string;
+                            /**
+                             * Format: date-time
+                             * @description What “at the end” is counted at: the end of the period, or now when it has not ended.
+                             */
+                            asOf: string;
+                            ended: boolean;
+                        };
+                        /** @description Flights and flight time from the flight records on file. Needs evidence:read. */
+                        flights: {
+                            /** @constant */
+                            readable: true;
+                            /** @description Flights with a current flight record whose takeoff is in the period. */
+                            flights: number;
+                            /** @description Their recorded takeoff to landing time, added up, in seconds. */
+                            flightSeconds: number;
+                            /** @description Of those flights, the ones whose recorded landing is not after their takeoff: not in the time. */
+                            withoutDuration: number;
+                            /** @description Flights with a current plan starting in the period and no flight record: not counted above. */
+                            plannedWithoutRecord: number;
+                        } | {
+                            /** @constant */
+                            readable: false;
+                            /** @description What reading this part needs, which the reader does not hold. */
+                            capability: string;
+                        };
+                        /** @description Counted findings by rule: opened and closed in the period, and open at its end. Needs evidence:read. */
+                        findings: {
+                            /** @constant */
+                            readable: true;
+                            rules: {
+                                packId: string;
+                                packTitle: string;
+                                ruleId: string;
+                                ruleTitle: string;
+                                opened: number;
+                                closed: number;
+                                openAtEnd: number;
+                            }[];
+                            total: {
+                                opened: number;
+                                closed: number;
+                                openAtEnd: number;
+                            };
+                            /** @description Findings opened in the period by rules adopted to propose only: recorded, never counted. */
+                            proposed: number;
+                            /** @description Findings opened in the period whose latest result a waiver relieves: not counted. */
+                            relieved: number;
+                        } | {
+                            /** @constant */
+                            readable: false;
+                            /** @description What reading this part needs, which the reader does not hold. */
+                            capability: string;
+                        };
+                        /** @description Actions planned on counted findings, open at the end of the period and of those overdue. Needs evidence:read. */
+                        findingActions: {
+                            /** @constant */
+                            readable: true;
+                            open: number;
+                            overdue: number;
+                        } | {
+                            /** @constant */
+                            readable: false;
+                            /** @description What reading this part needs, which the reader does not hold. */
+                            capability: string;
+                        };
+                        /** @description Actions of signed safety assurance records, open at the end of the period and of those overdue. Needs sms:read. */
+                        assuranceActions: {
+                            /** @constant */
+                            readable: true;
+                            open: number;
+                            overdue: number;
+                        } | {
+                            /** @constant */
+                            readable: false;
+                            /** @description What reading this part needs, which the reader does not hold. */
+                            capability: string;
+                        };
+                        /** @description Hazards open at the end of the period, by level. Needs sms:read. */
+                        hazards: {
+                            /** @constant */
+                            readable: true;
+                            /** @description Hazards open at the end by the residual level of their latest assessment, least first. */
+                            levels: {
+                                level: string;
+                                label: string;
+                                count: number;
+                            }[];
+                            notAssessed: number;
+                            total: number;
+                        } | {
+                            /** @constant */
+                            readable: false;
+                            /** @description What reading this part needs, which the reader does not hold. */
+                            capability: string;
+                        };
+                        /** Format: date-time */
+                        computedAt: string;
+                    };
+                };
+            };
+            /** @description Invalid request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        error: {
+                            code: string;
+                            message: string;
+                            details?: {
+                                [key: string]: unknown;
+                            };
+                        };
+                        requestId: string;
+                    };
+                };
+            };
+            /** @description Authentication required */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        error: {
+                            code: string;
+                            message: string;
+                            details?: {
+                                [key: string]: unknown;
+                            };
+                        };
+                        requestId: string;
+                    };
+                };
+            };
+            /** @description Missing capability */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        error: {
+                            code: string;
+                            message: string;
+                            details?: {
+                                [key: string]: unknown;
+                            };
+                        };
+                        requestId: string;
+                    };
+                };
+            };
+            /** @description Scoped object unavailable */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        error: {
+                            code: string;
+                            message: string;
+                            details?: {
+                                [key: string]: unknown;
+                            };
+                        };
+                        requestId: string;
+                    };
+                };
+            };
+            /** @description Stale basis or conflicting idempotency content */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        error: {
+                            code: string;
+                            message: string;
+                            details?: {
+                                [key: string]: unknown;
+                            };
+                        };
+                        requestId: string;
+                    };
+                };
+            };
+            /** @description Bounded intake exceeded */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        error: {
+                            code: string;
+                            message: string;
+                            details?: {
+                                [key: string]: unknown;
+                            };
+                        };
+                        requestId: string;
+                    };
+                };
+            };
+        };
+    };
+    findingsByMonth: {
+        parameters: {
+            query?: {
+                from?: string;
+                until?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Success */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        period: {
+                            from: string;
+                            until: string;
+                            timeZone: string;
+                        };
+                        months: string[];
+                        rules: {
+                            packId: string;
+                            packTitle: string;
+                            ruleId: string;
+                            ruleTitle: string;
+                            /** @description One count per month, in the order of months. */
+                            opened: number[];
+                            closed: number[];
+                        }[];
+                        total: {
+                            opened: number[];
+                            closed: number[];
+                        };
+                        /** Format: date-time */
+                        computedAt: string;
+                    };
+                };
+            };
+            /** @description Invalid request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        error: {
+                            code: string;
+                            message: string;
+                            details?: {
+                                [key: string]: unknown;
+                            };
+                        };
+                        requestId: string;
+                    };
+                };
+            };
+            /** @description Authentication required */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        error: {
+                            code: string;
+                            message: string;
+                            details?: {
+                                [key: string]: unknown;
+                            };
+                        };
+                        requestId: string;
+                    };
+                };
+            };
+            /** @description Missing capability */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        error: {
+                            code: string;
+                            message: string;
+                            details?: {
+                                [key: string]: unknown;
+                            };
+                        };
+                        requestId: string;
+                    };
+                };
+            };
+            /** @description Scoped object unavailable */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        error: {
+                            code: string;
+                            message: string;
+                            details?: {
+                                [key: string]: unknown;
+                            };
+                        };
+                        requestId: string;
+                    };
+                };
+            };
+            /** @description Stale basis or conflicting idempotency content */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        error: {
+                            code: string;
+                            message: string;
+                            details?: {
+                                [key: string]: unknown;
+                            };
+                        };
+                        requestId: string;
+                    };
+                };
+            };
+            /** @description Bounded intake exceeded */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        error: {
+                            code: string;
+                            message: string;
+                            details?: {
+                                [key: string]: unknown;
+                            };
+                        };
+                        requestId: string;
+                    };
+                };
+            };
+        };
+    };
+    reportIndicators: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Success */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        indicators: {
+                            id: string;
+                            version: number;
+                            title: string | null;
+                            results: number;
+                            /** Format: date-time */
+                            firstWindowStart: string;
+                            /** Format: date-time */
+                            lastWindowEnd: string;
+                        }[];
+                    };
+                };
+            };
+            /** @description Invalid request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        error: {
+                            code: string;
+                            message: string;
+                            details?: {
+                                [key: string]: unknown;
+                            };
+                        };
+                        requestId: string;
+                    };
+                };
+            };
+            /** @description Authentication required */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        error: {
+                            code: string;
+                            message: string;
+                            details?: {
+                                [key: string]: unknown;
+                            };
+                        };
+                        requestId: string;
+                    };
+                };
+            };
+            /** @description Missing capability */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        error: {
+                            code: string;
+                            message: string;
+                            details?: {
+                                [key: string]: unknown;
+                            };
+                        };
+                        requestId: string;
+                    };
+                };
+            };
+            /** @description Scoped object unavailable */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        error: {
+                            code: string;
+                            message: string;
+                            details?: {
+                                [key: string]: unknown;
+                            };
+                        };
+                        requestId: string;
+                    };
+                };
+            };
+            /** @description Stale basis or conflicting idempotency content */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        error: {
+                            code: string;
+                            message: string;
+                            details?: {
+                                [key: string]: unknown;
+                            };
+                        };
+                        requestId: string;
+                    };
+                };
+            };
+            /** @description Bounded intake exceeded */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        error: {
+                            code: string;
+                            message: string;
+                            details?: {
+                                [key: string]: unknown;
+                            };
+                        };
+                        requestId: string;
+                    };
+                };
+            };
+        };
+    };
+    indicatorHistory: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                indicatorId: string;
+                version: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Success */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @description As the registered definition states it; null where no registered one does. */
+                        definition: {
+                            id: string;
+                            version: number;
+                            title: string | null;
+                            description: string | null;
+                            unitLabel: string | null;
+                            /** @description The level the definition sets for a person to compare a rate with, or null when it sets none. */
+                            limit: {
+                                rate: string;
+                                label: string;
+                            } | null;
+                        };
+                        results: {
+                            id: string;
+                            digest: string;
+                            windowId: string;
+                            hazardId: string;
+                            window: {
+                                /** Format: date-time */
+                                start: string;
+                                /** Format: date-time */
+                                end: string;
+                            };
+                            /** Format: date-time */
+                            recordedAt: string;
+                            /** Format: date-time */
+                            recordedThrough: string;
+                            status: "supported" | "insufficient" | "conflicting";
+                            eventCount: number;
+                            exposure: {
+                                decimal: string;
+                                unit: string;
+                            };
+                            /** @description The rate the result states, or null when the evidence supported none. */
+                            rate: {
+                                decimal: string;
+                                label: string;
+                            } | null;
+                        }[];
+                        /** @description More results are recorded than are listed: the newest are listed. */
+                        truncated: boolean;
+                        /** Format: date-time */
+                        computedAt: string;
                     };
                 };
             };
@@ -37065,7 +37860,7 @@ export interface operations {
                 limit?: number;
                 /** @description Opaque continuation scoped to tenant, principal authority, route and filters. Current read models, not a frozen historical snapshot. */
                 cursor?: string;
-                order?: "newest" | "oldest" | "due";
+                order?: "newest" | "oldest" | "due" | "owner";
                 search?: string;
                 status?: string;
                 assuranceType?: "audit" | "program_evaluation" | "occurrence_investigation" | "noncompliance_investigation" | "management_review" | "change_assessment" | "hazard_notice_sent" | "hazard_notice_received";

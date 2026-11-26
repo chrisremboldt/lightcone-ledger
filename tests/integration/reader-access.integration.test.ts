@@ -95,6 +95,12 @@ describe.runIf(process.env.LEDGER_ENV !== 'staging')('A reader looks and changes
     '/v1/record-productions/:id': 'production',
     '/v1/record-productions/:id/content': 'production-content',
     '/v1/record-productions/:id/links': 'production-links',
+    // The reports count records and findings a reader may read; a part they may not, such as hazards, is named as
+    // not theirs to read (see reports.integration.test.ts).
+    '/v1/reports/summary': '/v1/reports/summary?from=2026-01-01&until=2026-01-31',
+    '/v1/reports/findings-by-month': '/v1/reports/findings-by-month',
+    '/v1/reports/indicators': '/v1/reports/indicators',
+    '/v1/reports/indicators/:indicatorId/versions/:version': 'indicator-history',
   };
   const requestFor = (key: string, value: string) =>
     ({
@@ -104,6 +110,7 @@ describe.runIf(process.env.LEDGER_ENV !== 'staging')('A reader looks and changes
       production: fill(key, { id: ids.production! }),
       'production-content': fill(key, { id: ids.production! }),
       'production-links': fill(key, { id: ids.production! }),
+      'indicator-history': fill(key, { indicatorId: 'example-airspace.excursions-per-flight-hour', version: '1' }),
     })[value] ?? value;
 
   /**
@@ -217,6 +224,8 @@ describe.runIf(process.env.LEDGER_ENV !== 'staging')('A reader looks and changes
     }
     const file = await read(reader, `/v1/operator-records/subjects/aircraft/${encodeURIComponent(ids.aircraft!)}`);
     expect(JSON.stringify(file)).toContain(ids.aircraft);
+    const summary = await read(reader, '/v1/reports/summary?from=2026-01-01&until=2026-01-31');
+    expect(summary.hazards).toEqual({ readable: false, capability: 'sms:read' });
     const home = await read(reader, '/v1/sms/home');
     expect(home).toMatchObject({ people: [], reportLinks: [], attention: { waitingOnMe: [], overdue: [] } });
   });

@@ -131,6 +131,7 @@ export function indicatorDefinitionProblem(definition: IndicatorDefinition): str
   if (parameters) return `${label}: ${parameters}`;
   if (parseDecimal(content.completeness.exposureMustExceed) === undefined)
     return `${label}: exposureMustExceed is not a decimal`;
+  if (content.limit && parseDecimal(content.limit.rate) === undefined) return `${label}: the limit is not a decimal`;
   if (scope.kind === 'subjects') {
     const keys = scope.subjects.map(subjectKeyOf);
     if (keys.some((key) => key === undefined)) return `${label} lists a source subject without its sourceId`;

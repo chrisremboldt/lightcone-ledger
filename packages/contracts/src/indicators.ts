@@ -188,6 +188,26 @@ export const IndicatorDefinitionContentSchema = Type.Object(
           'The rate is events times per divided by exposure, for example per 100 flights. Decimal forms are rounded half up to fractionDigits; the exact fraction is always kept.',
       },
     ),
+    limit: Type.Optional(
+      Type.Object(
+        {
+          rate: Type.String({
+            pattern: IndicatorDecimalPattern,
+            description: 'The level, in the same unit as the rate: events times per divided by exposure.',
+          }),
+          label: Type.String({
+            minLength: 1,
+            maxLength: 100,
+            description: 'What the level is called where it is drawn, such as "Alert level".',
+          }),
+        },
+        {
+          ...Closed,
+          description:
+            'A level the definition’s author set for a person to compare a stated rate with, drawn beside the results. It is not a verdict and changes no result: a rate above it says nothing more than its number does.',
+        },
+      ),
+    ),
   },
   {
     ...Closed,
