@@ -55,7 +55,29 @@ export const capabilityValues = [
   'sms:adopt',
   'sms:restricted:read',
   'sms:report:read',
+  'document:read',
 ] as const;
+/**
+ * The capabilities that only read. A principal that holds some and nothing else changes nothing: the API refuses every
+ * request of theirs that is not a read, and the screens offer them no action. Documented in
+ * docs/design/shared-links.md.
+ */
+export const readCapabilityValues = [
+  'flight:read',
+  'order:read',
+  'evidence:read',
+  'document:read',
+  'sms:read',
+  'sms:restricted:read',
+  'sms:report:read',
+] as const satisfies readonly (typeof capabilityValues)[number][];
+/** Whether a principal holding these capabilities only reads: they hold at least one, and every one reads. */
+export function readsOnly(capabilities: readonly string[]): boolean {
+  return (
+    capabilities.length > 0 &&
+    capabilities.every((capability) => (readCapabilityValues as readonly string[]).includes(capability))
+  );
+}
 /**
  * RETAINED: capabilities no longer granted. command-link:write authorized the retired command-link intake; a principal
  * granted it earlier keeps it until it is removed, and authority records accepted under it keep it, but
@@ -722,6 +744,7 @@ export * from './request-shape.js';
 export * from './operator-record-api.js';
 export * from './operator-record-subjects.js';
 export * from './operator-record-production.js';
+export * from './record-production-links.js';
 export * from './indicators.js';
 export * from './control-windows.js';
 export * from './control-indicator-results.js';

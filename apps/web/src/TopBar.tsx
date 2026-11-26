@@ -26,14 +26,14 @@ const sectionPlaces: Record<BarSection, Place> = {
 };
 
 /**
- * The sections a person may open: Flights when the organization records flights, Safety with safety read, Records and
- * Rules with evidence read, People with authority to manage it.
+ * The sections a person may open: Flights when the organization records flights, Safety with safety read or document
+ * read, Records and Rules with evidence read, People with authority to manage it.
  */
 export function offeredSections(principal: Principal | null, flights: boolean): BarSection[] {
   const may = (capability: Capability) => Boolean(principal?.capabilities.includes(capability));
   const offered: Record<BarSection, boolean> = {
     flights,
-    safety: may('sms:read'),
+    safety: may('sms:read') || may('document:read'),
     records: may('evidence:read'),
     rules: may('evidence:read'),
     people: may('authority:write'),

@@ -129,6 +129,14 @@ export const rolePresets: { key: string; title: string; capabilities: Capability
     ],
     keepsRecords: true,
   },
+  {
+    // Someone who looks and changes nothing, such as an inspector or an auditor: records and each subject's file, the
+    // rules and their coverage, findings, produced records and controlled documents. Never a safety report.
+    key: 'reader',
+    title: 'Reader',
+    capabilities: ['evidence:read', 'document:read'],
+    keepsRecords: false,
+  },
   { key: 'none', title: 'Nothing yet', capabilities: [], keepsRecords: false },
 ];
 export type RolePreset = (typeof rolePresets)[number];

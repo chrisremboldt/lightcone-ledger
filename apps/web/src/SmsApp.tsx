@@ -1,7 +1,7 @@
-import { useCallback, useEffect, useMemo, useState, type ReactNode } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { appFetch, demonstration } from './transport.js';
 import { LedgerClient } from '@ledger/contracts/client';
-import { standardRiskMatrix } from '@ledger/contracts';
+import { readsOnly, standardRiskMatrix } from '@ledger/contracts';
 import type {
   Principal,
   SmsHomeResponse,
@@ -31,6 +31,11 @@ import { readFailureOutcome } from './read-failure.js';
 import { barSection, goTo, placeTitle, usePlace, type Place } from './place.js';
 import { offeredSections, TopBar } from './TopBar.js';
 import { SectionArea, SectionUnavailable } from './SectionArea.js';
+
+/** Whether a person reads the controlled documents and no other safety record. */
+export function onlyDocuments(principal: Pick<Principal, 'capabilities'>): boolean {
+  return principal.capabilities.includes('document:read') && !principal.capabilities.includes('sms:read');
+}
 
 /** A new sign-in at the identity provider, which a signature needs; returns when it happened. */
 export type ConfirmIdentity = () => Promise<{ authenticatedAt: string }>;
@@ -170,24 +175,44 @@ export function SmsApp({ apiUrl, token, report, account, local = false, confirmI
   const [documentsAfter, setDocumentsAfter] = useState<DocumentPages>([]);
   const [reload, setReload] = useState(0);
   const refresh = useCallback(() => setReload((value) => value + 1), []);
+  const principalRef = useRef<Principal | null>(null);
+  const documentsOnly = Boolean(principal && onlyDocuments(principal));
+  // A person who reads only the documents has no safety home or other register: Safety opens on the documents.
+  useEffect(() => {
+    if (!documentsOnly || !inSafety || screen.view === 'documents' || screen.view === 'record') return;
+    goTo({ section: 'safety', view: 'documents' }, { replace: true });
+  }, [documentsOnly, inSafety, screen.view]);
 
   useEffect(() => {
     let stopped = false;
     let timer: ReturnType<typeof setTimeout>;
     async function poll() {
       try {
+        // A person who reads the controlled documents and no other safety record reads only those registers.
+        const known = principalRef.current;
+        const documentsOnly = Boolean(known && onlyDocuments(known));
+        const none = async (): Promise<SmsRegisterResponse> => ({
+          records: [],
+          limit: 0,
+          hasMore: false,
+          nextCursor: null,
+          computedAt: new Date().toISOString(),
+        });
         const [session, shownHome, shownRegister, shownDocuments, shownMatrices, shownReports, shownAssurance] =
           await Promise.all([
             client.request<CurrentPrincipalResponse>('/v1/me'),
             client.request<SmsHomeResponse>('/v1/sms/home'),
-            client.request<SmsRegisterResponse>('/v1/sms/records?kind=hazard'),
+            documentsOnly ? none() : client.request<SmsRegisterResponse>('/v1/sms/records?kind=hazard'),
             client.request<SmsRegisterResponse>('/v1/sms/records?kind=document'),
             client.request<SmsRegisterResponse>('/v1/sms/records?kind=risk_matrix'),
-            client.request<SmsRegisterResponse>('/v1/sms/records?kind=report'),
+            documentsOnly ? none() : client.request<SmsRegisterResponse>('/v1/sms/records?kind=report'),
             // A demonstration recorded before safety assurance records existed has no such read; it shows none.
-            client.request<SmsRegisterResponse>('/v1/sms/records?kind=assurance').catch(() => null),
+            documentsOnly
+              ? none()
+              : client.request<SmsRegisterResponse>('/v1/sms/records?kind=assurance').catch(() => null),
           ]);
         if (stopped) return;
+        principalRef.current = session.principal;
         setTimeZone(session.organization?.timeZone);
         setOrganizationName(session.organization?.name ?? null);
         setPrincipal(session.principal);
@@ -208,6 +233,16 @@ export function SmsApp({ apiUrl, token, report, account, local = false, confirmI
         setError(null);
       } catch (failure) {
         if (stopped) return;
+        // A person who reads only the documents was refused the other registers: read again knowing who they are.
+        if (!principalRef.current) {
+          const session = await client.request<CurrentPrincipalResponse>('/v1/me').catch(() => null);
+          if (stopped) return;
+          principalRef.current = session?.principal ?? null;
+          if (session && onlyDocuments(session.principal)) {
+            void poll();
+            return;
+          }
+        }
         // The session and its registers name no record the API could hide behind a 404.
         if (readFailureOutcome(failure, false) === 'access_lost') {
           setHome(null);
@@ -304,26 +339,34 @@ export function SmsApp({ apiUrl, token, report, account, local = false, confirmI
           <div className="roster-head">
             <h1>Safety management</h1>
             <nav className="sms-nav-links">
-              <button
-                aria-current={screen.view === 'home' ? 'page' : undefined}
-                onClick={() => setScreen({ view: 'home' })}
-              >
-                Safety home
-                {attentionCount !== null && attentionCount > 0 && <span className="sms-count">{attentionCount}</span>}
-              </button>
-              <button
-                aria-current={screen.view !== 'home' && !onDocuments && !onReports && !onAssurance ? 'page' : undefined}
-                onClick={() => setScreen({ view: 'register' })}
-              >
-                Hazard register
-                {register && (
-                  <span className="sms-count sms-count--quiet">
-                    {register.records.length}
-                    {register.hasMore ? '+' : ''}
-                  </span>
-                )}
-              </button>
-              {showDocuments && (
+              {!documentsOnly && (
+                <>
+                  <button
+                    aria-current={screen.view === 'home' ? 'page' : undefined}
+                    onClick={() => setScreen({ view: 'home' })}
+                  >
+                    Safety home
+                    {attentionCount !== null && attentionCount > 0 && (
+                      <span className="sms-count">{attentionCount}</span>
+                    )}
+                  </button>
+                  <button
+                    aria-current={
+                      screen.view !== 'home' && !onDocuments && !onReports && !onAssurance ? 'page' : undefined
+                    }
+                    onClick={() => setScreen({ view: 'register' })}
+                  >
+                    Hazard register
+                    {register && (
+                      <span className="sms-count sms-count--quiet">
+                        {register.records.length}
+                        {register.hasMore ? '+' : ''}
+                      </span>
+                    )}
+                  </button>
+                </>
+              )}
+              {(showDocuments || documentsOnly) && (
                 <button
                   aria-current={onDocuments ? 'page' : undefined}
                   onClick={() => setScreen({ view: 'documents' })}
@@ -332,13 +375,13 @@ export function SmsApp({ apiUrl, token, report, account, local = false, confirmI
                   {documents && <span className="sms-count sms-count--quiet">{documents.length}</span>}
                 </button>
               )}
-              {showReports && (
+              {showReports && !documentsOnly && (
                 <button aria-current={onReports ? 'page' : undefined} onClick={() => setScreen({ view: 'reports' })}>
                   Safety reports
                   {reports && <span className="sms-count sms-count--quiet">{reports.length}</span>}
                 </button>
               )}
-              {showAssurance && (
+              {showAssurance && !documentsOnly && (
                 <button
                   aria-current={onAssurance ? 'page' : undefined}
                   onClick={() => setScreen({ view: 'assurance' })}
@@ -824,7 +867,9 @@ function DocumentsRegister({
         {documents.length === 0 ? (
           <div className="safety-empty">
             <h3>No documents recorded yet</h3>
-            <p>Record an authored or received document with the form beside this page.</p>
+            {!readsOnly(principal.capabilities) && (
+              <p>Record an authored or received document with the form beside this page.</p>
+            )}
           </div>
         ) : (
           <DocumentLibrary documents={documents} onOpen={onOpen} />
@@ -836,7 +881,7 @@ function DocumentsRegister({
         )}
         <RegisterMore label="More documents" list={read} />
       </div>
-      <aside className="rail safety-rail" aria-label="Document actions">
+      <aside className="rail safety-rail" aria-label="Document actions" hidden={readsOnly(principal.capabilities)}>
         {drafting || !principal.capabilities.includes('sms:write') ? (
           <>
             <DraftDocumentForm

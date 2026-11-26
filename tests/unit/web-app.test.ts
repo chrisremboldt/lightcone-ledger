@@ -65,4 +65,15 @@ describe('the web app served from the API origin', () => {
     expect(api.json()).toMatchObject({ error: 'Not Found' });
     expect((await app.inject({ method: 'GET', url: '/v1/me' })).json()).toEqual({ ok: true });
   });
+
+  it('serves the page a link to produced records opens to no cache, no other site and no search', async () => {
+    const page = await app.inject({ method: 'GET', url: '/shared' });
+    expect(page.statusCode).toBe(200);
+    expect(page.body).toContain('<title>Ledger</title>');
+    expect(page.headers).toMatchObject({
+      'cache-control': 'no-store',
+      'referrer-policy': 'no-referrer',
+      'x-robots-tag': 'noindex',
+    });
+  });
 });

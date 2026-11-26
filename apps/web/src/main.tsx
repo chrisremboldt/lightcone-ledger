@@ -1,6 +1,7 @@
 import React from 'react';
 import { createRoot } from 'react-dom/client';
 import { LedgerClient } from '@ledger/contracts/client';
+import { RECORD_LINK_PAGE } from '@ledger/contracts';
 import { Button, Mark, Spinner } from '@ledger/ui';
 import '@fontsource/open-sans/latin-400.css';
 import '@fontsource/open-sans/latin-600.css';
@@ -33,6 +34,7 @@ import {
 } from './openid-connect.js';
 import { SafetyRecordLink } from './area-controls.js';
 import { blankSignedInReport, PublicReportPage, SubmitReportDialog } from './SafetyReportSubmission.js';
+import { SharedRecordsPage } from './SharedRecordsPage.js';
 import { safetyDestinationPlace, type FlightLinks, type SafetyDestination } from './safety-navigation.js';
 import { forgetPlaces, goTo, usePlace } from './place.js';
 import { useFirstDay } from './FirstDay.js';
@@ -289,6 +291,9 @@ function Workspace({ account, ...rest }: AppProps & { confirmIdentity?: ConfirmI
   const opensOnSetup =
     opensOnFlights &&
     Boolean(firstDay.decision && opensOnFirstDay(firstDay.decision.principal, firstDay.decision.adoptions));
+  // A person who reads records and not the safety records, such as a reader, opens on the records.
+  const starting = firstDay.decision?.principal.capabilities;
+  const opensOnRecords = Boolean(starting && !starting.includes('sms:read') && starting.includes('evidence:read'));
   React.useEffect(() => {
     if (!known) return;
     if (place.section === 'start' || (place.section === 'flights' && !opensOnFlights))
@@ -297,10 +302,12 @@ function Workspace({ account, ...rest }: AppProps & { confirmIdentity?: ConfirmI
           ? { section: 'setup' }
           : opensOnFlights
             ? { section: 'flights' }
-            : { section: 'safety', view: 'home' },
+            : opensOnRecords
+              ? { section: 'records', pane: 'subjects' }
+              : { section: 'safety', view: 'home' },
         { replace: true },
       );
-  }, [known, opensOnFlights, opensOnSetup, place.section]);
+  }, [known, opensOnFlights, opensOnSetup, opensOnRecords, place.section]);
   if (!known)
     return props.local && localAllowed ? (
       <Gate>
@@ -608,6 +615,8 @@ function LocalSession() {
 const returningFromProvider = import.meta.env.DEV && !demonstration && isCallback(window.location.href);
 
 function Root() {
+  // The page a link to one produced set opens: no sign-in, and its secret stays in the address after #.
+  if (window.location.pathname === RECORD_LINK_PAGE) return <SharedRecordsPage apiUrl={apiUrl} />;
   // The page a reporting link opens: no sign-in, and its token stays in the address after #.
   if (window.location.pathname === '/report')
     return (

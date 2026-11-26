@@ -39,7 +39,15 @@ export {
   listRecordProductions,
 } from './record-productions.js';
 export { assembleRecordProduction, type ProductionSources } from './record-production-assembly.js';
-export { writeZip } from './zip.js';
+export {
+  createRecordLink,
+  listRecordLinks,
+  openSharedRecords,
+  openSharedRecordsArchive,
+  openSharedRecordsFile,
+  revokeRecordLink,
+} from './record-production-links.js';
+export { readZip, writeZip } from './zip.js';
 export { createSubjectExport, getSubjectExport, getSubjectExportObject, listSubjectExports } from './subject.js';
 export { createSmsExport, getSmsExport, SMS_EXPORT_FORMAT } from './sms.js';
 export { renderSmsPacket, type SmsPacketBundle } from './sms-packet.js';

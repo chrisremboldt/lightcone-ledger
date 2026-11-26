@@ -15003,6 +15003,10 @@
                   "type": "string"
                 },
                 {
+                  "const": "document:read",
+                  "type": "string"
+                },
+                {
                   "const": "command-link:write",
                   "type": "string"
                 }
@@ -15229,6 +15233,10 @@
                     },
                     {
                       "const": "sms:report:read",
+                      "type": "string"
+                    },
+                    {
+                      "const": "document:read",
                       "type": "string"
                     },
                     {
@@ -15467,6 +15475,10 @@
                       },
                       {
                         "const": "sms:report:read",
+                        "type": "string"
+                      },
+                      {
+                        "const": "document:read",
                         "type": "string"
                       },
                       {
@@ -60911,6 +60923,10 @@
                                 "type": "string"
                               },
                               {
+                                "const": "document:read",
+                                "type": "string"
+                              },
+                              {
                                 "const": "command-link:write",
                                 "type": "string"
                               }
@@ -61449,6 +61465,10 @@
                                 },
                                 {
                                   "const": "sms:report:read",
+                                  "type": "string"
+                                },
+                                {
+                                  "const": "document:read",
                                   "type": "string"
                                 },
                                 {
@@ -62197,7 +62217,7 @@
       "get": {
         "operationId": "rolePresets",
         "summary": "List the role presets people are added from",
-        "description": "Returns each role preset (Dispatcher, Pilot, Safety manager, Administrator, Nothing yet) with exactly the capabilities and observation grants it gives. The People screen and the command-line client read the same list. Needs `authority:write`.",
+        "description": "Returns each role preset (Dispatcher, Pilot, Safety manager, Administrator, Reader, Nothing yet) with exactly the capabilities and observation grants it gives. The People screen and the command-line client read the same list. Needs `authority:write`.",
         "security": [
           {
             "bearerAuth": []
@@ -65356,6 +65376,10 @@
                                 "type": "string"
                               },
                               {
+                                "const": "document:read",
+                                "type": "string"
+                              },
+                              {
                                 "const": "command-link:write",
                                 "type": "string"
                               }
@@ -66207,7 +66231,7 @@
       "get": {
         "operationId": "organizationCoverage",
         "summary": "Read the rule packs the organization has adopted and their coverage",
-        "description": "Returns the organization, its rule pack adoptions and what each adoption covers. Needs `flight:read`.",
+        "description": "Returns the organization, its rule pack adoptions and what each adoption covers. Needs `flight:read` or `evidence:read`.",
         "security": [
           {
             "bearerAuth": []
@@ -78698,7 +78722,7 @@
       "get": {
         "operationId": "ruleSourceContent",
         "summary": "Download the original bytes of one rule source document",
-        "description": "Returns the retained rule source document as it was published, with its SHA-256 in the X-Content-SHA256 header. Needs `flight:read`.",
+        "description": "Returns the retained rule source document as it was published, with its SHA-256 in the X-Content-SHA256 header. Needs `flight:read` or `evidence:read`.",
         "security": [
           {
             "bearerAuth": []
@@ -78981,7 +79005,7 @@
       "get": {
         "operationId": "rulePacks",
         "summary": "List the rule pack versions this host offers",
-        "description": "Returns every rule pack version registered on this host, adopted or not. Needs `flight:read`.",
+        "description": "Returns every rule pack version registered on this host, adopted or not. Needs `flight:read` or `evidence:read`.",
         "security": [
           {
             "bearerAuth": []
@@ -79327,7 +79351,7 @@
       "get": {
         "operationId": "rulePackVersion",
         "summary": "Read one rule pack version and its rules",
-        "description": "Returns one rule pack version with its rules and the sources they cite. Needs `flight:read`.",
+        "description": "Returns one rule pack version with its rules and the sources they cite. Needs `flight:read` or `evidence:read`.",
         "security": [
           {
             "bearerAuth": []
@@ -89574,6 +89598,10 @@
                           },
                           {
                             "const": "sms:report:read",
+                            "type": "string"
+                          },
+                          {
+                            "const": "document:read",
                             "type": "string"
                           },
                           {
@@ -119099,6 +119127,2106 @@
         }
       }
     },
+    "/v1/record-productions/{id}/links": {
+      "post": {
+        "operationId": "createRecordLink",
+        "summary": "Make a link to one produced set",
+        "description": "Makes a link that opens one produced set to someone who does not sign in, until it expires (7 days unless given, 90 at most) or is revoked. Its secret is 256 random bits, returned once; only its SHA-256 is kept. Recorded with who made it and the note saying who it is for. A principal who holds only reads is refused. Needs `evidence:read` and an Idempotency-Key.",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 1
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "additionalProperties": false,
+                "description": "Make a link to one produced set of records. Its secret is returned once.",
+                "type": "object",
+                "required": [
+                  "note"
+                ],
+                "properties": {
+                  "note": {
+                    "minLength": 1,
+                    "maxLength": 300,
+                    "pattern": "\\S",
+                    "description": "Who the link is for and why, in your words. Shown with the link and kept with its creation.",
+                    "type": "string"
+                  },
+                  "expiresInDays": {
+                    "minimum": 1,
+                    "maximum": 90,
+                    "description": "How many days the link opens the set. 7 unless given; 90 at most.",
+                    "type": "integer"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": false,
+                  "type": "object",
+                  "required": [
+                    "link",
+                    "secret"
+                  ],
+                  "properties": {
+                    "link": {
+                      "additionalProperties": false,
+                      "type": "object",
+                      "required": [
+                        "id",
+                        "productionId",
+                        "note",
+                        "createdBy",
+                        "createdAt",
+                        "expiresAt",
+                        "revokedBy",
+                        "revokedAt",
+                        "revokeReason",
+                        "state",
+                        "openings"
+                      ],
+                      "properties": {
+                        "id": {
+                          "minLength": 1,
+                          "maxLength": 200,
+                          "type": "string"
+                        },
+                        "productionId": {
+                          "minLength": 1,
+                          "maxLength": 200,
+                          "type": "string"
+                        },
+                        "note": {
+                          "type": "string"
+                        },
+                        "createdBy": {
+                          "additionalProperties": false,
+                          "type": "object",
+                          "required": [
+                            "id",
+                            "name"
+                          ],
+                          "properties": {
+                            "id": {
+                              "minLength": 1,
+                              "maxLength": 200,
+                              "type": "string"
+                            },
+                            "name": {
+                              "type": "string"
+                            }
+                          }
+                        },
+                        "createdAt": {
+                          "format": "date-time",
+                          "type": "string"
+                        },
+                        "expiresAt": {
+                          "format": "date-time",
+                          "type": "string"
+                        },
+                        "revokedBy": {
+                          "anyOf": [
+                            {
+                              "additionalProperties": false,
+                              "type": "object",
+                              "required": [
+                                "id",
+                                "name"
+                              ],
+                              "properties": {
+                                "id": {
+                                  "minLength": 1,
+                                  "maxLength": 200,
+                                  "type": "string"
+                                },
+                                "name": {
+                                  "type": "string"
+                                }
+                              }
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "revokedAt": {
+                          "anyOf": [
+                            {
+                              "format": "date-time",
+                              "type": "string"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "revokeReason": {
+                          "anyOf": [
+                            {
+                              "type": "string"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "state": {
+                          "description": "open: the link opens the set now.",
+                          "anyOf": [
+                            {
+                              "const": "open",
+                              "type": "string"
+                            },
+                            {
+                              "const": "expired",
+                              "type": "string"
+                            },
+                            {
+                              "const": "revoked",
+                              "type": "string"
+                            }
+                          ]
+                        },
+                        "openings": {
+                          "description": "Newest first, at most 200.",
+                          "type": "array",
+                          "items": {
+                            "additionalProperties": false,
+                            "description": "One opening of a link. Who opened it is not kept.",
+                            "type": "object",
+                            "required": [
+                              "openedAt",
+                              "opened",
+                              "path"
+                            ],
+                            "properties": {
+                              "openedAt": {
+                                "format": "date-time",
+                                "type": "string"
+                              },
+                              "opened": {
+                                "description": "The page, one file of the set, or the whole .zip.",
+                                "anyOf": [
+                                  {
+                                    "const": "page",
+                                    "type": "string"
+                                  },
+                                  {
+                                    "const": "file",
+                                    "type": "string"
+                                  },
+                                  {
+                                    "const": "archive",
+                                    "type": "string"
+                                  }
+                                ]
+                              },
+                              "path": {
+                                "description": "The file opened, for a file.",
+                                "anyOf": [
+                                  {
+                                    "type": "string"
+                                  },
+                                  {
+                                    "type": "null"
+                                  }
+                                ]
+                              }
+                            }
+                          }
+                        }
+                      }
+                    },
+                    "secret": {
+                      "pattern": "^ledger-records-[A-Za-z0-9_-]{43}$",
+                      "description": "Shown once. The link is /shared# followed by the secret, on the web app’s address.",
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "error",
+                    "requestId"
+                  ],
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "required": [
+                        "code",
+                        "message"
+                      ],
+                      "properties": {
+                        "code": {
+                          "type": "string"
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "details": {
+                          "type": "object",
+                          "patternProperties": {
+                            "^(.*)$": {}
+                          }
+                        }
+                      }
+                    },
+                    "requestId": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Authentication required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "error",
+                    "requestId"
+                  ],
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "required": [
+                        "code",
+                        "message"
+                      ],
+                      "properties": {
+                        "code": {
+                          "type": "string"
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "details": {
+                          "type": "object",
+                          "patternProperties": {
+                            "^(.*)$": {}
+                          }
+                        }
+                      }
+                    },
+                    "requestId": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Missing capability",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "error",
+                    "requestId"
+                  ],
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "required": [
+                        "code",
+                        "message"
+                      ],
+                      "properties": {
+                        "code": {
+                          "type": "string"
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "details": {
+                          "type": "object",
+                          "patternProperties": {
+                            "^(.*)$": {}
+                          }
+                        }
+                      }
+                    },
+                    "requestId": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Scoped object unavailable",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "error",
+                    "requestId"
+                  ],
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "required": [
+                        "code",
+                        "message"
+                      ],
+                      "properties": {
+                        "code": {
+                          "type": "string"
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "details": {
+                          "type": "object",
+                          "patternProperties": {
+                            "^(.*)$": {}
+                          }
+                        }
+                      }
+                    },
+                    "requestId": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Stale basis or conflicting idempotency content",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "error",
+                    "requestId"
+                  ],
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "required": [
+                        "code",
+                        "message"
+                      ],
+                      "properties": {
+                        "code": {
+                          "type": "string"
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "details": {
+                          "type": "object",
+                          "patternProperties": {
+                            "^(.*)$": {}
+                          }
+                        }
+                      }
+                    },
+                    "requestId": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Bounded intake exceeded",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "error",
+                    "requestId"
+                  ],
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "required": [
+                        "code",
+                        "message"
+                      ],
+                      "properties": {
+                        "code": {
+                          "type": "string"
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "details": {
+                          "type": "object",
+                          "patternProperties": {
+                            "^(.*)$": {}
+                          }
+                        }
+                      }
+                    },
+                    "requestId": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "operationId": "listRecordLinks",
+        "summary": "List the links to one produced set",
+        "description": "Returns every link made to one produced set, newest first: who it is for, who made it and when, when it expires, whether it was revoked, by whom and why, and each time it was opened, with nothing about who opened it. Never a secret. Needs `evidence:read`.",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": false,
+                  "type": "object",
+                  "required": [
+                    "links"
+                  ],
+                  "properties": {
+                    "links": {
+                      "type": "array",
+                      "items": {
+                        "additionalProperties": false,
+                        "type": "object",
+                        "required": [
+                          "id",
+                          "productionId",
+                          "note",
+                          "createdBy",
+                          "createdAt",
+                          "expiresAt",
+                          "revokedBy",
+                          "revokedAt",
+                          "revokeReason",
+                          "state",
+                          "openings"
+                        ],
+                        "properties": {
+                          "id": {
+                            "minLength": 1,
+                            "maxLength": 200,
+                            "type": "string"
+                          },
+                          "productionId": {
+                            "minLength": 1,
+                            "maxLength": 200,
+                            "type": "string"
+                          },
+                          "note": {
+                            "type": "string"
+                          },
+                          "createdBy": {
+                            "additionalProperties": false,
+                            "type": "object",
+                            "required": [
+                              "id",
+                              "name"
+                            ],
+                            "properties": {
+                              "id": {
+                                "minLength": 1,
+                                "maxLength": 200,
+                                "type": "string"
+                              },
+                              "name": {
+                                "type": "string"
+                              }
+                            }
+                          },
+                          "createdAt": {
+                            "format": "date-time",
+                            "type": "string"
+                          },
+                          "expiresAt": {
+                            "format": "date-time",
+                            "type": "string"
+                          },
+                          "revokedBy": {
+                            "anyOf": [
+                              {
+                                "additionalProperties": false,
+                                "type": "object",
+                                "required": [
+                                  "id",
+                                  "name"
+                                ],
+                                "properties": {
+                                  "id": {
+                                    "minLength": 1,
+                                    "maxLength": 200,
+                                    "type": "string"
+                                  },
+                                  "name": {
+                                    "type": "string"
+                                  }
+                                }
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ]
+                          },
+                          "revokedAt": {
+                            "anyOf": [
+                              {
+                                "format": "date-time",
+                                "type": "string"
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ]
+                          },
+                          "revokeReason": {
+                            "anyOf": [
+                              {
+                                "type": "string"
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ]
+                          },
+                          "state": {
+                            "description": "open: the link opens the set now.",
+                            "anyOf": [
+                              {
+                                "const": "open",
+                                "type": "string"
+                              },
+                              {
+                                "const": "expired",
+                                "type": "string"
+                              },
+                              {
+                                "const": "revoked",
+                                "type": "string"
+                              }
+                            ]
+                          },
+                          "openings": {
+                            "description": "Newest first, at most 200.",
+                            "type": "array",
+                            "items": {
+                              "additionalProperties": false,
+                              "description": "One opening of a link. Who opened it is not kept.",
+                              "type": "object",
+                              "required": [
+                                "openedAt",
+                                "opened",
+                                "path"
+                              ],
+                              "properties": {
+                                "openedAt": {
+                                  "format": "date-time",
+                                  "type": "string"
+                                },
+                                "opened": {
+                                  "description": "The page, one file of the set, or the whole .zip.",
+                                  "anyOf": [
+                                    {
+                                      "const": "page",
+                                      "type": "string"
+                                    },
+                                    {
+                                      "const": "file",
+                                      "type": "string"
+                                    },
+                                    {
+                                      "const": "archive",
+                                      "type": "string"
+                                    }
+                                  ]
+                                },
+                                "path": {
+                                  "description": "The file opened, for a file.",
+                                  "anyOf": [
+                                    {
+                                      "type": "string"
+                                    },
+                                    {
+                                      "type": "null"
+                                    }
+                                  ]
+                                }
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "error",
+                    "requestId"
+                  ],
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "required": [
+                        "code",
+                        "message"
+                      ],
+                      "properties": {
+                        "code": {
+                          "type": "string"
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "details": {
+                          "type": "object",
+                          "patternProperties": {
+                            "^(.*)$": {}
+                          }
+                        }
+                      }
+                    },
+                    "requestId": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Authentication required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "error",
+                    "requestId"
+                  ],
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "required": [
+                        "code",
+                        "message"
+                      ],
+                      "properties": {
+                        "code": {
+                          "type": "string"
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "details": {
+                          "type": "object",
+                          "patternProperties": {
+                            "^(.*)$": {}
+                          }
+                        }
+                      }
+                    },
+                    "requestId": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Missing capability",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "error",
+                    "requestId"
+                  ],
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "required": [
+                        "code",
+                        "message"
+                      ],
+                      "properties": {
+                        "code": {
+                          "type": "string"
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "details": {
+                          "type": "object",
+                          "patternProperties": {
+                            "^(.*)$": {}
+                          }
+                        }
+                      }
+                    },
+                    "requestId": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Scoped object unavailable",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "error",
+                    "requestId"
+                  ],
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "required": [
+                        "code",
+                        "message"
+                      ],
+                      "properties": {
+                        "code": {
+                          "type": "string"
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "details": {
+                          "type": "object",
+                          "patternProperties": {
+                            "^(.*)$": {}
+                          }
+                        }
+                      }
+                    },
+                    "requestId": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Stale basis or conflicting idempotency content",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "error",
+                    "requestId"
+                  ],
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "required": [
+                        "code",
+                        "message"
+                      ],
+                      "properties": {
+                        "code": {
+                          "type": "string"
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "details": {
+                          "type": "object",
+                          "patternProperties": {
+                            "^(.*)$": {}
+                          }
+                        }
+                      }
+                    },
+                    "requestId": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Bounded intake exceeded",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "error",
+                    "requestId"
+                  ],
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "required": [
+                        "code",
+                        "message"
+                      ],
+                      "properties": {
+                        "code": {
+                          "type": "string"
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "details": {
+                          "type": "object",
+                          "patternProperties": {
+                            "^(.*)$": {}
+                          }
+                        }
+                      }
+                    },
+                    "requestId": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/record-production-links/{id}/revoke": {
+      "post": {
+        "operationId": "revokeRecordLink",
+        "summary": "Revoke a link to a produced set",
+        "description": "Revokes a link at once: it opens nothing from then on. Recorded with who revoked it and why. A principal who holds only reads is refused. Needs `evidence:read`.",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "additionalProperties": false,
+                "type": "object",
+                "required": [
+                  "reason"
+                ],
+                "properties": {
+                  "reason": {
+                    "minLength": 1,
+                    "maxLength": 1000,
+                    "pattern": "\\S",
+                    "description": "Why the link is revoked. Kept with the revocation.",
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": false,
+                  "type": "object",
+                  "required": [
+                    "link"
+                  ],
+                  "properties": {
+                    "link": {
+                      "additionalProperties": false,
+                      "type": "object",
+                      "required": [
+                        "id",
+                        "productionId",
+                        "note",
+                        "createdBy",
+                        "createdAt",
+                        "expiresAt",
+                        "revokedBy",
+                        "revokedAt",
+                        "revokeReason",
+                        "state",
+                        "openings"
+                      ],
+                      "properties": {
+                        "id": {
+                          "minLength": 1,
+                          "maxLength": 200,
+                          "type": "string"
+                        },
+                        "productionId": {
+                          "minLength": 1,
+                          "maxLength": 200,
+                          "type": "string"
+                        },
+                        "note": {
+                          "type": "string"
+                        },
+                        "createdBy": {
+                          "additionalProperties": false,
+                          "type": "object",
+                          "required": [
+                            "id",
+                            "name"
+                          ],
+                          "properties": {
+                            "id": {
+                              "minLength": 1,
+                              "maxLength": 200,
+                              "type": "string"
+                            },
+                            "name": {
+                              "type": "string"
+                            }
+                          }
+                        },
+                        "createdAt": {
+                          "format": "date-time",
+                          "type": "string"
+                        },
+                        "expiresAt": {
+                          "format": "date-time",
+                          "type": "string"
+                        },
+                        "revokedBy": {
+                          "anyOf": [
+                            {
+                              "additionalProperties": false,
+                              "type": "object",
+                              "required": [
+                                "id",
+                                "name"
+                              ],
+                              "properties": {
+                                "id": {
+                                  "minLength": 1,
+                                  "maxLength": 200,
+                                  "type": "string"
+                                },
+                                "name": {
+                                  "type": "string"
+                                }
+                              }
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "revokedAt": {
+                          "anyOf": [
+                            {
+                              "format": "date-time",
+                              "type": "string"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "revokeReason": {
+                          "anyOf": [
+                            {
+                              "type": "string"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "state": {
+                          "description": "open: the link opens the set now.",
+                          "anyOf": [
+                            {
+                              "const": "open",
+                              "type": "string"
+                            },
+                            {
+                              "const": "expired",
+                              "type": "string"
+                            },
+                            {
+                              "const": "revoked",
+                              "type": "string"
+                            }
+                          ]
+                        },
+                        "openings": {
+                          "description": "Newest first, at most 200.",
+                          "type": "array",
+                          "items": {
+                            "additionalProperties": false,
+                            "description": "One opening of a link. Who opened it is not kept.",
+                            "type": "object",
+                            "required": [
+                              "openedAt",
+                              "opened",
+                              "path"
+                            ],
+                            "properties": {
+                              "openedAt": {
+                                "format": "date-time",
+                                "type": "string"
+                              },
+                              "opened": {
+                                "description": "The page, one file of the set, or the whole .zip.",
+                                "anyOf": [
+                                  {
+                                    "const": "page",
+                                    "type": "string"
+                                  },
+                                  {
+                                    "const": "file",
+                                    "type": "string"
+                                  },
+                                  {
+                                    "const": "archive",
+                                    "type": "string"
+                                  }
+                                ]
+                              },
+                              "path": {
+                                "description": "The file opened, for a file.",
+                                "anyOf": [
+                                  {
+                                    "type": "string"
+                                  },
+                                  {
+                                    "type": "null"
+                                  }
+                                ]
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "error",
+                    "requestId"
+                  ],
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "required": [
+                        "code",
+                        "message"
+                      ],
+                      "properties": {
+                        "code": {
+                          "type": "string"
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "details": {
+                          "type": "object",
+                          "patternProperties": {
+                            "^(.*)$": {}
+                          }
+                        }
+                      }
+                    },
+                    "requestId": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Authentication required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "error",
+                    "requestId"
+                  ],
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "required": [
+                        "code",
+                        "message"
+                      ],
+                      "properties": {
+                        "code": {
+                          "type": "string"
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "details": {
+                          "type": "object",
+                          "patternProperties": {
+                            "^(.*)$": {}
+                          }
+                        }
+                      }
+                    },
+                    "requestId": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Missing capability",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "error",
+                    "requestId"
+                  ],
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "required": [
+                        "code",
+                        "message"
+                      ],
+                      "properties": {
+                        "code": {
+                          "type": "string"
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "details": {
+                          "type": "object",
+                          "patternProperties": {
+                            "^(.*)$": {}
+                          }
+                        }
+                      }
+                    },
+                    "requestId": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Scoped object unavailable",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "error",
+                    "requestId"
+                  ],
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "required": [
+                        "code",
+                        "message"
+                      ],
+                      "properties": {
+                        "code": {
+                          "type": "string"
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "details": {
+                          "type": "object",
+                          "patternProperties": {
+                            "^(.*)$": {}
+                          }
+                        }
+                      }
+                    },
+                    "requestId": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Stale basis or conflicting idempotency content",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "error",
+                    "requestId"
+                  ],
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "required": [
+                        "code",
+                        "message"
+                      ],
+                      "properties": {
+                        "code": {
+                          "type": "string"
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "details": {
+                          "type": "object",
+                          "patternProperties": {
+                            "^(.*)$": {}
+                          }
+                        }
+                      }
+                    },
+                    "requestId": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Bounded intake exceeded",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "error",
+                    "requestId"
+                  ],
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "required": [
+                        "code",
+                        "message"
+                      ],
+                      "properties": {
+                        "code": {
+                          "type": "string"
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "details": {
+                          "type": "object",
+                          "patternProperties": {
+                            "^(.*)$": {}
+                          }
+                        }
+                      }
+                    },
+                    "requestId": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/shared-records": {
+      "post": {
+        "operationId": "openSharedRecords",
+        "summary": "Open the produced set a link opens",
+        "description": "Returns the organization’s name, what the set is and its files, for the secret from the link. Each opening is kept with its time and nothing about who opened it. Unknown, expired and revoked links all answer 404 record_link_not_in_use. Answered with Cache-Control no-store, Referrer-Policy no-referrer and X-Robots-Tag noindex. Needs the link’s secret in the body, and no sign-in.",
+        "security": [],
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "additionalProperties": false,
+                "type": "object",
+                "required": [
+                  "secret"
+                ],
+                "properties": {
+                  "secret": {
+                    "minLength": 1,
+                    "maxLength": 200,
+                    "description": "The secret after # in the link.",
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": false,
+                  "description": "One produced set of records as its link shows it. Expired, revoked and unknown links all answer 404 record_link_not_in_use.",
+                  "type": "object",
+                  "required": [
+                    "organization",
+                    "set",
+                    "files",
+                    "expiresAt"
+                  ],
+                  "properties": {
+                    "organization": {
+                      "additionalProperties": false,
+                      "type": "object",
+                      "required": [
+                        "name",
+                        "timeZone"
+                      ],
+                      "properties": {
+                        "name": {
+                          "type": "string"
+                        },
+                        "timeZone": {
+                          "type": "string"
+                        }
+                      }
+                    },
+                    "set": {
+                      "additionalProperties": false,
+                      "type": "object",
+                      "required": [
+                        "reason",
+                        "requestedBy",
+                        "producedAt",
+                        "producedBy",
+                        "records",
+                        "archiveSha256",
+                        "manifestSha256",
+                        "byteLength"
+                      ],
+                      "properties": {
+                        "reason": {
+                          "description": "Why the records were produced, as the file prints it.",
+                          "type": "string"
+                        },
+                        "requestedBy": {
+                          "type": "string"
+                        },
+                        "producedAt": {
+                          "format": "date-time",
+                          "type": "string"
+                        },
+                        "producedBy": {
+                          "description": "The name of the person who produced them.",
+                          "type": "string"
+                        },
+                        "records": {
+                          "minimum": 0,
+                          "type": "integer"
+                        },
+                        "archiveSha256": {
+                          "pattern": "^[a-f0-9]{64}$",
+                          "type": "string"
+                        },
+                        "manifestSha256": {
+                          "pattern": "^[a-f0-9]{64}$",
+                          "type": "string"
+                        },
+                        "byteLength": {
+                          "minimum": 1,
+                          "type": "integer"
+                        }
+                      }
+                    },
+                    "files": {
+                      "type": "array",
+                      "items": {
+                        "additionalProperties": false,
+                        "type": "object",
+                        "required": [
+                          "path",
+                          "role",
+                          "contentType",
+                          "byteLength",
+                          "sha256"
+                        ],
+                        "properties": {
+                          "path": {
+                            "type": "string"
+                          },
+                          "role": {
+                            "anyOf": [
+                              {
+                                "const": "index",
+                                "type": "string"
+                              },
+                              {
+                                "const": "records",
+                                "type": "string"
+                              },
+                              {
+                                "const": "original",
+                                "type": "string"
+                              },
+                              {
+                                "const": "manifest",
+                                "type": "string"
+                              }
+                            ]
+                          },
+                          "contentType": {
+                            "type": "string"
+                          },
+                          "byteLength": {
+                            "minimum": 0,
+                            "type": "integer"
+                          },
+                          "sha256": {
+                            "description": "From manifest.json; null for manifest.json itself, whose digest is manifestSha256.",
+                            "anyOf": [
+                              {
+                                "pattern": "^[a-f0-9]{64}$",
+                                "type": "string"
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ]
+                          }
+                        }
+                      }
+                    },
+                    "expiresAt": {
+                      "format": "date-time",
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "error",
+                    "requestId"
+                  ],
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "required": [
+                        "code",
+                        "message"
+                      ],
+                      "properties": {
+                        "code": {
+                          "type": "string"
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "details": {
+                          "type": "object",
+                          "patternProperties": {
+                            "^(.*)$": {}
+                          }
+                        }
+                      }
+                    },
+                    "requestId": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Authentication required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "error",
+                    "requestId"
+                  ],
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "required": [
+                        "code",
+                        "message"
+                      ],
+                      "properties": {
+                        "code": {
+                          "type": "string"
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "details": {
+                          "type": "object",
+                          "patternProperties": {
+                            "^(.*)$": {}
+                          }
+                        }
+                      }
+                    },
+                    "requestId": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Missing capability",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "error",
+                    "requestId"
+                  ],
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "required": [
+                        "code",
+                        "message"
+                      ],
+                      "properties": {
+                        "code": {
+                          "type": "string"
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "details": {
+                          "type": "object",
+                          "patternProperties": {
+                            "^(.*)$": {}
+                          }
+                        }
+                      }
+                    },
+                    "requestId": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Scoped object unavailable",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "error",
+                    "requestId"
+                  ],
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "required": [
+                        "code",
+                        "message"
+                      ],
+                      "properties": {
+                        "code": {
+                          "type": "string"
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "details": {
+                          "type": "object",
+                          "patternProperties": {
+                            "^(.*)$": {}
+                          }
+                        }
+                      }
+                    },
+                    "requestId": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Stale basis or conflicting idempotency content",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "error",
+                    "requestId"
+                  ],
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "required": [
+                        "code",
+                        "message"
+                      ],
+                      "properties": {
+                        "code": {
+                          "type": "string"
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "details": {
+                          "type": "object",
+                          "patternProperties": {
+                            "^(.*)$": {}
+                          }
+                        }
+                      }
+                    },
+                    "requestId": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Bounded intake exceeded",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "error",
+                    "requestId"
+                  ],
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "required": [
+                        "code",
+                        "message"
+                      ],
+                      "properties": {
+                        "code": {
+                          "type": "string"
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "details": {
+                          "type": "object",
+                          "patternProperties": {
+                            "^(.*)$": {}
+                          }
+                        }
+                      }
+                    },
+                    "requestId": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/shared-records/file": {
+      "post": {
+        "operationId": "readSharedRecordsFile",
+        "summary": "Read one file of the set a link opens",
+        "description": "Returns one file of the set by its path, checked against the SHA-256 its manifest lists. The opening is kept. Needs the link’s secret in the body, and no sign-in.",
+        "security": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "additionalProperties": false,
+                "type": "object",
+                "required": [
+                  "secret",
+                  "path"
+                ],
+                "properties": {
+                  "secret": {
+                    "minLength": 1,
+                    "maxLength": 200,
+                    "description": "The secret after # in the link.",
+                    "type": "string"
+                  },
+                  "path": {
+                    "minLength": 1,
+                    "maxLength": 500,
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "The file, checked against the SHA-256 its manifest lists. The opening is kept.",
+            "content": {
+              "application/octet-stream": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "record_link_not_in_use, or no file by that name in the set",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "error",
+                    "requestId"
+                  ],
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "required": [
+                        "code",
+                        "message"
+                      ],
+                      "properties": {
+                        "code": {
+                          "type": "string"
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "details": {
+                          "type": "object",
+                          "patternProperties": {
+                            "^(.*)$": {}
+                          }
+                        }
+                      }
+                    },
+                    "requestId": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Kept bytes differ from their record",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "error",
+                    "requestId"
+                  ],
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "required": [
+                        "code",
+                        "message"
+                      ],
+                      "properties": {
+                        "code": {
+                          "type": "string"
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "details": {
+                          "type": "object",
+                          "patternProperties": {
+                            "^(.*)$": {}
+                          }
+                        }
+                      }
+                    },
+                    "requestId": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/shared-records/archive": {
+      "post": {
+        "operationId": "readSharedRecordsArchive",
+        "summary": "Download the whole set a link opens",
+        "description": "Returns the kept .zip of the set, checked against its recorded SHA-256, with X-Manifest-SHA256. The opening is kept. Needs the link’s secret in the body, and no sign-in.",
+        "security": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "additionalProperties": false,
+                "type": "object",
+                "required": [
+                  "secret"
+                ],
+                "properties": {
+                  "secret": {
+                    "minLength": 1,
+                    "maxLength": 200,
+                    "description": "The secret after # in the link.",
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "The kept .zip, checked against its recorded SHA-256. The opening is kept.",
+            "content": {
+              "application/zip": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              }
+            },
+            "headers": {
+              "X-Content-SHA256": {
+                "schema": {
+                  "type": "string",
+                  "pattern": "^[a-f0-9]{64}$"
+                }
+              },
+              "X-Manifest-SHA256": {
+                "schema": {
+                  "type": "string",
+                  "pattern": "^[a-f0-9]{64}$"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "record_link_not_in_use",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "error",
+                    "requestId"
+                  ],
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "required": [
+                        "code",
+                        "message"
+                      ],
+                      "properties": {
+                        "code": {
+                          "type": "string"
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "details": {
+                          "type": "object",
+                          "patternProperties": {
+                            "^(.*)$": {}
+                          }
+                        }
+                      }
+                    },
+                    "requestId": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Kept bytes differ from their record",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "error",
+                    "requestId"
+                  ],
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "required": [
+                        "code",
+                        "message"
+                      ],
+                      "properties": {
+                        "code": {
+                          "type": "string"
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "details": {
+                          "type": "object",
+                          "patternProperties": {
+                            "^(.*)$": {}
+                          }
+                        }
+                      }
+                    },
+                    "requestId": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/v1/control-windows": {
       "post": {
         "operationId": "openControlWindow",
@@ -132183,6 +134311,10 @@
                               "type": "string"
                             },
                             {
+                              "const": "document:read",
+                              "type": "string"
+                            },
+                            {
                               "const": "command-link:write",
                               "type": "string"
                             }
@@ -132385,6 +134517,10 @@
                             },
                             {
                               "const": "sms:report:read",
+                              "type": "string"
+                            },
+                            {
+                              "const": "document:read",
                               "type": "string"
                             },
                             {
@@ -140199,7 +142335,7 @@
       "get": {
         "operationId": "smsHome",
         "summary": "Read the overview of the organization’s safety records",
-        "description": "Returns the overview of the safety records: whether the program is active, the risk matrix in use and the people who take part in it. Private, not cached. Needs `sms:read`.",
+        "description": "Returns the overview of the safety records: whether the program is active, the risk matrix in use and the people who take part in it. To a person who reads the controlled documents alone, only the program and the risk matrix. Private, not cached. Needs `sms:read` or `document:read`.",
         "security": [
           {
             "bearerAuth": []
@@ -145250,7 +147386,7 @@
       "get": {
         "operationId": "smsRegister",
         "summary": "List the safety records of one kind",
-        "description": "Returns the safety records of one kind, a page at a time, optionally only those raised from one finding, or the one that carries the organization’s own id (`reference`). Private, not cached. Needs `sms:read`.",
+        "description": "Returns the safety records of one kind, a page at a time, optionally only those raised from one finding, or the one that carries the organization’s own id (`reference`). Private, not cached. Needs `sms:read`, or `document:read` for the documents and risk matrices.",
         "security": [
           {
             "bearerAuth": []
@@ -146313,7 +148449,7 @@
       "get": {
         "operationId": "smsRecord",
         "summary": "Read one safety record",
-        "description": "Returns one safety record with its versions and what is recorded about it. Restricted content is read through its own route. Private, not cached. Needs `sms:read`.",
+        "description": "Returns one safety record with its versions and what is recorded about it. Restricted content is read through its own route. Private, not cached. Needs `sms:read`, or `document:read` for a document or a risk matrix.",
         "security": [
           {
             "bearerAuth": []
@@ -150298,7 +152434,7 @@
       "get": {
         "operationId": "smsAttachmentContent",
         "summary": "Download the original bytes of one safety record attachment",
-        "description": "Returns the original bytes of one attachment after checking them against its digest. A restricted attachment also needs the capability for its class, `sms:report:read` or `sms:restricted:read`, and each read of one is retained. Needs `sms:read`.",
+        "description": "Returns the original bytes of one attachment after checking them against its digest. A restricted attachment also needs the capability for its class, `sms:report:read` or `sms:restricted:read`, and each read of one is retained. Needs `sms:read`, or `document:read` for an ordinary attachment of a document or a risk matrix.",
         "security": [
           {
             "bearerAuth": []

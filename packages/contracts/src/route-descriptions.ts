@@ -105,7 +105,7 @@ export const routeDescriptions: Record<string, { summary: string; description: s
   rolePresets: {
     summary: 'List the role presets people are added from',
     description:
-      'Returns each role preset (Dispatcher, Pilot, Safety manager, Administrator, Nothing yet) with exactly the capabilities and observation grants it gives. The People screen and the command-line client read the same list. Needs `authority:write`.',
+      'Returns each role preset (Dispatcher, Pilot, Safety manager, Administrator, Reader, Nothing yet) with exactly the capabilities and observation grants it gives. The People screen and the command-line client read the same list. Needs `authority:write`.',
   },
   issueDevelopmentToken: {
     summary: 'Issue a development token to a person on a local or test database',
@@ -127,7 +127,7 @@ export const routeDescriptions: Record<string, { summary: string; description: s
   organizationCoverage: {
     summary: 'Read the rule packs the organization has adopted and their coverage',
     description:
-      'Returns the organization, its rule pack adoptions and what each adoption covers. Needs `flight:read`.',
+      'Returns the organization, its rule pack adoptions and what each adoption covers. Needs `flight:read` or `evidence:read`.',
   },
   adoptionRuleCoverage: {
     summary: 'Read the coverage of one adoption by rule',
@@ -199,15 +199,49 @@ export const routeDescriptions: Record<string, { summary: string; description: s
   ruleSourceContent: {
     summary: 'Download the original bytes of one rule source document',
     description:
-      'Returns the retained rule source document as it was published, with its SHA-256 in the X-Content-SHA256 header. Needs `flight:read`.',
+      'Returns the retained rule source document as it was published, with its SHA-256 in the X-Content-SHA256 header. Needs `flight:read` or `evidence:read`.',
   },
+  // Links to one produced set (docs/design/shared-links.md)
+  createRecordLink: {
+    summary: 'Make a link to one produced set',
+    description:
+      'Makes a link that opens one produced set to someone who does not sign in, until it expires (7 days unless given, 90 at most) or is revoked. Its secret is 256 random bits, returned once; only its SHA-256 is kept. Recorded with who made it and the note saying who it is for. A principal who holds only reads is refused. Needs `evidence:read` and an Idempotency-Key.',
+  },
+  listRecordLinks: {
+    summary: 'List the links to one produced set',
+    description:
+      'Returns every link made to one produced set, newest first: who it is for, who made it and when, when it expires, whether it was revoked, by whom and why, and each time it was opened, with nothing about who opened it. Never a secret. Needs `evidence:read`.',
+  },
+  revokeRecordLink: {
+    summary: 'Revoke a link to a produced set',
+    description:
+      'Revokes a link at once: it opens nothing from then on. Recorded with who revoked it and why. A principal who holds only reads is refused. Needs `evidence:read`.',
+  },
+  openSharedRecords: {
+    summary: 'Open the produced set a link opens',
+    description:
+      'Returns the organization’s name, what the set is and its files, for the secret from the link. Each opening is kept with its time and nothing about who opened it. Unknown, expired and revoked links all answer 404 record_link_not_in_use. Answered with Cache-Control no-store, Referrer-Policy no-referrer and X-Robots-Tag noindex. Needs the link’s secret in the body, and no sign-in.',
+  },
+  readSharedRecordsFile: {
+    summary: 'Read one file of the set a link opens',
+    description:
+      'Returns one file of the set by its path, checked against the SHA-256 its manifest lists. The opening is kept. Needs the link’s secret in the body, and no sign-in.',
+  },
+  readSharedRecordsArchive: {
+    summary: 'Download the whole set a link opens',
+    description:
+      'Returns the kept .zip of the set, checked against its recorded SHA-256, with X-Manifest-SHA256. The opening is kept. Needs the link’s secret in the body, and no sign-in.',
+  },
+
   rulePacks: {
     summary: 'List the rule pack versions this host offers',
-    description: 'Returns every rule pack version registered on this host, adopted or not. Needs `flight:read`.',
+    description:
+      'Returns every rule pack version registered on this host, adopted or not. Needs `flight:read` or `evidence:read`.',
   },
   rulePackVersion: {
     summary: 'Read one rule pack version and its rules',
-    description: 'Returns one rule pack version with its rules and the sources they cite. Needs `flight:read`.',
+    description:
+      'Returns one rule pack version with its rules and the sources they cite. Needs `flight:read` or `evidence:read`.',
   },
 
   // Flights
@@ -464,12 +498,12 @@ export const routeDescriptions: Record<string, { summary: string; description: s
   smsHome: {
     summary: 'Read the overview of the organization’s safety records',
     description:
-      'Returns the overview of the safety records: whether the program is active, the risk matrix in use and the people who take part in it. Private, not cached. Needs `sms:read`.',
+      'Returns the overview of the safety records: whether the program is active, the risk matrix in use and the people who take part in it. To a person who reads the controlled documents alone, only the program and the risk matrix. Private, not cached. Needs `sms:read` or `document:read`.',
   },
   smsRegister: {
     summary: 'List the safety records of one kind',
     description:
-      'Returns the safety records of one kind, a page at a time, optionally only those raised from one finding, or the one that carries the organization’s own id (`reference`). Private, not cached. Needs `sms:read`.',
+      'Returns the safety records of one kind, a page at a time, optionally only those raised from one finding, or the one that carries the organization’s own id (`reference`). Private, not cached. Needs `sms:read`, or `document:read` for the documents and risk matrices.',
   },
   smsControlTypes: {
     summary: 'List the control types a control may be proposed with',
@@ -479,7 +513,7 @@ export const routeDescriptions: Record<string, { summary: string; description: s
   smsRecord: {
     summary: 'Read one safety record',
     description:
-      'Returns one safety record with its versions and what is recorded about it. Restricted content is read through its own route. Private, not cached. Needs `sms:read`.',
+      'Returns one safety record with its versions and what is recorded about it. Restricted content is read through its own route. Private, not cached. Needs `sms:read`, or `document:read` for a document or a risk matrix.',
   },
   smsSigningPreview: {
     summary: 'Preview signing one safety record',
@@ -499,7 +533,7 @@ export const routeDescriptions: Record<string, { summary: string; description: s
   smsAttachmentContent: {
     summary: 'Download the original bytes of one safety record attachment',
     description:
-      'Returns the original bytes of one attachment after checking them against its digest. A restricted attachment also needs the capability for its class, `sms:report:read` or `sms:restricted:read`, and each read of one is retained. Needs `sms:read`.',
+      'Returns the original bytes of one attachment after checking them against its digest. A restricted attachment also needs the capability for its class, `sms:report:read` or `sms:restricted:read`, and each read of one is retained. Needs `sms:read`, or `document:read` for an ordinary attachment of a document or a risk matrix.',
   },
   smsExportPacket: {
     summary: 'Download a readable copy of one safety records export',

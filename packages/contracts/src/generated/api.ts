@@ -232,7 +232,7 @@ export interface paths {
         };
         /**
          * List the role presets people are added from
-         * @description Returns each role preset (Dispatcher, Pilot, Safety manager, Administrator, Nothing yet) with exactly the capabilities and observation grants it gives. The People screen and the command-line client read the same list. Needs `authority:write`.
+         * @description Returns each role preset (Dispatcher, Pilot, Safety manager, Administrator, Reader, Nothing yet) with exactly the capabilities and observation grants it gives. The People screen and the command-line client read the same list. Needs `authority:write`.
          */
         get: operations["rolePresets"];
         put?: never;
@@ -400,7 +400,7 @@ export interface paths {
         };
         /**
          * Read the rule packs the organization has adopted and their coverage
-         * @description Returns the organization, its rule pack adoptions and what each adoption covers. Needs `flight:read`.
+         * @description Returns the organization, its rule pack adoptions and what each adoption covers. Needs `flight:read` or `evidence:read`.
          */
         get: operations["organizationCoverage"];
         put?: never;
@@ -680,7 +680,7 @@ export interface paths {
         };
         /**
          * Download the original bytes of one rule source document
-         * @description Returns the retained rule source document as it was published, with its SHA-256 in the X-Content-SHA256 header. Needs `flight:read`.
+         * @description Returns the retained rule source document as it was published, with its SHA-256 in the X-Content-SHA256 header. Needs `flight:read` or `evidence:read`.
          */
         get: operations["ruleSourceContent"];
         put?: never;
@@ -700,7 +700,7 @@ export interface paths {
         };
         /**
          * List the rule pack versions this host offers
-         * @description Returns every rule pack version registered on this host, adopted or not. Needs `flight:read`.
+         * @description Returns every rule pack version registered on this host, adopted or not. Needs `flight:read` or `evidence:read`.
          */
         get: operations["rulePacks"];
         put?: never;
@@ -720,7 +720,7 @@ export interface paths {
         };
         /**
          * Read one rule pack version and its rules
-         * @description Returns one rule pack version with its rules and the sources they cite. Needs `flight:read`.
+         * @description Returns one rule pack version with its rules and the sources they cite. Needs `flight:read` or `evidence:read`.
          */
         get: operations["rulePackVersion"];
         put?: never;
@@ -1299,6 +1299,110 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/record-productions/{id}/links": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List the links to one produced set
+         * @description Returns every link made to one produced set, newest first: who it is for, who made it and when, when it expires, whether it was revoked, by whom and why, and each time it was opened, with nothing about who opened it. Never a secret. Needs `evidence:read`.
+         */
+        get: operations["listRecordLinks"];
+        put?: never;
+        /**
+         * Make a link to one produced set
+         * @description Makes a link that opens one produced set to someone who does not sign in, until it expires (7 days unless given, 90 at most) or is revoked. Its secret is 256 random bits, returned once; only its SHA-256 is kept. Recorded with who made it and the note saying who it is for. A principal who holds only reads is refused. Needs `evidence:read` and an Idempotency-Key.
+         */
+        post: operations["createRecordLink"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/record-production-links/{id}/revoke": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Revoke a link to a produced set
+         * @description Revokes a link at once: it opens nothing from then on. Recorded with who revoked it and why. A principal who holds only reads is refused. Needs `evidence:read`.
+         */
+        post: operations["revokeRecordLink"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/shared-records": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Open the produced set a link opens
+         * @description Returns the organization’s name, what the set is and its files, for the secret from the link. Each opening is kept with its time and nothing about who opened it. Unknown, expired and revoked links all answer 404 record_link_not_in_use. Answered with Cache-Control no-store, Referrer-Policy no-referrer and X-Robots-Tag noindex. Needs the link’s secret in the body, and no sign-in.
+         */
+        post: operations["openSharedRecords"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/shared-records/file": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Read one file of the set a link opens
+         * @description Returns one file of the set by its path, checked against the SHA-256 its manifest lists. The opening is kept. Needs the link’s secret in the body, and no sign-in.
+         */
+        post: operations["readSharedRecordsFile"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/shared-records/archive": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Download the whole set a link opens
+         * @description Returns the kept .zip of the set, checked against its recorded SHA-256, with X-Manifest-SHA256. The opening is kept. Needs the link’s secret in the body, and no sign-in.
+         */
+        post: operations["readSharedRecordsArchive"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/control-windows": {
         parameters: {
             query?: never;
@@ -1696,7 +1800,7 @@ export interface paths {
         };
         /**
          * Read the overview of the organization’s safety records
-         * @description Returns the overview of the safety records: whether the program is active, the risk matrix in use and the people who take part in it. Private, not cached. Needs `sms:read`.
+         * @description Returns the overview of the safety records: whether the program is active, the risk matrix in use and the people who take part in it. To a person who reads the controlled documents alone, only the program and the risk matrix. Private, not cached. Needs `sms:read` or `document:read`.
          */
         get: operations["smsHome"];
         put?: never;
@@ -1716,7 +1820,7 @@ export interface paths {
         };
         /**
          * List the safety records of one kind
-         * @description Returns the safety records of one kind, a page at a time, optionally only those raised from one finding, or the one that carries the organization’s own id (`reference`). Private, not cached. Needs `sms:read`.
+         * @description Returns the safety records of one kind, a page at a time, optionally only those raised from one finding, or the one that carries the organization’s own id (`reference`). Private, not cached. Needs `sms:read`, or `document:read` for the documents and risk matrices.
          */
         get: operations["smsRegister"];
         put?: never;
@@ -1736,7 +1840,7 @@ export interface paths {
         };
         /**
          * Read one safety record
-         * @description Returns one safety record with its versions and what is recorded about it. Restricted content is read through its own route. Private, not cached. Needs `sms:read`.
+         * @description Returns one safety record with its versions and what is recorded about it. Restricted content is read through its own route. Private, not cached. Needs `sms:read`, or `document:read` for a document or a risk matrix.
          */
         get: operations["smsRecord"];
         put?: never;
@@ -1816,7 +1920,7 @@ export interface paths {
         };
         /**
          * Download the original bytes of one safety record attachment
-         * @description Returns the original bytes of one attachment after checking them against its digest. A restricted attachment also needs the capability for its class, `sms:report:read` or `sms:restricted:read`, and each read of one is retained. Needs `sms:read`.
+         * @description Returns the original bytes of one attachment after checking them against its digest. A restricted attachment also needs the capability for its class, `sms:report:read` or `sms:restricted:read`, and each read of one is retained. Needs `sms:read`, or `document:read` for an ordinary attachment of a document or a risk matrix.
          */
         get: operations["smsAttachmentContent"];
         put?: never;
@@ -5485,7 +5589,7 @@ export interface components {
             kind: "human" | "source" | "worker" | "service";
             active: boolean;
             revision: number;
-            capabilities: ("input:write" | "flight:create" | "flight:read" | "order:read" | "decision:write" | "correction:write" | "identity:write" | "authority:write" | "evidence:read" | "pack:adopt" | "monitoring:write" | "risk:accept:low" | "risk:accept:medium" | "risk:accept:high" | "mission:write" | "mission:release" | "briefing:write" | "briefing:ack" | "sms:read" | "sms:write" | "sms:configure" | "sms:adopt" | "sms:restricted:read" | "sms:report:read" | "command-link:write")[];
+            capabilities: ("input:write" | "flight:create" | "flight:read" | "order:read" | "decision:write" | "correction:write" | "identity:write" | "authority:write" | "evidence:read" | "pack:adopt" | "monitoring:write" | "risk:accept:low" | "risk:accept:medium" | "risk:accept:high" | "mission:write" | "mission:release" | "briefing:write" | "briefing:ack" | "sms:read" | "sms:write" | "sms:configure" | "sms:adopt" | "sms:restricted:read" | "sms:report:read" | "document:read" | "command-link:write")[];
             commandLinkSources: string[];
             missionSources: string[];
             monitoringSources: string[];
@@ -5505,7 +5609,7 @@ export interface components {
                 kind: "human" | "source" | "worker" | "service";
                 active: boolean;
                 revision: number;
-                capabilities: ("input:write" | "flight:create" | "flight:read" | "order:read" | "decision:write" | "correction:write" | "identity:write" | "authority:write" | "evidence:read" | "pack:adopt" | "monitoring:write" | "risk:accept:low" | "risk:accept:medium" | "risk:accept:high" | "mission:write" | "mission:release" | "briefing:write" | "briefing:ack" | "sms:read" | "sms:write" | "sms:configure" | "sms:adopt" | "sms:restricted:read" | "sms:report:read" | "command-link:write")[];
+                capabilities: ("input:write" | "flight:create" | "flight:read" | "order:read" | "decision:write" | "correction:write" | "identity:write" | "authority:write" | "evidence:read" | "pack:adopt" | "monitoring:write" | "risk:accept:low" | "risk:accept:medium" | "risk:accept:high" | "mission:write" | "mission:release" | "briefing:write" | "briefing:ack" | "sms:read" | "sms:write" | "sms:configure" | "sms:adopt" | "sms:restricted:read" | "sms:report:read" | "document:read" | "command-link:write")[];
                 commandLinkSources: string[];
                 missionSources: string[];
                 monitoringSources: string[];
@@ -5526,7 +5630,7 @@ export interface components {
                 kind: "human" | "source" | "worker" | "service";
                 active: boolean;
                 revision: number;
-                capabilities: ("input:write" | "flight:create" | "flight:read" | "order:read" | "decision:write" | "correction:write" | "identity:write" | "authority:write" | "evidence:read" | "pack:adopt" | "monitoring:write" | "risk:accept:low" | "risk:accept:medium" | "risk:accept:high" | "mission:write" | "mission:release" | "briefing:write" | "briefing:ack" | "sms:read" | "sms:write" | "sms:configure" | "sms:adopt" | "sms:restricted:read" | "sms:report:read" | "command-link:write")[];
+                capabilities: ("input:write" | "flight:create" | "flight:read" | "order:read" | "decision:write" | "correction:write" | "identity:write" | "authority:write" | "evidence:read" | "pack:adopt" | "monitoring:write" | "risk:accept:low" | "risk:accept:medium" | "risk:accept:high" | "mission:write" | "mission:release" | "briefing:write" | "briefing:ack" | "sms:read" | "sms:write" | "sms:configure" | "sms:adopt" | "sms:restricted:read" | "sms:report:read" | "document:read" | "command-link:write")[];
                 commandLinkSources: string[];
                 missionSources: string[];
                 monitoringSources: string[];
@@ -14794,7 +14898,7 @@ export interface operations {
                             tenantId: string;
                             name: string;
                             kind?: "human" | "source" | "worker" | "service";
-                            capabilities: ("input:write" | "flight:create" | "flight:read" | "order:read" | "decision:write" | "correction:write" | "identity:write" | "authority:write" | "evidence:read" | "pack:adopt" | "monitoring:write" | "risk:accept:low" | "risk:accept:medium" | "risk:accept:high" | "mission:write" | "mission:release" | "briefing:write" | "briefing:ack" | "sms:read" | "sms:write" | "sms:configure" | "sms:adopt" | "sms:restricted:read" | "sms:report:read" | "command-link:write")[];
+                            capabilities: ("input:write" | "flight:create" | "flight:read" | "order:read" | "decision:write" | "correction:write" | "identity:write" | "authority:write" | "evidence:read" | "pack:adopt" | "monitoring:write" | "risk:accept:low" | "risk:accept:medium" | "risk:accept:high" | "mission:write" | "mission:release" | "briefing:write" | "briefing:ack" | "sms:read" | "sms:write" | "sms:configure" | "sms:adopt" | "sms:restricted:read" | "sms:report:read" | "document:read" | "command-link:write")[];
                             revision: number;
                             commandLinkSources: string[];
                             missionSources: string[];
@@ -14951,7 +15055,7 @@ export interface operations {
                             kind: "human" | "source" | "worker" | "service";
                             active: boolean;
                             revision: number;
-                            capabilities: ("input:write" | "flight:create" | "flight:read" | "order:read" | "decision:write" | "correction:write" | "identity:write" | "authority:write" | "evidence:read" | "pack:adopt" | "monitoring:write" | "risk:accept:low" | "risk:accept:medium" | "risk:accept:high" | "mission:write" | "mission:release" | "briefing:write" | "briefing:ack" | "sms:read" | "sms:write" | "sms:configure" | "sms:adopt" | "sms:restricted:read" | "sms:report:read" | "command-link:write")[];
+                            capabilities: ("input:write" | "flight:create" | "flight:read" | "order:read" | "decision:write" | "correction:write" | "identity:write" | "authority:write" | "evidence:read" | "pack:adopt" | "monitoring:write" | "risk:accept:low" | "risk:accept:medium" | "risk:accept:high" | "mission:write" | "mission:release" | "briefing:write" | "briefing:ack" | "sms:read" | "sms:write" | "sms:configure" | "sms:adopt" | "sms:restricted:read" | "sms:report:read" | "document:read" | "command-link:write")[];
                             commandLinkSources: string[];
                             missionSources: string[];
                             monitoringSources: string[];
@@ -16458,7 +16562,7 @@ export interface operations {
                             kind: "human" | "source" | "worker" | "service";
                             active: boolean;
                             revision: number;
-                            capabilities: ("input:write" | "flight:create" | "flight:read" | "order:read" | "decision:write" | "correction:write" | "identity:write" | "authority:write" | "evidence:read" | "pack:adopt" | "monitoring:write" | "risk:accept:low" | "risk:accept:medium" | "risk:accept:high" | "mission:write" | "mission:release" | "briefing:write" | "briefing:ack" | "sms:read" | "sms:write" | "sms:configure" | "sms:adopt" | "sms:restricted:read" | "sms:report:read" | "command-link:write")[];
+                            capabilities: ("input:write" | "flight:create" | "flight:read" | "order:read" | "decision:write" | "correction:write" | "identity:write" | "authority:write" | "evidence:read" | "pack:adopt" | "monitoring:write" | "risk:accept:low" | "risk:accept:medium" | "risk:accept:high" | "mission:write" | "mission:release" | "briefing:write" | "briefing:ack" | "sms:read" | "sms:write" | "sms:configure" | "sms:adopt" | "sms:restricted:read" | "sms:report:read" | "document:read" | "command-link:write")[];
                             commandLinkSources: string[];
                             missionSources: string[];
                             monitoringSources: string[];
@@ -22781,7 +22885,7 @@ export interface operations {
                                 consistency: "live_projection";
                             };
                         };
-                        availableCommands: ("input:write" | "flight:create" | "flight:read" | "order:read" | "decision:write" | "correction:write" | "identity:write" | "authority:write" | "evidence:read" | "pack:adopt" | "monitoring:write" | "risk:accept:low" | "risk:accept:medium" | "risk:accept:high" | "mission:write" | "mission:release" | "briefing:write" | "briefing:ack" | "sms:read" | "sms:write" | "sms:configure" | "sms:adopt" | "sms:restricted:read" | "sms:report:read" | "command-link:write")[];
+                        availableCommands: ("input:write" | "flight:create" | "flight:read" | "order:read" | "decision:write" | "correction:write" | "identity:write" | "authority:write" | "evidence:read" | "pack:adopt" | "monitoring:write" | "risk:accept:low" | "risk:accept:medium" | "risk:accept:high" | "mission:write" | "mission:release" | "briefing:write" | "briefing:ack" | "sms:read" | "sms:write" | "sms:configure" | "sms:adopt" | "sms:restricted:read" | "sms:report:read" | "document:read" | "command-link:write")[];
                         meta: {
                             requestId: string;
                             effectId?: string;
@@ -30339,6 +30443,801 @@ export interface operations {
             };
         };
     };
+    listRecordLinks: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Success */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        links: {
+                            id: string;
+                            productionId: string;
+                            note: string;
+                            createdBy: {
+                                id: string;
+                                name: string;
+                            };
+                            /** Format: date-time */
+                            createdAt: string;
+                            /** Format: date-time */
+                            expiresAt: string;
+                            revokedBy: {
+                                id: string;
+                                name: string;
+                            } | null;
+                            revokedAt: string | null;
+                            revokeReason: string | null;
+                            /** @description open: the link opens the set now. */
+                            state: "open" | "expired" | "revoked";
+                            /** @description Newest first, at most 200. */
+                            openings: {
+                                /** Format: date-time */
+                                openedAt: string;
+                                /** @description The page, one file of the set, or the whole .zip. */
+                                opened: "page" | "file" | "archive";
+                                /** @description The file opened, for a file. */
+                                path: string | null;
+                            }[];
+                        }[];
+                    };
+                };
+            };
+            /** @description Invalid request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        error: {
+                            code: string;
+                            message: string;
+                            details?: {
+                                [key: string]: unknown;
+                            };
+                        };
+                        requestId: string;
+                    };
+                };
+            };
+            /** @description Authentication required */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        error: {
+                            code: string;
+                            message: string;
+                            details?: {
+                                [key: string]: unknown;
+                            };
+                        };
+                        requestId: string;
+                    };
+                };
+            };
+            /** @description Missing capability */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        error: {
+                            code: string;
+                            message: string;
+                            details?: {
+                                [key: string]: unknown;
+                            };
+                        };
+                        requestId: string;
+                    };
+                };
+            };
+            /** @description Scoped object unavailable */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        error: {
+                            code: string;
+                            message: string;
+                            details?: {
+                                [key: string]: unknown;
+                            };
+                        };
+                        requestId: string;
+                    };
+                };
+            };
+            /** @description Stale basis or conflicting idempotency content */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        error: {
+                            code: string;
+                            message: string;
+                            details?: {
+                                [key: string]: unknown;
+                            };
+                        };
+                        requestId: string;
+                    };
+                };
+            };
+            /** @description Bounded intake exceeded */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        error: {
+                            code: string;
+                            message: string;
+                            details?: {
+                                [key: string]: unknown;
+                            };
+                        };
+                        requestId: string;
+                    };
+                };
+            };
+        };
+    };
+    createRecordLink: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+            };
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    /** @description Who the link is for and why, in your words. Shown with the link and kept with its creation. */
+                    note: string;
+                    /** @description How many days the link opens the set. 7 unless given; 90 at most. */
+                    expiresInDays?: number;
+                };
+            };
+        };
+        responses: {
+            /** @description Success */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        link: {
+                            id: string;
+                            productionId: string;
+                            note: string;
+                            createdBy: {
+                                id: string;
+                                name: string;
+                            };
+                            /** Format: date-time */
+                            createdAt: string;
+                            /** Format: date-time */
+                            expiresAt: string;
+                            revokedBy: {
+                                id: string;
+                                name: string;
+                            } | null;
+                            revokedAt: string | null;
+                            revokeReason: string | null;
+                            /** @description open: the link opens the set now. */
+                            state: "open" | "expired" | "revoked";
+                            /** @description Newest first, at most 200. */
+                            openings: {
+                                /** Format: date-time */
+                                openedAt: string;
+                                /** @description The page, one file of the set, or the whole .zip. */
+                                opened: "page" | "file" | "archive";
+                                /** @description The file opened, for a file. */
+                                path: string | null;
+                            }[];
+                        };
+                        /** @description Shown once. The link is /shared# followed by the secret, on the web app’s address. */
+                        secret: string;
+                    };
+                };
+            };
+            /** @description Invalid request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        error: {
+                            code: string;
+                            message: string;
+                            details?: {
+                                [key: string]: unknown;
+                            };
+                        };
+                        requestId: string;
+                    };
+                };
+            };
+            /** @description Authentication required */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        error: {
+                            code: string;
+                            message: string;
+                            details?: {
+                                [key: string]: unknown;
+                            };
+                        };
+                        requestId: string;
+                    };
+                };
+            };
+            /** @description Missing capability */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        error: {
+                            code: string;
+                            message: string;
+                            details?: {
+                                [key: string]: unknown;
+                            };
+                        };
+                        requestId: string;
+                    };
+                };
+            };
+            /** @description Scoped object unavailable */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        error: {
+                            code: string;
+                            message: string;
+                            details?: {
+                                [key: string]: unknown;
+                            };
+                        };
+                        requestId: string;
+                    };
+                };
+            };
+            /** @description Stale basis or conflicting idempotency content */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        error: {
+                            code: string;
+                            message: string;
+                            details?: {
+                                [key: string]: unknown;
+                            };
+                        };
+                        requestId: string;
+                    };
+                };
+            };
+            /** @description Bounded intake exceeded */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        error: {
+                            code: string;
+                            message: string;
+                            details?: {
+                                [key: string]: unknown;
+                            };
+                        };
+                        requestId: string;
+                    };
+                };
+            };
+        };
+    };
+    revokeRecordLink: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    /** @description Why the link is revoked. Kept with the revocation. */
+                    reason: string;
+                };
+            };
+        };
+        responses: {
+            /** @description Success */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        link: {
+                            id: string;
+                            productionId: string;
+                            note: string;
+                            createdBy: {
+                                id: string;
+                                name: string;
+                            };
+                            /** Format: date-time */
+                            createdAt: string;
+                            /** Format: date-time */
+                            expiresAt: string;
+                            revokedBy: {
+                                id: string;
+                                name: string;
+                            } | null;
+                            revokedAt: string | null;
+                            revokeReason: string | null;
+                            /** @description open: the link opens the set now. */
+                            state: "open" | "expired" | "revoked";
+                            /** @description Newest first, at most 200. */
+                            openings: {
+                                /** Format: date-time */
+                                openedAt: string;
+                                /** @description The page, one file of the set, or the whole .zip. */
+                                opened: "page" | "file" | "archive";
+                                /** @description The file opened, for a file. */
+                                path: string | null;
+                            }[];
+                        };
+                    };
+                };
+            };
+            /** @description Invalid request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        error: {
+                            code: string;
+                            message: string;
+                            details?: {
+                                [key: string]: unknown;
+                            };
+                        };
+                        requestId: string;
+                    };
+                };
+            };
+            /** @description Authentication required */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        error: {
+                            code: string;
+                            message: string;
+                            details?: {
+                                [key: string]: unknown;
+                            };
+                        };
+                        requestId: string;
+                    };
+                };
+            };
+            /** @description Missing capability */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        error: {
+                            code: string;
+                            message: string;
+                            details?: {
+                                [key: string]: unknown;
+                            };
+                        };
+                        requestId: string;
+                    };
+                };
+            };
+            /** @description Scoped object unavailable */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        error: {
+                            code: string;
+                            message: string;
+                            details?: {
+                                [key: string]: unknown;
+                            };
+                        };
+                        requestId: string;
+                    };
+                };
+            };
+            /** @description Stale basis or conflicting idempotency content */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        error: {
+                            code: string;
+                            message: string;
+                            details?: {
+                                [key: string]: unknown;
+                            };
+                        };
+                        requestId: string;
+                    };
+                };
+            };
+            /** @description Bounded intake exceeded */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        error: {
+                            code: string;
+                            message: string;
+                            details?: {
+                                [key: string]: unknown;
+                            };
+                        };
+                        requestId: string;
+                    };
+                };
+            };
+        };
+    };
+    openSharedRecords: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    /** @description The secret after # in the link. */
+                    secret: string;
+                };
+            };
+        };
+        responses: {
+            /** @description Success */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        organization: {
+                            name: string;
+                            timeZone: string;
+                        };
+                        set: {
+                            /** @description Why the records were produced, as the file prints it. */
+                            reason: string;
+                            requestedBy: string;
+                            /** Format: date-time */
+                            producedAt: string;
+                            /** @description The name of the person who produced them. */
+                            producedBy: string;
+                            records: number;
+                            archiveSha256: string;
+                            manifestSha256: string;
+                            byteLength: number;
+                        };
+                        files: {
+                            path: string;
+                            role: "index" | "records" | "original" | "manifest";
+                            contentType: string;
+                            byteLength: number;
+                            /** @description From manifest.json; null for manifest.json itself, whose digest is manifestSha256. */
+                            sha256: string | null;
+                        }[];
+                        /** Format: date-time */
+                        expiresAt: string;
+                    };
+                };
+            };
+            /** @description Invalid request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        error: {
+                            code: string;
+                            message: string;
+                            details?: {
+                                [key: string]: unknown;
+                            };
+                        };
+                        requestId: string;
+                    };
+                };
+            };
+            /** @description Authentication required */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        error: {
+                            code: string;
+                            message: string;
+                            details?: {
+                                [key: string]: unknown;
+                            };
+                        };
+                        requestId: string;
+                    };
+                };
+            };
+            /** @description Missing capability */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        error: {
+                            code: string;
+                            message: string;
+                            details?: {
+                                [key: string]: unknown;
+                            };
+                        };
+                        requestId: string;
+                    };
+                };
+            };
+            /** @description Scoped object unavailable */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        error: {
+                            code: string;
+                            message: string;
+                            details?: {
+                                [key: string]: unknown;
+                            };
+                        };
+                        requestId: string;
+                    };
+                };
+            };
+            /** @description Stale basis or conflicting idempotency content */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        error: {
+                            code: string;
+                            message: string;
+                            details?: {
+                                [key: string]: unknown;
+                            };
+                        };
+                        requestId: string;
+                    };
+                };
+            };
+            /** @description Bounded intake exceeded */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        error: {
+                            code: string;
+                            message: string;
+                            details?: {
+                                [key: string]: unknown;
+                            };
+                        };
+                        requestId: string;
+                    };
+                };
+            };
+        };
+    };
+    readSharedRecordsFile: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    /** @description The secret after # in the link. */
+                    secret: string;
+                    path: string;
+                };
+            };
+        };
+        responses: {
+            /** @description The file, checked against the SHA-256 its manifest lists. The opening is kept. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/octet-stream": string;
+                };
+            };
+            /** @description record_link_not_in_use, or no file by that name in the set */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        error: {
+                            code: string;
+                            message: string;
+                            details?: {
+                                [key: string]: unknown;
+                            };
+                        };
+                        requestId: string;
+                    };
+                };
+            };
+            /** @description Kept bytes differ from their record */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        error: {
+                            code: string;
+                            message: string;
+                            details?: {
+                                [key: string]: unknown;
+                            };
+                        };
+                        requestId: string;
+                    };
+                };
+            };
+        };
+    };
+    readSharedRecordsArchive: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    /** @description The secret after # in the link. */
+                    secret: string;
+                };
+            };
+        };
+        responses: {
+            /** @description The kept .zip, checked against its recorded SHA-256. The opening is kept. */
+            200: {
+                headers: {
+                    "X-Content-SHA256"?: string;
+                    "X-Manifest-SHA256"?: string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/zip": string;
+                };
+            };
+            /** @description record_link_not_in_use */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        error: {
+                            code: string;
+                            message: string;
+                            details?: {
+                                [key: string]: unknown;
+                            };
+                        };
+                        requestId: string;
+                    };
+                };
+            };
+            /** @description Kept bytes differ from their record */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        error: {
+                            code: string;
+                            message: string;
+                            details?: {
+                                [key: string]: unknown;
+                            };
+                        };
+                        requestId: string;
+                    };
+                };
+            };
+        };
+    };
     listControlWindows: {
         parameters: {
             query: {
@@ -34063,7 +34962,7 @@ export interface operations {
                     kind: "authority.update";
                     principalId: string;
                     expectedRevision: number;
-                    capabilities: ("input:write" | "flight:create" | "flight:read" | "order:read" | "decision:write" | "correction:write" | "identity:write" | "authority:write" | "evidence:read" | "pack:adopt" | "monitoring:write" | "risk:accept:low" | "risk:accept:medium" | "risk:accept:high" | "mission:write" | "mission:release" | "briefing:write" | "briefing:ack" | "sms:read" | "sms:write" | "sms:configure" | "sms:adopt" | "sms:restricted:read" | "sms:report:read" | "command-link:write")[];
+                    capabilities: ("input:write" | "flight:create" | "flight:read" | "order:read" | "decision:write" | "correction:write" | "identity:write" | "authority:write" | "evidence:read" | "pack:adopt" | "monitoring:write" | "risk:accept:low" | "risk:accept:medium" | "risk:accept:high" | "mission:write" | "mission:release" | "briefing:write" | "briefing:ack" | "sms:read" | "sms:write" | "sms:configure" | "sms:adopt" | "sms:restricted:read" | "sms:report:read" | "document:read" | "command-link:write")[];
                     active?: boolean;
                     missionSources?: string[];
                     monitoringSources?: string[];
@@ -34080,7 +34979,7 @@ export interface operations {
                     kind: "person.add";
                     name: string;
                     principalKind: "human" | "source" | "service";
-                    capabilities: ("input:write" | "flight:create" | "flight:read" | "order:read" | "decision:write" | "correction:write" | "identity:write" | "authority:write" | "evidence:read" | "pack:adopt" | "monitoring:write" | "risk:accept:low" | "risk:accept:medium" | "risk:accept:high" | "mission:write" | "mission:release" | "briefing:write" | "briefing:ack" | "sms:read" | "sms:write" | "sms:configure" | "sms:adopt" | "sms:restricted:read" | "sms:report:read" | "command-link:write")[];
+                    capabilities: ("input:write" | "flight:create" | "flight:read" | "order:read" | "decision:write" | "correction:write" | "identity:write" | "authority:write" | "evidence:read" | "pack:adopt" | "monitoring:write" | "risk:accept:low" | "risk:accept:medium" | "risk:accept:high" | "mission:write" | "mission:release" | "briefing:write" | "briefing:ack" | "sms:read" | "sms:write" | "sms:configure" | "sms:adopt" | "sms:restricted:read" | "sms:report:read" | "document:read" | "command-link:write")[];
                     /** @description Complete set of observation grants. In authority.update, omission preserves current grants and [] revokes them all. */
                     observationGrants?: {
                         sourceId: string;

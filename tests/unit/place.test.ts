@@ -39,6 +39,7 @@ const places: Place[] = [
   { section: 'records', pane: 'subjects', kind: 'person', id: 'Avery Example' },
   { section: 'records', pane: 'produce' },
   { section: 'records', pane: 'produced' },
+  { section: 'records', pane: 'produced', id: '6f1c2a90-produced-set' },
   { section: 'records', pane: 'required' },
   { section: 'records', pane: 'browse' },
   { section: 'records', pane: 'browse', type: 'person.training@1' },

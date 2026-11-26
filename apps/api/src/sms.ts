@@ -152,7 +152,9 @@ export function registerSmsRoutes(
   };
 
   app.get('/v1/sms/program', privately, async (request) => read(request, undefined, getSmsProgram));
-  app.get('/v1/sms/home', privately, async (request) => read(request, 'sms:read', getSmsHome));
+  // The home, the registers, a record and its files decide who may read them by the record's kind: sms:read opens
+  // every kind, document:read the controlled documents.
+  app.get('/v1/sms/home', privately, async (request) => read(request, undefined, getSmsHome));
   app.get('/v1/sms/control-types', privately, async (request) =>
     read(request, 'sms:read', async (): Promise<SmsControlTypeListResponse> => ({ controlTypes: listControlTypes() })),
   );
@@ -163,14 +165,14 @@ export function registerSmsRoutes(
     '/v1/sms/records',
     { ...privately, schema: { querystring: SmsRegisterQuerySchema } },
     async (request) =>
-      read(request, 'sms:read', (client, who) =>
+      read(request, undefined, (client, who) =>
         getSmsRegister(client, who, request.query.kind, registerPage(request.query)),
       ),
   );
   app.get<{ Params: { id: string } }>(
     '/v1/sms/records/:id',
     { ...privately, schema: { params: SmsRecordParamsSchema } },
-    async (request) => read(request, 'sms:read', (client, who) => getSmsRecord(client, who, request.params.id)),
+    async (request) => read(request, undefined, (client, who) => getSmsRecord(client, who, request.params.id)),
   );
   app.get<{ Params: { id: string }; Querystring: SmsSigningPreviewQuery }>(
     '/v1/sms/records/:id/signing',
@@ -207,11 +209,8 @@ export function registerSmsRoutes(
     '/v1/sms/attachments/:id/content',
     { schema: { params: SmsRecordParamsSchema } },
     async (request, reply) => {
-      const object = await withScope(
-        pool,
-        principal(request),
-        (client, who) => readSmsAttachmentObject(client, who, request.params.id),
-        'sms:read',
+      const object = await withScope(pool, principal(request), (client, who) =>
+        readSmsAttachmentObject(client, who, request.params.id),
       );
       const bytes = await readBoundedObject(store, object.objectKey, { maxBytes: object.byteLength, timeoutMs: 10000 });
       if (bytes.byteLength !== object.byteLength || sha256(bytes) !== object.sha256)

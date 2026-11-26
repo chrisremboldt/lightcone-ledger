@@ -88,6 +88,7 @@ import {
   type Upload,
   type UploadCreate,
   type SimulationAvoidanceDemoConfig,
+  readsOnly,
   requestShapeRefusal,
   type SchemaError,
 } from '@ledger/contracts';
@@ -199,7 +200,7 @@ import {
 import { registerOperatorRecordRoutes } from './operator-records.js';
 import { registerRecordSubjectRoutes } from './operator-record-subjects.js';
 import { registerRequiredRecordRoutes } from './required-records.js';
-import { registerRecordProductionRoutes } from './record-productions.js';
+import { registerRecordProductionRoutes, SHARED_RECORDS_PATHS } from './record-productions.js';
 import { registerControlWindowRoutes } from './control-windows.js';
 import { registerPeopleRoutes } from './people-routes.js';
 import { registerNoticeRoutes } from './notice-routes.js';
@@ -228,7 +229,30 @@ export interface AppOptions {
   identityProvider?: Pick<TokenVerifierOptions, 'fetch' | 'keyRefetchCooldownMs'>;
   /** Whether email notices are written; defaults to whether LEDGER_SMTP_HOST configures a mail server. */
   noticeEmail?: boolean;
+  /** Called with every route as it is registered, before any; a test reads the whole route table through it. */
+  onRoute?: (route: { method: string | string[]; url: string }) => void;
 }
+/**
+ * The routes other than reads that a principal who holds only reads may still send (docs/design/shared-links.md):
+ * reporting a safety concern, which Ledger takes from anyone; two reads sent as a POST, which check their own
+ * capabilities; a person's own choice of which notices reach them, which changes no record; and the commands, of which
+ * such a principal may send only an acknowledgement of what was issued to them.
+ */
+export const OPEN_TO_READERS: ReadonlySet<string> = new Set([
+  'POST /v1/safety-reports',
+  'PUT /v1/notices/settings',
+  'POST /v1/flights/:id/mission/route-suggestion',
+  'POST /v1/flights/:id/findings/:findingId/investigation',
+  'POST /v1/commands',
+]);
+/** The commands a principal who holds only reads may send: acknowledging a document or a briefing issued to them. */
+export const ACKNOWLEDGEMENT_COMMANDS: readonly string[] = ['sms.document.acknowledge', 'mission.briefing-acknowledge'];
+const readsOnlyRefusal = () =>
+  new DomainError(
+    403,
+    'reads_only',
+    'You may read records here and change nothing. Ask the person who manages authority in your organization.',
+  );
 /** What a request is answered while the database cannot be reached: it may not have been completed. */
 const DATABASE_UNAVAILABLE = {
   code: 'database_unavailable',
@@ -274,13 +298,18 @@ function refuseUnconfiguredIssuer(command: Command, signIn: SignInSettings): voi
 }
 /**
  * What the request log keeps of a request, as Fastify's own line does, except for the requests a person using a
- * reporting link makes: the safety report routes, and the web app's own files when the API serves them (the report
- * page and the files it loads). Those keep only the method and path, never an address, port or user agent
- * (docs/design/report-submission.md).
+ * reporting link or a link to produced records makes: the safety report routes, the routes the shared records page
+ * reads, and the web app's own files when the API serves them (those pages and the files they load). Those keep only
+ * the method and path, never an address, port or user agent (docs/design/report-submission.md,
+ * docs/design/shared-links.md).
  */
 function requestLogLine(request: FastifyRequest, servesWebApp: boolean) {
   const path = request.url.split('?')[0]!;
-  if (UNATTRIBUTED_PATHS.has(path) || (servesWebApp && isWebAppRequest(request.method, request.url)))
+  if (
+    UNATTRIBUTED_PATHS.has(path) ||
+    SHARED_RECORDS_PATHS.includes(path) ||
+    (servesWebApp && isWebAppRequest(request.method, request.url))
+  )
     return { method: request.method, url: path };
   return {
     method: request.method,
@@ -416,6 +445,10 @@ export async function createApp(options: AppOptions = {}) {
     ajv: { customOptions: { removeAdditional: false, allowUnionTypes: true, verbose: true } },
     schemaErrorFormatter: (errors, part) => new Error(requestShapeRefusal(errors as SchemaError[], part)),
   });
+  if (options.onRoute) {
+    const onRoute = options.onRoute;
+    app.addHook('onRoute', (route) => onRoute({ method: route.method, url: route.url }));
+  }
   // The API starts while its database is still starting or restarting, and answers 503 until it is back.
   app.addHook('onReady', async () =>
     untilDatabaseReachable(
@@ -456,6 +489,7 @@ export async function createApp(options: AppOptions = {}) {
       request.url.startsWith('/openapi.json') ||
       request.url === '/v1/sign-in' ||
       (request.method === 'POST' && UNAUTHENTICATED_REPORT_PATHS.includes(request.url)) ||
+      (request.method === 'POST' && SHARED_RECORDS_PATHS.includes(request.url)) ||
       request.method === 'OPTIONS' ||
       (webDir && isWebAppRequest(request.method, request.url))
     )
@@ -479,6 +513,14 @@ export async function createApp(options: AppOptions = {}) {
     }
     if (!principal)
       throw new DomainError(401, 'unauthenticated', 'Credential is invalid or has no current Ledger membership');
+    // Before the body is read: a principal who holds only reads sends nothing that changes a record.
+    if (
+      readsOnly(principal.capabilities) &&
+      request.method !== 'GET' &&
+      request.method !== 'HEAD' &&
+      !OPEN_TO_READERS.has(`${request.method} ${request.routeOptions.url}`)
+    )
+      throw readsOnlyRefusal();
     (request as AuthRequest).ledgerPrincipal = principal;
     (request as AuthRequest).ledgerIdentity = identity;
   });
@@ -520,9 +562,16 @@ export async function createApp(options: AppOptions = {}) {
   const principal = (request: FastifyRequest) => (request as AuthRequest).ledgerPrincipal;
   const read = <T>(
     request: FastifyRequest,
-    capability: string,
+    capability: string | undefined,
     operation: (client: PoolClient, who: AuthContext) => Promise<T>,
   ) => withScope(pool, principal(request), operation, capability, true);
+  /** A read of the organization's rules: open to whoever reads flights or reads evidence. */
+  const readRules = <T>(request: FastifyRequest, operation: (client: PoolClient, who: AuthContext) => Promise<T>) =>
+    read(request, undefined, async (client, who) => {
+      if (!who.capabilities.includes('flight:read') && !who.capabilities.includes('evidence:read'))
+        throw new DomainError(403, 'capability_required', 'Reading the rules requires flight:read or evidence:read');
+      return operation(client, who);
+    });
   let exportOperations = 0;
   const boundedExport = async <T>(operation: () => Promise<T>): Promise<T> => {
     if (exportOperations >= 2)
@@ -636,7 +685,7 @@ export async function createApp(options: AppOptions = {}) {
       read(request, 'authority:write', (client, who) => getPrincipalAuthority(client, who, request.params.id)),
   );
   app.get('/v1/rule-packs', async (request) =>
-    read(request, 'flight:read', async (_client, who) => {
+    readRules(request, async (_client, who) => {
       const organization = { fictional: seededFictionalOrganizationIds.includes(who.tenantId) };
       return { packs: listRulePackVersions().filter((pack) => packOffered(pack.packId, organization)) };
     }),
@@ -645,7 +694,7 @@ export async function createApp(options: AppOptions = {}) {
     '/v1/rule-packs/:packId/versions/:version',
     { schema: { params: RulePackVersionParamsSchema } },
     async (request) =>
-      read(request, 'flight:read', async () => {
+      readRules(request, async () => {
         const pack = getRulePackVersion(request.params.packId, request.params.version);
         if (!pack) throw new DomainError(404, 'rule_pack_not_found', 'The requested rule pack version was not found');
         return { pack };
@@ -662,7 +711,7 @@ export async function createApp(options: AppOptions = {}) {
     },
   );
   app.get('/v1/organization/coverage', async (request) =>
-    read(request, 'flight:read', async (client, who) => {
+    readRules(request, async (client, who) => {
       const coverage = await getOrganizationCoverage(client, who);
       return { ...coverage, meta: { ...coverage.meta, requestId: request.id } };
     }),
@@ -731,7 +780,7 @@ export async function createApp(options: AppOptions = {}) {
     '/v1/rule-sources/:sourceId/content',
     { schema: { params: RuleSourceParamsSchema } },
     async (request, reply) => {
-      const source = await read(request, 'flight:read', async () => {
+      const source = await readRules(request, async () => {
         const retained = await getRuleSource(request.params.sourceId);
         if (!retained) throw new DomainError(404, 'rule_source_not_found', 'The retained rule source was not found');
         return retained;
@@ -1594,7 +1643,15 @@ export async function createApp(options: AppOptions = {}) {
   );
   app.post<{ Body: Command }>(
     '/v1/commands',
-    { schema: { body: CommandSchema }, preValidation: refuseSingleControlBriefing },
+    {
+      schema: { body: CommandSchema },
+      preValidation: async (request) => {
+        const kind = (request.body as { kind?: unknown } | null)?.kind;
+        if (readsOnly(principal(request).capabilities) && !ACKNOWLEDGEMENT_COMMANDS.includes(String(kind)))
+          throw readsOnlyRefusal();
+        await refuseSingleControlBriefing(request);
+      },
+    },
     async (request, reply) => {
       rejectCredentials(request.body);
       refuseUnconfiguredIssuer(request.body, signIn);

@@ -6,6 +6,16 @@ import {
   RecordProductionResponseSchema,
 } from './operator-record-production.js';
 import {
+  RecordLinkCreatedSchema,
+  RecordLinkCreateSchema,
+  RecordLinkListSchema,
+  RecordLinkResponseSchema,
+  RecordLinkRevokeSchema,
+  SharedRecordsFileRequestSchema,
+  SharedRecordsRequestSchema,
+  SharedRecordsSchema,
+} from './record-production-links.js';
+import {
   RecordSubjectFileSchema,
   RecordSubjectQuerySchema,
   RecordSubjectsQuerySchema,
@@ -1509,6 +1519,76 @@ export const openApiDocument = {
             },
           },
           404: response(ErrorResponseSchema, 'Scoped object unavailable'),
+          409: response(ErrorResponseSchema, 'Kept bytes differ from their record'),
+        },
+      },
+    },
+    '/v1/record-productions/{id}/links': {
+      post: {
+        ...operation('createRecordLink', RecordLinkCreatedSchema, 201, RecordLinkCreateSchema, [
+          identifier('id'),
+          idempotency,
+        ]),
+        summary: 'Make a link to one produced set',
+        description:
+          'A link that opens this produced set to someone who does not sign in, until it expires (7 days unless given, 90 at most) or is revoked. Its secret is 256 random bits, returned once; Ledger keeps only its SHA-256. Recorded with who made it and the note. Requires evidence:read.',
+      },
+      get: {
+        ...operation('listRecordLinks', RecordLinkListSchema, 200, undefined, [identifier('id')]),
+        summary: 'List the links to one produced set',
+        description:
+          'Every link made to this set, newest first, with its state, who made and revoked it and why, and each time it was opened. Never a secret. Requires evidence:read.',
+      },
+    },
+    '/v1/record-production-links/{id}/revoke': {
+      post: {
+        ...operation('revokeRecordLink', RecordLinkResponseSchema, 200, RecordLinkRevokeSchema, [identifier('id')]),
+        summary: 'Revoke a link to a produced set',
+        description:
+          'The link opens nothing from now on. Recorded with who revoked it and why. Requires evidence:read.',
+      },
+    },
+    '/v1/shared-records': {
+      post: {
+        ...operation('openSharedRecords', SharedRecordsSchema, 200, SharedRecordsRequestSchema),
+        security: [],
+        summary: 'Open the produced set a link opens',
+        description:
+          'No sign-in: the secret from the link finds the set. Each opening is kept, with its time and nothing about who opened it. Expired, revoked and unknown links all answer 404 record_link_not_in_use. Answered with Cache-Control no-store, Referrer-Policy no-referrer and X-Robots-Tag noindex.',
+      },
+    },
+    '/v1/shared-records/file': {
+      post: {
+        operationId: 'readSharedRecordsFile',
+        security: [],
+        summary: 'Read one file of the set a link opens',
+        requestBody: { required: true, content: { 'application/json': { schema: SharedRecordsFileRequestSchema } } },
+        responses: {
+          200: {
+            description: 'The file, checked against the SHA-256 its manifest lists. The opening is kept.',
+            content: { 'application/octet-stream': { schema: { type: 'string', format: 'binary' } } },
+          },
+          404: response(ErrorResponseSchema, 'record_link_not_in_use, or no file by that name in the set'),
+          409: response(ErrorResponseSchema, 'Kept bytes differ from their record'),
+        },
+      },
+    },
+    '/v1/shared-records/archive': {
+      post: {
+        operationId: 'readSharedRecordsArchive',
+        security: [],
+        summary: 'Download the whole set a link opens',
+        requestBody: { required: true, content: { 'application/json': { schema: SharedRecordsRequestSchema } } },
+        responses: {
+          200: {
+            description: 'The kept .zip, checked against its recorded SHA-256. The opening is kept.',
+            content: { 'application/zip': { schema: { type: 'string', format: 'binary' } } },
+            headers: {
+              'X-Content-SHA256': { schema: { type: 'string', pattern: '^[a-f0-9]{64}$' } },
+              'X-Manifest-SHA256': { schema: { type: 'string', pattern: '^[a-f0-9]{64}$' } },
+            },
+          },
+          404: response(ErrorResponseSchema, 'record_link_not_in_use'),
           409: response(ErrorResponseSchema, 'Kept bytes differ from their record'),
         },
       },

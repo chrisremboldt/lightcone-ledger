@@ -1,7 +1,8 @@
 import type { ReactNode } from 'react';
 import type { LedgerClient } from '@ledger/contracts/client';
-import type { Principal } from '@ledger/contracts';
+import { readsOnly, type Principal } from '@ledger/contracts';
 import { Notice } from '@ledger/ui';
+import { FindingWorkContext } from './finding-work-context.js';
 import { FirstDay } from './FirstDay.js';
 import { NoticesArea } from './NoticesArea.js';
 import { PeopleArea } from './PeopleArea.js';
@@ -44,7 +45,15 @@ export function SectionArea({
   if (principal && section && !offered.includes(section)) return <SectionUnavailable section={section} />;
   if (place.section === 'records')
     return <RecordsArea client={client} principal={principal} place={place} onOpenDocument={onOpenDocument} />;
-  if (place.section === 'rules') return <RulesArea client={client} principal={principal} place={place} />;
+  if (place.section === 'rules') {
+    const rules = <RulesArea client={client} principal={principal} place={place} />;
+    // A finding's actions are offered by who is signed in; a person who only reads is told apart wherever they are.
+    return principal && readsOnly(principal.capabilities) ? (
+      <FindingWorkContext.Provider value={{ principal }}>{rules}</FindingWorkContext.Provider>
+    ) : (
+      rules
+    );
+  }
   if (place.section === 'people')
     return 'pane' in place ? (
       <NoticesArea client={client} pane={place.pane} />

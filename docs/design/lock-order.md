@@ -62,6 +62,9 @@ Groups by number from the table above. "Then" is runtime order. Conditional step
 | Revoke a reporting link | 6 `safety_report_links` row UPDATE → 6 stream |
 | Notice settings (`updateNoticeSettings`), a person's own or their address set by an administrator | 6 the person's `notice_settings` row (upsert) → 6 stream `notices:<person>` |
 | Set or remove the organization's webhook (`setNoticeWebhook`) | 2 `notice-webhook|<tenant>` → 6 stream `notices:webhook` → the `notice_webhooks` row |
+| Make a link to a produced set (`createRecordLink`) | 6 stream → new `record_production_links` row (no other transaction can see it) |
+| Revoke a link to a produced set (`revokeRecordLink`) | 6 `record_production_links` row UPDATE → 6 stream |
+| Open a link to a produced set (`ledger_record_production_link_opened`), no principal | new `record_production_link_openings` row, whose foreign key takes the link's row FOR KEY SHARE |
 | Create flight (`createFlight`) | 2 `origination:` → 5 new → 6 stream → 4 org SHARE → 5 new → 8 |
 
 ### Projections (`projectEvent`, packages/projections/src/index.ts)

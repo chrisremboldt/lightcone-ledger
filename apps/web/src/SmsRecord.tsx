@@ -1,5 +1,6 @@
 import { lazy, Suspense, useCallback, useEffect, useState } from 'react';
 import type { LedgerClient } from '@ledger/contracts/client';
+import { readsOnly } from '@ledger/contracts';
 import type {
   AssessedPosition,
   DocumentBody,
@@ -355,7 +356,8 @@ export function SmsRecordView({
               onRecorded={recorded}
             />
           )}
-          {!isDocument && (
+          {/* A person who only reads is offered no action they could not take. */}
+          {!isDocument && !readsOnly(principal.capabilities) && (
             <>
               {record.kind === 'hazard' ? (
                 <HazardNextStep
@@ -462,7 +464,9 @@ export function SmsRecordView({
               )}
             </>
           )}
-          <ExportCard client={client} detail={detail} principal={principal} home={home} />
+          {!readsOnly(principal.capabilities) && (
+            <ExportCard client={client} detail={detail} principal={principal} home={home} />
+          )}
         </aside>
       </div>
     </>

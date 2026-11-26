@@ -15,6 +15,7 @@ import { time, timeRange, timeZoneLabel } from './format.js';
 import { coverageResultLabels } from './rule-coverage.js';
 import { plainError, saveBytes } from './sms-labels.js';
 import { subjectLabel } from './subject-label.js';
+import { PlaceLink } from './TopBar.js';
 
 import { recordSubjectKinds, type RecordSubjectKind } from './record-subject-kinds.js';
 
@@ -193,7 +194,8 @@ export function SubjectFile({
   catalog: OperatorRecordTypesResponse;
   subject: ChosenSubject;
   onBack: () => void;
-  onProduce: (subject: ChosenSubject) => void;
+  /** Absent for a person who may not produce records. */
+  onProduce?: (subject: ChosenSubject) => void;
   onOpenType: (typeKey: string, subjectId: string) => void;
 }) {
   const [file, setFile] = useState<RecordSubjectFile | null>(null);
@@ -222,7 +224,7 @@ export function SubjectFile({
         {own ? 'Records about your own organization' : `${subject.kind} · your id ${subject.id}`}
         {file && !file.named && !own ? ' · no personnel file, identity or plan names it yet' : ''}
       </p>
-      <Button onClick={() => onProduce(subject)}>Produce these records</Button>
+      {onProduce && <Button onClick={() => onProduce(subject)}>Produce these records</Button>}
       {error && (
         <Notice tone="alert" title="This file could not be read">
           {error}
@@ -414,6 +416,11 @@ export function ProducePanel({
       <section className="records-form" aria-label="Records produced" data-testid="record-production">
         <h2>Records produced</h2>
         <ProductionSummary client={client} production={produced} />
+        <p>
+          <PlaceLink place={{ section: 'records', pane: 'produced', id: produced.id }}>
+            Open this set, to make a link to it
+          </PlaceLink>
+        </p>
         <Button kind="quiet" onClick={() => setProduced(null)}>
           Produce other records
         </Button>
@@ -550,7 +557,7 @@ function selectionWords(production: RecordProduction): string {
   ].join('; ');
 }
 
-function ProductionSummary({ client, production }: { client: LedgerClient; production: RecordProduction }) {
+export function ProductionSummary({ client, production }: { client: LedgerClient; production: RecordProduction }) {
   const [error, setError] = useState<string | null>(null);
   async function download() {
     try {
@@ -657,7 +664,9 @@ export function ProductionsList({ client }: { client: LedgerClient }) {
         {records.map((production) => (
           <li key={production.id} data-testid="record-production-item">
             <h3>
-              {time(production.producedAt, true)} {timeZoneLabel()} · {production.requestedBy}
+              <PlaceLink place={{ section: 'records', pane: 'produced', id: production.id }}>
+                {time(production.producedAt, true)} {timeZoneLabel()} · {production.requestedBy}
+              </PlaceLink>
             </h3>
             <ProductionSummary client={client} production={production} />
           </li>

@@ -58,7 +58,7 @@ On your own computer the command prints a development token once. Run `pnpm dev`
 
 ## 3. Add the people who sign in
 
-Open **People** and choose **Add a person**. Give the name, start from a role (Dispatcher, Pilot, Safety manager or Administrator) and tick or untick what that person may do. Tick **Import and enter operator records** for whoever keeps your records. On a server, also give the person's account at your identity provider. The same roles, with exactly what each grants, are printed by `pnpm ledger people presets`, and `pnpm ledger people add` adds a person from the command line: it prints the addition and sends it only with your own token and `--reason`. `pnpm ledger people set "<name>" --capability <capability>` changes what someone already added may do (`--preset` and `--capability` add, `--remove-capability` takes away) the same way, printing what they may do now and after, and keeps your reason with the change.
+Open **People** and choose **Add a person**. Give the name, start from a role (Dispatcher, Pilot, Safety manager, Administrator or Reader) and tick or untick what that person may do. Tick **Import and enter operator records** for whoever keeps your records. On a server, also give the person's account at your identity provider. The same roles, with exactly what each grants, are printed by `pnpm ledger people presets`, and `pnpm ledger people add` adds a person from the command line: it prints the addition and sends it only with your own token and `--reason`. `pnpm ledger people set "<name>" --capability <capability>` changes what someone already added may do (`--preset` and `--capability` add, `--remove-capability` takes away) the same way, printing what they may do now and after, and keeps your reason with the change.
 
 Every change to what someone may do is recorded with who made it. A person who leaves is deactivated, never deleted.
 
@@ -283,6 +283,20 @@ Under **Records**, **Records your rules require** lists each record the packs yo
 What Ledger does and does not do about retention: it keeps every record, every correction and every original file, and removes none, ever. It does not keep itself running. Keeping the deployment, its database and its stored files, and their backups ([Deploy Ledger, section 9](deploy.md#9-backups-and-restoring)), for as long as the text asks is yours.
 
 To produce records on request, use **Produce records** on the same screen, or `pnpm ledger records produce` from the command line. Each production is recorded with its reason and who asked, and the file it makes is checked offline as [Verify an export](verify-an-export.md#records-produced-on-request) describes.
+
+### Show your records to an inspector
+
+An inspector or an auditor can look at your records for themselves, in two ways.
+
+**Add them as a reader** when they will sign in. On **People**, add them from the **Reader** role: they can open your records and each pilot's, aircraft's and flight's file, the rules you adopted and their coverage, the findings, the records you produced, and your controlled documents under **Safety**, **Documents**. They change nothing: Ledger refuses every request of theirs that is not a read, and their screens offer no button to produce, import, enter or export. Like anyone who signs in, they can still report a safety concern, and acknowledge a document you issue to them. They never see a safety report, nor the hazard register or safety assurance records, unless you tick **See safety records**, which also opens the list of safety reports (never a report's content). On a server they sign in through your identity provider like anyone else; deactivate them when the inspection is over.
+
+**Send them a link to one produced set** when they will not sign in. Produce the records, then open the set under **Records**, **Produced records** (or **Open this set, to make a link to it** right after producing it). Under **Links to this set**, say who the link is for and for how many days it opens the set: seven unless you choose otherwise, ninety at most. Choose **Make a link** and copy the link Ledger shows: it is shown once, and Ledger keeps only a hash of it. Send it to them as you would any private document.
+
+The link opens a page that needs no sign-in: your organization's name, why the records were produced and who asked, when and by whom, both digests, each file to read or download, and the whole .zip. It opens that set and nothing else, and changes nothing. A link that has expired, was revoked or was never made gives the same plain answer, so it tells nobody whether your organization or a set exists. **Revoke this link**, with the reason, stops it at once.
+
+Each opening is kept on the set's screen beside its link: when, and whether it was the page, one file or the .zip. Ledger keeps nothing about who opened it, no address and no browser, since it keeps as little about a person as the record needs. A proxy or load balancer in front of Ledger logs every request's address on its own; whether and how long it keeps those lines is your deployment's to configure. The link itself is after `#` in its address, which a browser never sends to a server, so it is in no such log. Making and revoking a link are recorded with who did it and why.
+
+A produced set never holds a safety report or a restricted attachment, so any set can be shared this way.
 
 ## 10. Connect aircraft, docks and airspace services
 

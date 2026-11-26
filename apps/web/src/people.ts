@@ -35,6 +35,7 @@ export const capabilityGroups: { title: string; capabilities: { value: Capabilit
     capabilities: [
       { value: 'pack:adopt', label: 'Adopt rule packs' },
       { value: 'sms:read', label: 'See safety records' },
+      { value: 'document:read', label: 'See controlled documents, and no other safety record' },
       { value: 'sms:write', label: 'Write safety records' },
       { value: 'sms:configure', label: 'Configure safety records' },
       { value: 'sms:adopt', label: 'Sign to adopt a risk matrix and documents' },

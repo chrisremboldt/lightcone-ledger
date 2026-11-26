@@ -337,7 +337,7 @@ It saves the .zip after checking it against its recorded SHA-256 and prints the 
 
 ## 10. What comes next, and whose it is
 
-- **People who sign in** (the administrator): these are the people who use Ledger, not the crew list; a pilot who never signs in needs no entry. Prepare the list as names and presets: `pnpm ledger people presets` prints each preset (Dispatcher, Pilot, Safety manager, Administrator) and exactly the capabilities it grants; add a capability a preset lacks by name, such as `sms:adopt` for the person who signs the safety policy and risk matrix, or `decision:write` for someone who closes the actions they own. Adding a person grants authority, so the administrator adds each one, on the People screen or with their own token:
+- **People who sign in** (the administrator): these are the people who use Ledger, not the crew list; a pilot who never signs in needs no entry. Prepare the list as names and presets: `pnpm ledger people presets` prints each preset (Dispatcher, Pilot, Safety manager, Administrator, Reader) and exactly the capabilities it grants; add a capability a preset lacks by name, such as `sms:adopt` for the person who signs the safety policy and risk matrix, or `decision:write` for someone who closes the actions they own. Adding a person grants authority, so the administrator adds each one, on the People screen or with their own token:
 
   ```sh
   pnpm ledger people add --name "<full name>" --preset safety --capability sms:adopt   # prints what it would record

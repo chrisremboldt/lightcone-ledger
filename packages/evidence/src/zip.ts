@@ -1,4 +1,4 @@
-import { crc32, deflateRawSync } from 'node:zlib';
+import { crc32, deflateRawSync, inflateRawSync } from 'node:zlib';
 
 /**
  * A plain .zip writer for produced files: deflate (or stored, when deflate does not help), UTF-8 names, no
@@ -73,4 +73,37 @@ export function writeZip(entries: readonly ZipEntry[], modifiedAt: string): Buff
   end.writeUInt32LE(directory.byteLength, 12);
   end.writeUInt32LE(offset, 16);
   return Buffer.concat([...locals, directory, end]);
+}
+
+/**
+ * Reads the entries of a .zip this writer made: stored or deflated, no ZIP64, no archive comment. Anything else is
+ * refused rather than read in part.
+ */
+export function readZip(bytes: Uint8Array): Map<string, Buffer> {
+  const zip = Buffer.from(bytes.buffer, bytes.byteOffset, bytes.byteLength);
+  const end = zip.byteLength - 22;
+  if (end < 0 || zip.readUInt32LE(end) !== 0x06054b50) throw new Error('Not a .zip this writer made');
+  const count = zip.readUInt16LE(end + 10);
+  let at = zip.readUInt32LE(end + 16);
+  const entries = new Map<string, Buffer>();
+  for (let index = 0; index < count; index++) {
+    if (zip.readUInt32LE(at) !== 0x02014b50) throw new Error('A .zip directory entry is malformed');
+    const method = zip.readUInt16LE(at + 10);
+    const compressed = zip.readUInt32LE(at + 20);
+    const size = zip.readUInt32LE(at + 24);
+    const nameLength = zip.readUInt16LE(at + 28);
+    const extraLength = zip.readUInt16LE(at + 30);
+    const commentLength = zip.readUInt16LE(at + 32);
+    const offset = zip.readUInt32LE(at + 42);
+    const name = zip.toString('utf8', at + 46, at + 46 + nameLength);
+    if (zip.readUInt32LE(offset) !== 0x04034b50) throw new Error(`The .zip entry ${name} is malformed`);
+    const start = offset + 30 + zip.readUInt16LE(offset + 26) + zip.readUInt16LE(offset + 28);
+    const data = zip.subarray(start, start + compressed);
+    const content = method === 0 ? Buffer.from(data) : method === 8 ? inflateRawSync(data) : undefined;
+    if (!content || content.byteLength !== size || crc32(content) !== zip.readUInt32LE(at + 16))
+      throw new Error(`The .zip entry ${name} does not read back as written`);
+    entries.set(name, content);
+    at += 46 + nameLength + extraLength + commentLength;
+  }
+  return entries;
 }

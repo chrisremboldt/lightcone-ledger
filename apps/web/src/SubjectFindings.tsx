@@ -1,6 +1,7 @@
 import { useCallback, useContext, useEffect, useState } from 'react';
 import {
   readableQuote,
+  readsOnly,
   reliefStatement,
   type EvaluationRelief,
   type FindingPacketRecord,
@@ -283,7 +284,12 @@ function FindingCard({
         onChanged={onChanged}
         onOpenHazard={work.openHazard && !proposed ? () => work.openHazard!(finding, label) : undefined}
       />
-      <FindingPackets client={client} findingId={finding.id} onIssued={onIssued} />
+      <FindingPackets
+        client={client}
+        findingId={finding.id}
+        mayIssue={!work.principal || !readsOnly(work.principal.capabilities)}
+        onIssued={onIssued}
+      />
     </article>
   );
 }
@@ -291,10 +297,13 @@ function FindingCard({
 function FindingPackets({
   client,
   findingId,
+  mayIssue,
   onIssued,
 }: {
   client: LedgerClient;
   findingId: string;
+  /** Issuing a packet is recorded: a person who only reads sees the packets and issues none. */
+  mayIssue: boolean;
   onIssued: () => void;
 }) {
   const [records, setRecords] = useState<FindingPacketRecord[] | null>(null);
@@ -343,9 +352,11 @@ function FindingPackets({
           {error}
         </Notice>
       )}
-      <Button kind="secondary" disabled={busy} onClick={() => void issue()}>
-        {busy ? <Spinner label="Issuing packet" /> : 'Issue a finding packet'}
-      </Button>
+      {mayIssue && (
+        <Button kind="secondary" disabled={busy} onClick={() => void issue()}>
+          {busy ? <Spinner label="Issuing packet" /> : 'Issue a finding packet'}
+        </Button>
+      )}
     </div>
   );
 }

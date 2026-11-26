@@ -20,7 +20,9 @@ export type Place =
   /** Opening a hazard from a finding, on a flight when flightId is given. */
   | { section: 'safety'; view: 'finding'; findingId: string; flightId?: string }
   | { section: 'records'; pane: 'subjects'; kind?: RecordSubjectKind; id?: string }
-  | { section: 'records'; pane: 'produce' | 'produced' | 'required' }
+  | { section: 'records'; pane: 'produce' | 'required' }
+  /** The produced records, or one produced set with its links when id is given. */
+  | { section: 'records'; pane: 'produced'; id?: string }
   | { section: 'records'; pane: RecordTypePane; type?: string }
   | { section: 'rules'; pane: 'coverage'; packId?: string }
   | { section: 'rules'; pane: 'open'; owner?: 'none'; subject?: FindingSubject }
@@ -128,6 +130,8 @@ export function placeAddress(place: Place): { path: string; query: Record<string
         if (!place.kind) return { path: '/records', query: {} };
         return { path: at('records', place.kind, ...(place.id ? [place.id] : [])), query: {} };
       }
+      if (place.pane === 'produced')
+        return { path: at('records', 'produced', ...(place.id ? [place.id] : [])), query: {} };
       if (!('type' in place) || !place.type) return { path: at('records', place.pane), query: {} };
       return { path: at('records', place.pane, place.type), query: {} };
     case 'rules':
@@ -235,8 +239,9 @@ function safetyPlace(rest: string[], query: URLSearchParams): Place | null {
 function recordsPlace(rest: string[]): Place | null {
   if (rest.length === 0) return { section: 'records', pane: 'subjects' };
   const [first, second] = rest;
-  if ((first === 'produce' || first === 'produced' || first === 'required') && rest.length === 1)
-    return { section: 'records', pane: first };
+  if ((first === 'produce' || first === 'required') && rest.length === 1) return { section: 'records', pane: first };
+  if (first === 'produced' && rest.length <= 2)
+    return { section: 'records', pane: 'produced', ...(second ? { id: second } : {}) };
   const pane = recordTypePanes.find((value) => value === first);
   if (pane && rest.length <= 2) return { section: 'records', pane, ...(second ? { type: second } : {}) };
   const kind = recordSubjectKinds.find(([value]) => value === first)?.[0];
@@ -335,6 +340,7 @@ export function placeTitle(place: Place, thing?: string): string {
           'Records',
         );
       }
+      if (place.pane === 'produced' && place.id) return title(thing ?? 'Produced set', 'Records');
       return title(recordsPaneLabels[place.pane], 'Records');
     case 'rules':
       if (place.pane === 'coverage')

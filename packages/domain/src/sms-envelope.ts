@@ -181,6 +181,19 @@ export function requireCapability(principal: AuthContext, capability: string, me
     });
 }
 
+/** The kinds of safety record that are controlled documents: what document:read opens. */
+export const documentKinds: readonly SmsRecordKind[] = ['document', 'risk_matrix'];
+
+/**
+ * Refuses a principal who may not open safety records of this kind: sms:read opens every kind, document:read only the
+ * controlled documents. Without a kind, only sms:read does.
+ */
+export function requireSmsRead(principal: AuthContext, kind?: SmsRecordKind): void {
+  if (principal.capabilities.includes('sms:read')) return;
+  if (kind && documentKinds.includes(kind) && principal.capabilities.includes('document:read')) return;
+  requireCapability(principal, 'sms:read', 'Reading these safety records requires sms:read');
+}
+
 export async function lockSmsRecord(client: PoolClient, tenantId: string, id: string): Promise<SmsRecordRow> {
   await client.query('SELECT id FROM subjects WHERE tenant_id=$1 AND id=$2 FOR UPDATE', [tenantId, id]);
   const row = (

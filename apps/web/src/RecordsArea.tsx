@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useState, type FormEvent } from 'react
 import type { LedgerClient } from '@ledger/contracts/client';
 import {
   aboutOwnOrganization,
+  readsOnly,
   type OperatorRecordCommitResponse,
   type OperatorRecordListResponse,
   type OperatorRecordPreviewResponse,
@@ -14,6 +15,7 @@ import { RecordForm } from './RecordForm.js';
 import { SubjectPicker } from './SubjectPicker.js';
 import { searchableKinds } from './subject-picker.js';
 import { RequiredRecords } from './RequiredRecords.js';
+import { ProducedSet } from './ProducedSet.js';
 import {
   ProducePanel,
   ProductionsList,
@@ -126,6 +128,9 @@ export function RecordsArea({
   const type = catalog?.types.find((item) => typeKey(item) === chosen);
   const sourceId = catalog?.sourceId ?? 'operator-records';
   const writable = canKeepRecords(principal, sourceId);
+  // Producing records is recorded: a person who only reads looks at what was produced and produces nothing.
+  const produces = Boolean(principal && !readsOnly(principal.capabilities));
+  const producedId = place.pane === 'produced' ? place.id : undefined;
   const refresh = useCallback(() => setReload((value) => value + 1), []);
 
   return (
@@ -141,15 +146,17 @@ export function RecordsArea({
             <button aria-current={pane === 'subjects' ? 'page' : undefined} onClick={() => setOpened(null)}>
               People, aircraft and flights
             </button>
-            <button
-              aria-current={pane === 'produce' ? 'page' : undefined}
-              onClick={() => {
-                setProducing([]);
-                setPane('produce');
-              }}
-            >
-              Produce records
-            </button>
+            {produces && (
+              <button
+                aria-current={pane === 'produce' ? 'page' : undefined}
+                onClick={() => {
+                  setProducing([]);
+                  setPane('produce');
+                }}
+              >
+                Produce records
+              </button>
+            )}
             <button aria-current={pane === 'produced' ? 'page' : undefined} onClick={() => setPane('produced')}>
               Produced records
             </button>
@@ -180,12 +187,16 @@ export function RecordsArea({
             <button aria-current={pane === 'browse' ? 'page' : undefined} onClick={() => setPane('browse')}>
               Browse records
             </button>
-            <button aria-current={pane === 'import' ? 'page' : undefined} onClick={() => setPane('import')}>
-              Import a file
-            </button>
-            <button aria-current={pane === 'enter' ? 'page' : undefined} onClick={() => setPane('enter')}>
-              Enter a record
-            </button>
+            {writable && (
+              <>
+                <button aria-current={pane === 'import' ? 'page' : undefined} onClick={() => setPane('import')}>
+                  Import a file
+                </button>
+                <button aria-current={pane === 'enter' ? 'page' : undefined} onClick={() => setPane('enter')}>
+                  Enter a record
+                </button>
+              </>
+            )}
           </nav>
         </div>
         {type && <p className="records-note records-description">{type.description}</p>}
@@ -224,10 +235,14 @@ export function RecordsArea({
               catalog={catalog}
               subject={opened}
               onBack={() => setOpened(null)}
-              onProduce={(subject) => {
-                setProducing([subject]);
-                setPane('produce');
-              }}
+              {...(produces
+                ? {
+                    onProduce: (subject: ChosenSubject) => {
+                      setProducing([subject]);
+                      setPane('produce');
+                    },
+                  }
+                : {})}
               onOpenType={(key, subjectId) => {
                 setChosen(key);
                 setSubject(subjectId);
@@ -245,7 +260,10 @@ export function RecordsArea({
               onProduced={refresh}
             />
           )}
-          {pane === 'produced' && <ProductionsList key={reload} client={client} />}
+          {pane === 'produced' && !producedId && <ProductionsList key={reload} client={client} />}
+          {pane === 'produced' && producedId && (
+            <ProducedSet key={producedId} client={client} id={producedId} mayShare={produces} />
+          )}
           {pane === 'required' && (
             <RequiredRecords client={client} principal={principal} onOpenDocument={onOpenDocument} />
           )}

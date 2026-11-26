@@ -21,7 +21,7 @@ import {
   assignedFlights,
   type ProductionSources,
 } from '../../packages/evidence/src/record-production-assembly.js';
-import { writeZip } from '../../packages/evidence/src/zip.js';
+import { readZip as readProducedZip, writeZip } from '../../packages/evidence/src/zip.js';
 import { sha256 } from '../../packages/integrity/src/index.js';
 import { csvRows, readZip, verifyRecordProduction } from '../../tools/verifier/record-production.mjs';
 
@@ -531,5 +531,23 @@ describe('Records produced for a pilot', () => {
     expect(assembled.manifest.statements).toContain(
       '1 original file also holds 1 record this file does not, about other subjects. The table of original files gives the number for each.',
     );
+  });
+});
+
+describe('reading back a produced .zip', () => {
+  it('reads every entry as written, stored or deflated, and refuses one changed in place', () => {
+    const entries = [
+      { path: 'index.html', bytes: Buffer.from('<!doctype html><title>Records</title>'.repeat(20)) },
+      { path: 'records/aircraft.identity-v1.csv', bytes: Buffer.from('subjectId\r\nRIDGE-AC-1\r\n') },
+      { path: 'manifest.json', bytes: Buffer.from('{}') },
+    ];
+    const zip = writeZip(entries, '2026-11-20T12:00:00Z');
+    const read = readProducedZip(zip);
+    expect([...read.keys()]).toEqual(entries.map((entry) => entry.path));
+    for (const entry of entries) expect(read.get(entry.path)).toEqual(entry.bytes);
+    const changed = Buffer.from(zip);
+    changed[changed.indexOf('RIDGE-AC-1')] = 'X'.charCodeAt(0);
+    expect(() => readProducedZip(changed)).toThrow(/does not read back as written/);
+    expect(() => readProducedZip(Buffer.from('not a zip'))).toThrow(/Not a .zip/);
   });
 });

@@ -31,6 +31,7 @@ import type {
   SmsSigningPreviewResponse,
   SignedContent,
 } from '@ledger/contracts';
+import { readsOnly } from '@ledger/contracts';
 import { canonicalDigest } from '@ledger/integrity';
 import { DomainError, type AuthContext, type JournalEvent, type PoolClient } from '@ledger/persistence';
 import { reportLinksInForce } from './safety-report-submission.js';
@@ -46,6 +47,7 @@ import {
   readSmsBasis,
   readSmsRecord,
   requireCapability,
+  requireSmsRead,
   RESTRICTED_VERSION_COLUMNS,
   SMS_KINDS,
   type SmsRecordRow,
@@ -423,11 +425,37 @@ export async function getSmsProgram(
   return {
     active,
     flights: principal.capabilities.includes('flight:read'),
-    safetyRecords: active && principal.capabilities.includes('sms:read'),
+    safetyRecords:
+      active && (principal.capabilities.includes('sms:read') || principal.capabilities.includes('document:read')),
+  };
+}
+
+/** The home of a person who reads the controlled documents and no other safety record: the program, nothing else. */
+async function documentReaderHome(client: PoolClient, principal: AuthContext): Promise<SmsHomeResponse> {
+  const matrix = await adoptedMatrix(client, principal.tenantId);
+  const now = (await client.query<{ now: Date }>('SELECT clock_timestamp() AS now')).rows[0]!.now;
+  return {
+    program: { active: Boolean(matrix), matrix: await matrixView(client, principal, matrix) },
+    people: [],
+    attention: {
+      waitingOnMe: [],
+      awaitingAcceptance: [],
+      needsAssessment: [],
+      documentsAwaitingAdoption: [],
+      documentsToReview: [],
+      documentsToIssue: [],
+      overdue: [],
+    },
+    assuranceActions: [],
+    reportLinks: [],
+    capabilities: principal.capabilities,
+    computedAt: now.toISOString(),
   };
 }
 
 export async function getSmsHome(client: PoolClient, principal: AuthContext): Promise<SmsHomeResponse> {
+  requireSmsRead(principal, 'document');
+  if (!principal.capabilities.includes('sms:read')) return documentReaderHome(client, principal);
   const matrix = await adoptedMatrix(client, principal.tenantId);
   const rows = await client.query<SummaryRow>(
     `${summarySql} WHERE r.tenant_id=$1 AND r.status<>'closed'
@@ -529,6 +557,7 @@ export async function getSmsRegister(
   kind: SmsRecordKind = 'hazard',
   page: SmsRegisterPage = {},
 ): Promise<SmsRegisterResponse> {
+  requireSmsRead(principal, kind);
   const matrix = await adoptedMatrix(client, principal.tenantId);
   const limit = page.limit ?? REGISTER_LIMIT;
   const order = page.order ?? 'newest';
@@ -712,6 +741,7 @@ export async function getSmsRecord(
     await client.query<SummaryRow>(`${summarySql} WHERE r.tenant_id=$1 AND r.id=$2`, [principal.tenantId, id])
   ).rows[0];
   if (!row) throw new DomainError(404, 'sms_record_not_found', 'The record was not found in your organization');
+  requireSmsRead(principal, row.kind);
   const all =
     row.confidentiality === 'ordinary'
       ? await versions(client, principal.tenantId, id)
@@ -870,9 +900,11 @@ export async function getSmsRecord(
           : canWrite && principal.capabilities.includes('decision:write')
             ? allowed
             : unavailable('Reopening needs permission to edit this record and record decisions.'),
-      export: principal.capabilities.includes('evidence:read')
-        ? allowed
-        : unavailable('Exporting needs permission to read evidence.'),
+      export: !principal.capabilities.includes('evidence:read')
+        ? unavailable('Exporting needs permission to read evidence.')
+        : readsOnly(principal.capabilities)
+          ? unavailable('You may read here and change nothing; exporting is recorded.')
+          : allowed,
       readContent:
         row.confidentiality !== 'ordinary' && canReadContent
           ? allowed
@@ -945,9 +977,13 @@ export async function readSmsAttachmentObject(
   attachmentId: string,
 ): Promise<AttachmentObject> {
   const row = (
-    await client.query<AttachmentObject & { object_key: string; content_type: string; byte_length: number }>(
-      `SELECT a.confidentiality,a.sha256,a.byte_length,a.content_type,COALESCE(o.object_key,r.object_key) AS object_key
+    await client.query<
+      AttachmentObject & { object_key: string; content_type: string; byte_length: number; kind: SmsRecordKind }
+    >(
+      `SELECT a.confidentiality,a.sha256,a.byte_length,a.content_type,COALESCE(o.object_key,r.object_key) AS object_key,
+         s.kind
        FROM sms_attachments a
+       JOIN sms_records s ON s.tenant_id=a.tenant_id AND s.id=a.record_id
        LEFT JOIN artifacts o ON o.tenant_id=a.tenant_id AND o.id=a.artifact_id
        LEFT JOIN restricted_artifacts r ON r.tenant_id=a.tenant_id AND r.id=a.restricted_artifact_id
        WHERE a.tenant_id=$1 AND a.id=$2`,
@@ -955,8 +991,9 @@ export async function readSmsAttachmentObject(
     )
   ).rows[0];
   if (!row) throw new DomainError(404, 'attachment_not_found', 'The attachment was not found in your organization');
+  requireSmsRead(principal, row.kind);
   const capability = confidentialityCapability[row.confidentiality];
-  if (!principal.capabilities.includes(capability))
+  if (row.confidentiality !== 'ordinary' && !principal.capabilities.includes(capability))
     throw new DomainError(403, 'capability_required', 'This attachment is restricted to people cleared to read it', {
       capability,
     });

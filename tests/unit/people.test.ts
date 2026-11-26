@@ -4,6 +4,7 @@ import { describe, expect, it } from 'vitest';
 import {
   capabilityValues,
   operatorRecordObservationGrant,
+  readsOnly,
   rolePresetList,
   rolePresets,
   RolePresetListResponseSchema,
@@ -62,6 +63,7 @@ describe('the People screen', () => {
       ['pilot', 'Pilot'],
       ['safety', 'Safety manager'],
       ['administrator', 'Administrator'],
+      ['reader', 'Reader'],
       ['none', 'Nothing yet'],
     ]);
     for (const preset of read.presets) {
@@ -73,5 +75,19 @@ describe('the People screen', () => {
     // A read is a copy: changing it changes no preset.
     read.presets[0]!.capabilities.pop();
     expect(rolePresetList().presets[0]!.capabilities).toEqual(rolePresets[0]!.capabilities);
+  });
+
+  it('gives a reader reads alone, so they change nothing; every other preset but the empty one changes something', () => {
+    const reader = rolePresets.find((preset) => preset.key === 'reader')!;
+    expect(reader).toMatchObject({ capabilities: ['evidence:read', 'document:read'], keepsRecords: false });
+    expect(reader.capabilities).not.toContain('sms:read');
+    expect(reader.capabilities).not.toContain('sms:report:read');
+    expect(readsOnly(reader.capabilities)).toBe(true);
+    for (const preset of rolePresets.filter((entry) => !['reader', 'none'].includes(entry.key)))
+      expect(readsOnly(preset.capabilities), preset.key).toBe(false);
+    // Holding nothing is not reading only: a person who holds nothing yet still reports a safety concern.
+    expect(readsOnly([])).toBe(false);
+    expect(readsOnly(['flight:read', 'sms:read'])).toBe(true);
+    expect(readsOnly(['evidence:read', 'input:write'])).toBe(false);
   });
 });

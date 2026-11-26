@@ -84,10 +84,11 @@ describe.runIf(process.env.LEDGER_ENV !== 'staging')('Authenticated draft rule p
       code: 'invalid_request',
       message: 'Path parameter version must be a whole number; it is text.',
     });
+    // A principal who holds only reads is refused before the body is read, so the shape is checked for one who writes.
     const beside = await app.inject({
       method: 'POST',
       url: '/v1/inputs',
-      headers: { ...headers, 'idempotency-key': `shape-${prefix}` },
+      headers: { authorization: 'Bearer ledger-dev-alpha-operator', 'idempotency-key': `shape-${prefix}` },
       payload: {
         sourceId: 'example-ridge-log',
         kind: 'observation',

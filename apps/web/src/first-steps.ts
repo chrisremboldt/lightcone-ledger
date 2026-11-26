@@ -10,7 +10,7 @@ import type {
   SmsHomeResponse,
   SmsRecordSummary,
 } from '@ledger/contracts';
-import { ACCEPTED_CONTROL_PACK_ID, OPERATOR_RECORD_SOURCE_ID, riskAuthorityValues } from '@ledger/contracts';
+import { ACCEPTED_CONTROL_PACK_ID, OPERATOR_RECORD_SOURCE_ID, readsOnly, riskAuthorityValues } from '@ledger/contracts';
 import { time, timeZoneLabel } from './format.js';
 import { canKeepRecords } from './operator-records.js';
 import type { Place } from './place.js';
@@ -461,7 +461,7 @@ function productionStep({ principal, productions }: FirstDayInput): FirstDayStep
     label: 'Produce records under Records',
     who: ANYONE_READING_RECORDS,
     place: { section: 'records', pane: 'produce' },
-    mine: may(principal, 'evidence:read'),
+    mine: may(principal, 'evidence:read') && !readsOnly(principal.capabilities),
   };
   const step = {
     key: 'production' as const,

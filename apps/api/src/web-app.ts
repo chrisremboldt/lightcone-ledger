@@ -23,6 +23,10 @@ const contentTypes: Record<string, string> = {
   '.pfb': 'application/octet-stream',
 };
 
+/** Pages opened by a link someone was given: kept by no cache, sent to no other site, listed by no search. */
+const PRIVATE_PAGES: readonly string[] = ['/shared'];
+const privatePage = { 'Cache-Control': 'no-store', 'Referrer-Policy': 'no-referrer', 'X-Robots-Tag': 'noindex' };
+
 /** A request the web app answers: a page or a file, never an API path. */
 export function isWebAppRequest(method: string, url: string): boolean {
   if (method !== 'GET' && method !== 'HEAD') return false;
@@ -68,9 +72,10 @@ export function registerWebApp(app: FastifyInstance, directory: string): void {
     if (!file)
       return reply.code(404).send({ error: { code: 'not_found', message: 'Not found' }, requestId: request.id });
     const hashed = file.startsWith(resolve(directory, 'assets') + sep);
+    if (PRIVATE_PAGES.includes(path)) reply.headers(privatePage);
+    else reply.header('Cache-Control', hashed ? 'public, max-age=31536000, immutable' : 'no-cache');
     return reply
       .header('Content-Type', contentTypes[extname(file).toLowerCase()] ?? 'application/octet-stream')
-      .header('Cache-Control', hashed ? 'public, max-age=31536000, immutable' : 'no-cache')
       .header('X-Content-Type-Options', 'nosniff')
       .send(await readFile(file));
   }
