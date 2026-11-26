@@ -335,6 +335,7 @@ Known gaps:
 - **Extra fields on a built-in record type.** A pack declares whole record types of its own; it cannot yet add a field to one of Ledger's, such as `aircraft.inspection`. Declare a type of your own about the same aircraft instead. [Record types a pack declares](docs/design/declared-record-types.md) says why.
 - **Packs kept per organization.** Pack files, and the record types they declare, are read from one folder for the whole deployment, and the catalogue shows each to every organization on it. An organization has a declared type, and can record one, only once it adopts the pack.
 - **Notices on a record's history.** A sent notice is listed on the administrator's list of notices, not yet on the history of the record it is about.
+- **Crewed operations.** Ledger's built-in record types, roles and some check kinds are written for unmanned operations. What an operation under Part 91 or Part 135 would need, which of it a pack can declare, and the core changes left (a related subject on a declared type, a unit of mass, crewed positions, crew time over calendar periods) are listed in [docs/design/crewed-operations.md](docs/design/crewed-operations.md); none is built.
 - **Aircraft-estimated wind.** The aircraft adapter does not map the aircraft's own wind estimate, because its unit is not documented.
 
 ## Work with Lightcone Systems

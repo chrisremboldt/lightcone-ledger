@@ -45,6 +45,7 @@ The engineering record, in [design/](design/). The guides agree with these; wher
 - [lock-order.md](design/lock-order.md): the one order in which every transaction takes its locks, and the rule a new command, projection, worker job or trigger follows.
 - [ledger-lite.md](design/ledger-lite.md): Ledger on plain PostgreSQL without PostGIS, original files on disk as a deployment's choice and what protects them, and the API and the workers in one process with their own roles and leases.
 - [embedded-database.md](design/embedded-database.md): what Ledger asks of its database, and whether an embedded PostgreSQL could start it for one operator without Docker; looked into, not settled.
+- [crewed-operations.md](design/crewed-operations.md): what an operation under Part 91 or Part 135 keeps and checks that core cannot hold today, what record types a pack declares would cover, and the smallest list of core changes left; a reading to be corrected by people who run such operations.
 
 ## Elsewhere
 
