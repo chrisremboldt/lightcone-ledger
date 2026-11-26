@@ -293,6 +293,8 @@ Set these for the API, the workers, migrations and the setup commands. One env f
 | `LEDGER_PACKS_DIR` | API, workers | The folder of your own rule pack files (`*.pack.json`), for example a waiver you built with `pnpm pack:build`. Both processes read it at startup: give both the same absolute path and restart both after changing it. Unset: built-in packs only. `infra/compose.production.yaml` sets it for you: it mounts `packs/` at the checkout's root into the `ledger` service, read-only, as `/packs`, and sets `LEDGER_PACKS_DIR=/packs` there (see [Your own rule packs](#your-own-rule-packs-in-the-deployment)); do not set it in `ledger.env`. See [Write a rule pack](write-a-rule-pack.md). |
 | `LEDGER_EXAMPLE_PACKS` | API, workers | Leave unset. An organization of your own is offered only the packs that quote a regulation (Part 107, and the proposed Part 108 in shadow) and your own pack files; the invented example and demonstration packs, which name fictional organizations, are offered only to the seeded fictional organizations of a local stack. `1` offers them to every organization; give both processes the same value. |
 | `LEDGER_INVESTIGATOR_ENABLED` | API | Leave at `0`. The investigation assistant seam is a placeholder. |
+| `LEDGER_SMTP_HOST`, `LEDGER_SMTP_PORT`, `LEDGER_SMTP_SECURE`, `LEDGER_SMTP_USER`, `LEDGER_SMTP_PASSWORD`, `LEDGER_SMTP_FROM` | API, workers | The mail server email notices go through. Unset `LEDGER_SMTP_HOST`: no email is sent. See [Notices](#notices-by-email-and-webhook). |
+| `LEDGER_PUBLIC_URL` | API, workers | The address people open Ledger at, such as `https://ledger.example.org`; every link in a notice starts with it. Required with `LEDGER_SMTP_HOST`. |
 
 The web app reads one variable when it is built, and nothing about sign-in:
 
@@ -620,6 +622,76 @@ The organization's waiver and manual, built as pack files with `pnpm pack:build`
 4. Prepare the adoption as on a local Ledger, `pnpm ledger packs adopt <pack> ...` without `--reason`, and give it to the person who adopts.
 
 A corrected version is a new file beside the old one (raise `version` in `pack.yaml` and build again); keep the old file in the folder, since the adoptions that named it still read it, then restart. `node infra/verify-deployment/verify.mjs all` places the example waiver's pack file in the folder mounted there and checks that it is offered and that its adoption prints.
+
+## Notices by email and webhook
+
+Ledger tells a person by email when a finding or an action is assigned to them, when an action of theirs is due within three days, once when it becomes overdue, and when a document waits for their acknowledgement; and, if they ask for one, sends a daily or weekly digest of all of it. An organization can also have every one of these but the digest posted to a webhook of its own. Both are off until you configure them. [docs/design/notices.md](../design/notices.md) describes the outbox behind them.
+
+### Email
+
+Set, for the API and the workers both:
+
+| Variable | What it is for |
+| --- | --- |
+| `LEDGER_SMTP_HOST` | Your mail server or relay. Setting it turns email on. |
+| `LEDGER_SMTP_PORT` | Its port; default 587, or 465 with `LEDGER_SMTP_SECURE=1`. |
+| `LEDGER_SMTP_SECURE` | `1` for a server that speaks TLS from the first byte (port 465). Otherwise TLS is used when the server offers it. |
+| `LEDGER_SMTP_USER`, `LEDGER_SMTP_PASSWORD` | The account notices are sent with, when the server asks for one. Both or neither. |
+| `LEDGER_SMTP_FROM` | The address notices are sent from, such as `ledger@example.org`. Required. |
+| `LEDGER_PUBLIC_URL` | The address people open Ledger at. Required: with a mail server and no public address the API and the workers refuse to start and say so. |
+
+A notice is plain text: the organization's name, what happened in one sentence, the record's reference and title, the due date in the organization's time zone, and a link to the record. It holds no tracking and no images. A safety report, or any record whose confidentiality is not ordinary, is named by its reference and link only. Each person keeps their address and chooses which notices arrive under their name in the bar; an administrator can also set a person's address on the **People** screen, which says beside each person who has none and so gets no email.
+
+### Webhook
+
+An administrator sets the organization's webhook on **People**, **Notices sent**, **Webhook**: an https address (an http address is accepted only with `LEDGER_ENV=local`). Ledger makes a secret and shows it once; setting the webhook again makes a new one. Each notice is one `POST` with a JSON body:
+
+```json
+{
+  "version": "ledger.notice.1",
+  "id": "a notice id",
+  "createdAt": "2026-11-25T14:00:00.000Z",
+  "kind": "assigned",
+  "event": "finding.assigned",
+  "organization": { "id": "your organization id", "name": "Example Ridge Survey" },
+  "assigneeId": "person-…",
+  "sentence": "Avery Example assigned a finding to a person.",
+  "record": { "label": "Finding", "id": "…", "reference": "…", "title": "…", "path": "/rules/findings/…", "url": "https://ledger.example.org/rules/findings/…" },
+  "actionId": null,
+  "dueOn": null,
+  "dueAt": null,
+  "timeZone": "America/Denver"
+}
+```
+
+`kind` is `assigned`, `due`, `overdue` or `acknowledgement`. The person is named by `assigneeId`, their id in Ledger, never by email address. `title` is null for a safety report or a restricted record. `url` is null when `LEDGER_PUBLIC_URL` is unset.
+
+Each call carries two headers: `Ledger-Timestamp`, the time of the call in seconds since 1970, and `Ledger-Signature`, `sha256=` followed by the HMAC-SHA256, in hex, of the timestamp, a full stop and the exact body, keyed with the secret. Check the signature over the raw bytes before parsing, and refuse a timestamp more than five minutes old. In Node:
+
+```js
+import { createHmac, timingSafeEqual } from 'node:crypto';
+
+function verify(secret, headers, rawBody) {
+  const timestamp = headers['ledger-timestamp'];
+  const expected = `sha256=${createHmac('sha256', secret).update(`${timestamp}.${rawBody}`).digest('hex')}`;
+  const given = String(headers['ledger-signature'] ?? '');
+  const fresh = Math.abs(Date.now() / 1000 - Number(timestamp)) < 300;
+  return fresh && given.length === expected.length && timingSafeEqual(Buffer.from(given), Buffer.from(expected));
+}
+```
+
+Answer with any 2xx status within 10 seconds. Ledger does not follow redirects.
+
+### What is sent, and what is not
+
+Every notice and every attempt to send it is on record. **People**, **Notices sent** lists them, newest first, with their state: waiting, sent, failed with the reason (it is tried again after 1 minute, 5 minutes, 30 minutes and 2 hours) or given up after the fifth attempt. Nothing that causes a notice waits for it or fails because of it. A notice is recorded once; in the rare case that a worker sends one and stops before recording it, the next worker sends it again. To see where notices stand from the database, with the owner connection:
+
+```sql
+SELECT a.outcome, count(*) FROM notices n LEFT JOIN LATERAL (SELECT outcome FROM notice_attempts x
+  WHERE x.notice_id=n.id ORDER BY attempt DESC LIMIT 1) a ON true GROUP BY a.outcome;
+```
+
+On a local stack, `pnpm dev` starts stand-ins for both: `.env.example` points `LEDGER_SMTP_HOST` at the emulators' mail server stand-in on port 4025, and `http://127.0.0.1:4002/_notices/webhook` receives webhook calls. Open `http://127.0.0.1:4002/_notices` to see what arrived. A recipient at `refused.example`, or a webhook address ending in `?status=500`, shows a failing server.
 
 ## 8. Health checks
 

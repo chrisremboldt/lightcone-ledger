@@ -2,6 +2,7 @@ import { createServer, type IncomingMessage, type Server, type ServerResponse } 
 import { createHash, createHmac, randomUUID } from 'node:crypto';
 import { endpointSchemas, missingAirspaceSchemas, validatePayload } from './schema.js';
 import { answerMetarRequest, recordedMetarReports } from './metar.js';
+import { handleNoticeRequest, NoticeInbox } from './notices.js';
 import {
   djiFaultScripts,
   planScriptedFlight,
@@ -73,6 +74,8 @@ export interface EmulatorState {
   sourceClock?: string;
   /** Published weather reports, each the exact text of one report object; the recorded ones until replaced. */
   metarReports: string[];
+  /** What the notice stand-ins received: email over SMTP and webhook calls. */
+  notices: NoticeInbox;
 }
 const statuses = new Set([
   'STATUS_UNSPECIFIED',
@@ -126,6 +129,8 @@ function tokenFor(kind: string, input: string): string {
 export interface EmulatorOptions {
   /** Where scripted flights publish their telemetry messages. Without it the scripted-flight controls refuse to start. */
   djiFlights?: DjiFlightPublisher;
+  /** Shared with the SMTP stand-in, so the page of notices shows the email it received. */
+  notices?: NoticeInbox;
 }
 
 export function createEmulator(
@@ -140,6 +145,7 @@ export function createEmulator(
     codes: new Map(),
     callbackAttempts: [],
     metarReports: recordedMetarReports(),
+    notices: options.notices ?? new NoticeInbox(),
   };
   let controlLease: { id: string; owner: 'scenario' | 'trickle'; expires: number } | undefined;
   let scriptedFlight: ScriptedFlight | undefined;
@@ -254,6 +260,7 @@ export function createEmulator(
     const url = new URL(request.url ?? '/', `http://${request.headers.host ?? 'localhost'}`);
     const path = url.pathname;
     try {
+      if (await handleNoticeRequest(state.notices, request, response, url, () => readBytes(request))) return;
       if (path === '/healthz')
         return send(response, 200, {
           status: 'ok',

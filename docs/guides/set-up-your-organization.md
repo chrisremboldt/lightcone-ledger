@@ -64,6 +64,8 @@ Every change to what someone may do is recorded with who made it. A person who l
 
 **Several people on one computer.** On your own computer each person signs in with their own development token. Choose the person on the People screen and **Issue a development token**, or run `pnpm ledger people token "<their name>" --reason "<why>"` with your own token, and give them the token: it is shown once, and issuing another replaces the earlier one at once. They choose **Use a development token** on the sign-in screen and paste it, so what they sign, acknowledge or close is recorded as theirs. If your own token is lost, `pnpm development-token:issue --organization <organization id> --for "<your name>"` replaces it. Development tokens are for a trial on a computer that faces no network. Real use by several people needs each of them to sign in through your identity provider: [Deploy Ledger, section 6](deploy.md#6-sign-in).
 
+**Notices.** A person with an email address on file is told when a finding or an action is assigned to them, when one of theirs is due or overdue, and when a document waits for their acknowledgement, if your Ledger has a mail server ([Deploy Ledger, Notices](deploy.md#notices-by-email-and-webhook)). Each person sets their address and chooses which notices they get under their name in the bar; you can set an address when you choose the person on the People screen, which shows who has none and so gets no email. **Notices sent** on the People screen lists every notice and whether it was sent, and holds your organization's webhook.
+
 **These are the people who use Ledger, not your crew list.** A pilot who never signs in needs no entry here. The records about your pilots are step 4.
 
 ## 4. Add your aircraft, pilots and flights

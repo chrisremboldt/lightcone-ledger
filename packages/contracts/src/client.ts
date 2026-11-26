@@ -108,6 +108,15 @@ import type {
   OpenFindingsResponse,
 } from './open-findings.js';
 import type { paths } from './generated/api.js';
+import type {
+  NoticeListQuery,
+  NoticeListResponse,
+  NoticeSettingsChangeResponse,
+  NoticeSettingsResponse,
+  NoticeSettingsUpdate,
+  NoticeWebhookResponse,
+  NoticeWebhookSetResponse,
+} from './notices.js';
 import { parseEventStream } from './event-stream.js';
 export type ApiPaths = paths;
 type FlightListResponse = paths['/v1/flights']['get']['responses'][200]['content']['application/json'];
@@ -434,6 +443,38 @@ export class LedgerClient {
   principalAuthorities(query: PrincipalAuthorityListQuery = {}) {
     return this.request<PrincipalAuthorityListResponse>(`/v1/authority/principals${queryString(query)}`, {
       cache: 'no-store',
+    });
+  }
+  /** The signed-in person's own notice settings. */
+  noticeSettings() {
+    return this.request<NoticeSettingsResponse>('/v1/notices/settings', { cache: 'no-store' });
+  }
+  updateNoticeSettings(update: NoticeSettingsUpdate) {
+    return this.request<NoticeSettingsChangeResponse>('/v1/notices/settings', {
+      method: 'PUT',
+      cache: 'no-store',
+      body: JSON.stringify(update),
+    });
+  }
+  /** Keeps or removes the address a person gets email notices at; an administrator's change. */
+  setPersonNoticeEmail(principalId: string, email: string | null) {
+    return this.request<NoticeSettingsChangeResponse>(
+      `/v1/authority/principals/${encodeURIComponent(principalId)}/notice-email`,
+      { method: 'PUT', cache: 'no-store', body: JSON.stringify({ email }) },
+    );
+  }
+  notices(query: NoticeListQuery = {}) {
+    return this.request<NoticeListResponse>(`/v1/notices${queryString(query)}`, { cache: 'no-store' });
+  }
+  noticeWebhook() {
+    return this.request<NoticeWebhookResponse>('/v1/notices/webhook', { cache: 'no-store' });
+  }
+  /** Sets the organization's webhook, whose new secret is in this response only, or removes it with null. */
+  setNoticeWebhook(url: string | null) {
+    return this.request<NoticeWebhookSetResponse>('/v1/notices/webhook', {
+      method: 'PUT',
+      cache: 'no-store',
+      body: JSON.stringify({ url }),
     });
   }
   credentials() {

@@ -1392,3 +1392,35 @@ export { canonicalDigest, type JournalEvent };
 export { getOrganizationPeople } from './people.js';
 
 export { projectDocumentControl } from './sms-documents.js';
+export {
+  configureNoticeChannels,
+  emailNoticesConfigured,
+  getNoticeSettings,
+  getNoticeWebhook,
+  listNotices,
+  noticeDeployment,
+  noticeEmails,
+  queueNotices,
+  setNoticeWebhook,
+  updateNoticeSettings,
+  webhookAddressProblem,
+  type NoticeDeployment,
+  type NoticeDraft,
+  type SmtpSettings,
+} from './notices.js';
+export {
+  noticeDay,
+  noticeLink,
+  noticeSentence,
+  noticeTime,
+  noticeWebhookBody,
+  renderNoticeEmail,
+  webhookSignature,
+  WEBHOOK_SIGNATURE_HEADER,
+  WEBHOOK_TIMESTAMP_HEADER,
+  type NoticeContent,
+  type NoticeEvent,
+  type NoticeItem,
+  type NoticeRecord,
+} from './notice-content.js';
+export { writeDatedNotices, type DatedNoticeOptions } from './notice-schedule.js';

@@ -13,6 +13,7 @@ import {
 } from '@ledger/contracts';
 import { appendEvent, DomainError, type AuthContext, type PoolClient } from '@ledger/persistence';
 import { AUTHORITY_PRINCIPAL_COLUMNS, authorityPrincipal, type AuthorityPrincipalRow } from './authority.js';
+import { noticeEmails } from './notices.js';
 import { replaceObservationGrants } from './observations.js';
 
 /**
@@ -324,9 +325,15 @@ export async function listPrincipalAuthority(
       ...(grants.get(grant.principal_id) ?? []),
       { sourceId: grant.source_id, observationType: grant.observation_type },
     ]);
+  const emails = await noticeEmails(
+    client,
+    principal.tenantId,
+    shown.map((row) => row.id),
+  );
   const principals = shown.map((row): PrincipalAuthorityEntry => ({
     ...authorityPrincipal(row, grants.get(row.id) ?? []),
     signInLinked: row.sign_in_linked,
+    noticeEmail: emails.get(row.id) ?? null,
   }));
   const hasMore = rows.length > limit;
   const last = shown.at(-1);

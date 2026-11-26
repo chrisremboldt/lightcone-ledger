@@ -26,12 +26,15 @@ export type Place =
   | { section: 'rules'; pane: 'open'; owner?: 'none'; subject?: FindingSubject }
   | { section: 'rules'; pane: 'subjects' }
   | { section: 'people'; personId?: string }
+  /** The organization's notices, and its webhook for them. */
+  | { section: 'people'; pane: NoticesPane }
   /** An address that names no place here. */
   | { section: 'unknown'; path: string };
 
 export type Section = Place['section'];
 export type SafetyView = 'home' | 'hazards' | 'documents' | 'reports' | 'assurance' | 'new-risk-matrix';
 export type RecordTypePane = 'browse' | 'import' | 'enter';
+export type NoticesPane = 'notices' | 'webhook';
 /**
  * The plain choices a safety register is narrowed by: its state, its type and its order. A search's text and the days
  * are typed, and never go in the address.
@@ -137,6 +140,8 @@ export function placeAddress(place: Place): { path: string; query: Record<string
       }
       return { path: '/rules/findings', query: place.owner ? { owner: place.owner } : {} };
     case 'people':
+      if ('pane' in place)
+        return { path: place.pane === 'notices' ? '/people/notices' : '/people/notices/webhook', query: {} };
       return { path: place.personId ? at('people', place.personId) : '/people', query: {} };
     case 'unknown':
       return { path: place.path, query: {} };
@@ -186,6 +191,13 @@ export function placeFromAddress(pathname: string, search = ''): Place {
       return rulesPlace(rest, query) ?? unknown;
     case 'people':
       if (rest.length === 0) return { section: 'people' };
+      // A person's id never is "notices": people are person-<uuid>, and other principals have prefixes of their own.
+      if (rest[0] === 'notices')
+        return rest.length === 1
+          ? { section: 'people', pane: 'notices' }
+          : rest.length === 2 && rest[1] === 'webhook'
+            ? { section: 'people', pane: 'webhook' }
+            : unknown;
       return rest.length === 1 ? { section: 'people', personId: rest[0]! } : unknown;
     default:
       return unknown;
@@ -330,6 +342,7 @@ export function placeTitle(place: Place, thing?: string): string {
       if (place.pane === 'subjects') return title('Findings by subject', 'Rules');
       return title(place.subject ? (thing ?? `Findings about ${place.subject.id}`) : 'Open findings', 'Rules');
     case 'people':
+      if ('pane' in place) return title(place.pane === 'notices' ? 'Notices' : 'Webhook for notices', 'People');
       return place.personId ? title(thing ?? 'Person', 'People') : title('People');
   }
 }

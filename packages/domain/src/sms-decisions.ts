@@ -43,6 +43,7 @@ import { assessedControls, recordAcceptedControls, requireAssessedControlsCurren
 import { refreshAcceptedControlRules } from './accepted-control-rules.js';
 import { organization } from './adoptions.js';
 import { lockRecordsOnFile, recordsOnFileScope, refreshRecordsOnFile } from './records-on-file.js';
+import { noticeSmsDecision } from './notice-events.js';
 import { prepareActionClose } from './sms-assurance.js';
 
 export type Reauthenticate = () => Promise<ReauthenticationEvidence>;
@@ -782,6 +783,7 @@ export async function acceptSmsDecision(
      WHERE tenant_id=$6 AND id=$7`,
     [revision + 1, status, event.received_at, decision.kind, event.id, actor.tenantId, record.id],
   );
+  await noticeSmsDecision(client, actor, record, stored);
   if (acceptedControls.length)
     await recordAcceptedControls(client, actor.tenantId, record.id, event.id, acceptedControls, event.received_at);
   await retainSubjectEvidence(client, actor.tenantId, [record.id], event);

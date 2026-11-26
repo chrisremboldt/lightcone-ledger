@@ -381,19 +381,24 @@ export function actionsDueByOwner(
   });
 }
 
-/** The Safety home's list: open actions of every signed assurance record due within 30 days or overdue, by owner. */
-export async function assuranceActionsDue(
-  client: PoolClient,
-  tenantId: string,
-): Promise<{ owner: SmsPersonRef; actions: SmsAssuranceActionDue[] }[]> {
-  const records = await client.query<ActionRow & { body: AssuranceBody }>(
-    `SELECT r.id AS record_id,r.title,r.owner_id,v.body FROM sms_records r
+/** An open action of a signed assurance record, with its record as a notice names it. */
+export interface OpenAssuranceAction extends Omit<OpenAction, 'owner'> {
+  ownerId: string;
+  record: { id: string; kind: string; title: string; reference: string | null; confidentiality: string };
+}
+
+/** Every open action of the organization's signed assurance records. */
+export async function openAssuranceActions(client: PoolClient, tenantId: string): Promise<OpenAssuranceAction[]> {
+  const records = await client.query<
+    ActionRow & { body: AssuranceBody; reference: string | null; confidentiality: string }
+  >(
+    `SELECT r.id AS record_id,r.title,r.owner_id,r.reference,r.confidentiality,v.body FROM sms_records r
      JOIN sms_record_versions v ON v.tenant_id=r.tenant_id AND v.record_id=r.id AND v.version_number=r.version_number
      WHERE r.tenant_id=$1 AND r.kind='assurance'
        AND EXISTS(SELECT 1 FROM decisions d WHERE d.tenant_id=r.tenant_id AND d.subject_id=r.id AND d.kind='assurance.sign')`,
     [tenantId],
   );
-  const open: (Omit<OpenAction, 'owner'> & { ownerId: string })[] = [];
+  const open: OpenAssuranceAction[] = [];
   for (const record of records.rows) {
     const settled = settledActions(
       await signedVersions(client, tenantId, record.record_id),
@@ -409,8 +414,24 @@ export async function assuranceActionsDue(
         dueOn: entry.action.dueOn,
         overdue: false,
         ownerId: entry.action.ownerId,
+        record: {
+          id: record.record_id,
+          kind: 'assurance',
+          title: record.title,
+          reference: record.reference,
+          confidentiality: record.confidentiality,
+        },
       });
   }
+  return open;
+}
+
+/** The Safety home's list: open actions of every signed assurance record due within 30 days or overdue, by owner. */
+export async function assuranceActionsDue(
+  client: PoolClient,
+  tenantId: string,
+): Promise<{ owner: SmsPersonRef; actions: SmsAssuranceActionDue[] }[]> {
+  const open = await openAssuranceActions(client, tenantId);
   const directory = await names(
     client,
     tenantId,
@@ -418,7 +439,7 @@ export async function assuranceActionsDue(
   );
   const { today } = await organizationDay(client, tenantId);
   return actionsDueByOwner(
-    open.map(({ ownerId, ...action }) => ({ ...action, owner: person(directory, ownerId) })),
+    open.map(({ ownerId, record: _record, ...action }) => ({ ...action, owner: person(directory, ownerId) })),
     today,
   );
 }

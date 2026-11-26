@@ -72,6 +72,36 @@ export const routeDescriptions: Record<string, { summary: string; description: s
     description:
       'Returns the credentials issued to the principals of the organization, without their secrets. Private, not cached. Needs `authority:write`.',
   },
+  setPersonNoticeEmail: {
+    summary: 'Set the address a person gets email notices at',
+    description:
+      'Keeps or removes the email address a person of the organization gets notices at; a person with no address gets no email. Recorded as a journal event that says whether an address is kept, never the address. Needs `authority:write`.',
+  },
+  noticeSettings: {
+    summary: 'Read your own notice settings',
+    description:
+      'Returns the address you get email notices at, which notices arrive by email (assigned to you, due soon, overdue, waiting for your acknowledgement), whether you get a daily or weekly digest, and whether this Ledger sends email at all. Needs no capability: every person reads their own.',
+  },
+  updateNoticeSettings: {
+    summary: 'Change your own notice settings',
+    description:
+      'Changes your address for email notices, which notices arrive by email and your digest. Only the fields sent change. Recorded as a journal event. Needs no capability: every person sets their own.',
+  },
+  notices: {
+    summary: 'List the organization’s notices',
+    description:
+      'Every notice Ledger has written for the organization, newest first, a page at a time: what it says, who it is for, by email or the webhook, and its state (waiting, sent, failed with the reason, or given up after five attempts). Filter by state. Needs `authority:write`.',
+  },
+  noticeWebhook: {
+    summary: 'Read the organization’s webhook for notices',
+    description:
+      'Returns the address notices are posted to, when and by whom it was set, never its secret. Needs `authority:write`.',
+  },
+  setNoticeWebhook: {
+    summary: 'Set or remove the organization’s webhook for notices',
+    description:
+      'Sets the https address every assignment, due and overdue action and document waiting for acknowledgement is posted to, and makes a new secret that signs each call: the secret is in this response only and is never shown again. A null address removes the webhook. Needs `authority:write`.',
+  },
   rolePresets: {
     summary: 'List the role presets people are added from',
     description:

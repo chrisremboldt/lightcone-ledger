@@ -43,6 +43,7 @@ import { fictionalPeople } from './demo/fictional-organizations.js';
 import { developmentToken, heldOrganizations, offeredOrganizations } from './local-sign-in.js';
 import { appFetch, demonstration, mode } from './transport.js';
 import { openFoldedSectionsForPrint } from './print.js';
+import { NoticeChoices } from './NoticeSettings.js';
 
 const isLoopback = ['localhost', '127.0.0.1', '[::1]'].includes(window.location.hostname);
 // A demonstration build has no API: it shows the fictional people and answers from a recording.
@@ -217,11 +218,21 @@ function Workspace({ account, ...rest }: AppProps & { confirmIdentity?: ConfirmI
   const [reporting, setReporting] = React.useState(false);
   // An unsent report stays here, in memory only, while the page is open: closing the dialog keeps it.
   const [reportDraft, setReportDraft] = React.useState(blankSignedInReport);
+  const noticeClient = React.useMemo(
+    () => new LedgerClient(rest.apiUrl, rest.token, appFetch),
+    [rest.apiUrl, rest.token],
+  );
   // Any signed-in person can report a safety concern from every screen.
   const props = {
     ...rest,
     report: <Button onClick={() => setReporting(true)}>Report a safety concern</Button>,
-    account,
+    account: (
+      <>
+        {account}
+        {/* The demonstration replays recorded answers, and holds no one's notices. */}
+        {!demonstration && <NoticeChoices client={noticeClient} />}
+      </>
+    ),
   };
   // Outside the bar: the flights keep a bar of their own, hidden, behind the safety section.
   const dialog = reporting && (

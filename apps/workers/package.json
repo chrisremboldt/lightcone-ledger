@@ -17,6 +17,10 @@
     "@ledger/persistence": "workspace:*",
     "@ledger/projections": "workspace:*",
     "@ledger/standard-packs": "workspace:*",
-    "dotenv": "18.0.5"
+    "dotenv": "18.0.5",
+    "nodemailer": "7.0.5"
+  },
+  "devDependencies": {
+    "@types/nodemailer": "6.4.17"
   }
 }

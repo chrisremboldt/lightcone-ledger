@@ -164,6 +164,8 @@ import {
   getTimeline,
   requireRow,
   responseMeta,
+  configureNoticeChannels,
+  noticeDeployment,
 } from '@ledger/domain';
 import { sha256 } from '@ledger/integrity';
 import { examplePacksEnabled, packOffered, registerPackFolder, registerStandardPacks } from '@ledger/standard-packs';
@@ -200,6 +202,7 @@ import { registerRequiredRecordRoutes } from './required-records.js';
 import { registerRecordProductionRoutes } from './record-productions.js';
 import { registerControlWindowRoutes } from './control-windows.js';
 import { registerPeopleRoutes } from './people-routes.js';
+import { registerNoticeRoutes } from './notice-routes.js';
 import {
   registerSafetyReportRoutes,
   UNATTRIBUTED_PATHS,
@@ -223,6 +226,8 @@ export interface AppOptions {
   signIn?: SignInSettings;
   /** Overrides how the API reaches identity providers, for tests. */
   identityProvider?: Pick<TokenVerifierOptions, 'fetch' | 'keyRefetchCooldownMs'>;
+  /** Whether email notices are written; defaults to whether LEDGER_SMTP_HOST configures a mail server. */
+  noticeEmail?: boolean;
 }
 /** What a request is answered while the database cannot be reached: it may not have been completed. */
 const DATABASE_UNAVAILABLE = {
@@ -395,6 +400,8 @@ export async function createApp(options: AppOptions = {}) {
   if (!['local', 'test', 'staging'].includes(env)) throw new Error('LEDGER_ENV must be local, test or staging');
   if (env !== 'staging' && process.env.NODE_ENV === 'production')
     throw new Error('Development authentication cannot run in production');
+  // Email notices need a mail server and the address links open at; a start with one and not the other is refused.
+  configureNoticeChannels({ email: options.noticeEmail ?? Boolean(noticeDeployment(process.env).smtp) });
   const pool = options.pool ?? options.db ?? createPool();
   const ownPool = !options.pool && !options.db;
   const store = options.objectStore ?? createObjectStore();
@@ -536,6 +543,7 @@ export async function createApp(options: AppOptions = {}) {
   registerRecordProductionRoutes(app, { pool, store, principal, key, boundedOperation: boundedExport });
   registerControlWindowRoutes(app, { pool, principal, key });
   registerPeopleRoutes(app, { pool, env, principal });
+  registerNoticeRoutes(app, { pool, env, principal });
   registerSafetyReportRoutes(app, { pool, store, principal, key });
   registerFlightPredepartureRoutes(app, { pool, principal, config: flightPredeparture });
   registerSimulationAvoidanceDemoRoutes(app, { pool, principal, config: simulationAvoidanceDemo });

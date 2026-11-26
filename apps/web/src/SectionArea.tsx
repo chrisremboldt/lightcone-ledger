@@ -3,6 +3,7 @@ import type { LedgerClient } from '@ledger/contracts/client';
 import type { Principal } from '@ledger/contracts';
 import { Notice } from '@ledger/ui';
 import { FirstDay } from './FirstDay.js';
+import { NoticesArea } from './NoticesArea.js';
 import { PeopleArea } from './PeopleArea.js';
 import { RecordsArea } from './RecordsArea.js';
 import { RulesArea } from './RulesArea.js';
@@ -44,7 +45,12 @@ export function SectionArea({
   if (place.section === 'records')
     return <RecordsArea client={client} principal={principal} place={place} onOpenDocument={onOpenDocument} />;
   if (place.section === 'rules') return <RulesArea client={client} principal={principal} place={place} />;
-  if (place.section === 'people') return <PeopleArea client={client} principal={principal} personId={place.personId} />;
+  if (place.section === 'people')
+    return 'pane' in place ? (
+      <NoticesArea client={client} pane={place.pane} />
+    ) : (
+      <PeopleArea client={client} principal={principal} personId={place.personId} />
+    );
   return null;
 }
 

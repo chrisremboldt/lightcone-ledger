@@ -21,6 +21,8 @@ import {
 import { plainError } from './sms-labels.js';
 import { SourcesAndServices } from './SourcesAndServices.js';
 import { goTo } from './place.js';
+import { PersonNoticeEmail } from './NoticeSettings.js';
+import { PlaceLink } from './TopBar.js';
 
 type Selection = { kind: 'add' } | { kind: 'person'; id: string };
 
@@ -96,6 +98,9 @@ export function PeopleArea({
           >
             Add a person
           </Button>
+          <PlaceLink className="button button--quiet" place={{ section: 'people', pane: 'notices' }}>
+            Notices sent
+          </PlaceLink>
         </div>
         {!list && !error && <Spinner label="Loading people" />}
         <ul className="records-items people-list">
@@ -116,6 +121,7 @@ export function PeopleArea({
                 <span className="records-item-meta">
                   {kindLabels[person.kind]} · {person.capabilities.length} permissions
                   {person.id === principal?.id ? ' · you' : ''}
+                  {person.kind === 'human' && !person.noticeEmail ? ' · no email address: gets no email' : ''}
                 </span>
               </button>
             </li>
@@ -155,6 +161,14 @@ export function PeopleArea({
               client={client}
               person={chosen}
               selfId={principal?.id}
+              onChanged={(message) => changed(message)}
+            />
+          )}
+          {chosen?.kind === 'human' && chosen.active && (
+            <PersonNoticeEmail
+              key={`${chosen.id}:${chosen.noticeEmail ?? ''}`}
+              client={client}
+              person={chosen}
               onChanged={(message) => changed(message)}
             />
           )}

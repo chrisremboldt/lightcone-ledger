@@ -10,6 +10,7 @@ import {
 } from '@ledger/contracts';
 import { canonicalDigest } from '@ledger/integrity';
 import { appendEvent, DomainError, type AuthContext, type JournalEvent, type PoolClient } from '@ledger/persistence';
+import { noticeFindingAssigned } from './notice-events.js';
 import { observationRegistry } from './observation-registry.js';
 import { subjectFindingView } from './subject-findings.js';
 
@@ -387,6 +388,9 @@ export async function insertFindingTreatment(
       treatment.findingId,
     ],
   );
+  // The person a finding is assigned to hears of it; a notice that cannot be written changes nothing here.
+  if (treatment.action === 'assign')
+    await noticeFindingAssigned(client, principal, ids.treatmentId, treatment.findingId, treatment.assigneeId!);
   return aboutSubject(row);
 }
 

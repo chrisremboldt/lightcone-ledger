@@ -243,6 +243,94 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/authority/principals/{id}/notice-email": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * Set the address a person gets email notices at
+         * @description Keeps or removes the email address a person of the organization gets notices at; a person with no address gets no email. Recorded as a journal event that says whether an address is kept, never the address. Needs `authority:write`.
+         */
+        put: operations["setPersonNoticeEmail"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/notices/settings": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Read your own notice settings
+         * @description Returns the address you get email notices at, which notices arrive by email (assigned to you, due soon, overdue, waiting for your acknowledgement), whether you get a daily or weekly digest, and whether this Ledger sends email at all. Needs no capability: every person reads their own.
+         */
+        get: operations["noticeSettings"];
+        /**
+         * Change your own notice settings
+         * @description Changes your address for email notices, which notices arrive by email and your digest. Only the fields sent change. Recorded as a journal event. Needs no capability: every person sets their own.
+         */
+        put: operations["updateNoticeSettings"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/notices": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List the organization’s notices
+         * @description Every notice Ledger has written for the organization, newest first, a page at a time: what it says, who it is for, by email or the webhook, and its state (waiting, sent, failed with the reason, or given up after five attempts). Filter by state. Needs `authority:write`.
+         */
+        get: operations["notices"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/notices/webhook": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Read the organization’s webhook for notices
+         * @description Returns the address notices are posted to, when and by whom it was set, never its secret. Needs `authority:write`.
+         */
+        get: operations["noticeWebhook"];
+        /**
+         * Set or remove the organization’s webhook for notices
+         * @description Sets the https address every assignment, due and overdue action and document waiting for acknowledgement is posted to, and makes a new secret that signs each call: the secret is in this response only and is never shown again. A null address removes the webhook. Needs `authority:write`.
+         */
+        put: operations["setNoticeWebhook"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/authority/principals/{id}/development-token": {
         parameters: {
             query?: never;
@@ -5450,6 +5538,8 @@ export interface components {
                 }[];
                 /** @description Whether an identity-provider account is tied to this principal. The identity itself is not shown. */
                 signInLinked: boolean;
+                /** @description The address a person gets email notices at; null when none is kept, and then no email is sent. */
+                noticeEmail: string | null;
             }[];
             hasMore: boolean;
             /** @description Send as cursor to read the next page; null on the last page. */
@@ -14873,6 +14963,8 @@ export interface operations {
                             }[];
                             /** @description Whether an identity-provider account is tied to this principal. The identity itself is not shown. */
                             signInLinked: boolean;
+                            /** @description The address a person gets email notices at; null when none is kept, and then no email is sent. */
+                            noticeEmail: string | null;
                         }[];
                         hasMore: boolean;
                         /** @description Send as cursor to read the next page; null on the last page. */
@@ -15174,6 +15266,914 @@ export interface operations {
                                 observationType: string;
                             }[];
                         }[];
+                    };
+                };
+            };
+            /** @description Invalid request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        error: {
+                            code: string;
+                            message: string;
+                            details?: {
+                                [key: string]: unknown;
+                            };
+                        };
+                        requestId: string;
+                    };
+                };
+            };
+            /** @description Authentication required */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        error: {
+                            code: string;
+                            message: string;
+                            details?: {
+                                [key: string]: unknown;
+                            };
+                        };
+                        requestId: string;
+                    };
+                };
+            };
+            /** @description Missing capability */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        error: {
+                            code: string;
+                            message: string;
+                            details?: {
+                                [key: string]: unknown;
+                            };
+                        };
+                        requestId: string;
+                    };
+                };
+            };
+            /** @description Scoped object unavailable */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        error: {
+                            code: string;
+                            message: string;
+                            details?: {
+                                [key: string]: unknown;
+                            };
+                        };
+                        requestId: string;
+                    };
+                };
+            };
+            /** @description Stale basis or conflicting idempotency content */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        error: {
+                            code: string;
+                            message: string;
+                            details?: {
+                                [key: string]: unknown;
+                            };
+                        };
+                        requestId: string;
+                    };
+                };
+            };
+            /** @description Bounded intake exceeded */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        error: {
+                            code: string;
+                            message: string;
+                            details?: {
+                                [key: string]: unknown;
+                            };
+                        };
+                        requestId: string;
+                    };
+                };
+            };
+        };
+    };
+    setPersonNoticeEmail: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    email: string | null;
+                };
+            };
+        };
+        responses: {
+            /** @description Success */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        settings: {
+                            /** @description Where the person gets email notices; null when no address is kept, and then no email is sent. */
+                            email: string | null;
+                            choices: {
+                                /** @description A finding or an action is assigned to the person. */
+                                assigned: boolean;
+                                /** @description An action of theirs is due within three days. */
+                                due: boolean;
+                                /** @description An action of theirs is overdue; sent once. */
+                                overdue: boolean;
+                                /** @description A document is waiting for their acknowledgement. */
+                                acknowledgement: boolean;
+                            };
+                            digest: "none" | "daily" | "weekly";
+                        };
+                        commandId: string;
+                    };
+                };
+            };
+            /** @description Invalid request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        error: {
+                            code: string;
+                            message: string;
+                            details?: {
+                                [key: string]: unknown;
+                            };
+                        };
+                        requestId: string;
+                    };
+                };
+            };
+            /** @description Authentication required */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        error: {
+                            code: string;
+                            message: string;
+                            details?: {
+                                [key: string]: unknown;
+                            };
+                        };
+                        requestId: string;
+                    };
+                };
+            };
+            /** @description Missing capability */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        error: {
+                            code: string;
+                            message: string;
+                            details?: {
+                                [key: string]: unknown;
+                            };
+                        };
+                        requestId: string;
+                    };
+                };
+            };
+            /** @description Scoped object unavailable */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        error: {
+                            code: string;
+                            message: string;
+                            details?: {
+                                [key: string]: unknown;
+                            };
+                        };
+                        requestId: string;
+                    };
+                };
+            };
+            /** @description Stale basis or conflicting idempotency content */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        error: {
+                            code: string;
+                            message: string;
+                            details?: {
+                                [key: string]: unknown;
+                            };
+                        };
+                        requestId: string;
+                    };
+                };
+            };
+            /** @description Bounded intake exceeded */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        error: {
+                            code: string;
+                            message: string;
+                            details?: {
+                                [key: string]: unknown;
+                            };
+                        };
+                        requestId: string;
+                    };
+                };
+            };
+        };
+    };
+    noticeSettings: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Success */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        settings: {
+                            /** @description Where the person gets email notices; null when no address is kept, and then no email is sent. */
+                            email: string | null;
+                            choices: {
+                                /** @description A finding or an action is assigned to the person. */
+                                assigned: boolean;
+                                /** @description An action of theirs is due within three days. */
+                                due: boolean;
+                                /** @description An action of theirs is overdue; sent once. */
+                                overdue: boolean;
+                                /** @description A document is waiting for their acknowledgement. */
+                                acknowledgement: boolean;
+                            };
+                            digest: "none" | "daily" | "weekly";
+                        };
+                        /** @description Whether this Ledger is configured to send email. */
+                        emailAvailable: boolean;
+                    };
+                };
+            };
+            /** @description Invalid request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        error: {
+                            code: string;
+                            message: string;
+                            details?: {
+                                [key: string]: unknown;
+                            };
+                        };
+                        requestId: string;
+                    };
+                };
+            };
+            /** @description Authentication required */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        error: {
+                            code: string;
+                            message: string;
+                            details?: {
+                                [key: string]: unknown;
+                            };
+                        };
+                        requestId: string;
+                    };
+                };
+            };
+            /** @description Missing capability */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        error: {
+                            code: string;
+                            message: string;
+                            details?: {
+                                [key: string]: unknown;
+                            };
+                        };
+                        requestId: string;
+                    };
+                };
+            };
+            /** @description Scoped object unavailable */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        error: {
+                            code: string;
+                            message: string;
+                            details?: {
+                                [key: string]: unknown;
+                            };
+                        };
+                        requestId: string;
+                    };
+                };
+            };
+            /** @description Stale basis or conflicting idempotency content */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        error: {
+                            code: string;
+                            message: string;
+                            details?: {
+                                [key: string]: unknown;
+                            };
+                        };
+                        requestId: string;
+                    };
+                };
+            };
+            /** @description Bounded intake exceeded */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        error: {
+                            code: string;
+                            message: string;
+                            details?: {
+                                [key: string]: unknown;
+                            };
+                        };
+                        requestId: string;
+                    };
+                };
+            };
+        };
+    };
+    updateNoticeSettings: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    email?: string | null;
+                    choices?: {
+                        /** @description A finding or an action is assigned to the person. */
+                        assigned?: boolean;
+                        /** @description An action of theirs is due within three days. */
+                        due?: boolean;
+                        /** @description An action of theirs is overdue; sent once. */
+                        overdue?: boolean;
+                        /** @description A document is waiting for their acknowledgement. */
+                        acknowledgement?: boolean;
+                    };
+                    digest?: "none" | "daily" | "weekly";
+                };
+            };
+        };
+        responses: {
+            /** @description Success */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        settings: {
+                            /** @description Where the person gets email notices; null when no address is kept, and then no email is sent. */
+                            email: string | null;
+                            choices: {
+                                /** @description A finding or an action is assigned to the person. */
+                                assigned: boolean;
+                                /** @description An action of theirs is due within three days. */
+                                due: boolean;
+                                /** @description An action of theirs is overdue; sent once. */
+                                overdue: boolean;
+                                /** @description A document is waiting for their acknowledgement. */
+                                acknowledgement: boolean;
+                            };
+                            digest: "none" | "daily" | "weekly";
+                        };
+                        commandId: string;
+                    };
+                };
+            };
+            /** @description Invalid request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        error: {
+                            code: string;
+                            message: string;
+                            details?: {
+                                [key: string]: unknown;
+                            };
+                        };
+                        requestId: string;
+                    };
+                };
+            };
+            /** @description Authentication required */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        error: {
+                            code: string;
+                            message: string;
+                            details?: {
+                                [key: string]: unknown;
+                            };
+                        };
+                        requestId: string;
+                    };
+                };
+            };
+            /** @description Missing capability */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        error: {
+                            code: string;
+                            message: string;
+                            details?: {
+                                [key: string]: unknown;
+                            };
+                        };
+                        requestId: string;
+                    };
+                };
+            };
+            /** @description Scoped object unavailable */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        error: {
+                            code: string;
+                            message: string;
+                            details?: {
+                                [key: string]: unknown;
+                            };
+                        };
+                        requestId: string;
+                    };
+                };
+            };
+            /** @description Stale basis or conflicting idempotency content */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        error: {
+                            code: string;
+                            message: string;
+                            details?: {
+                                [key: string]: unknown;
+                            };
+                        };
+                        requestId: string;
+                    };
+                };
+            };
+            /** @description Bounded intake exceeded */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        error: {
+                            code: string;
+                            message: string;
+                            details?: {
+                                [key: string]: unknown;
+                            };
+                        };
+                        requestId: string;
+                    };
+                };
+            };
+        };
+    };
+    notices: {
+        parameters: {
+            query?: {
+                state?: "waiting" | "sent" | "failed" | "given_up";
+                /** @description Opaque continuation scoped to tenant, principal authority, route and filters. Current read models, not a frozen historical snapshot. */
+                cursor?: string;
+                limit?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Success */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        notices: {
+                            id: string;
+                            /** Format: date-time */
+                            createdAt: string;
+                            kind: "assigned" | "due" | "overdue" | "acknowledgement" | "digest";
+                            channel: "email" | "webhook";
+                            recipient: {
+                                id: string;
+                                name: string;
+                            };
+                            /** @description What the notice says happened. */
+                            sentence: string;
+                            reference: string | null;
+                            /** @description The address of the record in Ledger. */
+                            path: string | null;
+                            state: "waiting" | "sent" | "failed" | "given_up";
+                            attempts: number;
+                            lastAttemptAt: string | null;
+                            /** @description Why the last attempt failed. */
+                            reason: string | null;
+                        }[];
+                        hasMore: boolean;
+                        nextCursor: string | null;
+                    };
+                };
+            };
+            /** @description Invalid request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        error: {
+                            code: string;
+                            message: string;
+                            details?: {
+                                [key: string]: unknown;
+                            };
+                        };
+                        requestId: string;
+                    };
+                };
+            };
+            /** @description Authentication required */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        error: {
+                            code: string;
+                            message: string;
+                            details?: {
+                                [key: string]: unknown;
+                            };
+                        };
+                        requestId: string;
+                    };
+                };
+            };
+            /** @description Missing capability */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        error: {
+                            code: string;
+                            message: string;
+                            details?: {
+                                [key: string]: unknown;
+                            };
+                        };
+                        requestId: string;
+                    };
+                };
+            };
+            /** @description Scoped object unavailable */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        error: {
+                            code: string;
+                            message: string;
+                            details?: {
+                                [key: string]: unknown;
+                            };
+                        };
+                        requestId: string;
+                    };
+                };
+            };
+            /** @description Stale basis or conflicting idempotency content */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        error: {
+                            code: string;
+                            message: string;
+                            details?: {
+                                [key: string]: unknown;
+                            };
+                        };
+                        requestId: string;
+                    };
+                };
+            };
+            /** @description Bounded intake exceeded */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        error: {
+                            code: string;
+                            message: string;
+                            details?: {
+                                [key: string]: unknown;
+                            };
+                        };
+                        requestId: string;
+                    };
+                };
+            };
+        };
+    };
+    noticeWebhook: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Success */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        webhook: {
+                            /** @description Where each notice is posted. */
+                            url: string;
+                            /** Format: date-time */
+                            setAt: string;
+                            setBy: {
+                                id: string;
+                                name: string;
+                            };
+                        } | null;
+                        /** @description Whether an http:// address is accepted; only on a local Ledger. */
+                        httpAllowed: boolean;
+                    };
+                };
+            };
+            /** @description Invalid request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        error: {
+                            code: string;
+                            message: string;
+                            details?: {
+                                [key: string]: unknown;
+                            };
+                        };
+                        requestId: string;
+                    };
+                };
+            };
+            /** @description Authentication required */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        error: {
+                            code: string;
+                            message: string;
+                            details?: {
+                                [key: string]: unknown;
+                            };
+                        };
+                        requestId: string;
+                    };
+                };
+            };
+            /** @description Missing capability */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        error: {
+                            code: string;
+                            message: string;
+                            details?: {
+                                [key: string]: unknown;
+                            };
+                        };
+                        requestId: string;
+                    };
+                };
+            };
+            /** @description Scoped object unavailable */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        error: {
+                            code: string;
+                            message: string;
+                            details?: {
+                                [key: string]: unknown;
+                            };
+                        };
+                        requestId: string;
+                    };
+                };
+            };
+            /** @description Stale basis or conflicting idempotency content */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        error: {
+                            code: string;
+                            message: string;
+                            details?: {
+                                [key: string]: unknown;
+                            };
+                        };
+                        requestId: string;
+                    };
+                };
+            };
+            /** @description Bounded intake exceeded */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        error: {
+                            code: string;
+                            message: string;
+                            details?: {
+                                [key: string]: unknown;
+                            };
+                        };
+                        requestId: string;
+                    };
+                };
+            };
+        };
+    };
+    setNoticeWebhook: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    /** @description The https address to post notices to, or null to remove the webhook. */
+                    url: string | null;
+                };
+            };
+        };
+        responses: {
+            /** @description Success */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        webhook: {
+                            /** @description Where each notice is posted. */
+                            url: string;
+                            /** Format: date-time */
+                            setAt: string;
+                            setBy: {
+                                id: string;
+                                name: string;
+                            };
+                        } | null;
+                        /** @description The secret that signs each call, shown only in this response and never again. Null when the webhook was removed. */
+                        secret: string | null;
+                        commandId: string;
                     };
                 };
             };

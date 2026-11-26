@@ -128,6 +128,29 @@
 .topbar-account-panel .button {
   justify-content: flex-start;
 }
+/* The person's own email notices, folded in the account panel. */
+.notice-choices {
+  max-width: 340px;
+  font-size: 13px;
+}
+.notice-choices summary {
+  cursor: pointer;
+  min-height: var(--touch-target);
+  color: var(--ink);
+  font-weight: 600;
+}
+.notice-choices form {
+  display: grid;
+  gap: 8px;
+  padding-top: 8px;
+}
+.notice-choices fieldset {
+  display: grid;
+  gap: 4px;
+  margin: 0;
+  border: 0;
+  padding: 0;
+}
 .topbar--narrow .topbar-disclosure {
   display: contents;
 }

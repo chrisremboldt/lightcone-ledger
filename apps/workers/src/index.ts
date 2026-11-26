@@ -12,6 +12,7 @@ import { projectEvent, PROJECTOR_VERSION } from '@ledger/projections';
 import { runDueEvaluations } from './evaluations.js';
 import { runDueRuleEvaluations } from './rule-evaluations.js';
 import { runDueRuleSelections } from './rule-selections.js';
+import { runDueNotices, type NoticeWorkerOptions } from './notices.js';
 export { startWorkers, type WorkerRuntime, type WorkerRuntimeOptions } from './runtime.js';
 export {
   leaseEvaluations,
@@ -27,6 +28,21 @@ export {
   type RuleEvaluationLease,
   type RuleEvaluationLeaseOptions,
 } from './rule-evaluations.js';
+export {
+  failureReason,
+  leaseNotices,
+  leaseNoticeSchedules,
+  processNoticeSchedule,
+  runDueNotices,
+  sendLeasedNotice,
+  NOTICE_RETRY_DELAYS,
+  type NoticeLease,
+  type NoticeTransport,
+  type NoticeWorkerOptions,
+  type OutgoingCall,
+  type OutgoingEmail,
+  type ScheduleLease,
+} from './notices.js';
 export {
   leaseRuleSelections,
   processRuleSelectionLease,
@@ -138,7 +154,13 @@ export async function processLease(pool: Pool, lease: WorkLease, options: Worker
 }
 export async function runOnce(
   pool: Pool,
-  options: WorkerOptions & { owner?: string; limit?: number; leaseSeconds?: number } = {},
+  options: WorkerOptions & {
+    owner?: string;
+    limit?: number;
+    leaseSeconds?: number;
+    /** Writes and sends notices too; the workers' process passes it, a test that sends none leaves it out. */
+    notices?: NoticeWorkerOptions;
+  } = {},
 ): Promise<number> {
   const leases = await leaseWork(pool, options);
   let completed = 0;
@@ -183,5 +205,7 @@ export async function runOnce(
   }
   completed += await runDueRuleSelections(pool, options);
   completed += await runDueEvaluations(pool, options);
-  return completed + (await runDueRuleEvaluations(pool, options));
+  completed += await runDueRuleEvaluations(pool, options);
+  if (options.notices) completed += await runDueNotices(pool, options.notices);
+  return completed;
 }

@@ -25,6 +25,17 @@ import { CredentialListResponseSchema, IssuedCredentialSchema } from './credenti
 import { DevelopmentTokenRequestSchema, DevelopmentTokenResponseSchema } from './development-tokens.js';
 import { RolePresetListResponseSchema } from './people.js';
 import {
+  NoticeEmailUpdateSchema,
+  NoticeListQuerySchema,
+  NoticeListResponseSchema,
+  NoticeSettingsChangeResponseSchema,
+  NoticeSettingsResponseSchema,
+  NoticeSettingsUpdateSchema,
+  NoticeWebhookResponseSchema,
+  NoticeWebhookSetResponseSchema,
+  NoticeWebhookUpdateSchema,
+} from './notices.js';
+import {
   AdoptionRuleCoverageResponseSchema,
   RuleCoverageSubjectsQuerySchema,
   RuleCoverageSubjectsResponseSchema,
@@ -959,6 +970,22 @@ export const openApiDocument = {
     },
     '/v1/authority/presets': {
       get: operation('rolePresets', RolePresetListResponseSchema),
+    },
+    '/v1/authority/principals/{id}/notice-email': {
+      put: operation('setPersonNoticeEmail', NoticeSettingsChangeResponseSchema, 200, NoticeEmailUpdateSchema, [
+        identifier('id'),
+      ]),
+    },
+    '/v1/notices/settings': {
+      get: operation('noticeSettings', NoticeSettingsResponseSchema),
+      put: operation('updateNoticeSettings', NoticeSettingsChangeResponseSchema, 200, NoticeSettingsUpdateSchema),
+    },
+    '/v1/notices': {
+      get: operation('notices', NoticeListResponseSchema, 200, undefined, queryParameters(NoticeListQuerySchema)),
+    },
+    '/v1/notices/webhook': {
+      get: operation('noticeWebhook', NoticeWebhookResponseSchema),
+      put: operation('setNoticeWebhook', NoticeWebhookSetResponseSchema, 200, NoticeWebhookUpdateSchema),
     },
     '/v1/authority/principals/{id}/development-token': {
       post: {

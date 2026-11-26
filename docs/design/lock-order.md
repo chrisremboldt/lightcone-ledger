@@ -16,7 +16,7 @@ A transaction takes the locks it needs in this order, and never goes back to an 
 | 5 | Subject | `subjects` rows, sorted by id; `FOR SHARE` over a basis closure, `FOR UPDATE` to retain evidence; a projection takes all of its subjects in one statement | `lockSubjects`, `readSubjectEvidence({lock:true})`, `lockSubjectAndClosure`, `retainSubjectEvidence` (domain/src/cuts.ts) |
 | 6 | Record | the record behind the subject: `sms_records`, `receipts`, `finding_views`, `operational_orders`; then the stream head appended to (`streams`, in `appendEvent`) | the record's own module |
 | 7 | Live head | `flight_live_heads`, by `UPDATE`, sorted by flight | `appendLiveChange` (persistence/src/index.ts) |
-| 8 | Queue rows | `work_items`, `selection_work`, `evaluation_deadlines`, `rule_evaluation_work`: inserted with `ON CONFLICT DO NOTHING` | everyone, last |
+| 8 | Queue rows | `work_items`, `selection_work`, `evaluation_deadlines`, `rule_evaluation_work`, and the outbox's `notices` and `notice_deliveries` (`notices.md`): inserted with `ON CONFLICT DO NOTHING` | everyone, last |
 
 This is the order the person-facing commands already take (they are what people wait on), written down. The first sketch put the subject before the flight view; no command does that. Every flight command takes the view first, then the organization row, then the flight's subject: `acceptCommand` (domain/src/index.ts, `requireRow` on the view, then `organization(…,'SHARE')`, then `readSubjectEvidence({lock:true})`, then `retainSubjectEvidence`), `acceptMissionRelease`, `acceptMissionDeparture`, `acceptMissionBriefing` and the acknowledgement. A record command takes the record's subject, then the record (`lockSmsRecord`, domain/src/sms-envelope.ts).
 
@@ -60,6 +60,8 @@ Groups by number from the table above. "Then" is runtime order. Conditional step
 | Safety report submission, signed in or through a link (`submitSafetyReport`), as the reporting channel | 0 the channel's `principals` row SHARE → [6 the link's `safety_report_links` row UPDATE, link path (`countLinkReport`)] → 6 stream → 5 new record (no other transaction can see it) |
 | Issue a reporting link | 6 stream → new `safety_report_links` row (no other transaction can see it) |
 | Revoke a reporting link | 6 `safety_report_links` row UPDATE → 6 stream |
+| Notice settings (`updateNoticeSettings`), a person's own or their address set by an administrator | 6 the person's `notice_settings` row (upsert) → 6 stream `notices:<person>` |
+| Set or remove the organization's webhook (`setNoticeWebhook`) | 2 `notice-webhook|<tenant>` → 6 stream `notices:webhook` → the `notice_webhooks` row |
 | Create flight (`createFlight`) | 2 `origination:` → 5 new → 6 stream → 4 org SHARE → 5 new → 8 |
 
 ### Projections (`projectEvent`, packages/projections/src/index.ts)
@@ -94,6 +96,8 @@ Some branches still read or update a record (group 6: a receipt, an order) befor
 | Projection (`processLease`) | 8 own `work_items` row → `projectEvent`; on failure: 8 → 7 [→ offsets] |
 | Rule selection (`processRuleSelectionLease`) | 3 [flight lease] → 8 own row → `refreshFlightRuleSelection` (3, 4 org SHARE, 5 closure SHARE) or fan-out (inserts only) |
 | Flight deadlines (`processEvaluationLease`) | 3 → 8 own row → 1 shared → 8 inserts |
+| Notice sending (`sendLeasedNotice`) | reads under the lease, sends outside any transaction, then 8 own `notice_deliveries` row → insert into `notice_attempts` |
+| Dated notices and digests (`processNoticeSchedule`) | 8 own `notice_schedules` row → reads without locks → 8 inserts into `notices` and `notice_deliveries` |
 | Rule evaluation (`processRuleEvaluationLease`) | 8 own row → 2 `rule-evaluation:` → 3 [flight subject, through the subject kind's `lockSubject`] → 5 org and subject closures SHARE → 6 stream → 5 UPDATE → 6 `finding_views` → [3, 7 for a flight] → 8; a control-boundary row runs `refreshAcceptedControlRules` (4 org UPDATE → 5 → 6 stream → 5 → 8) |
 
 ### Triggers in the current schema

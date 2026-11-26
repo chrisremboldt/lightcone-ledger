@@ -8,6 +8,7 @@ import {
   untilDatabaseReachable,
   type ObjectStore,
 } from '@ledger/persistence';
+import { configureNoticeChannels, noticeDeployment } from '@ledger/domain';
 import { examplePacksEnabled, registerPackFolder, registerStandardPacks } from '@ledger/standard-packs';
 import { runOnce } from './index.js';
 
@@ -32,6 +33,11 @@ export function startWorkers(options: WorkerRuntimeOptions = {}): WorkerRuntime 
   const env = options.env ?? process.env;
   refuseOwnerConnection('workers', env);
   if (!env.WORKER_DATABASE_URL) throw new Error('WORKER_DATABASE_URL is required for the isolated worker role');
+  // Email notices need a mail server and the address links open at; a start with one and not the other is refused.
+  const deployment = noticeDeployment(env);
+  configureNoticeChannels({ email: Boolean(deployment.smtp) });
+  const ledgerEnv = env.LEDGER_ENV ?? (env.NODE_ENV === 'production' ? 'staging' : 'local');
+  const notices = { deployment, httpWebhooks: ledgerEnv === 'local' };
   // The same choice the API makes, so both hold the same packs.
   registerStandardPacks({ examples: examplePacksEnabled(env) });
   // The same folder the API reads, so both hold the same packs.
@@ -57,7 +63,7 @@ export function startWorkers(options: WorkerRuntimeOptions = {}): WorkerRuntime 
       let failures = 0;
       while (!stopping) {
         try {
-          const completed = await runOnce(pool, { objectStore, trace });
+          const completed = await runOnce(pool, { objectStore, notices, trace });
           failures = 0;
           if (!completed) await pause(250);
         } catch (error: any) {

@@ -134,6 +134,9 @@ export const PrincipalAuthorityEntrySchema = Type.Object(
     signInLinked: Type.Boolean({
       description: 'Whether an identity-provider account is tied to this principal. The identity itself is not shown.',
     }),
+    noticeEmail: Type.Union([Type.String(), Type.Null()], {
+      description: 'The address a person gets email notices at; null when none is kept, and then no email is sent.',
+    }),
   },
   { additionalProperties: false },
 );
@@ -675,6 +678,7 @@ export * from './checked-rules.js';
 export * from './pack-files.js';
 export * from './declared-record-types.js';
 export * from './required-records.js';
+export * from './notices.js';
 export * from './rule-evaluations.js';
 export * from './rule-coverage.js';
 export * from './adoptions.js';
