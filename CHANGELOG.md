@@ -6,7 +6,11 @@ Each release has a section here. Its **Upgrading** part says what a deployment d
 
 ### Upgrading
 
-Nothing yet: main has gained nothing since v0.2.0.
+Nothing to do: main has gained no change to Ledger itself since v0.2.0.
+
+### Fixed
+
+- The Ledger Lite check (`infra/verify-deployment/check-lite.mjs`) gives Ledger the pack folder the Lite file names; without it Ledger refused to start, so the check could never pass. The guides now say what was run from the published image.
 
 ## v0.2.0 (2026-11-27)
 

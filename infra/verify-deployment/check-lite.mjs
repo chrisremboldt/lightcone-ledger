@@ -18,7 +18,7 @@ const work = join(root, '.local/check-lite');
 const port = 18400;
 const base = `http://127.0.0.1:${port}`;
 
-mkdirSync(work, { recursive: true });
+mkdirSync(join(work, 'packs'), { recursive: true });
 writeFileSync(
   join(work, 'ledger.env'),
   [
@@ -37,14 +37,15 @@ writeFileSync(
   join(work, 'ledger-owner.env'),
   'LEDGER_DATABASE_OWNER_PASSWORD=check-owner\nDATABASE_ADMIN_URL=postgresql://ledger_owner:check-owner@postgres:5432/ledger\n',
 );
-// The check's own env files and no pack folder, laid over the Lite file.
+// The check's own env files and an empty pack folder of its own (the Lite file names /packs as the pack folder, and
+// Ledger refuses to start when that folder is missing), laid over the Lite file.
 writeFileSync(
   join(work, 'compose.check.yaml'),
   [
     'services:',
     '  ledger:',
     `    env_file: !override ['${join(work, 'ledger.env')}']`,
-    "    volumes: !override ['ledger-lite-files:/data']",
+    `    volumes: !override ['ledger-lite-files:/data', '${join(work, 'packs')}:/packs:ro']`,
     '  setup:',
     `    env_file: !override ['${join(work, 'ledger.env')}', '${join(work, 'ledger-owner.env')}']`,
     '',

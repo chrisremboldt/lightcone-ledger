@@ -48,7 +48,7 @@ Each step prints one JSON line per thing it did. A failure prints `{"step":"fail
 node infra/verify-deployment/check-lite.mjs
 ```
 
-**Unverified**: written and not yet run. Building the image needs several gigabytes of free disk.
+It was run against the published v0.2.0 image (`LEDGER_IMAGE=ghcr.io/chrisremboldt/lightcone-ledger:v0.2.0`), on linux/arm64, and every check held. **Unverified**: the build from the checkout through this script; building the image needs several gigabytes of free disk.
 
 ## The scripts an operator can use on their own deployment
 
