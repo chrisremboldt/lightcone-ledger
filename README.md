@@ -120,7 +120,7 @@ cd lightcone-ledger
 docker compose -f infra/compose.try.yaml up -d --wait
 ```
 
-It runs the published image (`ghcr.io/chrisremboldt/lightcone-ledger`, for amd64 and arm64) and the migrations, then waits until Ledger answers. If the image cannot be pulled (none has been published yet), the same command builds it from the checkout instead, which takes several minutes; `--build` builds it again after you change the checkout. Then create your own organization, with its name, its [time zone](https://en.wikipedia.org/wiki/List_of_tz_database_time_zones) and your name:
+It runs the published image (`ghcr.io/chrisremboldt/lightcone-ledger`, for amd64 and arm64) and the migrations, then waits until Ledger answers. If the image cannot be pulled, the same command builds it from the checkout instead, which takes several minutes; `--build` builds it again after you change the checkout. Then create your own organization, with its name, its [time zone](https://en.wikipedia.org/wiki/List_of_tz_database_time_zones) and your name:
 
 ```sh
 docker compose -f infra/compose.try.yaml run --rm setup apps/api/dist/create-organization.js \

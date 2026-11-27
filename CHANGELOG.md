@@ -6,6 +6,14 @@ Each release has a section here. Its **Upgrading** part says what a deployment d
 
 ### Upgrading
 
+Nothing yet: main has gained nothing since v0.2.0.
+
+## v0.2.0 (2026-11-27)
+
+The first release published as a container image, `ghcr.io/chrisremboldt/lightcone-ledger`, for linux/amd64 and linux/arm64.
+
+### Upgrading
+
 - **Recreate the database.** Ledger no longer uses PostGIS: the first and fourth migrations were edited in place, so a database made with v0.1.0 no longer matches their checksums and `pnpm db:migrate` refuses it. Make a new database, run the migrations and create your organization again. Ledger is pre-release and has no converter for this.
 - On a database made after that change, migrations 0090 (notices), 0091 (links to a produced set), 0092 (the queue figures for the metrics) and 0093 (grants to a program owner and the operators a program owner follows) run forward with `pnpm db:migrate`; nothing is recreated.
 - PostgreSQL needs no extension any more: plain `postgres:17-alpine`, or a managed PostgreSQL 17, is enough.
