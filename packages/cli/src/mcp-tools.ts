@@ -24,6 +24,7 @@ import { setPerson } from './people-authority.js';
 import { readFlightLog } from './read-log.js';
 import { startRecordMapping } from './record-mapping.js';
 import { draftPlan } from './records-plan.js';
+import { flightTimeReport, occurrencesReport } from './reports.js';
 import { runSafety } from './safety.js';
 
 /**
@@ -89,6 +90,19 @@ const Closed = { additionalProperties: false } as const;
 const Text = (description: string) => Type.String({ minLength: 1, maxLength: 1000, description });
 const Day = (description: string) =>
   Type.String({ pattern: '^[0-9]{4}-[0-9]{2}-[0-9]{2}$', description: `${description}, such as 2026-06-01` });
+const MonthInput = Type.Object(
+  {
+    month: Type.Optional(
+      Type.String({
+        pattern: '^[0-9]{4}-(0[1-9]|1[0-2])$',
+        description:
+          'The calendar month, such as 2026-10, in the organization’s time zone. Left out: the last whole month.',
+      }),
+    ),
+    csv: Type.Optional(Type.Boolean({ description: 'Return the lines of one CSV table instead of the report.' })),
+  },
+  { additionalProperties: false },
+);
 const SubjectKind = Type.Union(
   observationSubjectKindValues.map((kind) => Type.Literal(kind)),
   { description: 'The kind of subject.' },
@@ -267,6 +281,24 @@ export const tools: LedgerTool[] = [
     input: Type.Object({ subjectKind: SubjectKind, subjectId: Text('Your own id for the subject') }, Closed),
     annotations: reads,
     run: async (context, input) => done(await subjectFile(context, `${input.subjectKind}:${input.subjectId}`)),
+  }),
+  tool({
+    name: 'flight_time_by_aircraft',
+    title: 'Flight time by aircraft for a month',
+    description:
+      'For one calendar month in the organization’s time zone: each aircraft the flight records name, its registration and serial number from its identity record, its flights whose takeoff is in the month and their recorded takeoff to landing time, and each flight with no landing time on file. Counts of what is on file, to prepare a report the operator sends itself; it names no rule and Ledger sends nothing. A flight with no flight record is not counted.',
+    input: MonthInput,
+    annotations: reads,
+    run: async (context, input) => done(await flightTimeReport(context, input)),
+  }),
+  tool({
+    name: 'occurrences_by_month',
+    title: 'Occurrences recorded in a month',
+    description:
+      'For one calendar month in the organization’s time zone: the occurrence records on file by record type, each with its day, the flight and aircraft it names by the organization’s own ids, and the fields its record holds. Operator records only: no safety report is read. A type with none on file says only that none was recorded.',
+    input: MonthInput,
+    annotations: reads,
+    run: async (context, input) => done(await occurrencesReport(context, input)),
   }),
   tool({
     name: 'list_packs',

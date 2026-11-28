@@ -1185,6 +1185,162 @@ describe('Open findings from the command line', () => {
   });
 });
 
+describe('Reports of a month from the command line', () => {
+  const period = {
+    month: '2025-03',
+    from: '2025-03-01',
+    until: '2025-03-31',
+    timeZone: 'America/Denver',
+    start: '2025-03-01T07:00:00.000Z',
+    end: '2025-04-01T06:00:00.000Z',
+    ended: true,
+  };
+  const flightTime = {
+    period,
+    flights: {
+      readable: true,
+      aircraft: [
+        {
+          aircraftId: 'RIDGE-AC-1',
+          identity: { registrationNumber: 'RIDGE-REG-1', serialNumber: 'XSQ8-0001', recordedAfterMonth: false },
+          flights: 2,
+          flightSeconds: 6300,
+          withoutTime: 0,
+        },
+        { aircraftId: 'RIDGE-AC-2', identity: null, flights: 2, flightSeconds: 1230, withoutTime: 1 },
+      ],
+      withoutTime: [
+        {
+          aircraftId: 'RIDGE-AC-2',
+          flightId: 'RIDGE-FLT-4',
+          takeoffAt: '2025-03-15T15:00:00.000Z',
+          reason: 'no_landing_time',
+        },
+      ],
+      withoutTimeTruncated: false,
+      total: { aircraft: 2, flights: 4, flightSeconds: 7530, withoutTime: 1 },
+    },
+    computedAt: '2025-04-02T15:00:00.000Z',
+  };
+  const occurrences = {
+    period,
+    occurrences: {
+      readable: true,
+      total: 1,
+      truncated: false,
+      types: [
+        { recordType: 'occurrence.accident', recordVersion: 1, title: 'Accident', count: 0, occurrences: [] },
+        {
+          recordType: 'occurrence.operation-anomaly',
+          recordVersion: 1,
+          title: 'Operation anomaly',
+          count: 1,
+          occurrences: [
+            {
+              recordId: 'observation-1',
+              occurredAt: '2025-03-10T15:30:00.000Z',
+              occurredOn: '2025-03-10',
+              dateOnly: false,
+              flightId: 'RIDGE-FLT-1',
+              aircraftId: 'RIDGE-AC-1',
+              about: [],
+              fields: [{ name: 'summary', label: 'What happened', value: 'Landed at the north pad' }],
+            },
+          ],
+        },
+      ],
+    },
+    computedAt: '2025-04-02T15:00:00.000Z',
+  };
+  const api = () =>
+    fakeApi({
+      'GET /v1/reports/flight-time': { body: flightTime },
+      'GET /v1/reports/occurrences': { body: occurrences },
+    });
+
+  it('prints each aircraft’s flights and time, what is not on file, and what the month is', async () => {
+    const reports = api();
+    const shown = await cli(['reports', 'flight-time', '--month', '2025-03'], reports.fetcher);
+    expect(shown.code, shown.err).toBe(0);
+    expect(reports.sent.map((request) => request.path)).toEqual(['/v1/reports/flight-time?month=2025-03']);
+    const lines = shown.out.split('\n');
+    expect(lines[0]).toBe(
+      'Flight time by aircraft, 2025-03 (2025-03-01 to 2025-03-31, America/Denver), from the flight records on file. A flight belongs to the month of its takeoff.',
+    );
+    expect(lines.find((line) => line.startsWith('RIDGE-AC-1'))).toMatch(
+      /^RIDGE-AC-1 +RIDGE-REG-1 +XSQ8-0001 +2 +1 h 45 min +1\.8 +6300$/,
+    );
+    expect(lines.find((line) => line.startsWith('RIDGE-AC-2'))).toMatch(
+      /^RIDGE-AC-2 +no identity record on file +2 +0 h 20 min +0\.3 +1230$/,
+    );
+    expect(lines.find((line) => line.startsWith('Every aircraft: 2'))).toMatch(/ 4 +2 h 05 min +2\.1 +7530$/);
+    expect(shown.out).toContain('1 flight counted above adds no time:');
+    expect(shown.out).toContain('  RIDGE-FLT-4 (RIDGE-AC-2), took off 2025-03-15 09:00: no landing time on file.');
+    expect(shown.out).toContain('with no flight record, is not counted.');
+    expect(shown.out).toContain('periodStartsOn 2025-03-01 and periodEndsOn 2025-03-31');
+  });
+
+  it('prints one CSV table with --csv, the API’s data with --json, and takes the last whole month when none is given', async () => {
+    const reports = api();
+    const csv = await cli(['reports', 'flight-time', '--csv'], reports.fetcher);
+    expect(reports.sent.map((request) => request.path)).toEqual(['/v1/reports/flight-time']);
+    expect(csv.out.split('\n')).toEqual([
+      'month,timeZone,aircraftId,registrationNumber,serialNumber,flights,flightHours,flightSeconds,flightsWithoutTime,notes',
+      '2025-03,America/Denver,RIDGE-AC-1,RIDGE-REG-1,XSQ8-0001,2,1.8,6300,0,',
+      '2025-03,America/Denver,RIDGE-AC-2,,,2,0.3,1230,1,Aircraft: no identity record on file. Flight RIDGE-FLT-4: no landing time on file.',
+    ]);
+    const json = await cli(['reports', 'occurrences', '--month', '2025-03', '--json'], reports.fetcher);
+    expect(JSON.parse(json.out)).toEqual(occurrences);
+    const table = await cli(['reports', 'occurrences', '--month', '2025-03', '--csv'], reports.fetcher);
+    expect(table.out.split('\n')).toEqual([
+      'month,timeZone,recordType,recordVersion,type,occurredOn,occurredAtLocal,flightId,aircraftId,alsoAbout,summary,recordId',
+      '2025-03,America/Denver,occurrence.operation-anomaly,1,Operation anomaly,2025-03-10,2025-03-10 09:30,RIDGE-FLT-1,RIDGE-AC-1,,Landed at the north pad,observation-1',
+    ]);
+  });
+
+  it('lists the occurrences by record type, a type with none too, each with its fields', async () => {
+    const shown = await cli(['reports', 'occurrences', '--month', '2025-03'], api().fetcher);
+    expect(shown.code, shown.err).toBe(0);
+    const lines = shown.out.split('\n');
+    expect(lines.find((line) => line.startsWith('Accident'))).toMatch(/^Accident +occurrence\.accident +0$/);
+    expect(lines.find((line) => line.startsWith('Every type'))).toMatch(/ 1$/);
+    expect(shown.out).toContain(
+      [
+        'Operation anomaly',
+        '  2025-03-10 09:30, flight RIDGE-FLT-1, aircraft RIDGE-AC-1',
+        '    What happened: Landed at the north pad',
+      ].join('\n'),
+    );
+    expect(shown.out).toContain('No safety report is read.');
+  });
+
+  it('says a part is not the credential’s to read, never a zero, and refuses a month that is not one', async () => {
+    const closed = fakeApi({
+      'GET /v1/reports/flight-time': {
+        body: { period, flights: { readable: false, capability: 'evidence:read' }, computedAt: flightTime.computedAt },
+      },
+    });
+    const shown = await cli(['reports', 'flight-time', '--month', '2025-03'], closed.fetcher);
+    expect(shown.code).toBe(0);
+    expect(shown.out).toContain(
+      "Flights and flight time: not this credential's to read. Reading them needs evidence:read.",
+    );
+    const csv = await cli(['reports', 'flight-time', '--month', '2025-03', '--csv'], closed.fetcher);
+    expect(csv.code).toBe(1);
+    expect(csv.out).toBe('');
+    const reports = api();
+    for (const argv of [
+      ['reports', 'flight-time', '--month', 'March'],
+      ['reports', 'occurrences', '--month', '2025-13'],
+      ['reports', 'flight-time', '2025-03'],
+      ['reports', 'occurrences', '--csv', '--json'],
+      ['reports', 'occurrences', '--from', '2025-03-01'],
+    ])
+      expect((await cli(argv, reports.fetcher)).code, argv.join(' ')).toBe(2);
+    expect(reports.sent).toEqual([]);
+  });
+});
+
 describe('Checking a file of records from the command line', () => {
   it('says a heading that is not a field once, then each row with only its own reasons', () => {
     const unknown = 'Column "Flt #" is not a field of Flight record.';

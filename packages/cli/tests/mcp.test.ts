@@ -105,7 +105,16 @@ describe('The MCP server', () => {
     for (const name of ['check_records', 'import_records', 'read_flight_log']) expect(readOnly[name], name).toBe(false);
     for (const tool of tools.filter((item) => item.name.startsWith('prepare_')))
       expect(tool.annotations.readOnlyHint, tool.name).toBe(true);
-    for (const name of ['record_types', 'coverage', 'list_findings', 'show_finding', 'subject_file', 'list_people'])
+    for (const name of [
+      'record_types',
+      'coverage',
+      'list_findings',
+      'show_finding',
+      'subject_file',
+      'list_people',
+      'flight_time_by_aircraft',
+      'occurrences_by_month',
+    ])
       expect(readOnly[name], name).toBe(true);
     expect(tools.every((tool) => tool.annotations.openWorldHint === false)).toBe(true);
   });

@@ -6,6 +6,7 @@ import {
   type Principal,
 } from '@ledger/contracts';
 import { time, timeRange, timeZone, timeZoneLabel } from './format.js';
+import { calendarDay } from './place.js';
 
 /** Helpers for the Records area. They read only a record type's field metadata, never a record type by name. */
 
@@ -20,6 +21,42 @@ export interface RecordDraft {
   secondarySubjectKind: string;
   values: Record<string, string>;
   units: Record<string, string>;
+}
+
+/** Whether a field takes a value an address handed over: a choice only as one of its options, a date only as a day. */
+function takesFill(field: RecordField, value: string): boolean {
+  switch (field.kind) {
+    case 'select':
+      return Boolean(field.options?.some((option) => option.value === value));
+    case 'date':
+      return calendarDay(value);
+    case 'date_time':
+      return /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}(:\d{2})?$/.test(value);
+    case 'boolean':
+      return value === 'yes' || value === 'no';
+    case 'number':
+      return Number.isFinite(Number(value));
+    // Prose is written by a person, never handed over by an address.
+    case 'long_text':
+      return false;
+    default:
+      return true;
+  }
+}
+
+/**
+ * An entry that starts with values the address of the form carries, such as the period a report page hands over, for
+ * any record type. Only fields the type has are filled, each only with a value its kind takes; the rest of what the
+ * address names is left out. Returns the draft and the fields it filled, so the form can say which they are.
+ */
+export function filledDraft(
+  type: RecordTypeSummary,
+  fill: Readonly<Record<string, string>>,
+): { draft: RecordDraft; filled: RecordField[] } {
+  const draft = emptyDraft(type);
+  const filled = type.fields.filter((field) => fill[field.name] !== undefined && takesFill(field, fill[field.name]!));
+  for (const field of filled) draft.values[field.name] = fill[field.name]!;
+  return { draft, filled };
 }
 
 export const typeKey = (type: Pick<RecordTypeSummary, 'recordType' | 'recordVersion'>) =>

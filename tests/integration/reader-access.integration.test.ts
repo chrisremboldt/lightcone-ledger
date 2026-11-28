@@ -105,6 +105,10 @@ describe.runIf(process.env.LEDGER_ENV !== 'staging')('A reader looks and changes
     '/v1/reports/findings-by-month': '/v1/reports/findings-by-month',
     '/v1/reports/indicators': '/v1/reports/indicators',
     '/v1/reports/indicators/:indicatorId/versions/:version': 'indicator-history',
+    // A month's flight time by aircraft and its occurrences count operator records, which a reader reads. Neither
+    // reads a safety report (see month-reports.integration.test.ts).
+    '/v1/reports/flight-time': '/v1/reports/flight-time?month=2026-01',
+    '/v1/reports/occurrences': '/v1/reports/occurrences?month=2026-01',
     // The operators the organization follows, under Reports: the counts their own Ledgers answered. Following and
     // removing one needs authority:write, which a reader does not hold.
     '/v1/program-operators': '/v1/program-operators',
@@ -236,6 +240,11 @@ describe.runIf(process.env.LEDGER_ENV !== 'staging')('A reader looks and changes
     expect(JSON.stringify(file)).toContain(ids.aircraft);
     const summary = await read(reader, '/v1/reports/summary?from=2026-01-01&until=2026-01-31');
     expect(summary.hazards).toEqual({ readable: false, capability: 'sms:read' });
+    for (const [url, part] of [
+      ['/v1/reports/flight-time?month=2026-01', 'flights'],
+      ['/v1/reports/occurrences?month=2026-01', 'occurrences'],
+    ] as const)
+      expect((await read(reader, url))[part], url).toMatchObject({ readable: true });
     const home = await read(reader, '/v1/sms/home');
     expect(home).toMatchObject({ people: [], reportLinks: [], attention: { waitingOnMe: [], overdue: [] } });
   });

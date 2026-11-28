@@ -1739,6 +1739,46 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/reports/flight-time": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Count flight time by aircraft for one month
+         * @description Returns, for one calendar month in the organization’s time zone (the last whole month unless one is given), each aircraft the flight records name with its registration and serial number from its identity record, its flights whose takeoff is in the month and their recorded takeoff to landing time in whole seconds. A flight with no landing time on file is counted, listed with what is missing, and adds no time; an aircraft with no identity record says so. A flight known only from a source’s report or a plan, with no flight record, is not counted. Counts of what is on file: it names no rule and says nothing about one. The part says so instead of a number to a reader who may not read records. Needs `evidence:read` or `sms:read`; the flights need `evidence:read`.
+         */
+        get: operations["flightTimeByAircraft"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/reports/occurrences": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List the occurrences recorded for one month, by record type
+         * @description Returns, for one calendar month in the organization’s time zone (the last whole month unless one is given), the current occurrence records on file by record type: each with the day it occurred, the flight and aircraft it names by the organization’s own ids, and its own fields. Every record type whose id begins `occurrence.` is read, the built-in ones and those an adopted pack declares. Operator records only: no safety report and nothing restricted is read. The part says so instead of a number to a reader who may not read records. Needs `evidence:read` or `sms:read`; the occurrences need `evidence:read`.
+         */
+        get: operations["occurrencesByMonth"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/control-indicator-reviews": {
         parameters: {
             query?: never;
@@ -35448,6 +35488,394 @@ export interface operations {
                         }[];
                         /** @description More results are recorded than are listed: the newest are listed. */
                         truncated: boolean;
+                        /** Format: date-time */
+                        computedAt: string;
+                    };
+                };
+            };
+            /** @description Invalid request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        error: {
+                            code: string;
+                            message: string;
+                            details?: {
+                                [key: string]: unknown;
+                            };
+                        };
+                        requestId: string;
+                    };
+                };
+            };
+            /** @description Authentication required */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        error: {
+                            code: string;
+                            message: string;
+                            details?: {
+                                [key: string]: unknown;
+                            };
+                        };
+                        requestId: string;
+                    };
+                };
+            };
+            /** @description Missing capability */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        error: {
+                            code: string;
+                            message: string;
+                            details?: {
+                                [key: string]: unknown;
+                            };
+                        };
+                        requestId: string;
+                    };
+                };
+            };
+            /** @description Scoped object unavailable */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        error: {
+                            code: string;
+                            message: string;
+                            details?: {
+                                [key: string]: unknown;
+                            };
+                        };
+                        requestId: string;
+                    };
+                };
+            };
+            /** @description Stale basis or conflicting idempotency content */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        error: {
+                            code: string;
+                            message: string;
+                            details?: {
+                                [key: string]: unknown;
+                            };
+                        };
+                        requestId: string;
+                    };
+                };
+            };
+            /** @description Bounded intake exceeded */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        error: {
+                            code: string;
+                            message: string;
+                            details?: {
+                                [key: string]: unknown;
+                            };
+                        };
+                        requestId: string;
+                    };
+                };
+            };
+        };
+    };
+    flightTimeByAircraft: {
+        parameters: {
+            query?: {
+                month?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Success */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @description One calendar month in the organization’s time zone. */
+                        period: {
+                            month: string;
+                            /** @description The first day of the month. */
+                            from: string;
+                            /** @description The last day of the month. */
+                            until: string;
+                            timeZone: string;
+                            /** Format: date-time */
+                            start: string;
+                            /** Format: date-time */
+                            end: string;
+                            /** @description False while the month is not over: the counts are of what is on file so far. */
+                            ended: boolean;
+                        };
+                        /** @description Flights and flight time by aircraft, from the flight records on file. Needs evidence:read. */
+                        flights: {
+                            /** @constant */
+                            readable: true;
+                            /** @description Each aircraft with a flight in the month, by its id; flights naming no aircraft come last. */
+                            aircraft: {
+                                /** @description The organization’s own id for the aircraft the flight records name; null for the flight records that name no aircraft. */
+                                aircraftId: string | null;
+                                /** @description From the aircraft’s identity record; null when none is on file. */
+                                identity: {
+                                    registrationNumber: string | null;
+                                    serialNumber: string | null;
+                                    /** @description True when no identity record was on file by the end of the month and these come from the first one recorded after it. */
+                                    recordedAfterMonth: boolean;
+                                } | null;
+                                /** @description Flights with a current flight record naming the aircraft whose takeoff is in the month. */
+                                flights: number;
+                                /** @description Their recorded takeoff to landing time, added up, in whole seconds. */
+                                flightSeconds: number;
+                                /** @description Of those flights, the ones with no landing time on file or a landing not after the takeoff. */
+                                withoutTime: number;
+                            }[];
+                            /** @description Each flight counted that adds no time, and why, by takeoff. */
+                            withoutTime: {
+                                aircraftId: string | null;
+                                flightId: string;
+                                /** Format: date-time */
+                                takeoffAt: string;
+                                reason: "no_landing_time" | "landing_not_after_takeoff";
+                            }[];
+                            /** @description More flights add no time than are listed; all of them are counted. */
+                            withoutTimeTruncated: boolean;
+                            total: {
+                                /** @description Aircraft the flight records name. */
+                                aircraft: number;
+                                flights: number;
+                                flightSeconds: number;
+                                withoutTime: number;
+                            };
+                        } | {
+                            /** @constant */
+                            readable: false;
+                            /** @description What reading this part needs, which the reader does not hold. */
+                            capability: string;
+                        };
+                        /** Format: date-time */
+                        computedAt: string;
+                    };
+                };
+            };
+            /** @description Invalid request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        error: {
+                            code: string;
+                            message: string;
+                            details?: {
+                                [key: string]: unknown;
+                            };
+                        };
+                        requestId: string;
+                    };
+                };
+            };
+            /** @description Authentication required */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        error: {
+                            code: string;
+                            message: string;
+                            details?: {
+                                [key: string]: unknown;
+                            };
+                        };
+                        requestId: string;
+                    };
+                };
+            };
+            /** @description Missing capability */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        error: {
+                            code: string;
+                            message: string;
+                            details?: {
+                                [key: string]: unknown;
+                            };
+                        };
+                        requestId: string;
+                    };
+                };
+            };
+            /** @description Scoped object unavailable */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        error: {
+                            code: string;
+                            message: string;
+                            details?: {
+                                [key: string]: unknown;
+                            };
+                        };
+                        requestId: string;
+                    };
+                };
+            };
+            /** @description Stale basis or conflicting idempotency content */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        error: {
+                            code: string;
+                            message: string;
+                            details?: {
+                                [key: string]: unknown;
+                            };
+                        };
+                        requestId: string;
+                    };
+                };
+            };
+            /** @description Bounded intake exceeded */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        error: {
+                            code: string;
+                            message: string;
+                            details?: {
+                                [key: string]: unknown;
+                            };
+                        };
+                        requestId: string;
+                    };
+                };
+            };
+        };
+    };
+    occurrencesByMonth: {
+        parameters: {
+            query?: {
+                month?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Success */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @description One calendar month in the organization’s time zone. */
+                        period: {
+                            month: string;
+                            /** @description The first day of the month. */
+                            from: string;
+                            /** @description The last day of the month. */
+                            until: string;
+                            timeZone: string;
+                            /** Format: date-time */
+                            start: string;
+                            /** Format: date-time */
+                            end: string;
+                            /** @description False while the month is not over: the counts are of what is on file so far. */
+                            ended: boolean;
+                        };
+                        /** @description Occurrence records on file for the month, by record type. Needs evidence:read. */
+                        occurrences: {
+                            /** @constant */
+                            readable: true;
+                            /** @description Each occurrence record type the organization has, by title; a type with none on file for the month has a count of zero. */
+                            types: {
+                                recordType: string;
+                                recordVersion: number;
+                                title: string;
+                                /** @description Current records of the type that occurred in the month. */
+                                count: number;
+                                /** @description By when each occurred. */
+                                occurrences: {
+                                    recordId: string;
+                                    /** Format: date-time */
+                                    occurredAt: string;
+                                    /** @description The day it occurred, in the organization’s time zone. */
+                                    occurredOn: string;
+                                    /** @description True when the record gives the day alone, with no time of day. */
+                                    dateOnly: boolean;
+                                    /** @description The flight the record names, by the organization’s id. */
+                                    flightId: string | null;
+                                    /** @description The aircraft the record names, by the organization’s id. */
+                                    aircraftId: string | null;
+                                    /** @description What else the record names: a site or a component, by the organization’s id. */
+                                    about: {
+                                        kind: string;
+                                        id: string;
+                                    }[];
+                                    /** @description The record’s own fields that have a value, in the order its record type lists them, but for the one that gives when it occurred. */
+                                    fields: {
+                                        name: string;
+                                        label: string;
+                                        /** @description The value as a person reads it: a choice by its label, a time in the organization’s time zone. */
+                                        value: string;
+                                    }[];
+                                }[];
+                            }[];
+                            total: number;
+                            /** @description More occurrences are on file for the month than are listed; all of them are counted. */
+                            truncated: boolean;
+                        } | {
+                            /** @constant */
+                            readable: false;
+                            /** @description What reading this part needs, which the reader does not hold. */
+                            capability: string;
+                        };
                         /** Format: date-time */
                         computedAt: string;
                     };

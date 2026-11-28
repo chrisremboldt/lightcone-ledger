@@ -23,14 +23,21 @@ export type Place =
   | { section: 'records'; pane: 'produce' | 'required' }
   /** The produced records, or one produced set with its links when id is given. */
   | { section: 'records'; pane: 'produced'; id?: string }
-  | { section: 'records'; pane: RecordTypePane; type?: string }
+  /**
+   * Records by type. On the entry form, `fill` gives values for fields of the type to start with, such as the period
+   * a report page hands over: plain values only (a day, a choice, an id), never text a person typed.
+   */
+  | { section: 'records'; pane: RecordTypePane; type?: string; fill?: Record<string, string> }
   | { section: 'rules'; pane: 'coverage'; packId?: string }
   | { section: 'rules'; pane: 'open'; owner?: 'none'; subject?: FindingSubject }
   | { section: 'rules'; pane: 'subjects' }
   | { section: 'people'; personId?: string }
   /** The organization's notices, and its webhook for them. */
   | { section: 'people'; pane: NoticesPane }
-  /** The reports: their list, a period's summary, findings per month, indicators over time and one flight's file. */
+  /**
+   * The reports: their list, a period's summary, findings per month, indicators over time, one flight's file, and a
+   * month's flight time by aircraft and occurrences.
+   */
   | ({ section: 'reports' } & ReportView)
   /** An address that names no place here. */
   | { section: 'unknown'; path: string };
@@ -49,6 +56,9 @@ export type ReportView =
   | { report: 'findings'; from?: string; until?: string }
   | { report: 'indicators'; id?: string; version?: number }
   | { report: 'flight'; flightId: string }
+  /** A calendar month, YYYY-MM; with none, the last whole month in the organization's time zone. */
+  | { report: 'flight-time'; month?: string }
+  | { report: 'occurrences'; month?: string }
   | { report: 'grants' }
   | { report: 'operators' };
 /**
@@ -98,6 +108,31 @@ const safetyViewSegments: Record<Exclude<SafetyView, 'home' | 'new-risk-matrix'>
 const recordTypePanes: readonly RecordTypePane[] = ['browse', 'import', 'enter'];
 /** Query parameters a place owns; every other parameter of the address, such as ?autopilot=, is kept as it is. */
 export const placeParameters = ['flight', 'owner', ...choiceNames] as const;
+/**
+ * The entry form's starting values, one parameter per field: `fill.periodStartsOn=2026-10-01`. Any record type, any
+ * field. A value is a plain token, so an address still carries no typed text.
+ */
+const FILL_PREFIX = 'fill.';
+const fillField = /^[A-Za-z][A-Za-z0-9]{0,79}$/;
+const fillValue = /^[A-Za-z0-9][A-Za-z0-9_.:-]{0,79}$/;
+const FILL_LIMIT = 20;
+
+/** The starting values an address may carry: plain tokens for plainly named fields, and no more than a form's worth. */
+export function plainFill(values: Iterable<readonly [string, string]>): Record<string, string> | undefined {
+  const fill: Record<string, string> = {};
+  for (const [name, value] of values)
+    if (fillField.test(name) && fillValue.test(value) && Object.keys(fill).length < FILL_LIMIT) fill[name] = value;
+  return Object.keys(fill).length ? fill : undefined;
+}
+
+function fillQuery(fill: Record<string, string> | undefined): Record<string, string> {
+  return Object.fromEntries(
+    Object.entries(plainFill(Object.entries(fill ?? {})) ?? {}).map(([name, value]) => [
+      `${FILL_PREFIX}${name}`,
+      value,
+    ]),
+  );
+}
 
 /** An id as one segment of a path. `@` and `:` are allowed in a segment and keep a record type such as person.training@1 readable. */
 function segment(id: string): string {
@@ -148,7 +183,10 @@ export function placeAddress(place: Place): { path: string; query: Record<string
       if (place.pane === 'produced')
         return { path: at('records', 'produced', ...(place.id ? [place.id] : [])), query: {} };
       if (!('type' in place) || !place.type) return { path: at('records', place.pane), query: {} };
-      return { path: at('records', place.pane, place.type), query: {} };
+      return {
+        path: at('records', place.pane, place.type),
+        query: place.pane === 'enter' ? fillQuery(place.fill) : {},
+      };
     case 'rules':
       if (place.pane === 'coverage')
         return { path: place.packId ? at('rules', 'coverage', place.packId) : '/rules', query: {} };
@@ -183,6 +221,9 @@ function reportPath(place: ReportView, at: (...parts: string[]) => string): stri
         : '/reports/indicators';
     case 'flight':
       return at('reports', 'flights', place.flightId);
+    case 'flight-time':
+    case 'occurrences':
+      return at('reports', place.report, ...(place.month ? [place.month] : []));
     case 'grants':
       return '/reports/grants';
     case 'operators':
@@ -215,6 +256,8 @@ function reportsPlace(rest: string[]): Place | null {
   if (first === 'indicators' && one && two && /^[1-9][0-9]{0,8}$/.test(two))
     return reports({ report: 'indicators', id: one, version: Number(two) });
   if (first === 'flights' && one && !two) return reports({ report: 'flight', flightId: one });
+  if ((first === 'flight-time' || first === 'occurrences') && !two && (!one || calendarMonth(one)))
+    return reports({ report: first, ...(one ? { month: one } : {}) });
   if (first === 'grants' && !one) return reports({ report: 'grants' });
   if (first === 'operators' && !one) return reports({ report: 'operators' });
   return null;
@@ -258,7 +301,7 @@ export function placeFromAddress(pathname: string, search = ''): Place {
     case 'safety':
       return safetyPlace(rest, query) ?? unknown;
     case 'records':
-      return recordsPlace(rest) ?? unknown;
+      return recordsPlace(rest, query) ?? unknown;
     case 'rules':
       return rulesPlace(rest, query) ?? unknown;
     case 'reports':
@@ -306,14 +349,24 @@ function safetyPlace(rest: string[], query: URLSearchParams): Place | null {
   return null;
 }
 
-function recordsPlace(rest: string[]): Place | null {
+function recordsPlace(rest: string[], query: URLSearchParams): Place | null {
   if (rest.length === 0) return { section: 'records', pane: 'subjects' };
   const [first, second] = rest;
   if ((first === 'produce' || first === 'required') && rest.length === 1) return { section: 'records', pane: first };
   if (first === 'produced' && rest.length <= 2)
     return { section: 'records', pane: 'produced', ...(second ? { id: second } : {}) };
   const pane = recordTypePanes.find((value) => value === first);
-  if (pane && rest.length <= 2) return { section: 'records', pane, ...(second ? { type: second } : {}) };
+  if (pane && rest.length <= 2) {
+    const fill =
+      pane === 'enter' && second
+        ? plainFill(
+            [...query].flatMap(([name, value]) =>
+              name.startsWith(FILL_PREFIX) ? [[name.slice(FILL_PREFIX.length), value] as const] : [],
+            ),
+          )
+        : undefined;
+    return { section: 'records', pane, ...(second ? { type: second } : {}), ...(fill ? { fill } : {}) };
+  }
   const kind = recordSubjectKinds.find(([value]) => value === first)?.[0];
   if (kind && rest.length <= 2)
     return { section: 'records', pane: 'subjects', kind, ...(second ? { id: second } : {}) };
@@ -435,6 +488,10 @@ export function placeTitle(place: Place, thing?: string): string {
           return title(place.id ? (thing ?? `Indicator ${place.id}`) : 'Indicators over time', 'Reports');
         case 'flight':
           return title(thing ?? `Flight ${place.flightId}`, 'Reports');
+        case 'flight-time':
+          return title(place.month ? `Flight time by aircraft ${place.month}` : 'Flight time by aircraft', 'Reports');
+        case 'occurrences':
+          return title(place.month ? `Occurrences ${place.month}` : 'Occurrences by month', 'Reports');
         case 'grants':
           return title('Shown to program owners', 'Reports');
         case 'operators':
@@ -503,6 +560,7 @@ export function addressOf(place: Place, search: string): string {
   const { path, query } = placeAddress(place);
   const kept = new URLSearchParams(search);
   for (const name of placeParameters) kept.delete(name);
+  for (const name of [...kept.keys()]) if (name.startsWith(FILL_PREFIX)) kept.delete(name);
   for (const [name, value] of Object.entries(query)) kept.set(name, value);
   const rest = kept.toString();
   return rest ? `${path}?${rest}` : path;

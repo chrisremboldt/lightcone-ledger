@@ -134,6 +134,42 @@
   border-bottom: 0;
   font-weight: 700;
 }
+/* A month's report: its buttons beside its heading, and tables wider than a phone scroll inside their own box. */
+.report-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 8px;
+}
+.report-wide {
+  overflow-x: auto;
+}
+.report-numbers td small {
+  display: block;
+  color: var(--muted);
+}
+.report-without-time {
+  margin: 4px 0 0;
+  font-weight: 400;
+}
+.report-absent {
+  color: var(--ink-2);
+  font-style: italic;
+}
+.report-occurrences td,
+.report-occurrences thead th:not(:first-child) {
+  text-align: left;
+}
+.report-occurrences tbody th {
+  white-space: nowrap;
+}
+.report-occurrences .records-fields {
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  min-width: 220px;
+}
+.report-sent {
+  margin-top: 18px;
+}
 .report-not-yours {
   padding: 8px 10px;
   border: 1px dashed var(--line-2);
@@ -279,6 +315,10 @@
 @media (max-width: 719.98px) {
   .report-chart-svg text {
     font-size: 14px;
+  }
+  /* A month's report has two buttons beside its heading: on a phone they go under it. */
+  .report-page .thread-title {
+    flex-wrap: wrap;
   }
   .report-facts > div {
     display: grid;

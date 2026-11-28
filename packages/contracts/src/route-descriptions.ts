@@ -462,6 +462,16 @@ export const routeDescriptions: Record<string, { summary: string; description: s
     description:
       'Returns every recorded result of one indicator definition version, across its control windows, ordered by window: the rate each states or that it states none, its counts, and the limit the definition sets, if any. Needs `evidence:read`.',
   },
+  flightTimeByAircraft: {
+    summary: 'Count flight time by aircraft for one month',
+    description:
+      'Returns, for one calendar month in the organization’s time zone (the last whole month unless one is given), each aircraft the flight records name with its registration and serial number from its identity record, its flights whose takeoff is in the month and their recorded takeoff to landing time in whole seconds. A flight with no landing time on file is counted, listed with what is missing, and adds no time; an aircraft with no identity record says so. A flight known only from a source’s report or a plan, with no flight record, is not counted. Counts of what is on file: it names no rule and says nothing about one. The part says so instead of a number to a reader who may not read records. Needs `evidence:read` or `sms:read`; the flights need `evidence:read`.',
+  },
+  occurrencesByMonth: {
+    summary: 'List the occurrences recorded for one month, by record type',
+    description:
+      'Returns, for one calendar month in the organization’s time zone (the last whole month unless one is given), the current occurrence records on file by record type: each with the day it occurred, the flight and aircraft it names by the organization’s own ids, and its own fields. Every record type whose id begins `occurrence.` is read, the built-in ones and those an adopted pack declares. Operator records only: no safety report and nothing restricted is read. The part says so instead of a number to a reader who may not read records. Needs `evidence:read` or `sms:read`; the occurrences need `evidence:read`.',
+  },
   getControlIndicatorResult: {
     summary: 'Read one recorded indicator result',
     description:

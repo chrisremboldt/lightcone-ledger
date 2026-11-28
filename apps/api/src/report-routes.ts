@@ -2,12 +2,21 @@ import type { FastifyInstance, FastifyRequest } from 'fastify';
 import {
   FindingsByMonthQuerySchema,
   ReportIndicatorParamsSchema,
+  ReportMonthQuerySchema,
   ReportPeriodQuerySchema,
   type FindingsByMonthQuery,
   type ReportIndicatorParams,
+  type ReportMonthQuery,
   type ReportPeriodQuery,
 } from '@ledger/contracts';
-import { getFindingsByMonth, getIndicatorHistory, getPeriodSummary, listReportIndicators } from '@ledger/domain';
+import {
+  getFindingsByMonth,
+  getFlightTimeByAircraft,
+  getIndicatorHistory,
+  getOccurrencesByMonth,
+  getPeriodSummary,
+  listReportIndicators,
+} from '@ledger/domain';
 import { withScope, type AuthContext, type Pool, type PoolClient } from '@ledger/persistence';
 
 /** The paths of the reports: reads only, each counted by the database under the reader's own scope. */
@@ -16,9 +25,14 @@ export const REPORT_PATHS = [
   '/v1/reports/findings-by-month',
   '/v1/reports/indicators',
   '/v1/reports/indicators/:indicatorId/versions/:version',
+  '/v1/reports/flight-time',
+  '/v1/reports/occurrences',
 ] as const;
 
-/** A summary of a period, findings per month by rule, and indicators over time (docs/design/reports.md). */
+/**
+ * A summary of a period, findings per month by rule, indicators over time, and a month's flight time by aircraft and
+ * occurrences (docs/design/reports.md).
+ */
 export function registerReportRoutes(
   app: FastifyInstance,
   options: { pool: Pool; principal: (request: FastifyRequest) => AuthContext },
@@ -58,6 +72,23 @@ export function registerReportRoutes(
       return read(request, 'evidence:read', (client, who) =>
         getIndicatorHistory(client, who, request.params.indicatorId, Number(request.params.version)),
       );
+    },
+  );
+  // Like the summary, each of these names its part as not the reader's own instead of refusing the page.
+  app.get<{ Querystring: ReportMonthQuery }>(
+    REPORT_PATHS[4],
+    { schema: { querystring: ReportMonthQuerySchema } },
+    async (request, reply) => {
+      reply.header('Cache-Control', 'private, no-store');
+      return read(request, undefined, (client, who) => getFlightTimeByAircraft(client, who, request.query));
+    },
+  );
+  app.get<{ Querystring: ReportMonthQuery }>(
+    REPORT_PATHS[5],
+    { schema: { querystring: ReportMonthQuerySchema } },
+    async (request, reply) => {
+      reply.header('Cache-Control', 'private, no-store');
+      return read(request, undefined, (client, who) => getOccurrencesByMonth(client, who, request.query));
     },
   );
 }

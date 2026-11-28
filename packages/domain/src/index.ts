@@ -1443,6 +1443,14 @@ export {
   monthsBetween,
 } from './reports.js';
 export {
+  flightTimeByAircraft,
+  getFlightTimeByAircraft,
+  getOccurrencesByMonth,
+  monthOccurrence,
+  occurrenceTypes,
+  recordFieldText,
+} from './month-reports.js';
+export {
   addProgramOperator,
   askProgramRead,
   listProgramOperatorAnswers,

@@ -2,9 +2,12 @@ import type { DevelopmentTokenResponse } from './development-tokens.js';
 import type {
   FindingsByMonth,
   FindingsByMonthQuery,
+  FlightTimeByAircraft,
   IndicatorHistory,
+  OccurrencesByMonth,
   PeriodSummary,
   ReportIndicatorList,
+  ReportMonthQuery,
   ReportPeriodQuery,
 } from './reports.js';
 import type {
@@ -663,6 +666,14 @@ export class LedgerClient {
       `/v1/reports/indicators/${encodeURIComponent(indicatorId)}/versions/${version}`,
       { cache: 'no-store' },
     );
+  }
+  /** Flight time by aircraft for one calendar month; the last whole month when none is given. */
+  flightTimeByAircraft(query: ReportMonthQuery = {}) {
+    return this.request<FlightTimeByAircraft>(`/v1/reports/flight-time${queryString(query)}`, { cache: 'no-store' });
+  }
+  /** The occurrences recorded for one calendar month, by record type. */
+  occurrencesByMonth(query: ReportMonthQuery = {}) {
+    return this.request<OccurrencesByMonth>(`/v1/reports/occurrences${queryString(query)}`, { cache: 'no-store' });
   }
   flightsOnRecord() {
     return this.request<FlightsOnRecordResponse>('/v1/organization/flights-on-record');

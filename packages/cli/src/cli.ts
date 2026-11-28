@@ -29,6 +29,7 @@ import { serveMcp } from './mcp.js';
 import { readFlightLog } from './read-log.js';
 import { startRecordMapping } from './record-mapping.js';
 import { draftPlan, produceRecords } from './records-plan.js';
+import { flightTimeReport, occurrencesReport } from './reports.js';
 import { addPerson, listPeople, listPresets } from './people.js';
 import { issuePersonToken, setPerson } from './people-authority.js';
 import { runSafety } from './safety.js';
@@ -97,6 +98,17 @@ export const usage = `Usage: pnpm ledger <noun> <verb> [options]
   findings close --rule <rule> --as <why> [same options as take]
                                          the same, closing them all: --as corrected-by-record, accepted,
                                          condition-ended or recorded-in-error; you must own each first
+  reports flight-time [--month <YYYY-MM>] [--csv]
+                                         flight time by aircraft for a calendar month in your organization's time
+                                         zone, the last whole month unless one is given: each aircraft's registration
+                                         and serial number, its flights and their recorded takeoff to landing time,
+                                         and each flight with no landing time on file; --csv prints one table, with
+                                         decimal hours and the exact seconds
+  reports occurrences [--month <YYYY-MM>] [--csv]
+                                         the occurrence records on file for a calendar month, by record type, each
+                                         with its day, the flight and aircraft it names and its fields; --csv prints
+                                         one table. Both count what is on file, to prepare a report you send
+                                         yourself: Ledger sends nothing
   plan draft [--out <file>] [--open]     a recordkeeping plan drafted from the records your adopted packs require;
                                          opened as a draft controlled document only with --open, by a person
   people list                            everyone in the organization and what each may do
@@ -203,6 +215,8 @@ const options = {
   'sign-in-issuer': { type: 'string' },
   hazard: { type: 'string', multiple: true },
   recipient: { type: 'string', multiple: true },
+  month: { type: 'string' },
+  csv: { type: 'boolean' },
 } as const;
 
 function positiveInteger(text: string | undefined, flag: string): number | undefined {
@@ -242,6 +256,8 @@ const commandOptions: Record<string, readonly string[]> = {
     'out',
   ],
   'plan draft': ['out', 'open'],
+  'reports flight-time': ['month', 'csv'],
+  'reports occurrences': ['month', 'csv'],
   'packs list': ['all'],
   'packs adopted': [],
   'packs show': ['version'],
@@ -378,6 +394,13 @@ async function dispatch(
         out: text('out') === undefined ? undefined : path(text('out')!),
         open: values.open === true,
       });
+    case 'reports flight-time':
+    case 'reports occurrences': {
+      if (rest.length) throw new UsageError(`reports ${verb} takes its month as --month: ${rest.join(' ')}`);
+      if (values.csv === true && values.json === true) throw new UsageError('Give --csv or --json, not both.');
+      const options = { month: text('month'), csv: values.csv === true };
+      return verb === 'flight-time' ? flightTimeReport(context, options) : occurrencesReport(context, options);
+    }
     case 'records subject':
       return subjectFile(context, needs(rest, 1, 'one subject as <kind>:<id>, such as person:PIL-1')[0]!);
     case 'packs list':

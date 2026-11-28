@@ -172,8 +172,10 @@
     border: 0;
     padding: 0;
   }
-  /* The choice of period, order or rule is the screen's; the page says which it shows. */
+  /* The choice of period, order or rule is the screen's; the page says which it shows. What to do next in Ledger
+     once a report is sent is the screen's too. */
   .report-period,
+  .report-sent,
   .records-order,
   .shared-records-open {
     display: none !important;

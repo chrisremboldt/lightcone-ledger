@@ -218,6 +218,16 @@ describe.runIf(process.env.LEDGER_ENV !== 'staging')('The MCP server against Led
     expect(file.lines.join('\n')).toContain('Records on file about it');
     expect(file.lines.join('\n')).toContain('aircraft.identity');
 
+    // A month's flight time by aircraft and its occurrences, counted from the records just imported.
+    const flightTime = await call('flight_time_by_aircraft', { month: '2026-11' });
+    expect(flightTime.lines[0]).toContain('2026-11 (2026-11-01 to 2026-11-30, America/Denver)');
+    expect(flightTime.lines.find((line) => line.startsWith('Every aircraft: 3'))).toMatch(
+      / 3 +2 h 01 min +2\.0 +7260$/,
+    );
+    const occurred = await call('occurrences_by_month', { month: '2026-11', csv: true });
+    expect(occurred.lines).toHaveLength(1);
+    expect((occurred.data.occurrences as { total: number }).total).toBe(0);
+
     // A tool reads no more than the credential may: this one may not read who may do what.
     const people = await client.callTool({ name: 'list_people', arguments: {} });
     expect(people.isError).toBe(true);

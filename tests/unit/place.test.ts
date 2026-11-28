@@ -61,6 +61,16 @@ const places: Place[] = [
   { section: 'reports', report: 'indicators' },
   { section: 'reports', report: 'indicators', id: 'example-airspace.excursions-per-flight-hour', version: 2 },
   { section: 'reports', report: 'flight', flightId: 'RIDGE-FLT-1' },
+  { section: 'reports', report: 'flight-time' },
+  { section: 'reports', report: 'flight-time', month: '2026-10' },
+  { section: 'reports', report: 'occurrences' },
+  { section: 'reports', report: 'occurrences', month: '2026-10' },
+  {
+    section: 'records',
+    pane: 'enter',
+    type: 'organization.report@1',
+    fill: { periodStartsOn: '2026-10-01', periodEndsOn: '2026-10-31' },
+  },
   { section: 'reports', report: 'grants' },
   { section: 'reports', report: 'operators' },
 ];
@@ -123,6 +133,10 @@ describe('places and their addresses', () => {
     '/reports/indicators/one/zero',
     '/reports/flights',
     '/reports/flights/a/b',
+    '/reports/flight-time/2026-13',
+    '/reports/flight-time/October',
+    '/reports/flight-time/2026-10/more',
+    '/reports/occurrences/2026-1',
     '/reports/elsewhere',
     '/reports/grants/one',
     '/reports/operators/one',
@@ -138,6 +152,65 @@ describe('places and their addresses', () => {
     );
     expect(addressOf({ section: 'rules', pane: 'open', owner: 'none' }, '?replay=1')).toBe(
       '/rules/findings?replay=1&owner=none',
+    );
+  });
+});
+
+describe('an entry form that starts from its address', () => {
+  const form: Place = {
+    section: 'records',
+    pane: 'enter',
+    type: 'organization.report@1',
+    fill: { periodStartsOn: '2026-10-01', periodEndsOn: '2026-10-31' },
+  };
+
+  test('names each field it fills, for any record type', () => {
+    expect(placePath(form)).toBe(
+      '/records/enter/organization.report@1?fill.periodStartsOn=2026-10-01&fill.periodEndsOn=2026-10-31',
+    );
+    expect(placeFromAddress('/records/enter/aircraft.identity@1', '?fill.registrationNumber=RIDGE-REG-1')).toEqual({
+      section: 'records',
+      pane: 'enter',
+      type: 'aircraft.identity@1',
+      fill: { registrationNumber: 'RIDGE-REG-1' },
+    });
+  });
+
+  test('keeps plain values only, never typed text, and only on the entry form of a type', () => {
+    expect(
+      placeFromAddress(
+        '/records/enter/organization.report@1',
+        '?fill.recipient=The%20regional%20office&fill.reportKind=flight_hours&fill.bad%20name=1&reportKind=other',
+      ),
+    ).toEqual({
+      section: 'records',
+      pane: 'enter',
+      type: 'organization.report@1',
+      fill: { reportKind: 'flight_hours' },
+    });
+    expect(placeFromAddress('/records/browse/organization.report@1', '?fill.reportKind=flight_hours')).toEqual({
+      section: 'records',
+      pane: 'browse',
+      type: 'organization.report@1',
+    });
+    expect(placeFromAddress('/records/enter', '?fill.reportKind=flight_hours')).toEqual({
+      section: 'records',
+      pane: 'enter',
+    });
+    expect(placePath({ ...form, fill: { summary: 'Free text typed by a person' } })).toBe(
+      '/records/enter/organization.report@1',
+    );
+  });
+
+  test('leaves its values behind when a person moves on', () => {
+    expect(
+      addressOf(
+        { section: 'records', pane: 'browse', type: 'organization.report@1' },
+        '?fill.periodStartsOn=2026-10-01&autopilot=rules',
+      ),
+    ).toBe('/records/browse/organization.report@1?autopilot=rules');
+    expect(addressOf(form, '?fill.reportKind=other&replay=1')).toBe(
+      '/records/enter/organization.report@1?replay=1&fill.periodStartsOn=2026-10-01&fill.periodEndsOn=2026-10-31',
     );
   });
 });
@@ -175,6 +248,15 @@ describe('page titles', () => {
       '/reports/summary/2026-11-01/2026-11-30',
     );
     expect(barSection({ section: 'reports', report: 'flight', flightId: 'RIDGE-FLT-1' })).toBe('reports');
+    expect(placePath({ section: 'reports', report: 'flight-time', month: '2026-10' })).toBe(
+      '/reports/flight-time/2026-10',
+    );
+    expect(placePath({ section: 'reports', report: 'occurrences' })).toBe('/reports/occurrences');
+    expect(placeTitle({ section: 'reports', report: 'flight-time', month: '2026-10' })).toBe(
+      'Flight time by aircraft 2026-10 · Reports · Ledger',
+    );
+    expect(placeTitle({ section: 'reports', report: 'occurrences' })).toBe('Occurrences by month · Reports · Ledger');
+    expect(barSection({ section: 'reports', report: 'occurrences', month: '2026-10' })).toBe('reports');
   });
 
   test('never name a safety report', () => {

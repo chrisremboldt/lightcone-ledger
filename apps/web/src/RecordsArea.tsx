@@ -30,6 +30,7 @@ import {
   columnFor,
   displayValue,
   draftFromRecord,
+  filledDraft,
   originalExcerpt,
   limitationText,
   recordHeadline,
@@ -99,7 +100,8 @@ export function RecordsArea({
     );
   const choose = (type: string) => {
     setChosen(type);
-    if (placedType !== undefined && type !== placedType) goTo({ ...place, type } as RecordsPlace);
+    // Values an address handed to the form belong to the type they were handed for.
+    if (placedType !== undefined && type !== placedType) goTo({ ...place, type, fill: undefined } as RecordsPlace);
   };
   const setOpened = (subject: ChosenSubject | null) =>
     goTo(
@@ -141,6 +143,10 @@ export function RecordsArea({
   }, [client]);
 
   const type = catalog?.types.find((item) => typeKey(item) === chosen);
+  const fill = place.pane === 'enter' ? place.fill : undefined;
+  const fillKey = JSON.stringify(fill ?? null);
+  // What the address hands the entry form to start with, for any record type and any of its fields.
+  const handed = useMemo(() => (type && fill ? filledDraft(type, fill) : null), [type, fillKey]);
   const sourceId = catalog?.sourceId ?? 'operator-records';
   const writable = canKeepRecords(principal, sourceId);
   // Producing records is recorded: a person who only reads looks at what was produced and produces nothing.
@@ -353,12 +359,19 @@ export function RecordsArea({
           )}
           {type && pane === 'enter' && (
             <>
+              {writable && handed && handed.filled.length > 0 && (
+                <p className="records-note" data-testid="record-form-filled">
+                  Filled in from the page you came from: {handed.filled.map((field) => field.label).join(', ')}. Check
+                  {handed.filled.length === 1 ? ' it' : ' them'} before you record.
+                </p>
+              )}
               {writable ? (
                 <RecordForm
-                  key={chosen}
+                  key={`${chosen} ${fillKey}`}
                   client={client}
                   type={type}
                   sourceId={sourceId}
+                  initial={handed?.draft}
                   onRecorded={(result) => {
                     const subjectId = ownId(result.rows[0]?.subject);
                     refresh();

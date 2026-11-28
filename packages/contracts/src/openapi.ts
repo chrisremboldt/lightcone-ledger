@@ -86,9 +86,12 @@ import { routeDescriptions } from './route-descriptions.js';
 import {
   FindingsByMonthQuerySchema,
   FindingsByMonthSchema,
+  FlightTimeByAircraftSchema,
   IndicatorHistorySchema,
+  OccurrencesByMonthSchema,
   PeriodSummarySchema,
   ReportIndicatorListSchema,
+  ReportMonthQuerySchema,
   ReportPeriodQuerySchema,
 } from './reports.js';
 import {
@@ -1745,6 +1748,24 @@ export const openApiDocument = {
         identifier('indicatorId'),
         identifier('version'),
       ]),
+    },
+    '/v1/reports/flight-time': {
+      get: operation(
+        'flightTimeByAircraft',
+        FlightTimeByAircraftSchema,
+        200,
+        undefined,
+        queryParameters(ReportMonthQuerySchema),
+      ),
+    },
+    '/v1/reports/occurrences': {
+      get: operation(
+        'occurrencesByMonth',
+        OccurrencesByMonthSchema,
+        200,
+        undefined,
+        queryParameters(ReportMonthQuerySchema),
+      ),
     },
     '/v1/control-indicator-reviews': {
       post: {

@@ -26,11 +26,11 @@ import { closedActions, settledActions, signedVersions, type SettledAction } fro
  */
 
 /** The flights a period counts, and the plans a flight's own record is told apart from. */
-const FLIGHT_RECORD = 'flight.record';
+export const FLIGHT_RECORD = 'flight.record';
 const FLIGHT_PLAN = 'flight.plan';
 
-const has = (principal: AuthContext, capability: string) => principal.capabilities.includes(capability);
-const notReadable = (capability: string) => ({ readable: false as const, capability });
+export const has = (principal: AuthContext, capability: string) => principal.capabilities.includes(capability);
+export const notReadable = (capability: string) => ({ readable: false as const, capability });
 
 function requireEvidenceRead(principal: AuthContext): void {
   if (!has(principal, 'evidence:read'))
@@ -105,10 +105,14 @@ async function periodBounds(client: PoolClient, tenantId: string, from: string, 
   return { zone: row.zone, start: row.start, end: row.stop, now: row.now, asOf, asOfDay: row.as_of_day };
 }
 
-/** Current operator records of one type about flights, neither replaced nor withdrawn, the newest for each flight. */
-const currentFlightRecords = (
+/**
+ * Current operator records of one type about flights, neither replaced nor withdrawn, the newest for each flight;
+ * `columns` adds columns of the record to the three every count reads.
+ */
+export const currentFlightRecords = (
   recordType: string,
-) => `SELECT DISTINCT ON(o.subject_id) o.subject_id,o.interval_start,o.interval_end
+  columns = '',
+) => `SELECT DISTINCT ON(o.subject_id) o.subject_id,o.interval_start,o.interval_end${columns}
   FROM observations o WHERE o.tenant_id=$1 AND o.source_id=$2 AND o.observation_type=ANY($3::text[])
     AND o.subject_scope='source' AND o.subject_kind='flight' AND ${RECORD_TYPE_SQL}=${recordType}
     AND NOT EXISTS(SELECT 1 FROM observations r WHERE r.tenant_id=o.tenant_id AND r.replaces_observation_id=o.id)

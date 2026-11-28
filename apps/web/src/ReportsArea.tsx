@@ -1,4 +1,4 @@
-import { useEffect, useState, type FormEvent, type ReactNode } from 'react';
+import { useState, type FormEvent } from 'react';
 import {
   OPERATOR_RECORD_SOURCE_ID,
   SUBJECT_RECORD_PAGE_LIMIT,
@@ -16,15 +16,17 @@ import {
   type SubjectReference,
 } from '@ledger/contracts';
 import type { LedgerClient } from '@ledger/contracts/client';
-import { Badge, Button, Notice, Spinner } from '@ledger/ui';
+import { Badge, Button, Notice } from '@ledger/ui';
 import { EvaluationReads } from './EvaluationReads.js';
 import { explainedEvaluation, summaryText, withReadContext } from './evaluation-reads.js';
 import { findingStatusLabels } from './finding-work.js';
-import { counted, ctDay, errorMessage, time, timeRange, timeZone, timeZoneLabel } from './format.js';
+import { counted, ctDay, time, timeRange, timeZone, timeZoneLabel } from './format.js';
 import { columnFor, displayValue, recordHeadline, recordTime as recordTimeText } from './operator-records.js';
 import { calendarDay, goTo, type Place, type ReportView } from './place.js';
+import { FlightTimePage, OccurrencesPage } from './MonthReports.js';
 import { ProgramGrantsPage, ProgramOperatorsPage } from './ProgramView.js';
 import { IndicatorChart, MonthlyChart } from './ReportCharts.js';
+import { CountLink, NotYours, PrintButton, Shown, useRead } from './ReportParts.js';
 import { monthLabel } from './report-charts.js';
 import { hoursAndMinutes, periodChoices, readingNeeds } from './report-periods.js';
 import { coverageResultLabels } from './rule-coverage.js';
@@ -34,50 +36,14 @@ import { PlaceLink } from './TopBar.js';
 
 /**
  * Reports a person reads, prints or saves: a summary of a period, findings opened and closed per month by rule, an
- * indicator's recorded results over time, and one flight's file. Every number is counted by the API from recorded
- * things and links to the list it counts; a part the person may not read is named as not theirs, never shown as zero.
- * A safety report's content appears on none of them.
+ * indicator's recorded results over time, one flight's file, and a month's flight time by aircraft and occurrences.
+ * Every number is counted by the API from recorded things and links to the list it counts; a part the person may not
+ * read is named as not theirs, never shown as zero. A safety report's content appears on none of them.
  */
 
-type Loaded<T> = { state: 'loading' } | { state: 'failed'; message: string } | { state: 'loaded'; value: T };
-
-function useRead<T>(read: () => Promise<T>, key: string): Loaded<T> {
-  const [loaded, setLoaded] = useState<Loaded<T>>({ state: 'loading' });
-  useEffect(() => {
-    let current = true;
-    setLoaded({ state: 'loading' });
-    read().then(
-      (value) => current && setLoaded({ state: 'loaded', value }),
-      (failure: unknown) => current && setLoaded({ state: 'failed', message: errorMessage(failure) }),
-    );
-    return () => {
-      current = false;
-    };
-    // The key names everything the read depends on.
-  }, [key]);
-  return loaded;
-}
-
-function Shown<T>({
-  loaded,
-  label,
-  children,
-}: {
-  loaded: Loaded<T>;
-  label: string;
-  children: (value: T) => ReactNode;
-}) {
-  if (loaded.state === 'loading') return <Spinner label={label} />;
-  if (loaded.state === 'failed')
-    return (
-      <Notice tone="alert" title="This report could not be read">
-        {loaded.message}
-      </Notice>
-    );
-  return <>{children(loaded.value)}</>;
-}
-
 const reports = (view: ReportView): Place => ({ section: 'reports', ...view });
+/** The pages open to everyone who opens Reports: each names a part its reader may not read, or needs another permission. */
+const partsSayWhoMayRead: ReportView['report'][] = ['home', 'summary', 'flight-time', 'occurrences', 'grants'];
 const may = (principal: Principal | null, capability: Capability) =>
   Boolean(principal?.capabilities.includes(capability));
 
@@ -119,6 +85,18 @@ export function ReportsArea({
             >
               Summary of a period
             </PlaceLink>
+            <PlaceLink
+              place={current === 'flight-time' ? place : reports({ report: 'flight-time' })}
+              current={current === 'flight-time'}
+            >
+              Flight time by aircraft
+            </PlaceLink>
+            <PlaceLink
+              place={current === 'occurrences' ? place : reports({ report: 'occurrences' })}
+              current={current === 'occurrences'}
+            >
+              Occurrences by month
+            </PlaceLink>
             {records && (
               <>
                 <PlaceLink place={current === 'findings' ? place : lastTwelve()} current={current === 'findings'}>
@@ -146,8 +124,10 @@ export function ReportsArea({
           {place.report === 'summary' && (
             <PeriodSummaryPage client={client} principal={principal} from={place.from} until={place.until} />
           )}
+          {place.report === 'flight-time' && <FlightTimePage client={client} month={place.month} />}
+          {place.report === 'occurrences' && <OccurrencesPage client={client} month={place.month} />}
           {place.report === 'grants' && <ProgramGrantsPage client={client} principal={principal} />}
-          {place.report !== 'home' && place.report !== 'summary' && place.report !== 'grants' && !records && (
+          {!partsSayWhoMayRead.includes(place.report) && !records && (
             <Notice tone="neutral" title="Not yours to read">
               This report counts records and findings. Reading them needs {readingNeeds['evidence:read']}. Ask the
               person who manages authority in your organization.
@@ -165,14 +145,6 @@ export function ReportsArea({
         </div>
       </section>
     </main>
-  );
-}
-
-function PrintButton() {
-  return (
-    <Button kind="secondary" onClick={() => window.print()}>
-      Print or save as PDF
-    </Button>
   );
 }
 
@@ -194,6 +166,26 @@ function ReportsHome({ client, principal }: { client: LedgerClient; principal: P
           level, for the days you choose.
         </p>
         <PeriodChooser />
+      </section>
+      <section className="report-card" aria-label="Flight time by aircraft">
+        <h3>Flight time by aircraft</h3>
+        <p className="records-note">
+          For a calendar month: each aircraft with a flight record in it, its registration and serial number, its
+          flights and their time from takeoff to landing. To prepare a report you send yourself.
+        </p>
+        <PlaceLink className="button button--secondary" place={reports({ report: 'flight-time' })}>
+          Flight time of the last whole month
+        </PlaceLink>
+      </section>
+      <section className="report-card" aria-label="Occurrences by month">
+        <h3>Occurrences by month</h3>
+        <p className="records-note">
+          For a calendar month: the occurrence records on file by type, each with its date, the flight and aircraft it
+          names and what was recorded.
+        </p>
+        <PlaceLink className="button button--secondary" place={reports({ report: 'occurrences' })}>
+          Occurrences of the last whole month
+        </PlaceLink>
       </section>
       {records && (
         <>
@@ -308,23 +300,6 @@ function PeriodChooser({ from, until }: { from?: string; until?: string }) {
       </form>
       <p className="records-note">Days are in your organization’s time zone, {timeZone()}.</p>
     </div>
-  );
-}
-
-/** A count that links to the list it counts; on paper, just the number. */
-function CountLink({ count, place, label }: { count: number; place: Place; label: string }) {
-  return (
-    <PlaceLink className="report-count" place={place}>
-      <span aria-label={`${count} ${label}`}>{count}</span>
-    </PlaceLink>
-  );
-}
-
-function NotYours({ part, capability }: { part: string; capability: string }) {
-  return (
-    <p className="records-note report-not-yours" data-testid="report-part-not-readable">
-      {part}: not yours to read. Reading them needs {readingNeeds[capability] ?? capability}.
-    </p>
   );
 }
 
