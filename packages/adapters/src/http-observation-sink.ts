@@ -1,10 +1,19 @@
 import type { ObservationV1 } from '@ledger/contracts';
 import type { LedgerClient } from '@ledger/contracts/client';
 import { sha256 } from '@ledger/integrity';
-import type { ObservationEnvelope, ObservationSink, RetainOriginalRequest } from './adapter-contract.js';
+import {
+  type CurrentRecordOptions,
+  type ObservationEnvelope,
+  type ObservationSink,
+  type RetainOriginalRequest,
+  keepsOneCurrent,
+} from './adapter-contract.js';
 
-export interface HttpObservationSinkConfig {
-  /** Authenticated as the principal that holds the observation grants for sourceId. */
+export interface HttpObservationSinkConfig extends CurrentRecordOptions {
+  /**
+   * Authenticated as the principal that holds the observation grants for sourceId. With oneCurrentPerSubject it
+   * also needs evidence:read, to read what is on file before it submits.
+   */
   ledger: LedgerClient;
   sourceId: string;
 }
@@ -12,12 +21,12 @@ export interface HttpObservationSinkConfig {
 /** Ledger refused a step. Nothing is retried: the caller decides whether the refusal is worth another attempt. */
 export class ObservationSinkRefusal extends Error {
   constructor(
-    readonly step: 'retain_original' | 'submit_observation',
+    readonly step: 'retain_original' | 'read_on_file' | 'submit_observation',
     readonly status: number,
     readonly code: string,
     detail: string,
   ) {
-    super(`Ledger refused ${step.replace('_', ' ')} with ${status} ${code}: ${detail}`);
+    super(`Ledger refused ${step.replaceAll('_', ' ')} with ${status} ${code}: ${detail}`);
     this.name = 'ObservationSinkRefusal';
   }
 }
@@ -69,12 +78,54 @@ export class HttpObservationSink<O extends ObservationEnvelope = ObservationV1> 
     }
   }
 
+  /**
+   * What this source has on file, not replaced and not withdrawn, of the observation's type about its subject: the
+   * one stating the same source event, or else the one received last, which a new observation replaces.
+   */
+  private async onFile(observation: O): Promise<{ same?: { receiptId: string }; replaces?: string }> {
+    const { subject, sourceEventId } = observation as O & {
+      subject: { kind: ObservationV1['subject']['kind']; id: string; scope: 'ledger' | 'source' };
+      sourceEventId?: string;
+    };
+    try {
+      const { observations } = await this.config.ledger.observations({
+        subjectKind: subject.kind,
+        subjectId: subject.id,
+        subjectScope: subject.scope,
+        ...(subject.scope === 'source' ? { sourceId: this.config.sourceId } : {}),
+        type: observation.type,
+        from: '1970-01-01T00:00:00.000Z',
+        to: '9999-12-31T23:59:59.000Z',
+        order: 'newest_first',
+        limit: 100,
+      });
+      const own = observations.filter((entry) => entry.sourceId === this.config.sourceId);
+      const same = own.find((entry) => entry.sourceEventId === sourceEventId);
+      if (same) return { same: { receiptId: same.receiptId } };
+      const latest = own.reduce<(typeof own)[number] | undefined>(
+        (last, entry) => (!last || Date.parse(entry.receivedAt) > Date.parse(last.receivedAt) ? entry : last),
+        undefined,
+      );
+      return latest ? { replaces: latest.id } : {};
+    } catch (error) {
+      throw refusal('read_on_file', error);
+    }
+  }
+
   async submitObservation(observation: O, idempotencyKey: string): Promise<{ receiptId: string }> {
     const payload = observation as unknown as Record<string, unknown>;
     if (typeof payload.occurredAt !== 'string') throw new Error('An observation needs occurredAt');
+    const onFile = keepsOneCurrent(this.config, observation) ? await this.onFile(observation) : {};
+    if (onFile.same) return onFile.same;
     try {
       const { receipt } = await this.config.ledger.input(
-        { sourceId: this.config.sourceId, kind: 'observation', occurredAt: payload.occurredAt, payload },
+        {
+          sourceId: this.config.sourceId,
+          kind: 'observation',
+          occurredAt: payload.occurredAt,
+          payload,
+          ...(onFile.replaces ? { replaces: onFile.replaces } : {}),
+        },
         boundedKey(idempotencyKey),
       );
       return { receiptId: receipt.id };

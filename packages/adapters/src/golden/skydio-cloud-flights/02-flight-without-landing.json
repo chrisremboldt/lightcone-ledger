@@ -1,0 +1,48 @@
+{
+  "note": "Constructed: a flight listed with a takeoff and no landing, and no telemetry uploaded.",
+  "case": "valid",
+  "message": {
+    "contentType": "application/json",
+    "transport": {
+      "method": "GET",
+      "path": "/api/v0/flights"
+    },
+    "capturedAt": "2026-11-20T16:00:05.000Z",
+    "body": {
+      "flight_id": "EXAMPLE-FLIGHT-0003",
+      "has_telemetry": false,
+      "takeoff": "2026-11-20T15:56:00.000000+00:00",
+      "vehicle_serial": "EXAMPLE-VEHICLE-01"
+    }
+  },
+  "expect": {
+    "observations": [
+      {
+        "type": "flight.report",
+        "version": 1,
+        "subject": {
+          "kind": "flight",
+          "id": "EXAMPLE-FLIGHT-0003",
+          "scope": "source"
+        },
+        "secondarySubject": {
+          "kind": "aircraft",
+          "id": "EXAMPLE-VEHICLE-01",
+          "scope": "source"
+        },
+        "values": {
+          "takeoffAt": "2026-11-20T15:56:00.000Z"
+        },
+        "occurredAt": "2026-11-20T15:56:00.000Z",
+        "sourceEventId": "flight:EXAMPLE-FLIGHT-0003:c754d596228bd65d0a784df81d8af14b"
+      }
+    ],
+    "rejections": [],
+    "unmapped": [
+      {
+        "kind": "json_pointer",
+        "value": "/has_telemetry"
+      }
+    ]
+  }
+}

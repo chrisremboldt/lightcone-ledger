@@ -5,6 +5,8 @@ import { type TranslationContext, type VendorMessage, translateAndSubmit } from 
 import { djiOsdBatteryAdapter } from '../src/dji-osd-battery.js';
 import { djiOsdPositionAdapter, type DjiOsdBinding } from '../src/dji-osd-position.js';
 import { HttpObservationSink, ObservationSinkRefusal } from '../src/http-observation-sink.js';
+import { skydioCloudFlightsAdapter } from '../src/skydio-cloud-flights.js';
+import { classifySubmissionFailure } from '../src/source-loop.js';
 import { djiOsdBytes } from '../../../apps/emulators/src/dji.js';
 
 const binding = { deviceId: 'ALPHA-AIRCRAFT-01', gatewayId: 'ALPHA-DOCK-01' };
@@ -156,5 +158,144 @@ describe('HTTP observation sink', () => {
       code: 'upload_too_large',
     });
     await expect(sink.retainOriginal({ ...request, sha256: '0'.repeat(64) })).rejects.toThrow(/SHA-256/);
+  });
+});
+
+/**
+ * Just enough of the public API for a record a source keeps one of: inputs that may name the observation they
+ * replace, a source event that conflicts when retained with other content, and the read of what is current.
+ */
+function fakeIntake(options: { refuseReads?: boolean } = {}) {
+  const calls: { method: string; path: string; search: string; body?: Record<string, unknown> }[] = [];
+  const stored: {
+    id: string;
+    receiptId: string;
+    sourceId: string;
+    receivedAt: string;
+    replaces?: string;
+    observation: Record<string, unknown>;
+  }[] = [];
+  let counter = 0;
+  const fetcher = (async (url: string | URL, init: RequestInit = {}) => {
+    const target = new URL(String(url));
+    const method = init.method ?? 'GET';
+    const body = typeof init.body === 'string' ? (JSON.parse(init.body) as Record<string, unknown>) : undefined;
+    calls.push({ method, path: target.pathname, search: target.search, ...(body ? { body } : {}) });
+    if (method === 'GET' && target.pathname === '/v1/observations') {
+      if (options.refuseReads)
+        return json(403, {
+          error: { code: 'capability_required', message: 'Reading observations requires evidence:read' },
+        });
+      const replaced = new Set(stored.map((entry) => entry.replaces));
+      const subject = (entry: (typeof stored)[number]) => entry.observation.subject as { kind: string; id: string };
+      return json(200, {
+        observations: stored
+          .filter(
+            (entry) =>
+              !replaced.has(entry.id) &&
+              entry.sourceId === target.searchParams.get('sourceId') &&
+              entry.observation.type === target.searchParams.get('type') &&
+              subject(entry).kind === target.searchParams.get('subjectKind') &&
+              subject(entry).id === target.searchParams.get('subjectId'),
+          )
+          .map(({ observation, ...entry }) => ({ ...entry, sourceEventId: observation.sourceEventId, observation })),
+      });
+    }
+    if (method === 'POST' && target.pathname === '/v1/inputs') {
+      const observation = body!.payload as Record<string, unknown>;
+      if (stored.some((entry) => entry.observation.sourceEventId === observation.sourceEventId))
+        return json(409, { error: { code: 'source_event_conflict', message: 'Already retained' } });
+      const id = `observation-${stored.length + 1}`;
+      stored.push({
+        id,
+        receiptId: `receipt-${stored.length + 1}`,
+        sourceId: body!.sourceId as string,
+        receivedAt: new Date(Date.UTC(2026, 10, 20, 16, 0, stored.length)).toISOString(),
+        ...(body!.replaces ? { replaces: body!.replaces as string } : {}),
+        observation,
+      });
+      return json(201, { receipt: { id: stored.at(-1)!.receiptId, eventId: id, kind: 'observation' } });
+    }
+    return json(404, { error: { code: 'not_found', message: target.pathname } });
+  }) as typeof fetch;
+  // This fake is not about uploads: the flow above covers them.
+  const ledger = new LedgerClient('http://ledger.test', 'ledger-dev-alpha-source', fetcher);
+  ledger.upload = async () => ({ artifact: { id: `artifact-${++counter}` } }) as never;
+  return { calls, stored, ledger };
+}
+
+describe('HTTP observation sink for a record the source keeps one of', () => {
+  const flightContext: TranslationContext = { subjects: { scope: 'source' }, binding: undefined };
+  const flight = {
+    flight_id: 'EXAMPLE-FLIGHT-0001',
+    vehicle_serial: 'EXAMPLE-VEHICLE-01',
+    takeoff: '2026-11-20T15:00:02Z',
+    has_telemetry: false,
+  };
+  const listed = (body: unknown): VendorMessage => ({
+    bytes: new TextEncoder().encode(JSON.stringify(body)),
+    contentType: 'application/json',
+    transport: { method: 'GET', path: '/api/v0/flights' },
+    capturedAt: '2026-11-20T16:00:05.000Z',
+  });
+  const submit = (sink: HttpObservationSink, body: unknown) =>
+    translateAndSubmit(skydioCloudFlightsAdapter, listed(body), flightContext, sink);
+  const options = { sourceId: 'fictional-flights', oneCurrentPerSubject: ['flight.report'] };
+
+  it('reads what is on file first: the same statement is not submitted again, a changed one replaces it', async () => {
+    const { calls, stored, ledger } = fakeIntake();
+    const first = await submit(new HttpObservationSink({ ledger, ...options }), flight);
+    expect(stored).toHaveLength(1);
+    const read = calls.find((call) => call.path === '/v1/observations')!;
+    expect(Object.fromEntries(new URLSearchParams(read.search))).toEqual({
+      subjectKind: 'flight',
+      subjectId: 'EXAMPLE-FLIGHT-0001',
+      subjectScope: 'source',
+      sourceId: 'fictional-flights',
+      type: 'flight.report',
+      from: '1970-01-01T00:00:00.000Z',
+      to: '9999-12-31T23:59:59.000Z',
+      order: 'newest_first',
+      limit: '100',
+    });
+    expect(calls.find((call) => call.path === '/v1/inputs')!.body).not.toHaveProperty('replaces');
+
+    // The same flight read after a restart, its bytes different only in a field no observation carries.
+    const again = await submit(new HttpObservationSink({ ledger, ...options }), { ...flight, has_telemetry: true });
+    expect(again.submitted[0]!.receiptId).toBe(first.submitted[0]!.receiptId);
+    expect(stored).toHaveLength(1);
+
+    // The service now lists the flight with its landing: the report on file is replaced.
+    const landed = await submit(new HttpObservationSink({ ledger, ...options }), {
+      ...flight,
+      landing: '2026-11-20T15:18:40Z',
+    });
+    expect(stored).toHaveLength(2);
+    expect(stored[1]).toMatchObject({ replaces: 'observation-1', receiptId: landed.submitted[0]!.receiptId });
+    expect(calls.filter((call) => call.path === '/v1/inputs').at(-1)!.body).toMatchObject({
+      kind: 'observation',
+      sourceId: 'fictional-flights',
+      replaces: 'observation-1',
+      occurredAt: '2026-11-20T15:18:40.000Z',
+    });
+    // A third statement replaces the second, never the first again.
+    await submit(new HttpObservationSink({ ledger, ...options }), { ...flight, landing: '2026-11-20T15:19:00Z' });
+    expect(stored[2]).toMatchObject({ replaces: 'observation-2' });
+  });
+
+  it('reads nothing for a type the source does not keep one of, or without the option', async () => {
+    const { calls, ledger } = fakeIntake();
+    await submit(new HttpObservationSink({ ledger, sourceId: 'fictional-flights' }), flight);
+    expect(calls.filter((call) => call.path === '/v1/observations')).toEqual([]);
+  });
+
+  it('stops as for a refused credential when Ledger does not let it read what is on file', async () => {
+    const { stored, ledger } = fakeIntake({ refuseReads: true });
+    const failure = await submit(new HttpObservationSink({ ledger, ...options }), flight).catch((error) => error);
+    expect(failure).toBeInstanceOf(ObservationSinkRefusal);
+    expect(failure).toMatchObject({ step: 'read_on_file', status: 403, code: 'capability_required' });
+    expect(failure.message).toMatch(/Ledger refused read on file with 403/);
+    expect(classifySubmissionFailure(failure)).toBe('credential');
+    expect(stored).toEqual([]);
   });
 });

@@ -1,0 +1,114 @@
+{
+  "note": "Constructed from the reference’s Flight object, every field it documents; not a flight the service sent.",
+  "case": "valid",
+  "message": {
+    "contentType": "application/json",
+    "transport": {
+      "method": "GET",
+      "path": "/api/v0/flights"
+    },
+    "capturedAt": "2026-11-20T16:00:05.000Z",
+    "body": {
+      "attachments": [
+        {
+          "attachment_serial": "EXAMPLE-ATTACHMENT-01",
+          "attachment_type": "SPOTLIGHT",
+          "mount_point": "TOP"
+        }
+      ],
+      "battery_serial": "EXAMPLE-BATTERY-01",
+      "flight_id": "EXAMPLE-FLIGHT-0001",
+      "has_telemetry": true,
+      "landing": "2026-11-20T15:18:40.250000+00:00",
+      "markers": [
+        {
+          "incident_id": "EXAMPLE-INCIDENT-01",
+          "uuid": "00000000-0000-4000-8000-000000000001"
+        }
+      ],
+      "sensor_package": {
+        "sensor_package_serial": "EXAMPLE-SENSOR-01",
+        "sensor_package_type": "VT300-L"
+      },
+      "takeoff": "2026-11-20T15:00:02.503000+00:00",
+      "takeoff_latitude": 44.5,
+      "takeoff_longitude": -100.5,
+      "user_email": "pilot.one@example.invalid",
+      "vehicle_serial": "EXAMPLE-VEHICLE-01"
+    }
+  },
+  "expect": {
+    "observations": [
+      {
+        "type": "flight.report",
+        "version": 1,
+        "subject": {
+          "kind": "flight",
+          "id": "EXAMPLE-FLIGHT-0001",
+          "scope": "source"
+        },
+        "secondarySubject": {
+          "kind": "aircraft",
+          "id": "EXAMPLE-VEHICLE-01",
+          "scope": "source"
+        },
+        "position": {
+          "latitudeDegrees": 44.5,
+          "longitudeDegrees": -100.5
+        },
+        "values": {
+          "activity": "landed",
+          "takeoffAt": "2026-11-20T15:00:02.503Z",
+          "landingAt": "2026-11-20T15:18:40.250Z"
+        },
+        "occurredAt": "2026-11-20T15:18:40.250Z",
+        "sourceEventId": "flight:EXAMPLE-FLIGHT-0001:cbe80231cc89efe5d04a3792f47b4a75"
+      }
+    ],
+    "rejections": [],
+    "unmapped": [
+      {
+        "kind": "json_pointer",
+        "value": "/attachments"
+      },
+      {
+        "kind": "json_pointer",
+        "value": "/battery_serial"
+      },
+      {
+        "kind": "json_pointer",
+        "value": "/has_telemetry"
+      },
+      {
+        "kind": "json_pointer",
+        "value": "/markers"
+      },
+      {
+        "kind": "json_pointer",
+        "value": "/sensor_package"
+      },
+      {
+        "kind": "json_pointer",
+        "value": "/user_email"
+      }
+    ],
+    "conversions": [
+      {
+        "observation": 0,
+        "field": "/position/latitudeDegrees",
+        "vendorField": "/takeoff_latitude",
+        "vendorUnit": "deg",
+        "vendorValue": 44.5,
+        "expected": 44.5
+      },
+      {
+        "observation": 0,
+        "field": "/position/longitudeDegrees",
+        "vendorField": "/takeoff_longitude",
+        "vendorUnit": "deg",
+        "vendorValue": -100.5,
+        "expected": -100.5
+      }
+    ]
+  }
+}

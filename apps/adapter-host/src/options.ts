@@ -15,6 +15,9 @@ export interface HostOptions {
   readonly broker?: { readonly url: string; readonly username: string; readonly password: string };
   readonly service?: {
     readonly url: string;
+    /** The URL of one poll, for a service asked for what began in the look-back before it. */
+    readonly urlAt?: (now: Date) => string;
+    readonly lookBackHours?: number;
     readonly headers: Readonly<Record<string, string>>;
     readonly pollMs: number;
   };
@@ -43,6 +46,7 @@ const settings = {
   ADAPTER_STATIONS: 'stations',
   ADAPTER_REGIONS: 'regions',
   ADAPTER_POLL_SECONDS: 'poll-seconds',
+  ADAPTER_LOOK_BACK_HOURS: 'look-back-hours',
   ADAPTER_QUEUE_LIMIT: 'queue-limit',
   ADAPTER_SHUTDOWN_SECONDS: 'shutdown-seconds',
   LEDGER_METRICS_LISTEN: 'metrics-listen',
@@ -81,7 +85,7 @@ Adapters:
 ${Object.entries(runnableAdapters)
   .map(
     ([id, runnable]) =>
-      `  ${id.padEnd(36)} ${runnable.transport === 'broker' ? 'message broker' : 'polls the service'}: ${runnable.bindingOptions.map((option) => `--${flagOf(option)}`).join(' ')}`,
+      `  ${id.padEnd(36)} ${runnable.transport === 'broker' ? 'message broker' : 'polls the service'}: ${runnable.bindingOptions.map((option) => `--${flagOf(option)}`).join(' ') || '(no source settings)'}`,
   )
   .join('\n')}
 
@@ -109,7 +113,10 @@ Every flag can be given as the environment variable after it instead; the flag w
                                                        semicolons, the radius in m or km: RIDGE-AREA-1=RIDGE-SITE-1@39.97,-86.13,5km
   --poll-seconds <n>         ADAPTER_POLL_SECONDS      Seconds between reads of the service (default 60 for the
                                                        airspace service, 300 for weather reports, 900 for
-                                                       forecasts, 600 for flight restrictions; at least 5)
+                                                       forecasts, 600 for flight restrictions, 120 for the
+                                                       flight service; at least 5)
+  --look-back-hours <n>      ADAPTER_LOOK_BACK_HOURS   The flight service only: each read asks for the flights that
+                                                       took off in this many hours before it (default 168)
   --queue-limit <n>          ADAPTER_QUEUE_LIMIT       Messages held while Ledger cannot be reached (default 10000)
   --shutdown-seconds <n>     ADAPTER_SHUTDOWN_SECONDS  How long a stop waits to submit what it holds (default 10)
   --private-network          ADAPTER_PRIVATE_NETWORK=1 Allow http:// and mqtt:// to another host on a network you
@@ -120,9 +127,14 @@ Every flag can be given as the environment variable after it instead; the flag w
 Secrets, from the environment only:
   LEDGER_API_CREDENTIAL      The source's API credential, as issued
   ADAPTER_BROKER_PASSWORD    The broker account's password
-  ADAPTER_SERVICE_TOKEN      The airspace service's access token, sent as a bearer token
+  ADAPTER_SERVICE_TOKEN      The service's token: the airspace service's access token, sent as a bearer token,
+                             or the flight service's API token, sent as the whole Authorization header
   ADAPTER_SERVICE_API_KEY    The airspace service's API key, if it asks for one (sent as x-api-key)
-  The weather and flight restriction services are public and take no secret.`;
+  The weather and flight restriction services are public and take no secret.
+${Object.entries(runnableAdapters)
+  .filter(([, runnable]) => runnable.startNotice)
+  .map(([id, runnable]) => `\n${id}: ${runnable.startNotice}`)
+  .join('')}`;
 
 export class UsageError extends Error {}
 
@@ -174,9 +186,11 @@ export function parseHostOptions(argv: readonly string[], env: NodeJS.ProcessEnv
     if (!given) throw new UsageError(`${variable} is required: ${purpose}`);
     return given;
   };
-  const serviceHeaders = (credential: 'bearer' | 'none'): Record<string, string> => {
+  const serviceHeaders = (credential: 'bearer' | 'token' | 'none'): Record<string, string> => {
     if (credential === 'none') return { 'user-agent': PUBLIC_SERVICE_USER_AGENT };
     const token = secret('ADAPTER_SERVICE_TOKEN', 'the service’s access token');
+    // This service takes the token itself as the header: a scheme word before it would make it another token.
+    if (credential === 'token') return { authorization: token };
     const apiKey = env.ADAPTER_SERVICE_API_KEY;
     return { authorization: `Bearer ${token}`, ...(apiKey ? { 'x-api-key': apiKey } : {}) };
   };
@@ -233,8 +247,25 @@ export function parseHostOptions(argv: readonly string[], env: NodeJS.ProcessEnv
       { tls: 'https:', plain: 'http:' },
       privateNetwork,
     );
+    const origin = base.toString().replace(/\/$/, '');
+    const { lookBack } = runnable;
+    const lookBackHours = lookBack
+      ? positiveInteger(
+          setting('ADAPTER_LOOK_BACK_HOURS') ?? String(lookBack.defaultHours),
+          '--look-back-hours',
+          1,
+          8760,
+        )
+      : undefined;
     service = {
-      url: `${base.toString().replace(/\/$/, '')}${runnable.path(binding)}`,
+      url: `${origin}${runnable.path(binding)}`,
+      ...(lookBack && lookBackHours
+        ? {
+            urlAt: (now: Date) =>
+              `${origin}${lookBack.path(binding, new Date(now.getTime() - lookBackHours * 3_600_000))}`,
+            lookBackHours,
+          }
+        : {}),
       headers: serviceHeaders(runnable.serviceCredential),
       pollMs:
         positiveInteger(

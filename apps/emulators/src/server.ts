@@ -4,6 +4,12 @@ import { endpointSchemas, missingAirspaceSchemas, validatePayload } from './sche
 import { answerMetarRequest, recordedMetarReports } from './metar.js';
 import { answerTafRequest, recordedTafForecasts } from './taf.js';
 import { answerTfrRequest } from './tfr.js';
+import {
+  answerSkydioRequest,
+  readSkydioEmulatedFlights,
+  skydioEmulatorState,
+  type SkydioEmulatorState,
+} from './skydio.js';
 import { handleNoticeRequest, NoticeInbox } from './notices.js';
 import {
   djiFaultScripts,
@@ -27,6 +33,11 @@ export interface EmulatorConfig {
   userRedirectUris: string[];
   callbackSecret: string;
   callbackOrigins: string[];
+  /**
+   * The API token the flight service stand-in accepts, as the whole Authorization header. Unset, as on a host that
+   * is not a local development host and names none, the stand-in is off.
+   */
+  flightServiceToken?: string;
 }
 const local = (host: string): boolean => ['127.0.0.1', 'localhost', '::1'].includes(host);
 export function emulatorConfig(env: NodeJS.ProcessEnv = process.env): EmulatorConfig {
@@ -51,6 +62,7 @@ export function emulatorConfig(env: NodeJS.ProcessEnv = process.env): EmulatorCo
     callbackOrigins: (
       env.EMULATOR_CALLBACK_ORIGINS ?? 'http://127.0.0.1:4000,http://localhost:4000,http://127.0.0.1:4003'
     ).split(','),
+    flightServiceToken: env.SKYDIO_API_TOKEN || (defaults ? 'ledger-local-skydio-token' : undefined),
   };
 }
 
@@ -78,6 +90,8 @@ export interface EmulatorState {
   metarReports: string[];
   /** Published weather forecasts, each the exact text of one forecast object; the recorded ones until replaced. */
   tafForecasts: string[];
+  /** The flight service stand-in: invented flights placed around the time the emulators started, until replaced. */
+  skydio: SkydioEmulatorState;
   /** What the notice stand-ins received: email over SMTP and webhook calls. */
   notices: NoticeInbox;
 }
@@ -150,6 +164,7 @@ export function createEmulator(
     callbackAttempts: [],
     metarReports: recordedMetarReports(),
     tafForecasts: recordedTafForecasts(),
+    skydio: skydioEmulatorState(new Date().toISOString()),
     notices: options.notices ?? new NoticeInbox(),
   };
   let controlLease: { id: string; owner: 'scenario' | 'trickle'; expires: number } | undefined;
@@ -330,6 +345,7 @@ export function createEmulator(
           state.sourceClock = undefined;
           state.metarReports = recordedMetarReports();
           state.tafForecasts = recordedTafForecasts();
+          state.skydio = skydioEmulatorState(new Date().toISOString());
           scriptedFlight?.stop();
           scriptedFlight = undefined;
           return send(response, 200, { reset: true });
@@ -359,6 +375,28 @@ export function createEmulator(
             throw new HttpError(400, 'Expected reports: report objects with icaoId, rawOb and obsTime');
           state.metarReports = reports.map((report) => JSON.stringify(report));
           return send(response, 200, { reports: state.metarReports.length });
+        }
+        if (path === '/_simulation/skydio/flights' && request.method === 'PUT') {
+          const value = JSON.parse(Buffer.from(await readBytes(request)).toString()) as { flights?: unknown };
+          try {
+            state.skydio.flights = readSkydioEmulatedFlights(value.flights);
+          } catch (error) {
+            throw new HttpError(400, (error as Error).message);
+          }
+          return send(response, 200, { flights: state.skydio.flights.length });
+        }
+        if (path === '/_simulation/skydio/rate-limit' && request.method === 'POST') {
+          const value = JSON.parse(Buffer.from(await readBytes(request)).toString()) as {
+            requests?: unknown;
+            retryAfterSeconds?: unknown;
+          };
+          const whole = (given: unknown, most: number) =>
+            Number.isSafeInteger(given) && Number(given) >= 0 && Number(given) <= most;
+          if (!whole(value.requests, 1000) || !whole(value.retryAfterSeconds ?? 2, 3600))
+            throw new HttpError(400, 'Expected requests (0 to 1000) and retryAfterSeconds (0 to 3600)');
+          state.skydio.rateLimited = value.requests as number;
+          state.skydio.retryAfterSeconds = (value.retryAfterSeconds as number | undefined) ?? 2;
+          return send(response, 200, { ...value, retryAfterSeconds: state.skydio.retryAfterSeconds });
         }
         if (path === '/_simulation/taf/forecasts' && request.method === 'PUT') {
           const value = JSON.parse(Buffer.from(await readBytes(request)).toString()) as { forecasts?: unknown };
@@ -573,6 +611,28 @@ export function createEmulator(
           message: 'success',
           statusCode: 200,
         });
+      }
+      const flightService =
+        config.flightServiceToken === undefined
+          ? undefined
+          : answerSkydioRequest(
+              state.skydio,
+              config.flightServiceToken,
+              {
+                method: request.method ?? 'GET',
+                path,
+                query: url.searchParams,
+                authorization: request.headers.authorization,
+              },
+              sourceTime(),
+            );
+      if (flightService) {
+        response.writeHead(flightService.status, {
+          ...flightService.headers,
+          'cache-control': 'no-store',
+          'x-ledger-simulation': 'invented-flight-service',
+        });
+        return response.end(flightService.body);
       }
       const restriction = request.method === 'GET' ? answerTfrRequest(path) : undefined;
       if (restriction) {

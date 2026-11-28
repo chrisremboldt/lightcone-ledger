@@ -1,0 +1,26 @@
+{
+  "note": "Constructed: the reference requires only flight_id and vehicle_serial.",
+  "case": "rejected",
+  "message": {
+    "contentType": "application/json",
+    "transport": {
+      "method": "GET",
+      "path": "/api/v0/flights"
+    },
+    "capturedAt": "2026-11-20T16:00:05.000Z",
+    "body": {
+      "flight_id": "EXAMPLE-FLIGHT-0006",
+      "vehicle_serial": "EXAMPLE-VEHICLE-02",
+      "has_telemetry": false
+    }
+  },
+  "expect": {
+    "observations": [],
+    "rejections": [
+      {
+        "reasonIncludes": "states neither a takeoff nor a landing"
+      }
+    ],
+    "unmapped": []
+  }
+}

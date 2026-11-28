@@ -1,0 +1,34 @@
+{
+  "note": "Constructed.",
+  "case": "rejected",
+  "message": {
+    "contentType": "application/json",
+    "transport": {
+      "method": "GET",
+      "path": "/api/v1/flight/EXAMPLE-FLIGHT-0001/telemetry"
+    },
+    "capturedAt": "2026-11-20T16:00:05.000Z",
+    "body": {
+      "flight": {
+        "flight_id": "EXAMPLE-FLIGHT-0001",
+        "vehicle_serial": "EXAMPLE-VEHICLE-01",
+        "has_telemetry": true,
+        "takeoff": "2026-11-20T15:00:02.503000+00:00",
+        "landing": "2026-11-20T15:18:40.250000+00:00"
+      },
+      "flight_telemetry": {
+        "aligned_telemetry": []
+      },
+      "metadata": {}
+    }
+  },
+  "expect": {
+    "observations": [],
+    "rejections": [
+      {
+        "reasonIncludes": "holds no samples"
+      }
+    ],
+    "unmapped": []
+  }
+}

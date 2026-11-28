@@ -16,7 +16,13 @@ import {
   SourceLoop,
   type SourceLoopEvent,
 } from '../src/source-loop.js';
-import { ServiceCredentialRefused, ServicePoll, transportUrl } from '../src/source-transports.js';
+import {
+  ServiceCredentialRefused,
+  ServicePoll,
+  jsonArrayElements,
+  jsonMemberBytes,
+  transportUrl,
+} from '../src/source-transports.js';
 import { djiOsdBytes } from '../../../apps/emulators/src/dji.js';
 
 const binding = { deviceId: 'LOOP-AIRCRAFT-01', gatewayId: 'LOOP-DOCK-01' };
@@ -305,6 +311,141 @@ describe('polling a service', () => {
       async () => {},
     );
     await expect(poll.start()).rejects.toBeInstanceOf(ServiceCredentialRefused);
+  });
+
+  it('cuts a member out of a JSON document as its own exact bytes, and refuses a path it cannot follow', () => {
+    const document =
+      '{ "meta": {"time": 1.5}, "data" : { "note": "a \\"data\\": {} in text", "items": [ {"a":1} , [2, "]"] ] } }';
+    const bytes = new TextEncoder().encode(document);
+    const cut = (path: string[]) => {
+      const part = jsonMemberBytes(bytes, path);
+      return part && new TextDecoder().decode(part);
+    };
+    expect(cut(['data', 'items'])).toBe('[ {"a":1} , [2, "]"] ]');
+    expect(cut(['meta', 'time'])).toBe('1.5');
+    expect(cut(['data', 'note'])).toBe('"a \\"data\\": {} in text"');
+    expect(cut([])).toBe(document);
+    expect(
+      jsonArrayElements(jsonMemberBytes(bytes, ['data', 'items'])!)!.map((part) => new TextDecoder().decode(part)),
+    ).toEqual(['{"a":1}', '[2, "]"]']);
+    expect(cut(['data', 'missing'])).toBeUndefined();
+    expect(cut(['meta', 'time', 'deeper'])).toBeUndefined();
+    const encode = (text: string) => new TextEncoder().encode(text);
+    // A key given twice has no one value.
+    expect(jsonMemberBytes(encode('{"data":{"a":1},"data":{"a":2}}'), ['data'])).toBeUndefined();
+    expect(jsonMemberBytes(encode('{"data":'), ['data'])).toBeUndefined();
+    expect(jsonMemberBytes(encode('[1,2]'), ['data'])).toBeUndefined();
+  });
+
+  it('reads a list page by page, hands each part over once by its key, and follows the items it names', async () => {
+    const pages: Record<string, unknown> = {
+      '/list?page=1': {
+        items: [
+          { id: 'a', revision: 1, ready: true },
+          { id: 'b', revision: 1, ready: false },
+        ],
+        next: 2,
+      },
+      '/list?page=2': { items: [{ id: 'c', revision: 1, ready: true }], next: null },
+    };
+    const asked: string[] = [];
+    const received: VendorMessage[] = [];
+    const events: SourceLoopEvent[] = [];
+    let itemC: () => Response = () => new Response('', { status: 404 });
+    const items = (bytes: Uint8Array) =>
+      (JSON.parse(new TextDecoder().decode(bytes)) as { items: { id: string; revision: number; ready: boolean }[] })
+        .items;
+    const poll = new ServicePoll(
+      {
+        url: () => 'https://service.example.invalid/list?page=1',
+        headers: {},
+        intervalMs: 5,
+        retry: fast,
+        maxBytes: 200,
+        split: (bytes) => jsonArrayElements(jsonMemberBytes(bytes, ['items'])!),
+        // Known by id and revision: a change of anything else does not hand the part over again.
+        partKey: (part) => {
+          const { id, revision } = JSON.parse(new TextDecoder().decode(part)) as { id: string; revision: number };
+          return `${id}:${revision}`;
+        },
+        follow: (bytes) =>
+          items(bytes)
+            .filter((item) => item.ready)
+            .map((item) => ({ path: `/items/${item.id}`, key: item.id, mayBeAbsent: true })),
+        followedPart: (bytes) => jsonMemberBytes(bytes, ['data']),
+        nextPage: (bytes) => {
+          const { next } = JSON.parse(new TextDecoder().decode(bytes)) as { next: number | null };
+          return next === null ? undefined : `/list?page=${next}`;
+        },
+        fetcher: (async (url: string) => {
+          const at = new URL(url);
+          asked.push(`${at.pathname}${at.search}`);
+          if (at.pathname === '/list') return json(200, pages[`${at.pathname}${at.search}`]);
+          if (at.pathname === '/items/a')
+            return new Response(`{"data":{"id":"a"},"at":${asked.length}}`, { status: 200 });
+          return itemC();
+        }) as typeof fetch,
+        log: (event) => events.push(event),
+      },
+      async (message) => {
+        received.push(message);
+      },
+    );
+    const running = poll.start();
+    await until(() => poll.polls >= 3);
+    const handed = () =>
+      received.map((message) => `${message.transport.path} ${new TextDecoder().decode(message.bytes)}`);
+    expect(handed()).toEqual([
+      '/list {"id":"a","revision":1,"ready":true}',
+      '/list {"id":"b","revision":1,"ready":false}',
+      '/list {"id":"c","revision":1,"ready":true}',
+      // Only the part cut from the item's answer: what changes with every read is not handed over.
+      '/items/a {"id":"a"}',
+    ]);
+    // The item the service did not hold yet is asked for on every poll, and that is not a failure.
+    expect(asked.filter((path) => path === '/items/a')).toHaveLength(1);
+    expect(asked.filter((path) => path === '/items/c').length).toBeGreaterThanOrEqual(2);
+    expect(events).toEqual([]);
+
+    // A part whose key changed is handed over again; one that became ready is followed; a huge item is left out.
+    (pages['/list?page=1'] as { items: unknown[] }).items = [
+      { id: 'a', revision: 2, ready: true },
+      { id: 'b', revision: 1, ready: true },
+    ];
+    itemC = () => new Response(`{"data":"${'x'.repeat(300)}"}`, { status: 200 });
+    const before = poll.polls;
+    await until(() => poll.polls >= before + 3);
+    await poll.stop();
+    await running;
+    expect(handed().slice(4)).toEqual(['/list {"id":"a","revision":2,"ready":true}']);
+    // Said once for each, however many polls follow, and never asked for again.
+    expect(events.map((event) => `${event.event}: ${event.message}`)).toEqual([
+      'item_too_large: /items/b is larger than 200 bytes and is not read.',
+      'item_too_large: /items/c is larger than 200 bytes and is not read.',
+    ]);
+    expect(asked.filter((path) => path === '/items/b')).toHaveLength(1);
+  });
+
+  it('waits as long as the service asks after a 429, up to a quarter of an hour', async () => {
+    const events: SourceLoopEvent[] = [];
+    const poll = new ServicePoll(
+      {
+        url: 'https://service.example.invalid/list',
+        headers: { authorization: 'fictional-secret-token' },
+        intervalMs: 5,
+        retry: fast,
+        fetcher: (async () =>
+          new Response('', { status: 429, headers: { 'retry-after': '86400' } })) as unknown as typeof fetch,
+        log: (event) => events.push(event),
+      },
+      async () => {},
+    );
+    const running = poll.start();
+    await until(() => events.length === 1);
+    await poll.stop();
+    await running;
+    expect(events[0]).toMatchObject({ event: 'poll_rate_limited', waitMs: 900_000 });
+    expect(JSON.stringify(events)).not.toContain('fictional-secret-token');
   });
 
   it('sends a secret without TLS only on this host or a private network the operator names', () => {

@@ -11,6 +11,9 @@ import {
   publishedTafAdapter,
   publishedTfrAdapter,
   restrictionListItems,
+  SKYDIO_CLOUD_START_NOTICE,
+  skydioCloudFlightsAdapter,
+  skydioCloudFlightsPoll,
   type DeliveryKind,
   type ListedItem,
   type ObservationAdapter,
@@ -29,6 +32,13 @@ interface Common {
   readonly bindingOptions: readonly BindingOption[];
   binding(values: BindingValues): unknown;
   subjects(values: BindingValues): SubjectNaming;
+  /**
+   * Observation types of which the source keeps one changing record per subject: before one is submitted, what is
+   * on file about its subject is read, and a changed one replaces it. The credential then also needs evidence:read.
+   */
+  readonly oneCurrentPerSubject?: readonly string[];
+  /** A sentence the process prints in its first line, for an adapter a person must test before relying on it. */
+  readonly startNotice?: string;
 }
 export interface BrokerAdapter extends Common {
   readonly transport: 'broker';
@@ -39,12 +49,28 @@ export interface PollAdapter extends Common {
   /** The path, and query when the service takes one, read on each poll. */
   path(values: BindingValues): string;
   readonly defaultPollSeconds: number;
-  /** bearer: the service takes an access token (ADAPTER_SERVICE_TOKEN). none: it is public and takes none. */
-  readonly serviceCredential: 'bearer' | 'none';
+  /**
+   * bearer: the service takes an access token (ADAPTER_SERVICE_TOKEN) as a bearer token. token: it takes the token
+   * as the whole Authorization header, with no scheme word. none: it is public and takes none.
+   */
+  readonly serviceCredential: 'bearer' | 'token' | 'none';
   /** Cuts a response into the messages it holds; each poll then hands over only those not in the previous one. */
   readonly split?: (bytes: Uint8Array) => Uint8Array[] | undefined;
+  /** What a part is known by from one poll to the next; default the digest of its bytes. */
+  readonly partKey?: (part: Uint8Array) => string;
   /** Reads a response as a list of items, each read at its own path and handed over as its own message. */
   readonly follow?: (bytes: Uint8Array) => readonly ListedItem[] | undefined;
+  /** Cuts a followed item's response down to the part that is handed over. */
+  readonly followedPart?: (bytes: Uint8Array) => Uint8Array | undefined;
+  /** The path and query of a list's next page, or undefined at the last. */
+  readonly nextPage?: (bytes: Uint8Array, url: string) => string | undefined;
+  /** The largest response read, in bytes; default 1 MiB. */
+  readonly maxBytes?: number;
+  /**
+   * With it, each poll asks for what began in the hours before it (--look-back-hours): the path and query are built
+   * again for every poll, and `path` only names what is read.
+   */
+  readonly lookBack?: { readonly defaultHours: number; path(values: BindingValues, since: Date): string };
 }
 export type RunnableAdapter = BrokerAdapter | PollAdapter;
 
@@ -150,6 +176,30 @@ export const runnableAdapters: Readonly<Record<string, RunnableAdapter>> = {
     defaultPollSeconds: 600,
     serviceCredential: 'none',
     follow: restrictionListItems,
+  },
+  [skydioCloudFlightsAdapter.descriptor.id]: {
+    adapter: skydioCloudFlightsAdapter as ObservationAdapter<never>,
+    transport: 'poll',
+    // A flight and its telemetry are records: none is dropped.
+    delivery: 'every',
+    bindingOptions: [],
+    binding: () => undefined,
+    subjects: () => sourceNames,
+    path: () => '/api/v0/flights',
+    // A flight that took off days ago can still change in the list, or have its telemetry uploaded.
+    lookBack: { defaultHours: 168, path: (_values, since) => skydioCloudFlightsPoll.path(since) },
+    // The service limits requests and does not publish the limit: two minutes is 720 reads of the list a day.
+    defaultPollSeconds: 120,
+    serviceCredential: 'token',
+    split: skydioCloudFlightsPoll.split,
+    partKey: skydioCloudFlightsPoll.partKey,
+    follow: skydioCloudFlightsPoll.follow,
+    followedPart: skydioCloudFlightsPoll.followedPart,
+    nextPage: skydioCloudFlightsPoll.nextPage,
+    maxBytes: skydioCloudFlightsPoll.maxBytes,
+    // The service keeps one record of a flight and changes it when the aircraft lands or the record is corrected.
+    oneCurrentPerSubject: ['flight.report'],
+    startNotice: SKYDIO_CLOUD_START_NOTICE,
   },
 };
 

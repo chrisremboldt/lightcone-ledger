@@ -1,0 +1,22 @@
+{
+  "note": "Constructed: a flight object cut off.",
+  "case": "malformed",
+  "message": {
+    "contentType": "application/json",
+    "transport": {
+      "method": "GET",
+      "path": "/api/v0/flights"
+    },
+    "capturedAt": "2026-11-20T16:00:05.000Z",
+    "bodyText": "{\"flight_id\":\"EXAMPLE-FLIGHT-0001\",\"vehicle_serial\":\"EXAMPLE-VEH"
+  },
+  "expect": {
+    "observations": [],
+    "rejections": [
+      {
+        "reasonIncludes": "Invalid or ambiguous JSON"
+      }
+    ],
+    "unmapped": []
+  }
+}

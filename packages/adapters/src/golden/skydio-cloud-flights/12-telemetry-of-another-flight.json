@@ -1,0 +1,56 @@
+{
+  "note": "Constructed: the answer names a flight other than the one asked for.",
+  "case": "rejected",
+  "message": {
+    "contentType": "application/json",
+    "transport": {
+      "method": "GET",
+      "path": "/api/v1/flight/EXAMPLE-FLIGHT-0001/telemetry"
+    },
+    "capturedAt": "2026-11-20T16:00:05.000Z",
+    "body": {
+      "flight": {
+        "flight_id": "EXAMPLE-FLIGHT-0002",
+        "vehicle_serial": "EXAMPLE-VEHICLE-01",
+        "has_telemetry": true,
+        "takeoff": "2026-11-20T15:00:02.503000+00:00",
+        "landing": "2026-11-20T15:18:40.250000+00:00"
+      },
+      "flight_telemetry": {
+        "aligned_telemetry": [
+          {
+            "battery_percentage": 0.93,
+            "gps_altitude": 562.4,
+            "gps_horizontal_accuracy": 0.8,
+            "gps_latitude": 44.5004,
+            "gps_longitude": -100.4993,
+            "gps_num_satellites_used": 14,
+            "gps_speed_accuracy": 0.3,
+            "gps_velocity": [3, 4, -0.5],
+            "gps_vertical_accuracy": 1.2,
+            "height_above_takeoff": 42.4,
+            "hybrid_altitude": 562.8,
+            "hybrid_camera_orientation_rpy_ned": [0, -10, 53.13],
+            "site_camera_orientation_quat_enu": [0, 0, 0, 1],
+            "site_camera_orientation_rpy_enu": [0, -10, 53.13],
+            "site_camera_position_enu": [55.6, 44.5, 42.4],
+            "site_orientation_quat_enu": [0, 0, 0, 1],
+            "site_orientation_rpy_enu": [0, 0, 53.13],
+            "site_position_enu": [55.6, 44.5, 42.4],
+            "timestamp": "2026-11-20T15:01:00.123456+00:00"
+          }
+        ]
+      },
+      "metadata": {}
+    }
+  },
+  "expect": {
+    "observations": [],
+    "rejections": [
+      {
+        "reasonIncludes": "not the flight it was asked for"
+      }
+    ],
+    "unmapped": []
+  }
+}

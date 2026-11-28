@@ -53,6 +53,18 @@ export {
 export { answerMetarRequest, recordedMetarReports, RECORDED_METAR_FILE, type MetarAnswer } from './metar.js';
 export { answerTafRequest, recordedTafForecasts, RECORDED_TAF_FILE, type TafAnswer } from './taf.js';
 export { answerTfrRequest, RECORDED_TFR_DIRECTORY, type TfrAnswer } from './tfr.js';
+export {
+  answerSkydioRequest,
+  inventedSkydioFlights,
+  readSkydioEmulatedFlights,
+  skydioEmulatorState,
+  skydioFlightObject,
+  skydioTelemetrySamples,
+  type SkydioAnswer,
+  type SkydioEmulatedFlight,
+  type SkydioEmulatorState,
+  type SkydioRequest,
+} from './skydio.js';
 
 if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
   const config = emulatorConfig();

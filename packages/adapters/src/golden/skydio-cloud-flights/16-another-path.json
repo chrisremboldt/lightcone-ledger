@@ -1,0 +1,24 @@
+{
+  "note": "Constructed: a message read somewhere this adapter does not read.",
+  "case": "rejected",
+  "message": {
+    "contentType": "application/json",
+    "transport": {
+      "method": "GET",
+      "path": "/api/v0/vehicles"
+    },
+    "capturedAt": "2026-11-20T16:00:05.000Z",
+    "body": {
+      "vehicles": []
+    }
+  },
+  "expect": {
+    "observations": [],
+    "rejections": [
+      {
+        "reasonIncludes": "not a path this adapter reads"
+      }
+    ],
+    "unmapped": []
+  }
+}

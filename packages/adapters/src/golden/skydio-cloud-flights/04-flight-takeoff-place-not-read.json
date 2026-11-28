@@ -1,0 +1,57 @@
+{
+  "note": "Constructed: a takeoff latitude out of range. The flight is reported without its place, and the reason is given.",
+  "case": "valid",
+  "message": {
+    "contentType": "application/json",
+    "transport": {
+      "method": "GET",
+      "path": "/api/v0/flights"
+    },
+    "capturedAt": "2026-11-20T16:00:05.000Z",
+    "body": {
+      "flight_id": "EXAMPLE-FLIGHT-0005",
+      "vehicle_serial": "EXAMPLE-VEHICLE-02",
+      "takeoff": "2026-11-20T10:00:00Z",
+      "landing": "2026-11-20T10:20:00Z",
+      "has_telemetry": true,
+      "takeoff_latitude": 95,
+      "takeoff_longitude": -100.5
+    }
+  },
+  "expect": {
+    "observations": [
+      {
+        "type": "flight.report",
+        "version": 1,
+        "subject": {
+          "kind": "flight",
+          "id": "EXAMPLE-FLIGHT-0005",
+          "scope": "source"
+        },
+        "secondarySubject": {
+          "kind": "aircraft",
+          "id": "EXAMPLE-VEHICLE-02",
+          "scope": "source"
+        },
+        "values": {
+          "activity": "landed",
+          "takeoffAt": "2026-11-20T10:00:00.000Z",
+          "landingAt": "2026-11-20T10:20:00.000Z"
+        },
+        "occurredAt": "2026-11-20T10:20:00.000Z",
+        "sourceEventId": "flight:EXAMPLE-FLIGHT-0005:06bf23c0a2f2706099cda3e76e2815ce"
+      }
+    ],
+    "rejections": [
+      {
+        "reasonIncludes": "reported without its takeoff place"
+      }
+    ],
+    "unmapped": [
+      {
+        "kind": "json_pointer",
+        "value": "/has_telemetry"
+      }
+    ]
+  }
+}

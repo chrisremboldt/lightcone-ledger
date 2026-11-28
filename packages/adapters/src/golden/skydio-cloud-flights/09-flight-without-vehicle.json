@@ -1,0 +1,25 @@
+{
+  "note": "Constructed.",
+  "case": "rejected",
+  "message": {
+    "contentType": "application/json",
+    "transport": {
+      "method": "GET",
+      "path": "/api/v0/flights"
+    },
+    "capturedAt": "2026-11-20T16:00:05.000Z",
+    "body": {
+      "flight_id": "EXAMPLE-FLIGHT-0008",
+      "takeoff": "2026-11-20T10:00:00Z"
+    }
+  },
+  "expect": {
+    "observations": [],
+    "rejections": [
+      {
+        "reasonIncludes": "vehicle_serial must be an id"
+      }
+    ],
+    "unmapped": []
+  }
+}

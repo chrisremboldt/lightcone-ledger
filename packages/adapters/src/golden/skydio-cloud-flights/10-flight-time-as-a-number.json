@@ -1,0 +1,26 @@
+{
+  "note": "Constructed: a time given as a count rather than a date and time.",
+  "case": "rejected",
+  "message": {
+    "contentType": "application/json",
+    "transport": {
+      "method": "GET",
+      "path": "/api/v0/flights"
+    },
+    "capturedAt": "2026-11-20T16:00:05.000Z",
+    "body": {
+      "flight_id": "EXAMPLE-FLIGHT-0009",
+      "vehicle_serial": "EXAMPLE-VEHICLE-02",
+      "takeoff": 1795100402503000
+    }
+  },
+  "expect": {
+    "observations": [],
+    "rejections": [
+      {
+        "reasonIncludes": "takeoff is not a date and time"
+      }
+    ],
+    "unmapped": []
+  }
+}

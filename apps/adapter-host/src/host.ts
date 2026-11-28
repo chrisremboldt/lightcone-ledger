@@ -156,6 +156,14 @@ export async function runAdapterHost(
   const log = (event: SourceLoopEvent) =>
     out(JSON.stringify({ at: new Date().toISOString(), adapter: descriptor.id, ...event }));
   const stop = dependencies.stop ?? signalFromProcess();
+  // The first line: what runs, how far it has been checked, and what a person must do before relying on it.
+  log({
+    event: 'starting',
+    message: `${descriptor.id} ${descriptor.version} reads ${descriptor.source.product} (${descriptor.source.interface}). Fidelity ${descriptor.fidelity}: ${fidelityWords[descriptor.fidelity]}.${runnable.startNotice ? ` ${runnable.startNotice}` : ''}`,
+    version: descriptor.version,
+    fidelity: descriptor.fidelity,
+    limitations: descriptor.limitations,
+  });
   let stats: (() => SourceLoopStats) | undefined;
   let metrics: MetricsServer | undefined;
   if (options.metrics) {
@@ -195,20 +203,16 @@ async function runSource(
   const { runnable } = options;
   const { descriptor } = runnable.adapter;
 
-  log({
-    event: 'starting',
-    message: `${descriptor.id} ${descriptor.version} reads ${descriptor.source.product} (${descriptor.source.interface}). Fidelity ${descriptor.fidelity}: ${fidelityWords[descriptor.fidelity]}.`,
-    version: descriptor.version,
-    fidelity: descriptor.fidelity,
-    limitations: descriptor.limitations,
-  });
-
   const ledger = new LedgerClient(options.apiUrl, options.credential, timedFetch(dependencies.fetcher ?? fetch));
   let sourceId: string;
   try {
     const me = await signIn(ledger, options, log, stop);
     if (!me) return 0;
     sourceId = sourceIdFor(me, descriptor, options.sourceId);
+    if (runnable.oneCurrentPerSubject?.length && !me.principal.capabilities.includes('evidence:read'))
+      throw new Error(
+        `${me.principal.name} may not read observations: give it evidence:read on the People screen. Before this adapter reports a ${runnable.oneCurrentPerSubject.join(' or ')} it reads the one on file about the same subject, so a changed record replaces the earlier one instead of standing beside it.`,
+      );
     log({
       event: 'signed_in',
       message: `Signed in to ${me.organization?.name ?? 'Ledger'} as ${me.principal.name} with the credential labelled "${options.credentialLabel}"; submitting under the source id ${sourceId}.`,
@@ -226,7 +230,11 @@ async function runSource(
   const loop = new SourceLoop({
     adapter: runnable.adapter,
     context: { subjects: runnable.subjects(options.binding), binding: runnable.binding(options.binding) as never },
-    sink: new HttpObservationSink({ ledger, sourceId }),
+    sink: new HttpObservationSink({
+      ledger,
+      sourceId,
+      ...(runnable.oneCurrentPerSubject ? { oneCurrentPerSubject: runnable.oneCurrentPerSubject } : {}),
+    }),
     delivery: runnable.delivery,
     queueLimit: options.queueLimit,
     log,
@@ -256,19 +264,23 @@ async function runSource(
     const service = options.service!;
     const poll = new ServicePoll(
       {
-        url: service.url,
+        url: service.urlAt ?? service.url,
         headers: service.headers,
         intervalMs: service.pollMs,
         log,
         ...(runnable.split ? { split: runnable.split } : {}),
+        ...(runnable.partKey ? { partKey: runnable.partKey } : {}),
         ...(runnable.follow ? { follow: runnable.follow } : {}),
+        ...(runnable.followedPart ? { followedPart: runnable.followedPart } : {}),
+        ...(runnable.nextPage ? { nextPage: runnable.nextPage } : {}),
+        ...(runnable.maxBytes ? { maxBytes: runnable.maxBytes } : {}),
         ...(dependencies.fetcher ? { fetcher: dependencies.fetcher } : {}),
       },
       receive,
     );
     log({
       event: 'polling',
-      message: `Reading ${new URL(service.url).pathname}${new URL(service.url).search} every ${service.pollMs / 1000} s.`,
+      message: `Reading ${new URL(service.url).pathname}${new URL(service.url).search} every ${service.pollMs / 1000} s${service.lookBackHours ? `, each time for what began in the ${service.lookBackHours} hours before it` : ''}.`,
     });
     transport = poll;
     transportFailed = poll.start();

@@ -172,10 +172,44 @@ export async function translateAndSubmit<Binding, O extends ObservationEnvelope 
   return { artifactId, submitted, rejections, unmapped };
 }
 
-/** Keeps everything in memory. Same key with different content conflicts, as intake does. */
+/**
+ * For a source that keeps one changing record per subject, such as a flight it updates when the aircraft lands: the
+ * observation types of which at most one observation per subject is current. Before a sink submits one of these it
+ * reads what this source has on file about the subject. The same source event on file: nothing is submitted. Another
+ * one on file: the new observation replaces it, as a correction. Each such observation carries a sourceEventId that
+ * changes exactly when what it states changes.
+ */
+export interface CurrentRecordOptions {
+  readonly oneCurrentPerSubject?: readonly string[];
+}
+
+/** Whether a sink reads what is on file before it submits this observation. */
+export function keepsOneCurrent(options: CurrentRecordOptions, observation: unknown): boolean {
+  const { type, sourceEventId } = observation as { type?: unknown; sourceEventId?: unknown };
+  return typeof sourceEventId === 'string' && (options.oneCurrentPerSubject ?? []).includes(String(type));
+}
+
+/**
+ * Keeps everything in memory. Same key with different content conflicts, and a source event already retained with
+ * different content conflicts, as intake does.
+ */
 export class InMemoryObservationSink<O extends ObservationEnvelope = ObservationV1> implements ObservationSink<O> {
   readonly originals = new Map<string, { bytes: Uint8Array; contentType: string }>();
-  readonly observations: { observation: O; idempotencyKey: string; receiptId: string }[] = [];
+  readonly observations: {
+    observation: O;
+    idempotencyKey: string;
+    receiptId: string;
+    /** The receipt of the observation this one replaced. */
+    replaces?: string;
+  }[] = [];
+  constructor(private readonly options: CurrentRecordOptions = {}) {}
+
+  /** The observations no later one replaced. */
+  get current() {
+    const replaced = new Set(this.observations.map((entry) => entry.replaces));
+    return this.observations.filter((entry) => !replaced.has(entry.receiptId));
+  }
+
   async retainOriginal(request: RetainOriginalRequest): Promise<{ artifactId: string }> {
     const artifactId = `memory-artifact-${request.sha256}`;
     if (!this.originals.has(artifactId))
@@ -183,14 +217,39 @@ export class InMemoryObservationSink<O extends ObservationEnvelope = Observation
     return { artifactId };
   }
   async submitObservation(observation: O, idempotencyKey: string): Promise<{ receiptId: string }> {
+    const stated = observation as O & { subject?: unknown; sourceEventId?: string };
+    const about = (entry: { observation: O }) =>
+      entry.observation.type === observation.type &&
+      canonicalize((entry.observation as typeof stated).subject) === canonicalize(stated.subject);
+    let replaces: string | undefined;
+    if (keepsOneCurrent(this.options, observation)) {
+      const onFile = this.current.filter(about);
+      const same = onFile.find((entry) => (entry.observation as typeof stated).sourceEventId === stated.sourceEventId);
+      if (same) return { receiptId: same.receiptId };
+      replaces = onFile.at(-1)?.receiptId;
+    }
     const existing = this.observations.find((entry) => entry.idempotencyKey === idempotencyKey);
     if (existing) {
-      if (canonicalize(existing.observation) !== canonicalize(observation))
+      if (canonicalize(existing.observation) !== canonicalize(observation) || existing.replaces !== replaces)
         throw new Error(`Idempotency key ${idempotencyKey} was used with different content`);
       return { receiptId: existing.receiptId };
     }
+    if (
+      stated.sourceEventId !== undefined &&
+      this.observations.some(
+        (entry) =>
+          entry.observation.type === observation.type &&
+          (entry.observation as typeof stated).sourceEventId === stated.sourceEventId,
+      )
+    )
+      throw new Error(`Source event ${stated.sourceEventId} already retains a different observation of this type`);
     const receiptId = `memory-receipt-${this.observations.length + 1}`;
-    this.observations.push({ observation: structuredClone(observation), idempotencyKey, receiptId });
+    this.observations.push({
+      observation: structuredClone(observation),
+      idempotencyKey,
+      receiptId,
+      ...(replaces ? { replaces } : {}),
+    });
     return { receiptId };
   }
 }

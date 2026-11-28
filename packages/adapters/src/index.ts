@@ -97,6 +97,23 @@ export {
   translatePublishedTfr,
 } from './published-tfr.js';
 export { type XmlElement, XmlRefusal, readXmlElements } from './xml-elements.js';
+export {
+  SKYDIO_CLOUD_START_NOTICE,
+  SKYDIO_MAX_POSITIONS_PER_FLIGHT,
+  SKYDIO_TELEMETRY_MAX_BYTES,
+  skydioCloudFlightsAdapter,
+  skydioCloudFlightsDescriptor,
+  skydioCloudFlightsPoll,
+  skydioFlightKey,
+  skydioFlightParts,
+  skydioFlightsPath,
+  skydioNextFlightsPage,
+  skydioTelemetryItems,
+  skydioTelemetryPart,
+  skydioTime,
+  thinSamples,
+  translateSkydioCloudFlights,
+} from './skydio-cloud-flights.js';
 export const digest = (bytes: Uint8Array | string): string => createHash('sha256').update(bytes).digest('hex');
 const boundedKey = (value: string): string => (value.length > 150 ? `adapter:${digest(value)}` : value);
 

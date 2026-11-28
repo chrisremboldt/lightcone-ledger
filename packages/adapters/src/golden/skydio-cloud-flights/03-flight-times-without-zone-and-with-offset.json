@@ -1,0 +1,45 @@
+{
+  "note": "Constructed: the reference’s time formats. A time without a zone is UTC; an offset is applied; microseconds are cut to milliseconds.",
+  "case": "valid",
+  "message": {
+    "contentType": "application/json",
+    "transport": {
+      "method": "GET",
+      "path": "/api/v0/flights"
+    },
+    "capturedAt": "2026-11-20T16:00:05.000Z",
+    "body": {
+      "flight_id": "EXAMPLE-FLIGHT-0004",
+      "vehicle_serial": "EXAMPLE-VEHICLE-02",
+      "takeoff": "2026-11-20T09:15:02",
+      "landing": "2026-11-20T04:33:10.123456-05:00"
+    }
+  },
+  "expect": {
+    "observations": [
+      {
+        "type": "flight.report",
+        "version": 1,
+        "subject": {
+          "kind": "flight",
+          "id": "EXAMPLE-FLIGHT-0004",
+          "scope": "source"
+        },
+        "secondarySubject": {
+          "kind": "aircraft",
+          "id": "EXAMPLE-VEHICLE-02",
+          "scope": "source"
+        },
+        "values": {
+          "activity": "landed",
+          "takeoffAt": "2026-11-20T09:15:02.000Z",
+          "landingAt": "2026-11-20T09:33:10.123Z"
+        },
+        "occurredAt": "2026-11-20T09:33:10.123Z",
+        "sourceEventId": "flight:EXAMPLE-FLIGHT-0004:be24ebc7d850f8939b33636400e148b3"
+      }
+    ],
+    "rejections": [],
+    "unmapped": []
+  }
+}
