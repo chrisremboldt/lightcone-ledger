@@ -1,0 +1,49 @@
+{
+  "case": "rejected",
+  "note": "Nobody has stated the unit of a point’s timestamp: no position is translated.",
+  "message": {
+    "contentType": "application/json",
+    "transport": {
+      "method": "GET",
+      "path": "/openapi/v2.0/flight-task/a1b2c3d4-0000-4000-8000-000000000001/track"
+    },
+    "capturedAt": "2026-11-20T14:15:00.000Z",
+    "body": {
+      "code": 0,
+      "message": "OK",
+      "data": {
+        "name": "North fence line",
+        "wayline_uuid": "0c6f1d2e-7a8b-4c9d-8e0f-1a2b3c4d5e6f",
+        "track": {
+          "track_id": "track-ridge-0001",
+          "drone_sn": "RIDGE-AC-1",
+          "flight_distance": 1480,
+          "flight_duration": 720,
+          "points": [
+            {
+              "timestamp": 1795183205,
+              "latitude": 39.97,
+              "longitude": -86.13,
+              "height": 260
+            }
+          ]
+        }
+      }
+    }
+  },
+  "context": {
+    "subjects": {
+      "scope": "source"
+    },
+    "binding": {}
+  },
+  "expect": {
+    "observations": [],
+    "rejections": [
+      {
+        "reasonIncludes": "the documentation does not state the unit of a point’s timestamp"
+      }
+    ],
+    "unmapped": []
+  }
+}

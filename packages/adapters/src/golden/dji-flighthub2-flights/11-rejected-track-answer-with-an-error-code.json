@@ -1,0 +1,26 @@
+{
+  "case": "rejected",
+  "note": "The documented error body.",
+  "message": {
+    "contentType": "application/json",
+    "transport": {
+      "method": "GET",
+      "path": "/openapi/v2.0/flight-task/a1b2c3d4-0000-4000-8000-000000000001/track"
+    },
+    "capturedAt": "2026-11-20T14:15:00.000Z",
+    "body": {
+      "code": 200500,
+      "message": "Internal Server Error",
+      "data": {}
+    }
+  },
+  "expect": {
+    "observations": [],
+    "rejections": [
+      {
+        "reasonIncludes": "code other than 0"
+      }
+    ],
+    "unmapped": []
+  }
+}

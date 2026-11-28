@@ -1,0 +1,48 @@
+{
+  "case": "rejected",
+  "note": "A completion time before the start time.",
+  "message": {
+    "contentType": "application/json",
+    "transport": {
+      "method": "GET",
+      "path": "/openapi/v2.0/flight-task/list"
+    },
+    "capturedAt": "2026-11-20T14:15:00.000Z",
+    "body": {
+      "uuid": "a1b2c3d4-0000-4000-8000-000000000001",
+      "name": "North fence line",
+      "task_type": "immediate",
+      "status": "success",
+      "sn": "RIDGE-DOCK-1",
+      "landing_dock_sn": "",
+      "wayline_uuid": "0c6f1d2e-7a8b-4c9d-8e0f-1a2b3c4d5e6f",
+      "begin_at": "2026-11-20T14:00:00.000000Z",
+      "end_at": "2026-11-20T14:12:00.000000Z",
+      "run_at": "2026-11-20T14:00:05.250000Z",
+      "completed_at": "2026-11-20T13:12:40Z",
+      "media_upload_status": "upload_finished",
+      "resumable_status": "manual",
+      "is_break_point_resume": false,
+      "current_waypoint_index": 6,
+      "total_waypoints": 6,
+      "flight_type": "1",
+      "flight_status": "2",
+      "folder_id": 4201,
+      "operations": [
+        {
+          "operator_account": "avery.example"
+        }
+      ],
+      "exceptions": []
+    }
+  },
+  "expect": {
+    "observations": [],
+    "rejections": [
+      {
+        "reasonIncludes": "completed_at is before run_at"
+      }
+    ],
+    "unmapped": []
+  }
+}

@@ -1,0 +1,28 @@
+{
+  "case": "rejected",
+  "note": "A response of another interface.",
+  "message": {
+    "contentType": "application/json",
+    "transport": {
+      "method": "GET",
+      "path": "/openapi/v2.0/project"
+    },
+    "capturedAt": "2026-11-20T14:15:00.000Z",
+    "body": {
+      "code": 0,
+      "message": "",
+      "data": {
+        "list": []
+      }
+    }
+  },
+  "expect": {
+    "observations": [],
+    "rejections": [
+      {
+        "reasonIncludes": "neither an entry of the flight task list nor a flight task’s track"
+      }
+    ],
+    "unmapped": []
+  }
+}

@@ -35,6 +35,8 @@ export {
 } from './http-observation-sink.js';
 export * from './source-loop.js';
 export * from './source-transports.js';
+export * from './dji-flighthub2-flights.js';
+export * from './dji-flighthub2-poll.js';
 export {
   djiOsdPositionAdapter,
   djiOsdPositionDescriptor,

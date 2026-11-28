@@ -1,0 +1,134 @@
+{
+  "case": "valid",
+  "note": "Times written with an offset, as the older documentation’s example writes them, and a status other than success.",
+  "message": {
+    "contentType": "application/json",
+    "transport": {
+      "method": "GET",
+      "path": "/openapi/v2.0/flight-task/list"
+    },
+    "capturedAt": "2026-11-20T14:15:00.000Z",
+    "body": {
+      "uuid": "a1b2c3d4-0000-4000-8000-000000000002",
+      "name": "North fence line",
+      "task_type": "immediate",
+      "status": "terminated",
+      "sn": "RIDGE-DOCK-1",
+      "landing_dock_sn": "",
+      "wayline_uuid": "0c6f1d2e-7a8b-4c9d-8e0f-1a2b3c4d5e6f",
+      "begin_at": "2026-11-20T14:00:00.000000Z",
+      "end_at": "2026-11-20T14:12:00.000000Z",
+      "run_at": "2026-11-20T22:00:05.25+08:00",
+      "completed_at": "2026-11-20T22:07:10+08:00",
+      "media_upload_status": "upload_finished",
+      "resumable_status": "manual",
+      "is_break_point_resume": false,
+      "current_waypoint_index": 6,
+      "total_waypoints": 6,
+      "flight_type": "1",
+      "flight_status": "2",
+      "folder_id": 4201,
+      "operations": [
+        {
+          "operator_account": "avery.example"
+        }
+      ],
+      "exceptions": [
+        {
+          "code": 219018,
+          "message": "Task device did not respond within timeout",
+          "happen_at": "2026-11-20T14:07:00Z",
+          "sn": "RIDGE-DOCK-1"
+        }
+      ]
+    }
+  },
+  "expect": {
+    "observations": [
+      {
+        "type": "flight.report",
+        "version": 1,
+        "subject": {
+          "kind": "flight",
+          "id": "a1b2c3d4-0000-4000-8000-000000000002",
+          "scope": "source"
+        },
+        "occurredAt": "2026-11-20T14:07:10.000Z",
+        "sourceEventId": "flight-task:a1b2c3d4-0000-4000-8000-000000000002:6e3204f8e22ac424ae04ce113e3ea631",
+        "values": {
+          "activity": "landed",
+          "takeoffAt": "2026-11-20T14:00:05.250Z",
+          "landingAt": "2026-11-20T14:07:10.000Z"
+        },
+        "extraLimitations": ["The source states the status of this flight task as terminated."]
+      }
+    ],
+    "rejections": [],
+    "unmapped": [
+      {
+        "kind": "json_pointer",
+        "value": "/begin_at"
+      },
+      {
+        "kind": "json_pointer",
+        "value": "/current_waypoint_index"
+      },
+      {
+        "kind": "json_pointer",
+        "value": "/end_at"
+      },
+      {
+        "kind": "json_pointer",
+        "value": "/exceptions"
+      },
+      {
+        "kind": "json_pointer",
+        "value": "/flight_type"
+      },
+      {
+        "kind": "json_pointer",
+        "value": "/folder_id"
+      },
+      {
+        "kind": "json_pointer",
+        "value": "/is_break_point_resume"
+      },
+      {
+        "kind": "json_pointer",
+        "value": "/landing_dock_sn"
+      },
+      {
+        "kind": "json_pointer",
+        "value": "/media_upload_status"
+      },
+      {
+        "kind": "json_pointer",
+        "value": "/name"
+      },
+      {
+        "kind": "json_pointer",
+        "value": "/operations"
+      },
+      {
+        "kind": "json_pointer",
+        "value": "/resumable_status"
+      },
+      {
+        "kind": "json_pointer",
+        "value": "/sn"
+      },
+      {
+        "kind": "json_pointer",
+        "value": "/task_type"
+      },
+      {
+        "kind": "json_pointer",
+        "value": "/total_waypoints"
+      },
+      {
+        "kind": "json_pointer",
+        "value": "/wayline_uuid"
+      }
+    ]
+  }
+}

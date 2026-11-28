@@ -131,7 +131,7 @@ Its `expect` holds the drafts, the rejections, the unmapped fields (`/bid`, `/da
 
 ## 6. The emulator
 
-`apps/emulators` plays the outside systems: partner orders, Airspace Link AirHub (from the pinned OpenAPI schemas that `pnpm vendor:airspace` downloads) DJI Cloud API telemetry over the local MQTT broker, published weather reports, forecasts and flight restrictions recorded from the live services, and the flights and telemetry part of the Skydio Cloud API with invented flights, written from its published reference. An emulator emits vendor-shaped bytes only, never observations. The adapter is the one place vendor shapes become observations.
+`apps/emulators` plays the outside systems: partner orders, Airspace Link AirHub (from the pinned OpenAPI schemas that `pnpm vendor:airspace` downloads) DJI Cloud API telemetry over the local MQTT broker, published weather reports, forecasts and flight restrictions recorded from the live services, and the flights and telemetry part of the Skydio Cloud API with invented flights, written from its published reference, and DJI FlightHub 2's flight tasks, written from its documentation only. An emulator emits vendor-shaped bytes only, never observations. The adapter is the one place vendor shapes become observations.
 
 Build your test messages with the emulator's own message builder, so the two cannot drift. The position test does this with `djiOsdBytes` from `apps/emulators/src/dji.ts`:
 

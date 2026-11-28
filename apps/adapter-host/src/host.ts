@@ -19,9 +19,10 @@ import { MetricsRegistry, registerProcessMetrics, serveMetrics, type MetricsServ
 import { sha256 } from '@ledger/integrity';
 import { hostUsage, parseHostOptions, UsageError, type HostOptions } from './options.js';
 import { registerAdapterMetrics } from './metrics.js';
+import type { SourceTransport } from './runnable.js';
 
 export { hostUsage, parseHostOptions, UsageError, type HostOptions } from './options.js';
-export { runnableAdapters, type RunnableAdapter } from './runnable.js';
+export { runnableAdapters, type RunnableAdapter, type SourceTransport } from './runnable.js';
 
 /** What each fidelity level claims, in the words an operator reads at start. */
 const fidelityWords: Record<Fidelity, string> = {
@@ -241,7 +242,7 @@ async function runSource(
   });
   measure(() => loop.stats);
   const receive = (message: Parameters<typeof loop.offer>[0]) => loop.offer(message);
-  let transport: BrokerSubscription | ServicePoll;
+  let transport: BrokerSubscription | SourceTransport;
   let transportFailed: Promise<unknown>;
   if (runnable.transport === 'broker') {
     const topic = runnable.topic(options.binding);
@@ -262,22 +263,36 @@ async function runSource(
     transportFailed = subscription.failed;
   } else {
     const service = options.service!;
-    const poll = new ServicePoll(
+    const own = runnable.source?.(
+      options.binding,
       {
-        url: service.urlAt ?? service.url,
+        url: service.url,
         headers: service.headers,
         intervalMs: service.pollMs,
         log,
-        ...(runnable.split ? { split: runnable.split } : {}),
-        ...(runnable.partKey ? { partKey: runnable.partKey } : {}),
-        ...(runnable.follow ? { follow: runnable.follow } : {}),
-        ...(runnable.followedPart ? { followedPart: runnable.followedPart } : {}),
-        ...(runnable.nextPage ? { nextPage: runnable.nextPage } : {}),
-        ...(runnable.maxBytes ? { maxBytes: runnable.maxBytes } : {}),
+        ...(service.lookBackHours ? { lookBackHours: service.lookBackHours } : {}),
         ...(dependencies.fetcher ? { fetcher: dependencies.fetcher } : {}),
       },
       receive,
     );
+    const shared = () =>
+      new ServicePoll(
+        {
+          url: service.urlAt ?? service.url,
+          headers: service.headers,
+          intervalMs: service.pollMs,
+          log,
+          ...(runnable.split ? { split: runnable.split } : {}),
+          ...(runnable.partKey ? { partKey: runnable.partKey } : {}),
+          ...(runnable.follow ? { follow: runnable.follow } : {}),
+          ...(runnable.followedPart ? { followedPart: runnable.followedPart } : {}),
+          ...(runnable.nextPage ? { nextPage: runnable.nextPage } : {}),
+          ...(runnable.maxBytes ? { maxBytes: runnable.maxBytes } : {}),
+          ...(dependencies.fetcher ? { fetcher: dependencies.fetcher } : {}),
+        },
+        receive,
+      );
+    const poll = own ?? shared();
     log({
       event: 'polling',
       message: `Reading ${new URL(service.url).pathname}${new URL(service.url).search} every ${service.pollMs / 1000} s${service.lookBackHours ? `, each time for what began in the ${service.lookBackHours} hours before it` : ''}.`,

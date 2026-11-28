@@ -1,0 +1,22 @@
+{
+  "case": "ambiguous",
+  "note": "completed_at twice.",
+  "message": {
+    "contentType": "application/json",
+    "transport": {
+      "method": "GET",
+      "path": "/openapi/v2.0/flight-task/list"
+    },
+    "capturedAt": "2026-11-20T14:15:00.000Z",
+    "bodyText": "{\"uuid\":\"a1b2c3d4-0000-4000-8000-000000000001\",\"status\":\"success\",\"flight_status\":\"2\",\"run_at\":\"2026-11-20T14:00:05Z\",\"completed_at\":\"2026-11-20T14:12:40Z\",\"completed_at\":\"2026-11-20T14:42:40Z\"}"
+  },
+  "expect": {
+    "observations": [],
+    "rejections": [
+      {
+        "reasonIncludes": "Invalid or ambiguous JSON"
+      }
+    ],
+    "unmapped": []
+  }
+}

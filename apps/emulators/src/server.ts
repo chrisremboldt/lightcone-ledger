@@ -10,6 +10,7 @@ import {
   skydioEmulatorState,
   type SkydioEmulatorState,
 } from './skydio.js';
+import { FlightHub2Project, handleFlightHub2Request } from './flighthub2.js';
 import { handleNoticeRequest, NoticeInbox } from './notices.js';
 import {
   djiFaultScripts,
@@ -92,6 +93,8 @@ export interface EmulatorState {
   tafForecasts: string[];
   /** The flight service stand-in: invented flights placed around the time the emulators started, until replaced. */
   skydio: SkydioEmulatorState;
+  /** The flight task stand-in's one project, with invented flights. */
+  flightHub2: FlightHub2Project;
   /** What the notice stand-ins received: email over SMTP and webhook calls. */
   notices: NoticeInbox;
 }
@@ -165,6 +168,7 @@ export function createEmulator(
     metarReports: recordedMetarReports(),
     tafForecasts: recordedTafForecasts(),
     skydio: skydioEmulatorState(new Date().toISOString()),
+    flightHub2: new FlightHub2Project(),
     notices: options.notices ?? new NoticeInbox(),
   };
   let controlLease: { id: string; owner: 'scenario' | 'trickle'; expires: number } | undefined;
@@ -281,6 +285,7 @@ export function createEmulator(
     const path = url.pathname;
     try {
       if (await handleNoticeRequest(state.notices, request, response, url, () => readBytes(request))) return;
+      if (handleFlightHub2Request(state.flightHub2, request, response, url)) return;
       if (path === '/healthz')
         return send(response, 200, {
           status: 'ok',
@@ -346,6 +351,7 @@ export function createEmulator(
           state.metarReports = recordedMetarReports();
           state.tafForecasts = recordedTafForecasts();
           state.skydio = skydioEmulatorState(new Date().toISOString());
+          state.flightHub2 = new FlightHub2Project();
           scriptedFlight?.stop();
           scriptedFlight = undefined;
           return send(response, 200, { reset: true });

@@ -1,0 +1,198 @@
+{
+  "case": "valid",
+  "note": "The configuration states milliseconds. One point’s time does not fit that unit and one has no usable latitude: both are left out, each with its reason.",
+  "message": {
+    "contentType": "application/json",
+    "transport": {
+      "method": "GET",
+      "path": "/openapi/v2.0/flight-task/a1b2c3d4-0000-4000-8000-000000000001/track"
+    },
+    "capturedAt": "2026-11-20T14:15:00.000Z",
+    "body": {
+      "code": 0,
+      "message": "OK",
+      "data": {
+        "name": "North fence line",
+        "wayline_uuid": "0c6f1d2e-7a8b-4c9d-8e0f-1a2b3c4d5e6f",
+        "track": {
+          "track_id": "track-ridge-0001",
+          "drone_sn": "RIDGE-AC-1",
+          "flight_distance": 1480,
+          "flight_duration": 720,
+          "points": [
+            {
+              "timestamp": 1795183205000,
+              "latitude": 39.97,
+              "longitude": -86.13,
+              "height": 260
+            },
+            {
+              "timestamp": 1795183210,
+              "latitude": 39.9702,
+              "longitude": -86.1298,
+              "height": 268.5
+            },
+            {
+              "timestamp": 1795183215000,
+              "latitude": 139.9704,
+              "longitude": -86.1296,
+              "height": 277
+            },
+            {
+              "timestamp": 1795183220500,
+              "latitude": 39.9706,
+              "longitude": -86.1294,
+              "height": 285.5
+            }
+          ]
+        }
+      }
+    }
+  },
+  "context": {
+    "subjects": {
+      "scope": "source"
+    },
+    "binding": {
+      "pointTimeUnit": "milliseconds"
+    }
+  },
+  "expect": {
+    "observations": [
+      {
+        "type": "position.fix",
+        "version": 1,
+        "subject": {
+          "kind": "aircraft",
+          "id": "RIDGE-AC-1",
+          "scope": "source"
+        },
+        "secondarySubject": {
+          "kind": "flight",
+          "id": "a1b2c3d4-0000-4000-8000-000000000001",
+          "scope": "source"
+        },
+        "occurredAt": "2026-11-20T14:00:05.000Z",
+        "sourceEventId": "track-ridge-0001 point 0",
+        "position": {
+          "latitudeDegrees": 39.97,
+          "longitudeDegrees": -86.13
+        },
+        "originalLocator": {
+          "kind": "json_pointer",
+          "value": "/data/track/points/0"
+        },
+        "values": {
+          "fix": "unknown"
+        }
+      },
+      {
+        "type": "position.fix",
+        "version": 1,
+        "subject": {
+          "kind": "aircraft",
+          "id": "RIDGE-AC-1",
+          "scope": "source"
+        },
+        "secondarySubject": {
+          "kind": "flight",
+          "id": "a1b2c3d4-0000-4000-8000-000000000001",
+          "scope": "source"
+        },
+        "occurredAt": "2026-11-20T14:00:20.500Z",
+        "sourceEventId": "track-ridge-0001 point 3",
+        "position": {
+          "latitudeDegrees": 39.9706,
+          "longitudeDegrees": -86.1294
+        },
+        "originalLocator": {
+          "kind": "json_pointer",
+          "value": "/data/track/points/3"
+        },
+        "values": {
+          "fix": "unknown"
+        }
+      }
+    ],
+    "rejections": [
+      {
+        "reasonIncludes": "read as milliseconds, timestamp is before 2020"
+      },
+      {
+        "reasonIncludes": "latitude must be degrees from -90 to 90"
+      }
+    ],
+    "unmapped": [
+      {
+        "kind": "json_pointer",
+        "value": "/message"
+      },
+      {
+        "kind": "json_pointer",
+        "value": "/data/name"
+      },
+      {
+        "kind": "json_pointer",
+        "value": "/data/wayline_uuid"
+      },
+      {
+        "kind": "json_pointer",
+        "value": "/data/track/flight_distance"
+      },
+      {
+        "kind": "json_pointer",
+        "value": "/data/track/flight_duration"
+      },
+      {
+        "kind": "json_pointer",
+        "value": "/data/track/points/0/height"
+      },
+      {
+        "kind": "json_pointer",
+        "value": "/data/track/points/1/height"
+      },
+      {
+        "kind": "json_pointer",
+        "value": "/data/track/points/2/height"
+      },
+      {
+        "kind": "json_pointer",
+        "value": "/data/track/points/3/height"
+      }
+    ],
+    "conversions": [
+      {
+        "observation": 0,
+        "field": "/position/latitudeDegrees",
+        "vendorField": "/data/track/points/0/latitude",
+        "vendorUnit": "deg",
+        "vendorValue": 39.97,
+        "expected": 39.97
+      },
+      {
+        "observation": 0,
+        "field": "/position/longitudeDegrees",
+        "vendorField": "/data/track/points/0/longitude",
+        "vendorUnit": "deg",
+        "vendorValue": -86.13,
+        "expected": -86.13
+      },
+      {
+        "observation": 1,
+        "field": "/position/latitudeDegrees",
+        "vendorField": "/data/track/points/3/latitude",
+        "vendorUnit": "deg",
+        "vendorValue": 39.9706,
+        "expected": 39.9706
+      },
+      {
+        "observation": 1,
+        "field": "/position/longitudeDegrees",
+        "vendorField": "/data/track/points/3/longitude",
+        "vendorUnit": "deg",
+        "vendorValue": -86.1294,
+        "expected": -86.1294
+      }
+    ]
+  }
+}

@@ -17,12 +17,25 @@ import {
   type DeliveryKind,
   type ListedItem,
   type ObservationAdapter,
+  type Receive,
+  type SourceLoopEvent,
   type SubjectNaming,
 } from '@ledger/adapters';
+import { flightHub2Flights, pointTimesProblem } from './flighthub2.js';
 
 /** The source settings an adapter is bound by, given as flags or environment variables. */
 export type BindingOption =
-  'device' | 'gateway' | 'dock' | 'site' | 'dockModel' | 'operation' | 'flight' | 'stations' | 'regions';
+  | 'device'
+  | 'gateway'
+  | 'dock'
+  | 'site'
+  | 'dockModel'
+  | 'operation'
+  | 'flight'
+  | 'stations'
+  | 'regions'
+  | 'project'
+  | 'pointTimes';
 export type BindingValues = Readonly<Partial<Record<BindingOption, string>>>;
 
 interface Common {
@@ -51,9 +64,10 @@ export interface PollAdapter extends Common {
   readonly defaultPollSeconds: number;
   /**
    * bearer: the service takes an access token (ADAPTER_SERVICE_TOKEN) as a bearer token. token: it takes the token
-   * as the whole Authorization header, with no scheme word. none: it is public and takes none.
+   * as the whole Authorization header, with no scheme word. none: it is public and takes none. header: it takes the
+   * token in a header of its own.
    */
-  readonly serviceCredential: 'bearer' | 'token' | 'none';
+  readonly serviceCredential: 'bearer' | 'token' | 'none' | { readonly header: string };
   /** Cuts a response into the messages it holds; each poll then hands over only those not in the previous one. */
   readonly split?: (bytes: Uint8Array) => Uint8Array[] | undefined;
   /** What a part is known by from one poll to the next; default the digest of its bytes. */
@@ -71,6 +85,27 @@ export interface PollAdapter extends Common {
    * again for every poll, and `path` only names what is read.
    */
   readonly lookBack?: { readonly defaultHours: number; path(values: BindingValues, since: Date): string };
+  /**
+   * A source that one read of a list and its items cannot cover brings its own transport, which the process starts
+   * in place of the shared poll, with the same settings.
+   */
+  readonly source?: (values: BindingValues, reads: SourceReads, receive: Receive) => SourceTransport;
+}
+/** The settings the process gives a transport an adapter brings itself. */
+export interface SourceReads {
+  /** The service's address with the adapter's path. */
+  readonly url: string;
+  /** Sent with each request. They hold secrets and are never logged. */
+  readonly headers: Readonly<Record<string, string>>;
+  readonly intervalMs: number;
+  readonly lookBackHours?: number;
+  readonly log: (event: SourceLoopEvent) => void;
+  readonly fetcher?: typeof fetch;
+}
+/** What the process starts and stops to receive a source's messages. */
+export interface SourceTransport {
+  start(): Promise<void>;
+  stop(): Promise<void>;
 }
 export type RunnableAdapter = BrokerAdapter | PollAdapter;
 
@@ -201,6 +236,7 @@ export const runnableAdapters: Readonly<Record<string, RunnableAdapter>> = {
     oneCurrentPerSubject: ['flight.report'],
     startNotice: SKYDIO_CLOUD_START_NOTICE,
   },
+  [flightHub2Flights.adapter.descriptor.id]: flightHub2Flights,
 };
 
 const IDENTIFIER = /^[A-Za-z0-9_-]{1,128}$/;
@@ -214,6 +250,7 @@ export function bindingProblem(name: BindingOption, given: string): string | und
     } catch (error) {
       return (error as Error).message;
     }
+  if (name === 'pointTimes') return pointTimesProblem(given);
   if (name === 'stations')
     try {
       parseMetarStations(given);

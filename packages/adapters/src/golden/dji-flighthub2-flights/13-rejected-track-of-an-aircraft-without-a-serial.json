@@ -1,0 +1,43 @@
+{
+  "case": "rejected",
+  "note": "The documentation’s own example leaves drone_sn empty: no aircraft to record a position about.",
+  "message": {
+    "contentType": "application/json",
+    "transport": {
+      "method": "GET",
+      "path": "/openapi/v2.0/flight-task/a1b2c3d4-0000-4000-8000-000000000001/track"
+    },
+    "capturedAt": "2026-11-20T14:15:00.000Z",
+    "body": {
+      "code": 0,
+      "message": "OK",
+      "data": {
+        "name": "",
+        "wayline_uuid": "",
+        "track": {
+          "track_id": "",
+          "drone_sn": "",
+          "flight_distance": 100,
+          "flight_duration": 10,
+          "points": [
+            {
+              "timestamp": 123456789,
+              "latitude": 11.1,
+              "longitude": 22.2,
+              "height": 33.3
+            }
+          ]
+        }
+      }
+    }
+  },
+  "expect": {
+    "observations": [],
+    "rejections": [
+      {
+        "reasonIncludes": "data.track.drone_sn must be an id"
+      }
+    ],
+    "unmapped": []
+  }
+}
