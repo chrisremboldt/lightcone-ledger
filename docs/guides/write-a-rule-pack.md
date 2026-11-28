@@ -557,6 +557,75 @@ A result recorded under either version then names the rule version it ran. When 
 
 To change only the mode, the dates or the values of an adoption, run `pnpm ledger packs adopt <pack>` for the version already adopted with the new `--mode`, `--from`, `--until` or `--set`: the client prints a revision that keeps everything else, and replaces the adoption with it. A version that replaced an earlier one keeps its start, where the earlier one ends. Both are sent only with `--reason` and a person's credential, like any adoption.
 
+## 7. When the text changes
+
+A waiver is amended, a new edition of a regulation is published, a final rule replaces a proposal. Every rule of the pack quotes the old text. `pnpm pack:compare` reports, rule by rule, what those words did in the new one:
+
+```sh
+pnpm pack:compare packages/standard-packs/examples/invented-waiver packages/standard-packs/examples/invented-waiver/amendment-1.txt
+```
+
+The first argument is the pack: a pack folder (compared as it builds now), a built `.pack.json`, or the id of a pack built into Ledger, such as `ledger.part107` or `ledger.part108-nprm` (its latest version, read from the quotations its rules carry). The second is a file that holds the new text. It must be UTF-8. It is compared exactly as the file holds it and is never re-encoded: every span the report gives is in bytes of that file, from its first byte up to, not including, its end.
+
+`amendment-1.txt` is an invented second edition of the example waiver: one provision as it was, one wrapped differently, one reworded, one removed, one moved to the top and one new. Each rule gets one of four results:
+
+| Result | What the words did |
+| --- | --- |
+| Unchanged | The quotation is in the new text byte for byte. The report gives its new span and line. |
+| Unchanged but for spacing | The same words in the same order, with different spaces or line breaks. `pnpm pack:build` finds the quotation as the description writes it. |
+| Changed | The quotation is not in the new text. The report shows the nearest passage and what differs, word by word. |
+| Not found | Nothing near the quotation is in the new text. |
+
+```text
+alpha-dispatch.waiver-exw-0042.provision-2 version 1: Height of at most 250 feet above ground, flown or else planned
+  Quotes Certificate of Waiver EXW-0042 (invented), provision 2: Maximum height, bytes 439 to 508 of source, line 14
+  Changed: the quotation is not in the new text. The nearest passage holds 10 of its 12 words in order (83%), at bytes 554 to 620, lines 17 to 18:
+      3. Maximum height. The aircraft is not flown higher than 300 feet above
+      ground level.
+    Word by word, [-only in the quotation-] and {+only in the new text+}:
+      The aircraft is not [-operated-] {+flown+} higher than [-250-] {+300+} feet above ground level.
+```
+
+The report says what the words did and nothing more. Whether the rule's check, its parameters and its title still mean what the new words say is yours to read.
+
+How each result is reached is ordinary code, the same for the same two inputs, and the report states it above the rules:
+
+- **Three steps, in order.** The quotation's exact bytes; then its words in order, with any run of spaces and line breaks taken as one space, which is how `pnpm pack:build` finds a quotation; then the nearest passage.
+- **The nearest passage** is the stretch of the new text that aligns best with the quotation word by word: 3 for each word found in order, 1 off for each word passed over in the quotation or in the text. Words are compared exactly, capitals and punctuation included. When the stretch holds fewer than 60% of the quotation's words the result is Not found, and the report still says where that stretch is. Of equal scores the first in the text is taken. A short quotation that was reworded heavily can be nearest to a passage about something else: read the words shown.
+- **More than once.** A quotation that is in the new text more than once is listed with every span. Which one is meant is yours to read.
+- **Moved.** Among the quotations found once, the longest run that still reads in the old order stays as it is; a quotation outside it is marked as moved.
+- **Passages no rule quotes.** In the other direction, the new text is cut into passages, and each passage no rule's quotation lies in is listed with its line, so a new paragraph is seen. The text is cut at each line that begins with a paragraph designator, such as `(a)`, `(1)`, `§ 108.40` or `Sec. 108.40`, when at least two lines do; otherwise at blank lines. The report says which. A passage that is the nearest one to a changed rule says so.
+
+Purposes and required records, with the words that say how long each is kept, are quotations too and are reported after the rules. The report ends with the count of each result. `--json` prints the same report for a program.
+
+### Start the next version
+
+For a pack folder, `--write-next` writes the start of the next version into a new or empty folder:
+
+```sh
+pnpm pack:compare my-waiver amended.txt --write-next my-waiver-v2
+```
+
+It writes the new text under the source's file name, byte for byte, and `pack.yaml` as it was, comments included, with `version` raised by one. A quotation the new text holds exactly once is left as written. Every other one keeps its old words and gains `settle`, which says what was found:
+
+```yaml
+  - number: 2
+    title: Maximum height
+    quote: The aircraft is not operated higher than 250 feet above ground level.
+    # Left by pnpm pack:compare for a person: settle it, then delete settle.
+    settle:
+      result: changed
+      was: The aircraft is not operated higher than 250 feet above ground level.
+      nearest: 3. Maximum height. The aircraft is not flown higher than 300 feet above ground level.
+      nearestLine: 17
+```
+
+`result` is `changed`, `not_found`, `more_than_once` (with the `lines` it starts on) or `occurrence_out_of_date` (the description gives an `occurrence` and the new text holds the words once). Nothing is rewritten by guess: `pnpm pack:build` refuses the folder while any `settle` is left, naming each rule with its old quotation and the nearest passage of the new text. For each, write in `quote` the words the rule should carry from the new text, or remove the rule, or say which `occurrence` is meant; change its title, parameters and check where the new words ask for it; then delete `settle`. Add a provision for each new passage the report listed. The waiver's stated dates and everything else in the description were copied unchanged, so read them against the new text too.
+
+Then build it into the folder that holds the earlier pack file, as in [Change it](#6-change-it), so each rule's version follows the earlier one.
+
+For a pack that ships with Ledger there is no folder to write: run `pnpm pack:compare <pack id> <the new document>` and work through the report while you write the new version's paragraphs in TypeScript.
+
 # Part 2. A pack that ships with Ledger, in TypeScript
 
 This part walks through a small pack with one rule: the latest wind reported at an aircraft must stay at or below a limit the organization sets. You will define the rule, pin its source text, assemble and register the pack.

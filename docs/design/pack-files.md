@@ -85,12 +85,13 @@ The registry records where each pack version came from: `built_in`, or `organiza
 
 ## Authoring a pack file
 
-Three commands, run with pnpm from the repository after `pnpm build`:
+The commands, run with pnpm from the repository after `pnpm build`:
 
 - `pnpm pack:new <folder> --kind waiver|procedure` writes `source.txt` (an invented placeholder) and `pack.yaml` (a description whose comments list the obligation types, check kinds and observation types this Ledger has). The templates build as they are.
 - `pnpm pack:build <folder> [--out <folder>]` reads `pack.yaml` and the source file, locates every quotation, builds and verifies the pack file exactly as startup will, writes `<id>-v<version>.pack.json` and prints each rule: its title, what it quotes and how it is checked.
 - `pnpm pack:check <file>` verifies a file as startup does and prints its rules.
 - `pnpm pack:list [<pack id>]` prints the packs built into Ledger, or one pack's rules with their ids: what a waiver's provision names under `relieves`.
+- `pnpm pack:compare <pack> <new text> [--json] [--write-next <folder>]` reports what each quotation of a pack did in a new source text, and starts the next version of a pack folder for a person to settle. [Comparing a new text with the one a pack quotes](pack-compare.md) has the design.
 
 The description is YAML rather than JSON because an operator reads and edits it by hand: it has comments, so the template can explain each field and list what Ledger has, and long quotations wrap without escaping. The pack file it produces is JSON, which the loader reads with no extra parser.
 

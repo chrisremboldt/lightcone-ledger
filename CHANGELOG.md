@@ -11,6 +11,7 @@ Nothing to do: main has gained no change to Ledger itself since v0.2.0.
 ### Added
 
 - `records read-log` and the `read_flight_log` tool read a GUTMA flight log (the Global UTM Association's Flight Logging Protocol, a JSON file a fleet or dock product exports), recognised from its content or with `--format gutma`: built from the published description and checked against logs the tests built, not against a product's real export.
+- `pnpm pack:compare <pack> <new text>` reports, rule by rule, whether each quotation a rule pack pins is unchanged, unchanged but for spacing, changed or not found in a new source text, and lists the passages no rule quotes; `--write-next` starts the next version of a pack folder, which `pnpm pack:build` refuses until a person has settled each marked quotation.
 
 ### Fixed
 

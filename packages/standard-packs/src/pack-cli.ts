@@ -1,4 +1,4 @@
-import { existsSync, mkdirSync, readdirSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, readdirSync, readFileSync, statSync, writeFileSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 import {
   isPackFileCheckedRule,
@@ -13,7 +13,10 @@ import { AUTHORITY_READ } from '@ledger/pack-example-waiver';
 import { checkKindsPrintout } from './check-kind-printout.js';
 import { earlierPackFile, ruleVersionLines, withRuleVersions } from './pack-rule-versions.js';
 import { buildPackFolder, conditionsCoverWords, coverageWords, type BuiltRuleReport } from './pack-builder.js';
+import { comparePack, packFileQuotations, readNewText, registeredPackQuotations } from './pack-compare.js';
+import { comparisonReportLines, countsLines } from './pack-compare-printout.js';
 import { PackFileError } from './pack-files.js';
+import { nextVersionLines, writeNextVersion } from './pack-next-version.js';
 import { fieldsReadWords, parametersWords } from './pack-printout.js';
 import { readsLine, relatedWords } from './pack-reads.js';
 import { packFileCollision, readPackFile } from './pack-folder.js';
@@ -25,7 +28,10 @@ const usage = `Usage:
   pnpm pack:build <folder> [--out <folder>]        build <id>-v<version>.pack.json from the folder
   pnpm pack:check <file>                           verify a pack file as startup does, and list its rules
   pnpm pack:list [<pack id>]                       list the packs built into Ledger, or one pack's rules by section
-  pnpm pack:kinds [<kind>[@<version>]]             what each check kind asks, its inputs and its parameters`;
+  pnpm pack:kinds [<kind>[@<version>]]             what each check kind asks, its inputs and its parameters
+  pnpm pack:compare <pack> <new text> [--json] [--write-next <folder>]
+                                                   what each quotation of a pack did in a new source text; <pack> is
+                                                   a pack folder, a pack file or the id of a built-in pack`;
 
 /** pnpm runs scripts from the repository root; a path is read from where the command was typed. */
 const fromCaller = (path: string) => resolve(process.env.INIT_CWD ?? process.cwd(), path);
@@ -283,7 +289,63 @@ function kinds(args: string[]): void {
   console.log(checkKindsPrintout(args[0]).join('\n'));
 }
 
-const commands: Record<string, (args: string[]) => void> = { new: scaffold, build, check, list, kinds };
+function flag(args: string[], name: string): boolean {
+  const index = args.indexOf(name);
+  if (index >= 0) args.splice(index, 1);
+  return index >= 0;
+}
+
+/** The pack a comparison reads: a pack folder as it builds now, a built pack file, or a built-in pack's latest version. */
+function packToCompare(argument: string) {
+  const path = fromCaller(argument);
+  if (existsSync(path) && statSync(path).isDirectory())
+    return { pack: packFileQuotations(buildPackFolder(path).file, 'pack_folder'), shown: path, folder: path };
+  if (existsSync(path)) return { pack: packFileQuotations(readPackFile(path).file, 'pack_file'), shown: path };
+  const newest = listRulePackVersions()
+    .filter((pack) => pack.packId === argument)
+    .at(-1);
+  const version = newest && getRulePackVersion(argument, newest.version);
+  if (!version)
+    throw new PackFileError(
+      `${argument} is not a pack folder, a pack file or the id of a pack built into Ledger. Run pnpm pack:list to see the built-in packs.`,
+    );
+  return { pack: registeredPackQuotations(version), shown: argument };
+}
+
+/** What each quotation of a pack did in a new source text, and the start of the next version when asked for. */
+function compare(args: string[]): void {
+  const json = flag(args, '--json');
+  const next = option(args, '--write-next');
+  const unknown = args.find((arg) => arg.startsWith('--'));
+  if (unknown) throw new PackFileError(`${unknown} is not an option of this command`);
+  if (args.length !== 2)
+    throw new PackFileError(
+      'Give a pack (a pack folder, a pack file or the id of a built-in pack) and the file that holds the new text',
+    );
+  registerStandardPacks();
+  const compared = packToCompare(args[0]!);
+  if (next && !compared.folder)
+    throw new PackFileError(
+      `--write-next starts the next version of a pack folder; ${compared.shown} is not one. Compare the folder that holds pack.yaml.`,
+    );
+  const textPath = fromCaller(args[1]!);
+  if (!existsSync(textPath) || !statSync(textPath).isFile())
+    throw new PackFileError(`${textPath} is not a file; give the file that holds the new text`);
+  const bytes = readFileSync(textPath);
+  const comparison = comparePack(compared.pack, readNewText(bytes, textPath));
+  const written = next ? writeNextVersion(compared.folder!, fromCaller(next), comparison, bytes) : undefined;
+  if (json) console.log(JSON.stringify({ ...comparison, ...(written ? { nextVersion: written } : {}) }, null, 2));
+  else
+    console.log(
+      [
+        ...comparisonReportLines(comparison, compared.shown, textPath),
+        ...(written ? nextVersionLines(written) : []),
+        ...countsLines(comparison),
+      ].join('\n'),
+    );
+}
+
+const commands: Record<string, (args: string[]) => void> = { new: scaffold, build, check, list, kinds, compare };
 
 const [command, ...args] = process.argv.slice(2);
 try {

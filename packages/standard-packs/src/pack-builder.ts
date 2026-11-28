@@ -31,6 +31,7 @@ import { Ajv } from 'ajv';
 import { parse } from 'yaml';
 import { fieldPathProblems } from './pack-field-paths.js';
 import { declaredRecordTypes, PackFileError, packFileVersion, verifiedPackFile } from './pack-files.js';
+import { refuseUnsettled } from './pack-settle.js';
 import { obligationParametersWithUnits, parametersWithUnits } from './pack-units.js';
 
 /** The id the single source document of a described pack takes in its pack file. */
@@ -689,6 +690,7 @@ export function buildPackFile(description: unknown, sourceText: string): BuiltPa
     );
   if (sourceKind === 'operator_procedure' && top.waiver !== undefined)
     throw new PackFileError('A procedure has no waiver section; only a description of kind waiver states one');
+  refuseUnsettled(top);
   const recordTypes = recordTypesOfDescription(top.recordTypes);
   const context: BuildContext = {
     packId: pack.id as string,

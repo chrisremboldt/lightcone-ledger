@@ -59,6 +59,7 @@
     "pack:check": "node --import tsx packages/standard-packs/src/pack-cli.ts check",
     "pack:list": "node --import tsx packages/standard-packs/src/pack-cli.ts list",
     "pack:kinds": "node --import tsx packages/standard-packs/src/pack-cli.ts kinds",
+    "pack:compare": "node --import tsx packages/standard-packs/src/pack-cli.ts compare",
     "verify:bundle": "node tools/verifier/cli.mjs",
     "demo": "tools/demo.sh",
     "demo:record": "node tools/record-demo-tape.mjs",
