@@ -6,7 +6,13 @@ Each release has a section here. Its **Upgrading** part says what a deployment d
 
 ### Upgrading
 
-Nothing to do: main has gained no change to Ledger itself since v0.2.0.
+From v0.2.0 there is nothing to do beyond the usual steps ([docs/upgrading.md](docs/upgrading.md#steps-for-an-upgrade)):
+
+- **No migration, and no database to recreate.** A database of v0.2.0 is used as it is; `pnpm db:migrate` finds nothing to run.
+- **No setting of an existing deployment is new or changed.** The new adapters have settings of their own, read only by an adapter process that runs one of them: `ADAPTER_LOOK_BACK_HOURS` for the flight service adapter, and what [Connect a source](docs/guides/deploy.md#10-connect-a-source-run-an-adapter) lists for each.
+- **No pinned digest moved.** Every shipped pack and check kind keeps its digest, so an adoption stays as it is. `value.one-of` version 2 and `record.points-total` version 1 are new and stand beside the versions a pack already uses. A pack file built with v0.2.0 loads unchanged.
+- **The API changed by addition only**: two reading routes for the reports of a month (`/v1/reports/flight-time`, `/v1/reports/occurrences`), and an optional `heading` on a field of a record type.
+- After the upgrade, check as after any upgrade ([docs/upgrading.md](docs/upgrading.md#after-an-upgrade)).
 
 ### Added
 

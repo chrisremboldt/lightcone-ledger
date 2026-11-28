@@ -125,7 +125,7 @@ export const PeriodSummarySchema = Type.Object(
           withoutDuration: Type.Integer({
             minimum: 0,
             description:
-              'Of those flights, the ones whose recorded landing is not after their takeoff: not in the time.',
+              'Of those flights, the ones with no landing time on file or whose recorded landing is not after their takeoff: not in the time.',
           }),
           plannedWithoutRecord: Type.Integer({
             minimum: 0,

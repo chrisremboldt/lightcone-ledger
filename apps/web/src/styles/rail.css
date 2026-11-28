@@ -588,6 +588,8 @@ button.rail-list-item[aria-pressed='true'] {
   margin-top: 3px;
   color: var(--ink-2);
   font-size: 11px;
+  /* A value with no space in it, such as a digest, breaks where the line ends instead of widening the page. */
+  overflow-wrap: anywhere;
 }
 .evaluation-read-subject h5 {
   margin: 12px 0 0;

@@ -215,20 +215,21 @@ function FlightTimeView({ report }: { report: FlightTimeByAircraft }) {
 }
 
 type ReadableFlights = Extract<FlightTimeByAircraft['flights'], { readable: true }>;
+const FLIGHT_TIME_COLUMN = 'Flight time, takeoff to landing';
 
 function FlightTimeTable({ flights }: { flights: ReadableFlights }) {
   const notRecorded = <span className="report-absent">not in the identity record</span>;
   return (
     <>
       <div className="report-wide">
-        <table className="report-numbers">
+        <table className="report-numbers report-stacked">
           <thead>
             <tr>
               <th scope="col">Aircraft</th>
               <th scope="col">Registration number</th>
               <th scope="col">Serial number</th>
               <th scope="col">Flights</th>
-              <th scope="col">Flight time, takeoff to landing</th>
+              <th scope="col">{FLIGHT_TIME_COLUMN}</th>
             </tr>
           </thead>
           <tbody>
@@ -262,22 +263,23 @@ function FlightTimeTable({ flights }: { flights: ReadableFlights }) {
                   </th>
                   {aircraft.identity ? (
                     <>
-                      <td>{aircraft.identity.registrationNumber ?? notRecorded}</td>
-                      <td>{aircraft.identity.serialNumber ?? notRecorded}</td>
+                      <td data-label="Registration number">{aircraft.identity.registrationNumber ?? notRecorded}</td>
+                      <td data-label="Serial number">{aircraft.identity.serialNumber ?? notRecorded}</td>
                     </>
                   ) : (
-                    <td colSpan={2}>
+                    <td colSpan={2} data-label="Registration and serial number">
                       {named === null ? '—' : <span className="report-absent">{NO_IDENTITY_RECORD}</span>}
                     </td>
                   )}
-                  <td>
+                  <td data-label="Flights">
                     <CountLink
                       count={aircraft.flights}
                       place={named === null ? browse('flight.record@1') : fileOf('aircraft', named)}
-                      label={named === null ? 'flights naming no aircraft' : `flights of ${named}`}
+                      one={named === null ? 'flight naming no aircraft' : `flight of ${named}`}
+                      many={named === null ? 'flights naming no aircraft' : `flights of ${named}`}
                     />
                   </td>
-                  <td>{hoursAndMinutes(aircraft.flightSeconds)}</td>
+                  <td data-label={FLIGHT_TIME_COLUMN}>{hoursAndMinutes(aircraft.flightSeconds)}</td>
                 </tr>
               );
             })}
@@ -286,10 +288,15 @@ function FlightTimeTable({ flights }: { flights: ReadableFlights }) {
             <tr data-testid="flight-time-total">
               <th scope="row">Every aircraft: {flights.total.aircraft}</th>
               <td colSpan={2} />
-              <td>
-                <CountLink count={flights.total.flights} place={browse('flight.record@1')} label="flights" />
+              <td data-label="Flights">
+                <CountLink
+                  count={flights.total.flights}
+                  place={browse('flight.record@1')}
+                  one="flight"
+                  many="flights"
+                />
               </td>
-              <td>{hoursAndMinutes(flights.total.flightSeconds)}</td>
+              <td data-label={FLIGHT_TIME_COLUMN}>{hoursAndMinutes(flights.total.flightSeconds)}</td>
             </tr>
           </tfoot>
         </table>
@@ -393,7 +400,8 @@ function OccurrenceTypes({ occurrences }: { occurrences: ReadableOccurrences }) 
                   <CountLink
                     count={type.count}
                     place={browse(`${type.recordType}@${type.recordVersion}`)}
-                    label={`${type.title} records`}
+                    one={`${type.title} record`}
+                    many={`${type.title} records`}
                   />
                 </td>
               </tr>
@@ -423,7 +431,7 @@ function OccurrenceTypes({ occurrences }: { occurrences: ReadableOccurrences }) 
           >
             <h3>{type.title}</h3>
             <div className="report-wide">
-              <table className="report-numbers report-occurrences">
+              <table className="report-numbers report-occurrences report-stacked">
                 <thead>
                   <tr>
                     <th scope="col">Date</th>
@@ -440,26 +448,28 @@ function OccurrenceTypes({ occurrences }: { occurrences: ReadableOccurrences }) 
                           ? `${item.occurredOn} (date only)`
                           : `${time(item.occurredAt, true)} ${timeZoneLabel()}`}
                       </th>
-                      <td>
+                      <td data-label="Flight">
                         {item.flightId ? (
                           <PlaceLink place={fileOf('flight', item.flightId)}>{item.flightId}</PlaceLink>
                         ) : (
                           '—'
                         )}
                       </td>
-                      <td>
-                        {item.aircraftId ? (
-                          <PlaceLink place={fileOf('aircraft', item.aircraftId)}>{item.aircraftId}</PlaceLink>
-                        ) : (
-                          '—'
-                        )}
-                        {item.about.map((subject) => (
-                          <small key={`${subject.kind} ${subject.id}`}>
-                            {subject.kind} {subject.id}
-                          </small>
-                        ))}
+                      <td data-label="Aircraft">
+                        <div>
+                          {item.aircraftId ? (
+                            <PlaceLink place={fileOf('aircraft', item.aircraftId)}>{item.aircraftId}</PlaceLink>
+                          ) : (
+                            '—'
+                          )}
+                          {item.about.map((subject) => (
+                            <small key={`${subject.kind} ${subject.id}`}>
+                              {subject.kind} {subject.id}
+                            </small>
+                          ))}
+                        </div>
                       </td>
-                      <td>
+                      <td className="report-stacked-whole">
                         <dl className="records-fields">
                           {item.fields.map((field) => (
                             <div key={field.name}>

@@ -34958,7 +34958,7 @@ export interface operations {
                             flights: number;
                             /** @description Their recorded takeoff to landing time, added up, in seconds. */
                             flightSeconds: number;
-                            /** @description Of those flights, the ones whose recorded landing is not after their takeoff: not in the time. */
+                            /** @description Of those flights, the ones with no landing time on file or whose recorded landing is not after their takeoff: not in the time. */
                             withoutDuration: number;
                             /** @description Flights with a current plan starting in the period and no flight record: not counted above. */
                             plannedWithoutRecord: number;

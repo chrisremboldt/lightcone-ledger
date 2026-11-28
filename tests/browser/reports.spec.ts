@@ -62,7 +62,7 @@ test('a summary of a period counts what is on file, at an address that carries t
       exact: true,
     }),
   ).toBeVisible();
-  await expect(flights.getByRole('link', { name: /^\d+ flights planned with no flight record$/ })).toBeVisible();
+  await expect(flights.getByRole('link', { name: /^\d+ flights? planned with no flight record$/ })).toBeVisible();
 
   await openAs(page, 'Alpha Dispatch', 'operator', '/reports/summary/2026-01-01/2026-01-31');
   await expect(page.getByRole('heading', { name: 'Summary of 2026-01-01 to 2026-01-31', exact: true })).toBeVisible();
@@ -157,7 +157,9 @@ test('one flight’s file opens at its address, and says what is not on file', a
 });
 
 // After `pnpm scenario`, the seeded flights Ledger holds have findings by Ledger's own id. Without it there is no such
-// finding, and this says so rather than passing on nothing.
+// finding, and this says so rather than passing on nothing. A flight known only by the organization's own id, such as
+// one imported with a worked example's records, may have findings too: the first finding about a flight Ledger holds
+// is the one opened.
 test('a flight’s file opened from one of its findings shows its rule results and findings', async ({ page }) => {
   await openAs(page, 'Alpha Dispatch', 'operator', '/rules/findings');
   const list = page.getByTestId('open-findings');
@@ -167,14 +169,20 @@ test('a flight’s file opened from one of its findings shows its rule results a
     .click();
   await list.getByLabel('Subject', { exact: true }).selectOption({ label: 'Flights' });
   const rows = list.getByRole('button', { name: /^Open the finding about / });
-  await expect(rows.first().or(list.getByText(/^No /).first())).toBeVisible();
-  test.skip(
-    (await rows.count()) === 0,
-    'No flight has an open finding: run `pnpm scenario` on the seeded stack first.',
-  );
-  await rows.first().click();
+  // A rule's title may begin with "No" too: the list's own sentence for nothing open is matched whole.
+  const none = list.getByText('No counted finding is open with these filters.', { exact: true });
+  await expect(rows.first().or(none)).toBeVisible();
   const detail = page.getByTestId('open-finding-detail');
-  await expect(detail.getByText(/^flight · Ledger’s id /)).toBeVisible();
+  const subject = detail.getByText(/^flight · (Ledger’s|your) id /);
+  const listed = Math.min(await rows.count(), 25);
+  let held = false;
+  for (let index = 0; index < listed && !held; index += 1) {
+    await rows.nth(index).click();
+    await expect(subject).toBeVisible();
+    held = (await subject.innerText()).startsWith('flight · Ledger’s id ');
+    if (!held) await detail.getByRole('button', { name: 'Back to open findings', exact: true }).click();
+  }
+  test.skip(!held, 'No flight Ledger holds has an open finding: run `pnpm scenario` on the seeded stack first.');
   await detail.getByRole('link', { name: 'This flight’s file', exact: true }).click();
   await expect(page).toHaveURL(/\/reports\/flights\/[0-9a-f-]{36}$/);
   const file = page.getByTestId('flight-file');

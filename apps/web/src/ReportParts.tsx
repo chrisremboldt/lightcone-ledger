@@ -1,6 +1,6 @@
 import { useEffect, useState, type ReactNode } from 'react';
 import { Button, Notice, Spinner } from '@ledger/ui';
-import { errorMessage } from './format.js';
+import { counted, errorMessage } from './format.js';
 import type { Place } from './place.js';
 import { readingNeeds } from './report-periods.js';
 import { PlaceLink } from './TopBar.js';
@@ -53,11 +53,14 @@ export function PrintButton() {
   );
 }
 
-/** A count that links to the list it counts; on paper, just the number. */
-export function CountLink({ count, place, label }: { count: number; place: Place; label: string }) {
+/**
+ * A count that links to the list it counts; on paper, just the number. It is read out with what it counts, in the
+ * words for one of them when it counts one: "1 flight of RIDGE-AC-1", "2 flights of RIDGE-AC-1".
+ */
+export function CountLink({ count, place, one, many }: { count: number; place: Place; one: string; many: string }) {
   return (
     <PlaceLink className="report-count" place={place}>
-      <span aria-label={`${count} ${label}`}>{count}</span>
+      <span aria-label={counted(count, one, many)}>{count}</span>
     </PlaceLink>
   );
 }

@@ -358,7 +358,7 @@ function PeriodSummaryView({ summary, principal }: { summary: PeriodSummary; pri
               <div>
                 <dt>Flights with a flight record, taking off in the period</dt>
                 <dd>
-                  <CountLink count={flights.flights} place={browse('flight.record@1')} label="flights" />
+                  <CountLink count={flights.flights} place={browse('flight.record@1')} one="flight" many="flights" />
                 </dd>
               </div>
               <div>
@@ -371,7 +371,8 @@ function PeriodSummaryView({ summary, principal }: { summary: PeriodSummary; pri
                   <CountLink
                     count={flights.plannedWithoutRecord}
                     place={browse('flight.plan@1')}
-                    label="flights planned with no flight record"
+                    one="flight planned with no flight record"
+                    many="flights planned with no flight record"
                   />
                 </dd>
               </div>
@@ -379,8 +380,8 @@ function PeriodSummaryView({ summary, principal }: { summary: PeriodSummary; pri
             {flights.withoutDuration > 0 && (
               <ul className="records-reasons" aria-label="Flights counted apart">
                 <li>
-                  {counted(flights.withoutDuration, 'flight')} with a landing recorded no later than its takeoff: in the
-                  flights, not in the time.
+                  {counted(flights.withoutDuration, 'flight')} with no landing time on file, or with a landing recorded
+                  no later than the takeoff: in the flights, not in the time. Flight time by aircraft lists each.
                 </li>
               </ul>
             )}
@@ -436,7 +437,8 @@ function PeriodSummaryView({ summary, principal }: { summary: PeriodSummary; pri
                         <CountLink
                           count={findings.total.openAtEnd}
                           place={{ section: 'rules', pane: 'open' }}
-                          label={`findings open ${atEnd}`}
+                          one={`finding open ${atEnd}`}
+                          many={`findings open ${atEnd}`}
                         />
                       </td>
                     </tr>
@@ -466,7 +468,8 @@ function PeriodSummaryView({ summary, principal }: { summary: PeriodSummary; pri
                   <CountLink
                     count={findingActions.open}
                     place={{ section: 'rules', pane: 'open' }}
-                    label="actions on findings open"
+                    one="action on findings open"
+                    many="actions on findings open"
                   />{' '}
                   open, {findingActions.overdue} of them overdue
                 </>
@@ -483,7 +486,8 @@ function PeriodSummaryView({ summary, principal }: { summary: PeriodSummary; pri
                   <CountLink
                     count={assuranceActions.open}
                     place={{ section: 'safety', view: 'assurance' }}
-                    label="actions of safety assurance records open"
+                    one="action of safety assurance records open"
+                    many="actions of safety assurance records open"
                   />{' '}
                   open, {assuranceActions.overdue} of them overdue
                 </>
@@ -529,7 +533,8 @@ function PeriodSummaryView({ summary, principal }: { summary: PeriodSummary; pri
                       <CountLink
                         count={hazards.total}
                         place={{ section: 'safety', view: 'hazards' }}
-                        label={`hazards open ${atEnd}`}
+                        one={`hazard open ${atEnd}`}
+                        many={`hazards open ${atEnd}`}
                       />
                     ) : (
                       hazards.total

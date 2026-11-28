@@ -160,7 +160,8 @@
 .report-occurrences thead th:not(:first-child) {
   text-align: left;
 }
-.report-occurrences tbody th {
+.report-occurrences tbody th,
+.report-occurrences td a {
   white-space: nowrap;
 }
 .report-occurrences .records-fields {
@@ -322,6 +323,63 @@
   }
   .report-facts > div {
     display: grid;
+  }
+  /*
+   * A month's table on a phone: each row is a block of its own, its heading cell first and each other cell on a line
+   * with its column's name before it, so no column is past the edge of the screen. The column headings stay for a
+   * screen reader.
+   */
+  .report-stacked thead {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+  .report-stacked,
+  .report-stacked tbody,
+  .report-stacked tfoot,
+  .report-stacked tr,
+  .report-stacked th,
+  .report-stacked td {
+    display: block;
+  }
+  .report-stacked tr {
+    padding: 8px 0;
+    border-bottom: 1px solid var(--line);
+  }
+  .report-stacked tfoot tr {
+    border-bottom: 0;
+  }
+  .report-stacked th,
+  .report-stacked td {
+    padding: 2px 0;
+    border-bottom: 0;
+  }
+  .report-stacked td[data-label] {
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+    text-align: right;
+  }
+  .report-stacked td[data-label]::before {
+    content: attr(data-label);
+    flex: none;
+    max-width: 60%;
+    color: var(--ink-2);
+    font-weight: 400;
+    text-align: left;
+  }
+  .report-stacked td:empty {
+    display: none;
+  }
+  .report-stacked td.report-stacked-whole {
+    padding-top: 6px;
+    text-align: left;
+  }
+  .report-occurrences tbody th {
+    white-space: normal;
   }
   .report-table th,
   .report-table td {

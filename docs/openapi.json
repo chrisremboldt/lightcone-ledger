@@ -133631,7 +133631,7 @@
                             },
                             "withoutDuration": {
                               "minimum": 0,
-                              "description": "Of those flights, the ones whose recorded landing is not after their takeoff: not in the time.",
+                              "description": "Of those flights, the ones with no landing time on file or whose recorded landing is not after their takeoff: not in the time.",
                               "type": "integer"
                             },
                             "plannedWithoutRecord": {

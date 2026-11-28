@@ -36,6 +36,8 @@ const files = {
     `${id('FLT-3')},${id('AC-2')},${month}-12 09:00,${month}-12 09:20,Quarry gate,Quarry gate,200`,
     // A takeoff and no landing time.
     `${id('FLT-4')},${id('AC-2')},${month}-15 09:00,,Quarry gate,Quarry gate,200`,
+    // The only flight of a third aircraft: 31 minutes.
+    `${id('FLT-5')},${id('AC-3')},${month}-20 14:00,${month}-20 14:31,Quarry gate,Quarry gate,200`,
   ],
   anomalies: [
     'subjectId,subjectKind,secondarySubjectId,secondarySubjectKind,occurredAt [local],summary,interruptionKind',
@@ -130,9 +132,14 @@ test('flight time by aircraft opens from Reports, counts the month, prints, and 
   );
   await expect(missing.getByRole('link', { name: id('FLT-4'), exact: true })).toBeVisible();
 
-  // The total counts at least this run's four flights, and opens the list it counts.
+  // One flight is read out as one flight.
+  const third = report.locator(`[data-testid="flight-time-row"][data-aircraft="${id('AC-3')}"]`);
+  await expect(third.getByRole('link', { name: `1 flight of ${id('AC-3')}`, exact: true })).toBeVisible();
+  await expect(third.getByRole('cell', { name: '0 h 31 min', exact: true })).toBeVisible();
+
+  // The total counts at least this run's five flights, and opens the list it counts.
   const total = report.getByTestId('flight-time-total').getByRole('link', { name: /^\d+ flights$/ });
-  expect(Number.parseInt(await total.innerText(), 10)).toBeGreaterThanOrEqual(4);
+  expect(Number.parseInt(await total.innerText(), 10)).toBeGreaterThanOrEqual(5);
   await expect(total).toHaveAttribute('href', '/records/browse/flight.record@1');
   await expect(
     report.getByText(
@@ -205,10 +212,10 @@ test('occurrences by month open from Reports, list the month by type, and lead t
   // Every occurrence type is listed with what is on file for the month, a type with none too.
   const counts = page.getByTestId('occurrence-counts');
   const count = async (title: string) =>
-    Number.parseInt(await counts.getByRole('link', { name: new RegExp(`^\\d+ ${title} records$`) }).innerText(), 10);
+    Number.parseInt(await counts.getByRole('link', { name: new RegExp(`^\\d+ ${title} records?$`) }).innerText(), 10);
   expect(await count('Operation anomaly')).toBeGreaterThanOrEqual(2);
   expect(await count('Mechanical irregularity')).toBeGreaterThanOrEqual(1);
-  await expect(counts.getByRole('link', { name: /^\d+ Accident records$/ })).toBeVisible();
+  await expect(counts.getByRole('link', { name: /^\d+ Accident records?$/ })).toBeVisible();
   await expect(counts.locator('[data-testid="occurrence-type"][data-type="occurrence.operation-anomaly"]')).toHaveCount(
     1,
   );
@@ -267,5 +274,13 @@ test('a report of a month at phone width keeps to the screen', async ({ page }) 
     await expect(page.getByRole('region', { name: 'What this report counts', exact: true })).toBeVisible();
     const overflow = await page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth);
     expect(overflow, address).toBeLessThanOrEqual(0);
+    // A row is a block of its own on a phone: no column of it is past the edge, to be found by scrolling sideways.
+    const last = address.includes('flight-time')
+      ? page.locator(`[data-testid="flight-time-row"][data-aircraft="${id('AC-1')}"]`).getByText('1 h 45 min')
+      : page.getByTestId('occurrence-row').getByText('Motor three ran warm', { exact: true });
+    await expect(last).toBeVisible();
+    const box = (await last.boundingBox())!;
+    expect(box.x, address).toBeGreaterThanOrEqual(0);
+    expect(box.x + box.width, address).toBeLessThanOrEqual(375);
   }
 });
