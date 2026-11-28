@@ -39,7 +39,11 @@ function conditionWords(rule: PackFileCheckedRule, condition: unknown, narrowed:
 
 /** A parameter's value with every field path in it named by its label. */
 function valueWords(rule: PackFileCheckedRule, name: string, value: unknown, narrowed: Narrowed): string {
-  if (typeof value === 'string' && (name === 'field' || /Field$/u.test(name)) && value.includes('.'))
+  if (
+    typeof value === 'string' &&
+    (name === 'field' || name === 'fields' || /Field$/u.test(name)) &&
+    value.includes('.')
+  )
     return fieldWords(rule, { path: value, reads: [], ...(narrowed ? { recordType: narrowed } : {}) });
   if (Array.isArray(value)) {
     if (name === 'where') return value.map((condition) => conditionWords(rule, condition, narrowed)).join(' and ');

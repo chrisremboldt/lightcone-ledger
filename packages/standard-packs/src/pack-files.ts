@@ -22,7 +22,7 @@ import { checkParameterProblem, defineCheckedRule, findCheckKind, observationReg
 import { rulePackRegistrationProblem } from '@ledger/domain/rule-pack-registry';
 import { canonicalDigest, sha256 } from '@ledger/integrity';
 import { Ajv } from 'ajv';
-import { fieldPathProblems } from './pack-field-paths.js';
+import { fieldPathProblems, recordTypesRead } from './pack-field-paths.js';
 import { writtenParameterProblem } from './pack-units.js';
 
 /** A pack file that cannot be loaded, with a reason written for the person who keeps the file. */
@@ -88,6 +88,16 @@ function checkedLeaf(
     const problem = checkParameterProblem(check.kind, check.version, check.params);
     if (problem) throw new PackFileError(`Rule ${rule.id}: ${problem}`);
   }
+  // What the kind itself says of the parameters the rule fixes, read against the record types the rule's reads take.
+  const stated =
+    kind.parameterProblems?.(check.params, {
+      recordTypes: (input) =>
+        recordTypesRead(
+          rule.reads.find((read) => read.name === input),
+          ownTypes,
+        ),
+    }) ?? [];
+  if (stated.length) throw new PackFileError(`Rule ${rule.id}: ${stated.join(' ')}`);
   try {
     return defineCheckedRule({
       ...declared,

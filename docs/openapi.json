@@ -69114,6 +69114,13 @@
                                                 "description": "One line in the operator’s words: what to write.",
                                                 "type": "string"
                                               },
+                                              "heading": {
+                                                "minLength": 1,
+                                                "maxLength": 60,
+                                                "pattern": "\\S",
+                                                "description": "A short heading the entry form shows above this field where it differs from the heading of the field before it, so the fields of one section give the same heading. A field without one stays in the section before it. Import templates and productions do not use it.",
+                                                "type": "string"
+                                              },
                                               "required": {
                                                 "description": "Counts toward completeness. A record without it is still kept, as incomplete.",
                                                 "type": "boolean"
@@ -69171,6 +69178,13 @@
                                                 "maxLength": 300,
                                                 "pattern": "\\S",
                                                 "description": "One line in the operator’s words: what to write.",
+                                                "type": "string"
+                                              },
+                                              "heading": {
+                                                "minLength": 1,
+                                                "maxLength": 60,
+                                                "pattern": "\\S",
+                                                "description": "A short heading the entry form shows above this field where it differs from the heading of the field before it, so the fields of one section give the same heading. A field without one stays in the section before it. Import templates and productions do not use it.",
                                                 "type": "string"
                                               },
                                               "required": {
@@ -69241,6 +69255,13 @@
                                                 "description": "One line in the operator’s words: what to write.",
                                                 "type": "string"
                                               },
+                                              "heading": {
+                                                "minLength": 1,
+                                                "maxLength": 60,
+                                                "pattern": "\\S",
+                                                "description": "A short heading the entry form shows above this field where it differs from the heading of the field before it, so the fields of one section give the same heading. A field without one stays in the section before it. Import templates and productions do not use it.",
+                                                "type": "string"
+                                              },
                                               "required": {
                                                 "description": "Counts toward completeness. A record without it is still kept, as incomplete.",
                                                 "type": "boolean"
@@ -69304,6 +69325,13 @@
                                                 "maxLength": 300,
                                                 "pattern": "\\S",
                                                 "description": "One line in the operator’s words: what to write.",
+                                                "type": "string"
+                                              },
+                                              "heading": {
+                                                "minLength": 1,
+                                                "maxLength": 60,
+                                                "pattern": "\\S",
+                                                "description": "A short heading the entry form shows above this field where it differs from the heading of the field before it, so the fields of one section give the same heading. A field without one stays in the section before it. Import templates and productions do not use it.",
                                                 "type": "string"
                                               },
                                               "required": {
@@ -82003,6 +82031,13 @@
                                           "description": "One line in the operator’s words: what to write.",
                                           "type": "string"
                                         },
+                                        "heading": {
+                                          "minLength": 1,
+                                          "maxLength": 60,
+                                          "pattern": "\\S",
+                                          "description": "A short heading the entry form shows above this field where it differs from the heading of the field before it, so the fields of one section give the same heading. A field without one stays in the section before it. Import templates and productions do not use it.",
+                                          "type": "string"
+                                        },
                                         "required": {
                                           "description": "Counts toward completeness. A record without it is still kept, as incomplete.",
                                           "type": "boolean"
@@ -82060,6 +82095,13 @@
                                           "maxLength": 300,
                                           "pattern": "\\S",
                                           "description": "One line in the operator’s words: what to write.",
+                                          "type": "string"
+                                        },
+                                        "heading": {
+                                          "minLength": 1,
+                                          "maxLength": 60,
+                                          "pattern": "\\S",
+                                          "description": "A short heading the entry form shows above this field where it differs from the heading of the field before it, so the fields of one section give the same heading. A field without one stays in the section before it. Import templates and productions do not use it.",
                                           "type": "string"
                                         },
                                         "required": {
@@ -82130,6 +82172,13 @@
                                           "description": "One line in the operator’s words: what to write.",
                                           "type": "string"
                                         },
+                                        "heading": {
+                                          "minLength": 1,
+                                          "maxLength": 60,
+                                          "pattern": "\\S",
+                                          "description": "A short heading the entry form shows above this field where it differs from the heading of the field before it, so the fields of one section give the same heading. A field without one stays in the section before it. Import templates and productions do not use it.",
+                                          "type": "string"
+                                        },
                                         "required": {
                                           "description": "Counts toward completeness. A record without it is still kept, as incomplete.",
                                           "type": "boolean"
@@ -82193,6 +82242,13 @@
                                           "maxLength": 300,
                                           "pattern": "\\S",
                                           "description": "One line in the operator’s words: what to write.",
+                                          "type": "string"
+                                        },
+                                        "heading": {
+                                          "minLength": 1,
+                                          "maxLength": 60,
+                                          "pattern": "\\S",
+                                          "description": "A short heading the entry form shows above this field where it differs from the heading of the field before it, so the fields of one section give the same heading. A field without one stays in the section before it. Import templates and productions do not use it.",
                                           "type": "string"
                                         },
                                         "required": {
@@ -110328,6 +110384,10 @@
                                   "type": "boolean"
                                 },
                                 "help": {
+                                  "type": "string"
+                                },
+                                "heading": {
+                                  "description": "A heading the entry form shows above this field where it differs from the heading of the field before it.",
                                   "type": "string"
                                 },
                                 "unit": {
@@ -179562,6 +179622,13 @@
                                               "description": "One line in the operator’s words: what to write.",
                                               "type": "string"
                                             },
+                                            "heading": {
+                                              "minLength": 1,
+                                              "maxLength": 60,
+                                              "pattern": "\\S",
+                                              "description": "A short heading the entry form shows above this field where it differs from the heading of the field before it, so the fields of one section give the same heading. A field without one stays in the section before it. Import templates and productions do not use it.",
+                                              "type": "string"
+                                            },
                                             "required": {
                                               "description": "Counts toward completeness. A record without it is still kept, as incomplete.",
                                               "type": "boolean"
@@ -179619,6 +179686,13 @@
                                               "maxLength": 300,
                                               "pattern": "\\S",
                                               "description": "One line in the operator’s words: what to write.",
+                                              "type": "string"
+                                            },
+                                            "heading": {
+                                              "minLength": 1,
+                                              "maxLength": 60,
+                                              "pattern": "\\S",
+                                              "description": "A short heading the entry form shows above this field where it differs from the heading of the field before it, so the fields of one section give the same heading. A field without one stays in the section before it. Import templates and productions do not use it.",
                                               "type": "string"
                                             },
                                             "required": {
@@ -179689,6 +179763,13 @@
                                               "description": "One line in the operator’s words: what to write.",
                                               "type": "string"
                                             },
+                                            "heading": {
+                                              "minLength": 1,
+                                              "maxLength": 60,
+                                              "pattern": "\\S",
+                                              "description": "A short heading the entry form shows above this field where it differs from the heading of the field before it, so the fields of one section give the same heading. A field without one stays in the section before it. Import templates and productions do not use it.",
+                                              "type": "string"
+                                            },
                                             "required": {
                                               "description": "Counts toward completeness. A record without it is still kept, as incomplete.",
                                               "type": "boolean"
@@ -179752,6 +179833,13 @@
                                               "maxLength": 300,
                                               "pattern": "\\S",
                                               "description": "One line in the operator’s words: what to write.",
+                                              "type": "string"
+                                            },
+                                            "heading": {
+                                              "minLength": 1,
+                                              "maxLength": 60,
+                                              "pattern": "\\S",
+                                              "description": "A short heading the entry form shows above this field where it differs from the heading of the field before it, so the fields of one section give the same heading. A field without one stays in the section before it. Import templates and productions do not use it.",
                                               "type": "string"
                                             },
                                             "required": {

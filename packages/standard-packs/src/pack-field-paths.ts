@@ -165,6 +165,19 @@ function recordTypesOf(
   );
 }
 
+/**
+ * The operator record types a read's conditions name, among those built into Ledger and those the pack declares.
+ * Empty when the read names none, or one neither has.
+ */
+export function recordTypesRead(
+  read: Read | undefined,
+  declared: readonly OperatorRecordDefinition[],
+): OperatorRecordDefinition[] {
+  if (!read || !required(read, 'values.recordType').length) return [];
+  const found = recordTypesOf(read, { path: '', where: '', reads: [read.name], compared: false }, declared);
+  return typeof found === 'string' ? [] : found;
+}
+
 /** Whether the path reaches a value in what one read takes. */
 function resolveInRead(
   read: Read | undefined,

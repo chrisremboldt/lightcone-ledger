@@ -1,0 +1,239 @@
+# A paper checklist as a record type a pack declares: a dozen items in four sections, each answered done, not
+# applicable or defect found, and three rules over it, written with check kinds Ledger already has. Ledger has no
+# checklist feature and needs none for this. Everything here is invented: the operator, its manual and its flights.
+pack:
+  # A pack that declares record types has an id of one word: it is the first part of every type it declares.
+  id: example-ridge-checklist
+  version: 1
+  title: Example Ridge Survey operations manual, preflight checklist (invented)
+
+source:
+  file: source.txt
+  kind: procedure
+  reference: Example Ridge Survey Operations Manual (invented)
+
+recordTypes:
+  - id: example-ridge-checklist.preflight-checklist
+    version: 1
+    title: Preflight checklist
+    description: The preflight checklist of the operator's own manual, completed for one flight.
+    subjectKinds: [flight]
+    # The record is placed in time by when the checklist was completed.
+    time:
+      meaning: event
+      atField: completedAt
+    fields:
+      - name: completedAt
+        label: Completed at
+        kind: date_time
+        required: true
+        help: When the checklist was completed. Give the time of day, so it can be placed before the takeoff.
+      - name: completedById
+        label: Completed by
+        kind: reference
+        referenceKind: person
+        required: true
+        help: Your own id for the remote pilot in command who completed it.
+      # Each item is a field. Its label is the item in the manual's own words: a finding names the item by it.
+      # heading starts a section of the form; the fields that follow with the same heading stay in it.
+      # &answers names the three answers so every item can take the same ones (*answers); plain YAML.
+      - name: airframe
+        heading: Airframe
+        label: Airframe and arms free of cracks and loose fasteners
+        kind: select
+        required: true
+        options: &answers
+          - value: done
+            label: Done
+          - value: not-applicable
+            label: Not applicable
+          - value: defect-found
+            label: Defect found
+      - name: propellers
+        heading: Airframe
+        label: Propellers undamaged and tight
+        kind: select
+        required: true
+        options: *answers
+      - name: motors
+        heading: Airframe
+        label: Motors turn freely by hand
+        kind: select
+        required: true
+        options: *answers
+      - name: payload
+        heading: Airframe
+        label: Payload and gimbal secure
+        kind: select
+        required: true
+        options: *answers
+      - name: flightBatteries
+        heading: Batteries
+        label: Flight batteries charged and latched
+        kind: select
+        required: true
+        options: *answers
+      - name: batteryCondition
+        heading: Batteries
+        label: No battery swollen or damaged
+        kind: select
+        required: true
+        options: *answers
+      - name: controllerBattery
+        heading: Batteries
+        label: Controller battery charged
+        kind: select
+        required: true
+        options: *answers
+      - name: controllerLink
+        heading: Control station
+        label: Controller linked and home point set
+        kind: select
+        required: true
+        options: *answers
+      - name: returnHeight
+        heading: Control station
+        label: Return-to-home height set for the site
+        kind: select
+        required: true
+        options: *answers
+      - name: launchArea
+        heading: Site
+        label: Launch area clear of people
+        kind: select
+        required: true
+        options: *answers
+      - name: obstacles
+        heading: Site
+        label: Wires and obstacles noted
+        kind: select
+        required: true
+        options: *answers
+      - name: weather
+        heading: Site
+        label: Weather within the limits of chapter 4
+        kind: select
+        required: true
+        options: *answers
+      - name: note
+        heading: Notes
+        label: Note
+        kind: long_text
+        help: Anything found, and what was done about it.
+
+rules:
+  # 5.1: a checklist is on file for the flight, completed before its takeoff.
+  - id: completed-before-takeoff
+    paragraph: '5.1'
+    title: Preflight checklist completed before the takeoff
+    quote: >-
+      Before each flight the remote pilot in command completes the preflight checklist below and records it before
+      the takeoff, with the time it was completed and who completed it.
+    target:
+      subjectKind: flight
+    population:
+      of: in_adoption_dates
+    reads:
+      - name: record
+        type: operator.record
+        versions: [1]
+        about: target
+        required: true
+        onFile: preflight checklist
+        select: all
+        where:
+          - field: values.recordType
+            oneOf: [example-ridge-checklist.preflight-checklist]
+      # The takeoff, from the operator's own record of the flight.
+      - name: window
+        type: operator.record
+        versions: [1]
+        about: target
+        required: true
+        onFile: flight record
+        select: latest
+        where:
+          - field: values.recordType
+            oneOf: [flight.record]
+    check:
+      kind: record.made-before
+      version: 1
+      params:
+        atField: values.record.completedAt
+        startField: values.record.takeoffAt
+        # Any time before the takeoff counts.
+        leadHours: 0
+    wording:
+      pass: The preflight checklist was completed at {madeAt}, before the takeoff at {startsAt}.
+      attention: >-
+        The earliest preflight checklist on file was completed at {madeAt}, after the takeoff at {startsAt}.
+
+  # 5.2: every item is answered. The items are the type's required fields, so a complete record has them all.
+  - id: every-item-answered
+    paragraph: '5.2'
+    title: Every item of the preflight checklist answered
+    quote: Each item is answered done, not applicable or defect found. No item is left unanswered.
+    target:
+      subjectKind: flight
+    population:
+      of: in_adoption_dates
+    reads:
+      - name: record
+        type: operator.record
+        versions: [1]
+        about: target
+        required: true
+        onFile: preflight checklist
+        select: latest
+        where:
+          - field: values.recordType
+            oneOf: [example-ridge-checklist.preflight-checklist]
+    check:
+      kind: record.complete
+      version: 2
+      params:
+        recordType: example-ridge-checklist.preflight-checklist
+        recordVersion: 1
+
+  # 5.3: no item is answered defect found. One rule reads all twelve items and names each that holds another answer
+  # than done or not applicable, by its label: the item in the manual's own words.
+  - id: no-defect-found
+    paragraph: '5.3'
+    title: No item of the preflight checklist answered defect found
+    quote: An item answered defect found is corrected before the flight, and the defect is noted on the checklist.
+    target:
+      subjectKind: flight
+    population:
+      of: in_adoption_dates
+    reads:
+      - name: subject
+        type: operator.record
+        versions: [1]
+        about: target
+        required: true
+        onFile: preflight checklist
+        select: latest
+        where:
+          - field: values.recordType
+            oneOf: [example-ridge-checklist.preflight-checklist]
+    check:
+      kind: value.one-of
+      version: 2
+      params:
+        fields:
+          - values.record.airframe
+          - values.record.propellers
+          - values.record.motors
+          - values.record.payload
+          - values.record.flightBatteries
+          - values.record.batteryCondition
+          - values.record.controllerBattery
+          - values.record.controllerLink
+          - values.record.returnHeight
+          - values.record.launchArea
+          - values.record.obstacles
+          - values.record.weather
+        # What a person calls these fields: the sentence says "1 of the 12 items".
+        fieldsDescribe: items
+        # Not applicable is an answer the manual allows: it is not a defect, and the sentence counts it.
+        expected: [done, not-applicable]

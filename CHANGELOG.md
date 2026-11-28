@@ -13,6 +13,8 @@ Nothing to do: main has gained no change to Ledger itself since v0.2.0.
 - `records read-log` and the `read_flight_log` tool read a GUTMA flight log (the Global UTM Association's Flight Logging Protocol, a JSON file a fleet or dock product exports), recognised from its content or with `--format gutma`: built from the published description and checked against logs the tests built, not against a product's real export.
 - `pnpm pack:compare <pack> <new text>` reports, rule by rule, whether each quotation a rule pack pins is unchanged, unchanged but for spacing, changed or not found in a new source text, and lists the passages no rule quotes; `--write-next` starts the next version of a pack folder, which `pnpm pack:build` refuses until a person has settled each marked quotation.
 - Two reports of a calendar month, to prepare what an operator sends: flight time by aircraft and the occurrences recorded, by type. Each is a page under Reports that prints and downloads as CSV, a command (`pnpm ledger reports flight-time`, `reports occurrences`) and a read-only MCP tool, and each leads to the entry form for a provided report with the period filled in. The entry form takes starting values from its address.
+- A check kind that totals the points of a record's answers and compares the total with a level, `record.points-total` version 1, with a worked example in `examples/flight-risk-assessment`.
+- A checklist as a record type a pack declares, worked in `examples/preflight-checklist`: a declared field may carry a `heading` that starts a section of the entry form, and `value.one-of` version 2 reads a list of fields in one rule and names each that fails.
 
 ### Fixed
 

@@ -44,8 +44,9 @@ function conditionPaths(
 
 /**
  * The field paths a check's parameters name: every text value under a key `field` or ending in `Field`, at any depth,
- * and every condition of a selection. A selection's recordType narrows the paths inside it. Only the check's own
- * top-level `field`, and conditions with oneOf, are compared values.
+ * every path in a list of them under `fields`, and every condition of a selection. A selection's recordType narrows
+ * the paths inside it. Only the check's own top-level `field` and `fields`, and conditions with oneOf, are compared
+ * values.
  */
 function parameterPaths(
   value: unknown,
@@ -73,6 +74,17 @@ function parameterPaths(
           ...(narrowed ? { recordType: narrowed } : {}),
         },
       ];
+    // A list of paths under `fields`. A list of bare field names, which some kinds take there, holds no path.
+    if (name === 'fields' && Array.isArray(item) && item.every((entry) => typeof entry === 'string'))
+      return (item as string[])
+        .filter((path) => path.includes('.'))
+        .map((path) => ({
+          path,
+          where: `check parameter ${depth === 0 ? name : `${key}.${name}`}`,
+          reads: [],
+          compared: depth === 0,
+          ...(narrowed ? { recordType: narrowed } : {}),
+        }));
     if (name === 'where' && Array.isArray(item) && item.every(isObject) && item.every((entry) => 'field' in entry))
       return conditionPaths(item as RuleReadCondition[], `check parameter ${key}.where`, [], narrowed);
     return parameterPaths(item, depth === 0 ? name : key, depth + 1, narrowed);

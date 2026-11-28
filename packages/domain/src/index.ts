@@ -286,6 +286,7 @@ export {
   type CheckKind,
   type CheckKindDefinition,
   type CheckObservation,
+  type CheckParameterContext,
   type CheckResult,
 } from './check-kinds.js';
 export {
@@ -342,6 +343,13 @@ export {
   type RecordBeforeFlightParams,
   type TimeWithinDatesParams,
 } from './check-kind-library-flights.js';
+export {
+  pointsCheckKinds,
+  recordPointsTotalV1,
+  type PointsBand,
+  type RecordPointsTotalParams,
+  type ScoredField,
+} from './check-kind-library-points.js';
 export {
   windowCheckKinds,
   windowValuesWithinLimitV1,

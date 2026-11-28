@@ -17691,6 +17691,8 @@ export interface operations {
                                         label: string;
                                         /** @description One line in the operator’s words: what to write. */
                                         help?: string;
+                                        /** @description A short heading the entry form shows above this field where it differs from the heading of the field before it, so the fields of one section give the same heading. A field without one stays in the section before it. Import templates and productions do not use it. */
+                                        heading?: string;
                                         /** @description Counts toward completeness. A record without it is still kept, as incomplete. */
                                         required?: boolean;
                                         kind: "text" | "long_text" | "boolean" | "date" | "date_time";
@@ -17700,6 +17702,8 @@ export interface operations {
                                         label: string;
                                         /** @description One line in the operator’s words: what to write. */
                                         help?: string;
+                                        /** @description A short heading the entry form shows above this field where it differs from the heading of the field before it, so the fields of one section give the same heading. A field without one stays in the section before it. Import templates and productions do not use it. */
+                                        heading?: string;
                                         /** @description Counts toward completeness. A record without it is still kept, as incomplete. */
                                         required?: boolean;
                                         /** @constant */
@@ -17713,6 +17717,8 @@ export interface operations {
                                         label: string;
                                         /** @description One line in the operator’s words: what to write. */
                                         help?: string;
+                                        /** @description A short heading the entry form shows above this field where it differs from the heading of the field before it, so the fields of one section give the same heading. A field without one stays in the section before it. Import templates and productions do not use it. */
+                                        heading?: string;
                                         /** @description Counts toward completeness. A record without it is still kept, as incomplete. */
                                         required?: boolean;
                                         /** @constant */
@@ -17727,6 +17733,8 @@ export interface operations {
                                         label: string;
                                         /** @description One line in the operator’s words: what to write. */
                                         help?: string;
+                                        /** @description A short heading the entry form shows above this field where it differs from the heading of the field before it, so the fields of one section give the same heading. A field without one stays in the section before it. Import templates and productions do not use it. */
+                                        heading?: string;
                                         /** @description Counts toward completeness. A record without it is still kept, as incomplete. */
                                         required?: boolean;
                                         /** @constant */
@@ -21320,6 +21328,8 @@ export interface operations {
                                     label: string;
                                     /** @description One line in the operator’s words: what to write. */
                                     help?: string;
+                                    /** @description A short heading the entry form shows above this field where it differs from the heading of the field before it, so the fields of one section give the same heading. A field without one stays in the section before it. Import templates and productions do not use it. */
+                                    heading?: string;
                                     /** @description Counts toward completeness. A record without it is still kept, as incomplete. */
                                     required?: boolean;
                                     kind: "text" | "long_text" | "boolean" | "date" | "date_time";
@@ -21329,6 +21339,8 @@ export interface operations {
                                     label: string;
                                     /** @description One line in the operator’s words: what to write. */
                                     help?: string;
+                                    /** @description A short heading the entry form shows above this field where it differs from the heading of the field before it, so the fields of one section give the same heading. A field without one stays in the section before it. Import templates and productions do not use it. */
+                                    heading?: string;
                                     /** @description Counts toward completeness. A record without it is still kept, as incomplete. */
                                     required?: boolean;
                                     /** @constant */
@@ -21342,6 +21354,8 @@ export interface operations {
                                     label: string;
                                     /** @description One line in the operator’s words: what to write. */
                                     help?: string;
+                                    /** @description A short heading the entry form shows above this field where it differs from the heading of the field before it, so the fields of one section give the same heading. A field without one stays in the section before it. Import templates and productions do not use it. */
+                                    heading?: string;
                                     /** @description Counts toward completeness. A record without it is still kept, as incomplete. */
                                     required?: boolean;
                                     /** @constant */
@@ -21356,6 +21370,8 @@ export interface operations {
                                     label: string;
                                     /** @description One line in the operator’s words: what to write. */
                                     help?: string;
+                                    /** @description A short heading the entry form shows above this field where it differs from the heading of the field before it, so the fields of one section give the same heading. A field without one stays in the section before it. Import templates and productions do not use it. */
+                                    heading?: string;
                                     /** @description Counts toward completeness. A record without it is still kept, as incomplete. */
                                     required?: boolean;
                                     /** @constant */
@@ -28038,6 +28054,8 @@ export interface operations {
                                 required: boolean;
                                 replayOnly: boolean;
                                 help?: string;
+                                /** @description A heading the entry form shows above this field where it differs from the heading of the field before it. */
+                                heading?: string;
                                 unit?: string;
                                 minimum?: number;
                                 maximum?: number;
@@ -47328,6 +47346,8 @@ export interface operations {
                                         label: string;
                                         /** @description One line in the operator’s words: what to write. */
                                         help?: string;
+                                        /** @description A short heading the entry form shows above this field where it differs from the heading of the field before it, so the fields of one section give the same heading. A field without one stays in the section before it. Import templates and productions do not use it. */
+                                        heading?: string;
                                         /** @description Counts toward completeness. A record without it is still kept, as incomplete. */
                                         required?: boolean;
                                         kind: "text" | "long_text" | "boolean" | "date" | "date_time";
@@ -47337,6 +47357,8 @@ export interface operations {
                                         label: string;
                                         /** @description One line in the operator’s words: what to write. */
                                         help?: string;
+                                        /** @description A short heading the entry form shows above this field where it differs from the heading of the field before it, so the fields of one section give the same heading. A field without one stays in the section before it. Import templates and productions do not use it. */
+                                        heading?: string;
                                         /** @description Counts toward completeness. A record without it is still kept, as incomplete. */
                                         required?: boolean;
                                         /** @constant */
@@ -47350,6 +47372,8 @@ export interface operations {
                                         label: string;
                                         /** @description One line in the operator’s words: what to write. */
                                         help?: string;
+                                        /** @description A short heading the entry form shows above this field where it differs from the heading of the field before it, so the fields of one section give the same heading. A field without one stays in the section before it. Import templates and productions do not use it. */
+                                        heading?: string;
                                         /** @description Counts toward completeness. A record without it is still kept, as incomplete. */
                                         required?: boolean;
                                         /** @constant */
@@ -47364,6 +47388,8 @@ export interface operations {
                                         label: string;
                                         /** @description One line in the operator’s words: what to write. */
                                         help?: string;
+                                        /** @description A short heading the entry form shows above this field where it differs from the heading of the field before it, so the fields of one section give the same heading. A field without one stays in the section before it. Import templates and productions do not use it. */
+                                        heading?: string;
                                         /** @description Counts toward completeness. A record without it is still kept, as incomplete. */
                                         required?: boolean;
                                         /** @constant */

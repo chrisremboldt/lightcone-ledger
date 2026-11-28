@@ -313,9 +313,11 @@ Once adopted, a flight whose assessment records 8000 m reads "The preflight asse
 | A value recorded is at most, or at least, a limit ("visibility at least 3 SM", "wind at launch not above 22 kt") | `value.within-limit` version 2, the limit with its unit |
 | A height or distance flown is at most a limit, read from what was flown, else the operator's record, else the plan | `value.flown-or-planned` version 1 |
 | A recorded value is one of a list ("only aircraft N-123", "only from the listed sites") | `value.one-of` version 1; a reference by its `.id` |
+| Each of several fields of one record is one of a list ("no item of the checklist is answered defect found") | `value.one-of` version 2 with `fields`: [a checklist of your own](#a-checklist-of-your-own) |
 | A value must be recorded before something happens ("returned to service before the next flight") | `value.recorded-as` version 1 |
 | Something was done within the previous N calendar months ("recurrent training every 12 months") | `date.within-months` version 2 |
 | A record of this kind is held and complete | `record.complete` version 2 |
+| Points for each answer, added up and compared with a level ("a total of 5 or more is reviewed") | `record.points-total` version 1: [a scored assessment](#a-scored-assessment) |
 | Duty no longer than N hours, rest at least N hours before it | `duty.within-limits` version 1, hours written `12 h`: [the worked rule below](#a-rule-over-duty-and-rest-periods) |
 | Notice given at least N hours before the flight | `record.made-before` version 1 |
 | A report or follow-up within a time after each event | `occurrence.in-window` version 1 |
@@ -480,11 +482,155 @@ recordTypes:
 - **The pack id** of a pack that declares record types is one word: lowercase letters, digits and hyphens, no dots, such as `example-ridge-procedures`. Every type's `id` is that word, a dot and the type's own name. The word may not be one Ledger's own types use (`aircraft`, `person`, `flight` and the others), so your types never sit beside Ledger's.
 - **`subjectKinds`**: what the record is about, from `aircraft`, `person`, `flight`, `site`, `component` and `organization`. A record about your own organization alone asks for no subject id.
 - **`time`**: how the record is placed in time. `event` at a `date_time` field (`atField`), `as_of` for a standing record (with or without an `atField`), or `interval` between a `startField` and an `endField`. That field is required, and takes a date alone when only the day was written down.
-- **`fields`**: each with a `name`, a `label` and optionally a one-line `help`, in your own words, and `required: true` when it counts toward a complete record. At least one is required. The kinds: `text` (one line) and `long_text`; `number` with a `unit` of `Hours`, `Meters`, `MetersPerSecond`, `Percent` or `Count` (a whole number), and optional `minimum` and `maximum`; `date`; `date_time`; `boolean` (yes or no); `select` with its `options`; and `reference` to a `person`, `aircraft`, `site` or `component` on file, by your own id. Names follow the rules Ledger's own types do: a number's name ends in its unit (`airframeHours`), a time's in `At`, a date's in `On`, a reference's in `Id`.
+- **`fields`**: each with a `name`, a `label` and optionally a one-line `help`, in your own words, and `required: true` when it counts toward a complete record. A `heading` starts a section of the entry form ([a checklist of your own](#a-checklist-of-your-own)). At least one is required. The kinds: `text` (one line) and `long_text`; `number` with a `unit` of `Hours`, `Meters`, `MetersPerSecond`, `Percent` or `Count` (a whole number), and optional `minimum` and `maximum`; `date`; `date_time`; `boolean` (yes or no); `select` with its `options`; and `reference` to a `person`, `aircraft`, `site` or `component` on file, by your own id. Names follow the rules Ledger's own types do: a number's name ends in its unit (`airframeHours`), a time's in `At`, a date's in `On`, a reference's in `Id`.
 
 A rule reads a declared type exactly as it reads a built-in one stored inside `operator.record`: `type: operator.record`, `versions: [1]`, `where: values.recordType oneOf [example-ridge-procedures.airframe-check]`, and a field is `values.record.<name>` (`values.record.inspectorId.id` for a reference). A rule reads only the types built into Ledger and those its own pack declares, so an adoption always pins the declarations its rules read. `pnpm pack:build` prints each declared type with its fields and refuses a declaration it cannot take with what to change: a dotted pack id, a number named without its unit, a time field that is not a field, no required field, a rule naming a field the type does not have.
 
 The organization has the type once it adopts the pack, and not before: `pnpm ledger records types`, `columns`, `template` and the Records screen list it from then on. Name the CSV file after the type, as for any other (`example-ridge-procedures.airframe-check.csv`). Each record names the declaration it was written under by its digest. [Record types a pack declares](../design/declared-record-types.md) has the design: identity, pinning, and what becomes of records on file when the declaration changes.
+
+### A scored assessment
+
+Many operations score a flight before it goes: so many points for each answer, added up, and a total at or over some number means someone else looks at the assessment. The check kind `record.points-total` does the adding. The worked example is `examples/flight-risk-assessment/`; its invented manual states the points and two levels:
+
+```text
+7.2 Points. Each answer scores the points stated here, and the points are added up.
+Wind at launch: below 5 m/s, 0 points; 5 m/s to under 8 m/s, 2 points; 8 m/s and above, 4 points.
+The site: flown before by this pilot, 0 points; flown before by the operator but not by this pilot, 1 point; new to the operator, 3 points.
+...
+When the total is 5 points or more, a second remote pilot reviews the assessment before the flight.
+When the total is above the level the chief pilot has set, the chief pilot reviews the assessment before the flight.
+```
+
+1. **The record.** The pack declares the assessment as a record type about a flight ([Declare a record type](#declare-a-record-type)): a `number` for the wind, a `select` for the site, a `boolean` for a yes-or-no question, and `assessedAt`, the time the answers were made, which places the record.
+2. **The points**, under the check's `fields`, each as the manual states them. The rule quotes the paragraph that states them, so the points a rule uses can be checked against its own quotation:
+
+   ```yaml
+       check:
+         kind: record.points-total
+         version: 1
+         params:
+           recordDescribes: flight risk assessment
+           atField: values.record.assessedAt
+           fields:
+             - field: values.record.windAtLaunchMetersPerSecond   # a number: bands
+               bands:
+                 - { to: 5, points: 0 }             # below 5
+                 - { from: 5, to: 8, points: 2 }    # 5 to under 8: from is included, to is not
+                 - { from: 8, points: 4 }           # 8 and above
+             - field: values.record.siteFamiliarity               # listed options: points for each one
+               options:
+                 - { value: flown-by-pilot, points: 0 }
+                 - { value: flown-by-operator, points: 1 }
+                 - { value: new-site, points: 3 }
+             - field: values.record.peopleNearPath                # yes or no
+               yes: 2
+               no: 0
+           comparison: below        # "5 points or more" is reviewed, so a total below 5 passes
+           level: 5
+           whenOver: a second remote pilot reviews the assessment before the flight
+           recordedStartField: values.record.takeoffAt
+           plannedStartField: values.record.windowStartsAt
+   ```
+
+   Points are whole numbers. `pnpm pack:build` refuses, naming the field, bands that overlap, leave a gap or stop short of the least or greatest value the field takes, an option with no points, and a number given options.
+3. **The level.** `comparison` says which totals pass: `below` the level, or `at_most` it. A level the manual fixes goes in `params`. One it leaves to somebody is left out of `params` and listed under `adoptionParameters` (`name: level`, `valueType: integer`), and the organization sets it when it adopts the pack. For two levels, write the rule twice with the same points: the example's second rule passes a total `at_most` the level the chief pilot set.
+4. **Which assessment is read.** The reads named `reported`, `recorded` and `planned` give the flight's time (a reported takeoff, else the operator's flight record, else the planned start), and the read named `record` takes every assessment about the flight (`select: all`). The check reads the latest one made at or before the takeoff. One made afterwards is never read for the flight.
+
+A result reads "The flight risk assessment made at 2026-11-11 08:20 America/Denver, before takeoff at 2026-11-11 09:00 America/Denver in the operator’s flight record, scores Wind at launch: 6 m/s (2); The site: New to the operator (3); Pilot's flights in the last 90 days: 12 (0); People within 30 m of the planned path: No (0); Pilot's hours on duty at takeoff: 2 h (0). Total: 5 points; the level is below 5 points. At 5 points or more: a second remote pilot reviews the assessment before the flight." and needs attention; a person can check the sum by eye. The total is arithmetic over what the pilot recorded. Ledger looks nothing up to score a flight, gives the total no other name, and does not hold the flight: the finding says what the manual asks, and the person who resolves it records that it was done.
+
+A scored question with no answer never counts as zero: the result names it ("… records no answer for: Pilot's hours on duty at takeoff. …") and states no total. A flight with no assessment reads "No flight risk assessment on file.", and one whose only assessment was made after the takeoff says when it was made and that it is not read for the flight. `tests/integration/flight-risk-assessment.integration.test.ts` adopts the example and reads flights below, at and above each level; if it and this guide disagree, the test is right.
+
+### A checklist of your own
+
+Ledger has no checklist feature, and a checklist needs none: it is a record a person makes, so the pack declares it as a record type and asks about it with check kinds Ledger already has. The worked example is `examples/preflight-checklist/`, an invented operator's preflight checklist as it stands in its manual:
+
+```text
+5.1 Before each flight the remote pilot in command completes the preflight checklist below and records it before the takeoff, with the time it was completed and who completed it.
+5.2 Each item is answered done, not applicable or defect found. No item is left unanswered.
+5.3 An item answered defect found is corrected before the flight, and the defect is noted on the checklist.
+
+Airframe
+1. Airframe and arms free of cracks and loose fasteners
+2. Propellers undamaged and tight
+...
+Batteries
+5. Flight batteries charged and latched
+...
+```
+
+**From the paper to a record type.** One record type about a flight, placed in time by when the checklist was completed:
+
+```yaml
+recordTypes:
+  - id: example-ridge-checklist.preflight-checklist
+    version: 1
+    title: Preflight checklist
+    description: The preflight checklist of the operator's own manual, completed for one flight.
+    subjectKinds: [flight]
+    time: { meaning: event, atField: completedAt }
+    fields:
+      - { name: completedAt, label: Completed at, kind: date_time, required: true }
+      - { name: completedById, label: Completed by, kind: reference, referenceKind: person, required: true }
+      - name: airframe
+        heading: Airframe                      # starts a section of the form
+        label: Airframe and arms free of cracks and loose fasteners
+        kind: select
+        required: true
+        options: &answers                      # plain YAML: name the answers once, reuse them with *answers
+          - { value: done, label: Done }
+          - { value: not-applicable, label: Not applicable }
+          - { value: defect-found, label: Defect found }
+      - name: propellers
+        heading: Airframe                      # the same heading: the same section
+        label: Propellers undamaged and tight
+        kind: select
+        required: true
+        options: *answers
+      # ... one field for each item ...
+      - { name: note, heading: Notes, label: Note, kind: long_text }
+```
+
+- **Each item is a field**, a `select` answered from one closed set of answers. Its `label` is the item in your manual's own words: the form shows it, and a finding names the item by it. Its `name` is a short word of your own (`propellers`), which the CSV column and a rule's path use.
+- **`required: true` on every item** makes "every item is answered" the same as "the record is complete".
+- **`heading`** is a short text. The form shows it above a field whose heading differs from that of the field before it, so give every field of a section the same one. A field without a heading stays in the section before it. Only the form uses it: the import file has one column per field, in this order, with no sections.
+- **Who and when** are fields too: a reference to a person on file, and the time that places the record.
+
+**The rules**, each quoting the manual:
+
+| The manual says | The rule |
+| --- | --- |
+| A checklist is recorded for the flight before the takeoff (5.1) | `record.made-before` version 1: the read named `record` takes the flight's checklists, the read named `window` its flight record, with `atField: values.record.completedAt`, `startField: values.record.takeoffAt` and `leadHours: 0` |
+| Every item is answered (5.2) | `record.complete` version 2 with the type's id and version: without `fields` it asks for every required field |
+| No item is answered defect found (5.3) | `value.one-of` version 2 with `fields`, the path of every item, and `expected: [done, not-applicable]` |
+
+```yaml
+    check:
+      kind: value.one-of
+      version: 2
+      params:
+        fields:
+          - values.record.airframe
+          - values.record.propellers
+          # ... every item ...
+        fieldsDescribe: items                  # the sentence says "1 of the 12 items"
+        expected: [done, not-applicable]
+```
+
+`value.one-of` version 2 is one rule over many fields: it reads the list from the latest checklist about the flight and names every item that holds another answer. A rule per item (`value.one-of` with `field`) gives a finding per item and a pack twelve rules long; write it that way only when items need different people or different wording. **Not applicable is an answer**: it is listed in `expected`, so it is never found, and the sentence counts it.
+
+**The form.** Once the pack is adopted, the Records screen offers "Preflight checklist" with the other record types. Its form lists the items under their headings, each with Done, Not applicable and Defect found. It works on a phone, and without a connection as any record form does: the entry is kept on the device and sent when Ledger can be reached ([Entering records without a connection](../design/offline-entry.md)). A CSV file with one column per item imports the same records.
+
+**The findings.** For each flight in the adoption's dates:
+
+| The flight has | What the rules report |
+| --- | --- |
+| No checklist | "No preflight checklist on file.", under each of the three rules |
+| A checklist completed after the takeoff | 5.1 needs attention: "The earliest preflight checklist on file was completed at …, after the takeoff at …." |
+| An item unanswered | 5.2 needs attention: "The latest preflight checklist is missing: No battery swollen or damaged, Return-to-home height set for the site." 5.3 waits and names the same items |
+| An item answered defect found | 5.3 needs attention: "1 of the 12 items read in the latest preflight checklist holds a value other than Done or Not applicable: Propellers undamaged and tight: Defect found. The others that hold a value: 10 Done, 1 Not applicable." |
+| A complete checklist, made in time | Each rule is supported by the record: "All 12 items read in the latest preflight checklist hold Done or Not applicable: 10 Done, 2 Not applicable." |
+
+A checklist is a record a person makes. Ledger does not hold a flight until one is made, and no screen says a flight may or may not go: the rules report what is on file and what is not, and a named person decides what to do about a finding. `tests/integration/preflight-checklist.integration.test.ts` adopts the example and reads these five flights; if it and this guide disagree, the test is right.
 
 ## 4. Build the pack file
 

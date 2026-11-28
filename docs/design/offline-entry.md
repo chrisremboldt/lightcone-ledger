@@ -8,7 +8,7 @@ Three records are made where the flying happens: a preflight assessment, a fligh
 
 ## What is in scope
 
-The record form (`RecordForm.tsx`: every operator record type, which includes the preflight assessment and the flight record) and the signed-in safety report (`SubmitReportDialog` in `SafetyReportSubmission.tsx`), for a person who is signed in. The public report page (`/report`, a reporting link, no sign-in) is unchanged: it keeps nothing on the device and needs a connection to send, as before. It has no person to tie an entry to, and keeping an anonymous report on a shared device would leave it for the next person to find.
+The record form (`RecordForm.tsx`: every operator record type, which includes the preflight assessment, the flight record and every record type a pack the organization adopted declares, such as a checklist of its own) and the signed-in safety report (`SubmitReportDialog` in `SafetyReportSubmission.tsx`), for a person who is signed in. The public report page (`/report`, a reporting link, no sign-in) is unchanged: it keeps nothing on the device and needs a connection to send, as before. It has no person to tie an entry to, and keeping an anonymous report on a shared device would leave it for the next person to find.
 
 ## Opening the app without a connection
 
@@ -66,6 +66,7 @@ When the form is saved with a connection, the entry is sent at once. If Ledger r
 
 ## What an offline entry cannot do yet
 
+- A record type a pack declares needs nothing of its own here. The form is generated from the record types the Records screen read, declared ones among them with their headings, and an entry is kept as the type's id and the bytes to send; Ledger names the declaration the record is written under when it takes the entry. If the organization's adoption of the pack ended while the entry waited, Ledger refuses it in its own words and the entry stays on the device, as any refused entry does.
 - The record form offers the record types the Records screen read while there was a connection, and its subject picker cannot suggest subjects without one: a subject is typed by its own id.
 - Files cannot be attached to an entry, as they cannot be to a report.
 - The list of waiting entries is per device; Ledger cannot see what waits on a device.

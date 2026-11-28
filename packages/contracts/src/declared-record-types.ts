@@ -33,6 +33,12 @@ const fieldCommon = {
   name: Type.String({ pattern: DeclaredFieldNamePattern }),
   label: Words(100, 'What the operator calls the field.'),
   help: Type.Optional(Words(300, 'One line in the operator’s words: what to write.')),
+  heading: Type.Optional(
+    Words(
+      60,
+      'A short heading the entry form shows above this field where it differs from the heading of the field before it, so the fields of one section give the same heading. A field without one stays in the section before it. Import templates and productions do not use it.',
+    ),
+  ),
   required: Type.Optional(
     Type.Boolean({ description: 'Counts toward completeness. A record without it is still kept, as incomplete.' }),
   ),
@@ -128,6 +134,7 @@ function definedField(field: DeclaredRecordField): OperatorRecordField {
     required: field.required ?? false,
     replayOnly: false,
     ...(field.help ? { help: field.help } : {}),
+    ...(field.heading ? { heading: field.heading } : {}),
   };
   switch (field.kind) {
     case 'number':

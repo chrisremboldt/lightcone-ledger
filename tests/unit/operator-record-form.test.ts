@@ -14,6 +14,7 @@ import {
   localInputValue,
   originalExcerpt,
   recordHeadline,
+  sectionStartedBy,
 } from '../../apps/web/src/operator-records.js';
 
 const types = listOperatorRecordTypes();
@@ -47,6 +48,31 @@ describe('generated entry form', () => {
     expect(reading.record.plannedMaxHeightAboveGroundMeters).toBe(121.92);
     // The form's times are the organization's wall-clock times; the import reads them in its zone.
     expect(reading.record.windowStartsAt).toBe('2026-11-02T20:00:00Z');
+  });
+
+  it('starts a section where a field’s heading differs from the heading of the field before it', () => {
+    const field = (name: string, heading?: string) => ({ name, ...(heading ? { heading } : {}) });
+    const type = {
+      fields: [
+        field('completedAt'),
+        field('airframe', 'Airframe'),
+        field('propellers', 'Airframe'),
+        field('batteries', 'Batteries'),
+        field('spare'),
+        field('note', 'Batteries'),
+      ],
+    } as unknown as Parameters<typeof sectionStartedBy>[0];
+    expect(type.fields.map((_field, index) => sectionStartedBy(type, index))).toEqual([
+      undefined,
+      'Airframe',
+      undefined,
+      'Batteries',
+      undefined,
+      'Batteries',
+    ]);
+    // A type built into Ledger gives no headings, so its form is one run of fields as before.
+    for (const builtIn of types)
+      expect(builtIn.fields.some((_field, index) => sectionStartedBy(builtIn, index))).toBe(false);
   });
 
   it('starts a correction’s times in the organization’s zone, as the form enters them', () => {

@@ -1,4 +1,4 @@
-import { useState, type FormEvent } from 'react';
+import { Fragment, useState, type FormEvent } from 'react';
 import type { LedgerClient } from '@ledger/contracts/client';
 import { aboutOwnOrganization, type OperatorRecordCommitResponse } from '@ledger/contracts';
 import { Button, Notice } from '@ledger/ui';
@@ -6,6 +6,7 @@ import {
   columnFor,
   emptyDraft,
   entryDocument,
+  sectionStartedBy,
   type RecordDraft,
   type RecordField,
   type RecordTypeSummary,
@@ -208,21 +209,23 @@ export function RecordForm({
             )}
           </>
         )}
-        {type.fields.map((field) => (
-          <FieldInput
-            key={field.name}
-            client={client}
-            sourceId={sourceId}
-            id={id(field.name)}
-            field={field}
-            type={type}
-            value={draft.values[field.name] ?? ''}
-            unit={draft.units[field.name]}
-            onChange={(value) => setValue(field.name, value)}
-            onUnit={(unit) =>
-              setDraft((previous) => ({ ...previous, units: { ...previous.units, [field.name]: unit } }))
-            }
-          />
+        {type.fields.map((field, index) => (
+          <Fragment key={field.name}>
+            <SectionHeading text={sectionStartedBy(type, index)} />
+            <FieldInput
+              client={client}
+              sourceId={sourceId}
+              id={id(field.name)}
+              field={field}
+              type={type}
+              value={draft.values[field.name] ?? ''}
+              unit={draft.units[field.name]}
+              onChange={(value) => setValue(field.name, value)}
+              onUnit={(unit) =>
+                setDraft((previous) => ({ ...previous, units: { ...previous.units, [field.name]: unit } }))
+              }
+            />
+          </Fragment>
         ))}
       </div>
       {kept && (
@@ -263,6 +266,11 @@ export function RecordForm({
       />
     </form>
   );
+}
+
+/** The heading of a section of the form, above its first field. It spans the form's columns. */
+function SectionHeading({ text }: { text: string | undefined }) {
+  return text ? <h4 className="records-form-heading">{text}</h4> : null;
 }
 
 function FieldInput({

@@ -107,7 +107,7 @@ function declarationLines(file: PackFile): string[] {
     `Record type ${declared.id} version ${declared.version}: ${declared.title}, about ${declared.subjectKinds.join(' or ')}`,
     ...declared.fields.map(
       (field) =>
-        `  ${field.name} (${field.label}): ${field.kind === 'number' ? `number in ${field.unit}` : field.kind === 'select' ? `one of ${field.options.map((option) => option.value).join(', ')}` : field.kind === 'reference' ? `a ${field.referenceKind} on file` : field.kind.replace('_', ' ')}${field.required ? ', required' : ''}`,
+        `  ${field.name} (${field.label}): ${field.kind === 'number' ? `number in ${field.unit}` : field.kind === 'select' ? `one of ${field.options.map((option) => option.value).join(', ')}` : field.kind === 'reference' ? `a ${field.referenceKind} on file` : field.kind.replace('_', ' ')}${field.required ? ', required' : ''}${field.heading ? `, under the heading “${field.heading}”` : ''}`,
     ),
     `  Read by a rule as type operator.record with where values.recordType oneOf [${declared.id}]; fields values.record.<field>`,
     '',

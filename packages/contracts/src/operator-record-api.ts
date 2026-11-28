@@ -34,6 +34,12 @@ export const OperatorRecordFieldSchema = Type.Object(
     required: Type.Boolean(),
     replayOnly: Type.Boolean(),
     help: Type.Optional(Type.String()),
+    heading: Type.Optional(
+      Type.String({
+        description:
+          'A heading the entry form shows above this field where it differs from the heading of the field before it.',
+      }),
+    ),
     unit: Type.Optional(Type.String()),
     minimum: Type.Optional(Type.Number()),
     maximum: Type.Optional(Type.Number()),

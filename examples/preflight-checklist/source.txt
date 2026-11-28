@@ -1,0 +1,31 @@
+EXAMPLE RIDGE SURVEY OPERATIONS MANUAL (INVENTED)
+
+Chapter 5. Preflight checklist
+
+5.1 Before each flight the remote pilot in command completes the preflight checklist below and records it before the takeoff, with the time it was completed and who completed it.
+
+5.2 Each item is answered done, not applicable or defect found. No item is left unanswered.
+
+5.3 An item answered defect found is corrected before the flight, and the defect is noted on the checklist.
+
+The checklist
+
+Airframe
+1. Airframe and arms free of cracks and loose fasteners
+2. Propellers undamaged and tight
+3. Motors turn freely by hand
+4. Payload and gimbal secure
+
+Batteries
+5. Flight batteries charged and latched
+6. No battery swollen or damaged
+7. Controller battery charged
+
+Control station
+8. Controller linked and home point set
+9. Return-to-home height set for the site
+
+Site
+10. Launch area clear of people
+11. Wires and obstacles noted
+12. Weather within the limits of chapter 4

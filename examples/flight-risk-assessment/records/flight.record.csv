@@ -1,0 +1,5 @@
+subjectId,secondarySubjectId,takeoffAt,landingAt,takeoffLocation,landingLocations,maxHeightFlownAboveGroundMeters
+RIDGE-F-701,RIDGE-AC-1,2026-11-10T16:00:00Z,2026-11-10T16:40:00Z,North substation pad,North substation pad,90
+RIDGE-F-702,RIDGE-AC-1,2026-11-11T16:00:00Z,2026-11-11T16:35:00Z,Ridge road pullout,Ridge road pullout,90
+RIDGE-F-703,RIDGE-AC-2,2026-11-12T16:00:00Z,2026-11-12T16:50:00Z,Quarry gate,Quarry gate,110
+RIDGE-F-704,RIDGE-AC-2,2026-11-13T16:00:00Z,2026-11-13T16:30:00Z,Quarry gate,Quarry gate,110

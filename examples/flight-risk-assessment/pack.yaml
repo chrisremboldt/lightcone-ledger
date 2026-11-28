@@ -1,0 +1,214 @@
+# A procedure that scores a flight before it goes: so many points for each answer, added up, and a total at or over a
+# level means someone else looks at the assessment. The pack declares the assessment as a record type of its own
+# (docs/design/declared-record-types.md) and totals its answers with the check kind record.points-total.
+# Everything here is invented: the operator, its manual, its people and its flights.
+pack:
+  # A pack that declares record types has an id of one word: it is the first part of every type it declares.
+  id: example-ridge-risk
+  version: 1
+  title: Example Ridge Survey operations manual, flight risk assessment (invented)
+
+source:
+  file: source.txt
+  kind: procedure
+  reference: Example Ridge Survey Operations Manual (invented)
+
+recordTypes:
+  - id: example-ridge-risk.flight-risk-assessment
+    version: 1
+    title: Flight risk assessment
+    description: The answers a remote pilot in command gives before a flight, under the operator's own manual.
+    subjectKinds: [flight]
+    # The record is placed in time by when the answers were made. A rule reads the latest one made by the takeoff.
+    time:
+      meaning: event
+      atField: assessedAt
+    fields:
+      - name: assessedAt
+        label: Assessed at
+        kind: date_time
+        required: true
+        help: When the answers were made. Give the time of day, so the record can be placed before the takeoff.
+      - name: assessedById
+        label: Assessed by
+        kind: reference
+        referenceKind: person
+        required: true
+        help: Your own id for the remote pilot in command who answered.
+      - name: windAtLaunchMetersPerSecond
+        label: Wind at launch
+        kind: number
+        unit: MetersPerSecond
+        maximum: 60
+        required: true
+        help: The wind at the launch point as the pilot measured or read it.
+      - name: siteFamiliarity
+        label: The site
+        kind: select
+        required: true
+        options:
+          - value: flown-by-pilot
+            label: Flown before by this pilot
+          - value: flown-by-operator
+            label: Flown before by the operator, not by this pilot
+          - value: new-site
+            label: New to the operator
+      - name: pilotFlightsLast90DaysCount
+        label: Pilot's flights in the last 90 days
+        kind: number
+        unit: Count
+        required: true
+      - name: peopleNearPath
+        label: People within 30 m of the planned path
+        kind: boolean
+        required: true
+      - name: dutyAtTakeoffHours
+        label: Pilot's hours on duty at takeoff
+        kind: number
+        unit: Hours
+        maximum: 24
+        required: true
+      - name: notes
+        label: Notes
+        kind: long_text
+
+rules:
+  # The manual's first level is fixed in its text: 5 points or more.
+  - id: second-pilot-review
+    paragraph: '7.2'
+    title: Assessment total below the 5 points at which a second remote pilot reviews it
+    # The quotation holds the points this rule uses and the sentence that states its level.
+    quote: >-
+      Each answer scores the points stated here, and the points are added up.
+      Wind at launch: below 5 m/s, 0 points; 5 m/s to under 8 m/s, 2 points; 8 m/s and above, 4 points.
+      The site: flown before by this pilot, 0 points; flown before by the operator but not by this pilot, 1 point;
+      new to the operator, 3 points.
+      The pilot's flights in the last 90 days: fewer than 3, 3 points; 3 to 9, 1 point; 10 or more, 0 points.
+      People within 30 m of the planned path: no, 0 points; yes, 2 points.
+      The pilot's hours on duty at takeoff: under 6 h, 0 points; 6 h to under 10 h, 1 point; 10 h and above, 3 points.
+      When the total is 5 points or more, a second remote pilot reviews the assessment before the flight.
+    target:
+      subjectKind: flight
+    population:
+      of: in_adoption_dates
+    # &reads names these reads so the second rule can take the same ones (*reads); plain YAML, nothing of Ledger's.
+    reads: &reads # Every assessment about the flight: the check takes the latest one made at or before the takeoff.
+      - name: record
+        type: operator.record
+        versions: [1]
+        about: target
+        required: true
+        onFile: flight risk assessment
+        select: all
+        where:
+          - field: values.recordType
+            oneOf: [example-ridge-risk.flight-risk-assessment]
+      # Where the flight's time comes from: a takeoff a source reported, else the operator's flight record, else the
+      # planned start.
+      - name: reported
+        type: flight.report
+        versions: [1]
+        about: target
+        required: false
+        select: latest
+        where:
+          - field: values.takeoffAt
+            filled: true
+      - name: recorded
+        type: operator.record
+        versions: [1]
+        about: target
+        required: false
+        select: latest
+        where:
+          - field: values.recordType
+            oneOf: [flight.record]
+      - name: planned
+        type: operator.record
+        versions: [1]
+        about: target
+        required: false
+        plans: true
+        select: latest
+        where:
+          - field: values.recordType
+            oneOf: [flight.plan]
+    check:
+      kind: record.points-total
+      version: 1
+      params:
+        recordDescribes: flight risk assessment
+        atField: values.record.assessedAt
+        # The points, as 7.2 states them. A band's from is included and its to is not. pnpm pack:build refuses
+        # bands that overlap or leave a value the field can hold without points, and an option left out.
+        fields: &points
+          - field: values.record.windAtLaunchMetersPerSecond
+            bands:
+              - { to: 5, points: 0 }
+              - { from: 5, to: 8, points: 2 }
+              - { from: 8, points: 4 }
+          - field: values.record.siteFamiliarity
+            options:
+              - { value: flown-by-pilot, points: 0 }
+              - { value: flown-by-operator, points: 1 }
+              - { value: new-site, points: 3 }
+          - field: values.record.pilotFlightsLast90DaysCount
+            bands:
+              - { to: 3, points: 3 }
+              - { from: 3, to: 10, points: 1 }
+              - { from: 10, points: 0 }
+          - field: values.record.peopleNearPath
+            yes: 2
+            no: 0
+          - field: values.record.dutyAtTakeoffHours
+            bands:
+              - { to: 6, points: 0 }
+              - { from: 6, to: 10, points: 1 }
+              - { from: 10, points: 3 }
+        # "5 points or more" is reviewed, so a total below 5 passes.
+        comparison: below
+        level: 5
+        whenOver: a second remote pilot reviews the assessment before the flight
+        reportedStartField: values.takeoffAt
+        recordedStartField: values.record.takeoffAt
+        plannedStartField: values.record.windowStartsAt
+
+  # The manual leaves the second level to the chief pilot, so the organization sets it when it adopts the pack.
+  - id: chief-pilot-review
+    paragraph: '7.2'
+    title: Assessment total at most the level above which the chief pilot reviews it
+    quote: >-
+      Each answer scores the points stated here, and the points are added up.
+      Wind at launch: below 5 m/s, 0 points; 5 m/s to under 8 m/s, 2 points; 8 m/s and above, 4 points.
+      The site: flown before by this pilot, 0 points; flown before by the operator but not by this pilot, 1 point;
+      new to the operator, 3 points.
+      The pilot's flights in the last 90 days: fewer than 3, 3 points; 3 to 9, 1 point; 10 or more, 0 points.
+      People within 30 m of the planned path: no, 0 points; yes, 2 points.
+      The pilot's hours on duty at takeoff: under 6 h, 0 points; 6 h to under 10 h, 1 point; 10 h and above, 3 points.
+      When the total is 5 points or more, a second remote pilot reviews the assessment before the flight.
+      When the total is above the level the chief pilot has set, the chief pilot reviews the assessment before the
+      flight.
+    target:
+      subjectKind: flight
+    population:
+      of: in_adoption_dates
+    reads: *reads
+    check:
+      kind: record.points-total
+      version: 1
+      params:
+        recordDescribes: flight risk assessment
+        atField: values.record.assessedAt
+        fields: *points
+        # "Above the level" is reviewed, so a total at most the level passes.
+        comparison: at_most
+        whenOver: the chief pilot reviews the assessment before the flight
+        reportedStartField: values.takeoffAt
+        recordedStartField: values.record.takeoffAt
+        plannedStartField: values.record.windowStartsAt
+    adoptionParameters:
+      - name: level
+        title: The level the chief pilot has set (points)
+        valueType: integer
+        minimum: 5
+        maximum: 15

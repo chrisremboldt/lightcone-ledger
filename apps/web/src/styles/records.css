@@ -235,6 +235,15 @@ label.records-field > select {
 .records-form-grid > .records-help {
   grid-column: 2;
 }
+.records-form-heading {
+  grid-column: 1 / -1;
+  margin: 10px 0 0;
+  padding-bottom: 4px;
+  border-bottom: 1px solid var(--line);
+  color: var(--ink);
+  font-size: 13px;
+  font-weight: 700;
+}
 .records-number {
   display: flex;
   gap: 6px;

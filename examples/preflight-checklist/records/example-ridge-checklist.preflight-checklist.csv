@@ -1,0 +1,5 @@
+subjectId,completedAt,completedById,airframe,propellers,motors,payload,flightBatteries,batteryCondition,controllerBattery,controllerLink,returnHeight,launchArea,obstacles,weather,note,replaces
+RIDGE-F-801,2026-11-16T15:40:00Z,RIDGE-P-01,done,done,done,not-applicable,done,done,done,done,done,done,done,done,No payload fitted,
+RIDGE-F-802,2026-11-17T16:20:00Z,RIDGE-P-01,done,done,done,done,done,done,done,done,done,done,done,done,Written up after landing,
+RIDGE-F-803,2026-11-18T15:45:00Z,RIDGE-P-02,done,done,done,done,done,,done,done,,done,done,done,,
+RIDGE-F-804,2026-11-19T15:50:00Z,RIDGE-P-02,done,defect-found,done,done,done,done,done,done,done,done,done,done,Chipped propeller on arm 3,

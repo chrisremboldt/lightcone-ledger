@@ -94,11 +94,11 @@ function inEffect() {
 }
 
 describe('a check kind’s own summary as wording', () => {
-  it('keeps every registered check kind digest, with record.made-before@1, events.answered-within@1, periods.each-recorded@1, record.in-force@1, values.on-file@1, records.counted@1, records.each-in-force@1 and value.recorded-as@1 added, and these evaluation results with fields named by their labels', () => {
+  it('keeps every registered check kind digest, with record.made-before@1, events.answered-within@1, periods.each-recorded@1, record.in-force@1, values.on-file@1, records.counted@1, records.each-in-force@1, value.recorded-as@1, record.points-total@1 and value.one-of@2 added, and these evaluation results with fields named by their labels', () => {
     const kinds = listCheckKinds()
       .map((kind) => `${kind.id}@${kind.version} ${registeredCheckKindDigest(kind.id, kind.version)}`)
       .sort();
-    expect(canonicalDigest(kinds)).toBe('aa18fd6249a93e34edac3aeef1ba6c9827434c71fe6a66786dcce57733a2120f');
+    expect(canonicalDigest(kinds)).toBe('a22ab06a377e66eee547d19b540f79e7be93ee0e15d625dc6ccf83fb3f73e786');
     expect(canonicalDigest(overdue())).toBe('e2b923c28a17b4f8f5f737a005f31f5411f805337aa099148b20171ac76bb50a');
     expect(canonicalDigest(covered())).toBe('4bc6e3a804a62b52b8ae43cdd2a25d4560d1800480f6b7bcf137ee57f1b4e2db');
   });

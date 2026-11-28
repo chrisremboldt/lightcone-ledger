@@ -107,6 +107,54 @@ export function fieldLabel(
 }
 
 /**
+ * A field by its own label alone, such as "Operating authority", for a sentence that has already named the record
+ * that holds it. Without a record type that has the field, a readable form of its name.
+ */
+export function ownFieldLabel(
+  path: string,
+  observations: readonly CheckObservation[] = [],
+  record?: { recordType?: string; recordVersion?: number },
+): string {
+  if (path.startsWith(RECORD_FIELD)) {
+    const name = path.slice(RECORD_FIELD.length).split('.')[0]!;
+    const definitions = [
+      ...observations.map((observation) =>
+        recordDefinition(
+          observationField(observation, 'values.recordType'),
+          observationField(observation, 'values.recordVersion'),
+        ),
+      ),
+      recordDefinition(record?.recordType, record?.recordVersion),
+    ];
+    for (const definition of definitions)
+      if (definition?.fields.some((field) => field.name === name)) return recordFieldLabel(definition, name);
+  }
+  for (const observation of observations) {
+    const definition = findObservationType(observationRegistry(), observation.type, observation.version);
+    const title = definition && schemaTitle(definition, path);
+    if (title) return title;
+  }
+  return sentenceStart(readableName(path));
+}
+
+/** What a person calls the record or observation the fields are read from, such as "flight plan"; none without one. */
+export function holderTitle(
+  observations: readonly CheckObservation[] = [],
+  record?: { recordType?: string; recordVersion?: number },
+): string | undefined {
+  for (const observation of observations) {
+    const recordType = observationField(observation, 'values.recordType');
+    const recordVersion = observationField(observation, 'values.recordVersion');
+    if (typeof recordType === 'string' && typeof recordVersion === 'number')
+      return recordTitle(recordType, recordVersion);
+    return observationTitle(observation.type, observation.version);
+  }
+  return record?.recordType && record.recordVersion !== undefined
+    ? recordTitle(record.recordType, record.recordVersion)
+    : undefined;
+}
+
+/**
  * A recorded value as a person reads it: the option's label when the field is a record field with options, else the
  * value as written.
  */

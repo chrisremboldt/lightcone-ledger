@@ -78,6 +78,15 @@ export function columnFor(type: RecordTypeSummary, field: string): RecordColumn 
   return type.columns.find((column) => column.field === field);
 }
 
+/**
+ * The heading the form shows above a field: the field's own, where it differs from the heading of the field before
+ * it. The fields of one section give the same heading, and a field without one stays in the section before it.
+ */
+export function sectionStartedBy(type: Pick<RecordTypeSummary, 'fields'>, index: number): string | undefined {
+  const heading = type.fields[index]?.heading;
+  return heading && heading !== type.fields[index - 1]?.heading ? heading : undefined;
+}
+
 export function emptyDraft(type: RecordTypeSummary): RecordDraft {
   return {
     subjectId: '',

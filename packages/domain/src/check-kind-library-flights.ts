@@ -38,13 +38,13 @@ import { valueLabel } from './field-labels.js';
 const DAY = 86_400_000;
 
 /** A result whose details keep its own summary as reading, so a rule's wording can quote it and add to it. */
-function result(...args: Parameters<typeof combinedResult>): ReturnType<typeof combinedResult> {
+export function result(...args: Parameters<typeof combinedResult>): ReturnType<typeof combinedResult> {
   const [, , , summary, , details] = args;
   details.reading = summary;
   return combinedResult(...args);
 }
 
-const readingDetail = {
+export const readingDetail = {
   name: 'reading',
   description: 'The kind’s own summary, so a rule’s wording can quote it and add what is left to a person.',
 } as const;
@@ -66,7 +66,7 @@ export interface FlightTimeParams {
   plannedEndField?: string;
 }
 
-const flightTimeSchema = {
+export const flightTimeSchema = {
   reportedSelect: selectionSchema,
   reportedStartField: fieldPath,
   reportedEndField: fieldPath,
@@ -78,19 +78,19 @@ const flightTimeSchema = {
   plannedEndField: fieldPath,
 } as const;
 
-const flightTimeDependencies = {
+export const flightTimeDependencies = {
   reportedEndField: ['reportedStartField'],
   recordedEndField: ['recordedStartField'],
   plannedEndField: ['plannedStartField'],
 } as const;
 
-const flightTimeInputs: readonly CheckKindInput[] = [
+export const flightTimeInputs: readonly CheckKindInput[] = [
   { name: 'reported', description: 'Reports of the flight that state its takeoff and landing.', optional: true },
   { name: 'recorded', description: 'The operator’s own record of the flight as flown.', optional: true },
   { name: 'planned', description: 'The flight’s plan, with its planned window.', optional: true },
 ];
 
-const flightTimeDetails = [
+export const flightTimeDetails = [
   readingDetail,
   { name: 'basis', description: 'Where the flight’s time came from: reported, recorded or planned; null when none.' },
   { name: 'flightStart', description: 'The takeoff, or the planned start, as a UTC instant; null when none.' },
@@ -98,14 +98,14 @@ const flightTimeDetails = [
 ] as const;
 
 /** The flight's window: a reported takeoff, else the operator's record, else the plan; the end from the same record. */
-interface FlightWindow {
+export interface FlightWindow {
   start: number;
   end: number | undefined;
   basis: 'reported' | 'recorded' | 'planned';
   evidence: CheckObservation[];
 }
 
-function flightWindow(params: FlightTimeParams, inputs: CheckInputs): FlightWindow | undefined {
+export function flightWindow(params: FlightTimeParams, inputs: CheckInputs): FlightWindow | undefined {
   const sources = [
     ['reported', inputs.reported, params.reportedSelect, params.reportedStartField, params.reportedEndField],
     ['recorded', inputs.recorded, params.recordedSelect, params.recordedStartField, params.recordedEndField],
@@ -135,7 +135,7 @@ function flightWindow(params: FlightTimeParams, inputs: CheckInputs): FlightWind
 }
 
 /** The flight's time as a sentence says it: "takeoff at …", "the recorded takeoff at …", "the planned start at …". */
-function startWords(window: FlightWindow): string {
+export function startWords(window: FlightWindow): string {
   const at = iso(window.start);
   if (window.basis === 'reported') return `takeoff at ${at}`;
   if (window.basis === 'recorded') return `takeoff at ${at} in the operator’s flight record`;
@@ -150,7 +150,7 @@ function windowWords(window: FlightWindow): string {
   return `the planned window, ${from}`;
 }
 
-function windowDetails(window: FlightWindow | undefined): CheckDetails {
+export function windowDetails(window: FlightWindow | undefined): CheckDetails {
   return {
     basis: window?.basis ?? null,
     flightStart: iso(window?.start),
@@ -158,7 +158,7 @@ function windowDetails(window: FlightWindow | undefined): CheckDetails {
   };
 }
 
-function noFlightTime(what: string, details: CheckDetails) {
+export function noFlightTime(what: string, details: CheckDetails) {
   return result(
     'insufficient',
     'pending',

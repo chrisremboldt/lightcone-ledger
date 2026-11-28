@@ -51,6 +51,11 @@ interface FieldCommon {
   readonly replayOnly: boolean;
   readonly help?: string;
   /**
+   * A heading the entry form shows above this field where it differs from the heading of the field before it: the
+   * fields of one section of a form give the same heading. Nothing else reads it.
+   */
+  readonly heading?: string;
+  /**
    * Counts toward completeness unless the named field has a value: of two fields that each say the same thing in a
    * different way, one is needed. Never set together with required.
    */

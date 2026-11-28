@@ -61,6 +61,7 @@ describe('record check kinds', () => {
       'duty.within-limits@1',
       'value.within-limit@2',
       'value.one-of@1',
+      'value.one-of@2',
       'occurrence.in-window@1',
       'record.made-before@1',
     ]);

@@ -1,0 +1,4 @@
+subjectId,assessedAt,assessedById,windAtLaunchMetersPerSecond,siteFamiliarity,pilotFlightsLast90DaysCount,peopleNearPath,dutyAtTakeoffHours,notes,replaces
+RIDGE-F-701,2026-11-10T15:30:00Z,RIDGE-P-01,6,flown-by-operator,5,no,2,,
+RIDGE-F-702,2026-11-11T15:20:00Z,RIDGE-P-01,6,new-site,12,no,2,First flight from the pullout,
+RIDGE-F-703,2026-11-12T15:40:00Z,RIDGE-P-02,9,new-site,2,yes,7,Quarry staff on the access road,

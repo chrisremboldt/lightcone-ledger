@@ -1,0 +1,16 @@
+EXAMPLE RIDGE SURVEY OPERATIONS MANUAL (INVENTED)
+
+Chapter 7. Flight risk assessment
+
+7.1 Assessment. Before each flight the remote pilot in command answers the five questions of 7.2 and records the answers with the time they were made.
+
+7.2 Points. Each answer scores the points stated here, and the points are added up.
+Wind at launch: below 5 m/s, 0 points; 5 m/s to under 8 m/s, 2 points; 8 m/s and above, 4 points.
+The site: flown before by this pilot, 0 points; flown before by the operator but not by this pilot, 1 point; new to the operator, 3 points.
+The pilot's flights in the last 90 days: fewer than 3, 3 points; 3 to 9, 1 point; 10 or more, 0 points.
+People within 30 m of the planned path: no, 0 points; yes, 2 points.
+The pilot's hours on duty at takeoff: under 6 h, 0 points; 6 h to under 10 h, 1 point; 10 h and above, 3 points.
+When the total is 5 points or more, a second remote pilot reviews the assessment before the flight.
+When the total is above the level the chief pilot has set, the chief pilot reviews the assessment before the flight.
+
+7.3 What the total is. The total is a sum of the points above. It is a prompt for a second look, and nothing else.

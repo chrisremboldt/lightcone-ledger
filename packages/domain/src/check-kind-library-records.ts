@@ -20,7 +20,15 @@ import {
   valueIsOneOf,
 } from './check-kinds.js';
 import { quantityText, textUnitSchema, type TextUnit } from './quantities.js';
-import { fieldLabel, recordFieldLabels, recordTitle, sentenceStart, valueLabel } from './field-labels.js';
+import {
+  fieldLabel,
+  holderTitle,
+  ownFieldLabel,
+  recordFieldLabels,
+  recordTitle,
+  sentenceStart,
+  valueLabel,
+} from './field-labels.js';
 import { observationRegistry } from './observation-registry.js';
 import { placedTime } from './day-precision.js';
 
@@ -966,6 +974,198 @@ export const valueOneOfV1: CheckKind<ValueOneOfParams> = {
   },
 };
 
+// Each of several recorded values is one of the expected values, version 2 ------------------------------------------
+
+export interface ValueOneOfV2Params {
+  select?: Selection;
+  field?: string;
+  fields?: string[];
+  fieldsDescribe?: string;
+  expected: Scalar[];
+  undetermined?: Scalar[];
+}
+
+/** How many of a long list a sentence names before it says how many more there are. */
+const NAMED_AT_MOST = 20;
+
+function namedList(entries: readonly string[], separator: string): string {
+  const shown = entries.slice(0, NAMED_AT_MOST).join(separator);
+  return entries.length > NAMED_AT_MOST ? `${shown}${separator}and ${entries.length - NAMED_AT_MOST} more` : shown;
+}
+
+/** A list of entries as one detail value, whole entries only, within what a detail may hold. */
+export function detailEntries(entries: readonly string[]): string | null {
+  let text = '';
+  for (const entry of entries) {
+    const next = text ? `${text}; ${entry}` : entry;
+    if (next.length > 990) return `${text}; …`;
+    text = next;
+  }
+  return text || null;
+}
+
+const lastPart = (path: string) => path.split('.').at(-1)!;
+
+export const valueOneOfV2: CheckKind<ValueOneOfV2Params> = {
+  id: 'value.one-of',
+  version: 2,
+  title: 'Recorded values are each one of the expected values',
+  description:
+    'Each named field of the latest selected observation holds one of the expected values: one field (field), or several read from the same record (fields). Every field that holds another value is named with that value, by the labels a person reads, and needs attention. Otherwise a field holding a value the rule lists as undetermined is insufficient, and so is a field with no value; each is named. With several fields the sentence counts how many hold each value, so an expected answer such as “not applicable” is counted and not found. Simultaneous reports that disagree conflict.',
+  inputs: [{ name: 'subject', description: 'Observations or operator records that carry the fields.' }],
+  details: [
+    { name: 'fieldsRead', description: 'How many fields the rule reads.' },
+    { name: 'unexpected', description: 'Each field holding a value that is not expected, as name=value; else null.' },
+    { name: 'unanswered', description: 'The fields with no value, by name; null when every field has one.' },
+    { name: 'counts', description: 'How many fields hold each value, as value=count; null when none holds one.' },
+  ],
+  parameterSchema: {
+    type: 'object',
+    additionalProperties: false,
+    required: ['expected'],
+    properties: {
+      select: selectionSchema,
+      field: fieldPath,
+      fields: {
+        type: 'array',
+        minItems: 1,
+        maxItems: 100,
+        uniqueItems: true,
+        items: fieldPath,
+        description: 'Several fields of the same record, each read as field is; every one that fails is named',
+      },
+      fieldsDescribe: {
+        type: 'string',
+        minLength: 1,
+        maxLength: 60,
+        description: 'What a person calls the fields, in the plural, such as items; without it, fields',
+      },
+      expected: scalars,
+      undetermined: scalars,
+    },
+    oneOf: [{ required: ['field'] }, { required: ['fields'] }],
+    dependencies: { fieldsDescribe: ['fields'] },
+  },
+  evaluate(params, inputs, clock) {
+    const paths = params.fields ?? [params.field!];
+    const latest = latestObservations(current(inputs.subject, params.select));
+    const read = paths.map((path) => {
+      const reported = latest.flatMap((observation) => {
+        const value = observationField(observation, path);
+        return recordFieldFilled(value) && ['string', 'number', 'boolean'].includes(typeof value)
+          ? [{ observation, value: value as Scalar }]
+          : [];
+      });
+      return { path, reported, values: [...new Set(reported.map((item) => item.value))] };
+    });
+    const shown = (path: string, value: Scalar) => valueLabel(path, value, latest, params.select);
+    const named = (items: readonly (typeof read)[number][], withValue: boolean) =>
+      namedList(
+        items.map((item) => {
+          const label = ownFieldLabel(item.path, latest, params.select);
+          return withValue ? `${label}: ${shown(item.path, item.values[0]!)}` : label;
+        }),
+        withValue ? '; ' : ', ',
+      );
+    const answered = read.filter((item) => item.values.length === 1);
+    const tally = new Map<Scalar, number>();
+    for (const item of answered) tally.set(item.values[0]!, (tally.get(item.values[0]!) ?? 0) + 1);
+    const ordered = [...tally.keys()].sort(
+      (a, b) => (params.expected.indexOf(a) + 1 || Infinity) - (params.expected.indexOf(b) + 1 || Infinity),
+    );
+    const unexpected = answered.filter(
+      (item) => !params.expected.includes(item.values[0]!) && !params.undetermined?.includes(item.values[0]!),
+    );
+    const undetermined = answered.filter((item) => params.undetermined?.includes(item.values[0]!));
+    const unanswered = read.filter((item) => !item.values.length);
+    const details = {
+      fieldsRead: paths.length,
+      unexpected: detailEntries(unexpected.map((item) => `${lastPart(item.path)}=${String(item.values[0])}`)),
+      unanswered: detailEntries(unanswered.map((item) => lastPart(item.path))),
+      counts: detailEntries(ordered.map((value) => `${String(value)}=${tally.get(value)}`)),
+    };
+    // One field reads and is worded exactly as version 1 words it.
+    if (params.fields === undefined) {
+      const { fields: _fields, fieldsDescribe: _describe, ...single } = params;
+      return { ...valueOneOfV1.evaluate(single as ValueOneOfParams, inputs, clock), details };
+    }
+    const evidence = [...new Set(read.flatMap((item) => item.reported.map((report) => report.observation)))];
+    const things = params.fieldsDescribe ?? 'fields';
+    const holder = holderTitle(latest, params.select);
+    const of = `the ${paths.length} ${things} read${holder ? ` in the latest ${holder}` : ''}`;
+    const disagreeing = read.filter((item) => item.values.length > 1);
+    if (disagreeing.length)
+      return {
+        ...result(
+          'conflicting',
+          'attention',
+          'values_disagree',
+          `Observations at the same time report different values for: ${named(disagreeing, false)}.`,
+          evidence,
+        ),
+        details,
+      };
+    // "10 Done, 2 Not applicable": how many of the fields hold each value, the expected ones first.
+    const counted = (items: readonly (typeof read)[number][]) => {
+      const counts = new Map<Scalar, { path: string; count: number }>();
+      for (const item of items)
+        counts.set(item.values[0]!, { path: item.path, count: (counts.get(item.values[0]!)?.count ?? 0) + 1 });
+      return ordered
+        .flatMap((value) =>
+          counts.has(value) ? [`${counts.get(value)!.count} ${shown(counts.get(value)!.path, value)}`] : [],
+        )
+        .join(', ');
+    };
+    const expectedWords = params.expected.map((value) => shown(paths[0]!, value)).join(' or ');
+    const expected = answered.filter((item) => params.expected.includes(item.values[0]!));
+    const others = expected.length ? ` The others that hold a value: ${counted(expected)}.` : '';
+    const missing = unanswered.length ? ` No value is recorded for: ${named(unanswered, false)}.` : '';
+    if (unexpected.length)
+      return {
+        ...result(
+          'supported',
+          'attention',
+          'value_unexpected',
+          `${unexpected.length} of ${of} hold${unexpected.length === 1 ? 's' : ''} a value other than ${expectedWords}: ${named(unexpected, true)}.${others}${missing}`,
+          evidence,
+        ),
+        details,
+      };
+    if (undetermined.length)
+      return {
+        ...result(
+          'insufficient',
+          'attention',
+          'value_undetermined',
+          `${undetermined.length} of ${of} hold${undetermined.length === 1 ? 's' : ''} a value that settles nothing either way: ${named(undetermined, true)}.${others}${missing}`,
+          evidence,
+        ),
+        details,
+      };
+    if (unanswered.length)
+      return {
+        ...result(
+          'insufficient',
+          'pending',
+          'value_missing',
+          `No value is recorded for ${unanswered.length} of ${of}: ${named(unanswered, false)}.${others}`,
+          evidence.length ? evidence : latest,
+        ),
+        details,
+      };
+    return {
+      ...result(
+        'supported',
+        'pass',
+        'value_expected',
+        `${paths.length === 1 ? 'The one' : `All ${paths.length}`} ${things} read${holder ? ` in the latest ${holder}` : ''} hold ${expectedWords}: ${counted(expected)}.`,
+        evidence,
+      ),
+      details,
+    };
+  },
+};
+
 // An occurrence is or is not recorded in a window ------------------------------------------------------------------
 
 export interface OccurrenceInWindowParams {
@@ -1221,6 +1421,7 @@ export const recordCheckKinds: readonly CheckKind[] = [
   dutyWithinLimitsV1,
   valueWithinLimitV2,
   valueOneOfV1,
+  valueOneOfV2,
   occurrenceInWindowV1,
   recordMadeBeforeV1,
 ];

@@ -5,6 +5,7 @@ import {
   RuleNamePattern,
   type CheckDetails,
   type IssueTime,
+  type OperatorRecordDefinition,
   type RuleReadCondition,
   type SummaryRecordSource,
 } from '@ledger/contracts';
@@ -83,6 +84,15 @@ export interface CheckKindDetail {
   description: string;
 }
 
+/** What a kind is told about a rule when it is asked for problems with the rule's parameters. */
+export interface CheckParameterContext {
+  /**
+   * The operator record types the rule's read for an input takes, among those built in and those the rule's own pack
+   * declares. Empty when the read takes other observations, or names no record type.
+   */
+  recordTypes(input: string): readonly OperatorRecordDefinition[];
+}
+
 export interface CheckKindInput {
   name: string;
   description: string;
@@ -122,6 +132,12 @@ export interface CheckKind<Params = any> {
    * then part of what an evaluation read, so a revision that changes them evaluates the rule again.
    */
   adoptionDates?: string;
+  /**
+   * Problems with the parameters a rule fixes that the schema cannot state, each a sentence for the pack's author: a
+   * pack file with one is refused when it is built and when it is loaded. The parameters arrive as the rule wrote
+   * them, before any the organization sets on adoption. Outside the definition and its digest.
+   */
+  parameterProblems?(params: Readonly<Record<string, unknown>>, context: CheckParameterContext): string[];
   evaluate(params: Params, inputs: CheckInputs, clock: CheckClock): CheckResult;
 }
 
