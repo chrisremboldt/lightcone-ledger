@@ -8,7 +8,7 @@ import { InMemoryTransport } from '@modelcontextprotocol/sdk/inMemory.js';
 import { afterAll, describe, expect, it } from 'vitest';
 import { createMcpServer } from '../src/mcp.js';
 import { tools } from '../src/mcp-tools.js';
-import { gutmaMessage } from '../../flight-logs/tests/encoders.js';
+import { DJI_FRAMES, djiFile, djiFlight, djiFramesCsv, gutmaMessage } from '../../flight-logs/tests/encoders.js';
 
 // The MCP server offers the client's own commands as tools. A tool takes no credential and no reason, and a tool for
 // a person's decision prepares it, sends nothing and gives the command the person runs.
@@ -182,6 +182,27 @@ describe('The MCP server', () => {
     await expect(
       client.callTool({ name: 'read_flight_log', arguments: { log: 'ridge-export.json', format: 'kml' } }),
     ).rejects.toThrow();
+    writeFileSync(join(folder, 'flight-record.txt'), djiFile(8, djiFlight(8)));
+    const record = await client.callTool({
+      name: 'read_flight_log',
+      arguments: { log: 'flight-record.txt', format: 'dji' },
+    });
+    expect(record.isError, JSON.stringify(record.content)).toBeFalsy();
+    const recordShown = record.structuredContent as { lines: string[]; data: { reading: { format: string } } };
+    expect(recordShown.data.reading.format).toBe('dji');
+    expect(recordShown.lines.join('\n')).toContain('has been run against no real flight record');
+    writeFileSync(join(folder, 'frames.csv'), djiFramesCsv(DJI_FRAMES));
+    const frames = await client.callTool({ name: 'read_flight_log', arguments: { log: 'frames.csv' } });
+    expect(frames.isError, JSON.stringify(frames.content)).toBeFalsy();
+    const framesShown = frames.structuredContent as { lines: string[]; data: { reading: { format: string } } };
+    expect(framesShown.data.reading.format).toBe('dji-frames-csv');
+    expect(framesShown.lines.join('\n')).toContain('has been run against no CSV the tool wrote');
+    expect(readFileSync(join(folder, 'frames.flight.record.csv'), 'utf8')).toContain('2026-11-10T16:05:12Z');
+    const forcedFrames = await client.callTool({
+      name: 'read_flight_log',
+      arguments: { log: 'frames.csv', format: 'dji-frames-csv', out: 'frames-again.csv' },
+    });
+    expect(forcedFrames.isError, JSON.stringify(forcedFrames.content)).toBeFalsy();
     expect(quiet.sent).toEqual([]);
     await client.close();
   });

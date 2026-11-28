@@ -51,11 +51,16 @@ export const usage = `Usage: pnpm ledger <noun> <verb> [options]
                                          import a CSV or JSON file, or an export through its column mapping; Ledger
                                          keeps the export as received and the mapping with the records, or the
                                          original the file was read from
-  records read-log <log> [--format ulog|dataflash|tlog|gutma] [--out <file.csv>]
-                                         read an aircraft's own log (PX4 .ulg, ArduPilot .bin, MAVLink .tlog) or a
-                                         GUTMA flight log a fleet product exported (JSON) into a flight.record CSV:
-                                         one row per whole flight, only what the log holds, and what it could not
-                                         read; works offline and sends nothing
+  records read-log <log> [--format ulog|dataflash|tlog|gutma|dji|dji-frames-csv] [--out <file.csv>]
+                                         read an aircraft's own log (PX4 .ulg, ArduPilot .bin, MAVLink .tlog), a
+                                         GUTMA flight log a fleet product exported (JSON), a DJI flight record
+                                         (.txt; versions up to 12, later ones need the maker's key and are refused)
+                                         or the CSV of frames the open-source dji-log tool writes from a DJI flight
+                                         record of any version, into a flight.record CSV: one row per whole
+                                         flight, only what the log holds, and what it could not read; works
+                                         offline and sends nothing. The two DJI readers were built from
+                                         documentation and run against no real file: test them against your own
+                                         first
   records mapping <type> <export.csv> [--out <file>]
                                          start a column mapping from an export: every column listed, none assigned,
                                          and the record type's fields as comments; nothing is guessed

@@ -1,9 +1,10 @@
 import { createHash } from 'node:crypto';
-import { closeSync, createReadStream, existsSync, openSync, readSync, writeFileSync } from 'node:fs';
+import { closeSync, createReadStream, existsSync, openSync, readSync, statSync, writeFileSync } from 'node:fs';
 import { basename, extname, relative } from 'node:path';
 import {
   flightRecordCsv,
   formatOf,
+  KEPT_ORIGINAL_MAX_BYTES,
   LOG_HEAD_BYTES,
   logFormats,
   logFormatWords,
@@ -15,9 +16,9 @@ import {
 import { UsageError, type Output } from './commands.js';
 
 /**
- * Reads an aircraft's own log, or a flight log a fleet product exported, into rows of Ledger's flight record,
- * offline: nothing is sent to Ledger. The rows go through `records check` and `records import` like any other file,
- * with the log itself kept as their original.
+ * Reads an aircraft's own log, a flight log a fleet product exported, the flight record a manufacturer's app
+ * wrote or an open tool's CSV of one, into rows of Ledger's flight record, offline: nothing is sent to Ledger or to anyone else. The rows go
+ * through `records check` and `records import` like any other file, with the log itself kept as their original.
  */
 
 /** "a, b, c or d": every format a reader exists for, as a person names them. */
@@ -82,6 +83,9 @@ export async function readFlightLog(
   if (existsSync(out)) throw new UsageError(`${shown} already exists; nothing was written. Give another --out.`);
   writeFileSync(out, flightRecordCsv(reading, { name, sha256 }));
   const shownLog = relative(options.folder, logPath) || logPath;
+  // A file larger than Ledger keeps cannot be the records' original; the rows are checked and imported without it.
+  const kept = statSync(logPath).size <= KEPT_ORIGINAL_MAX_BYTES;
+  const original = kept ? ` --original ${shownLog}` : '';
   return {
     data: { ...data, out },
     refused: Boolean(reading.unfinished),
@@ -95,9 +99,11 @@ export async function readFlightLog(
         : [
             'maxHeightFlownAboveGroundMeters is the greatest altitude in the log, which the log itself states as above ground level; check it before importing.',
           ]),
-      `Then: pnpm ledger records check flight.record ${shown} --original ${shownLog}`,
-      `  and: pnpm ledger records import flight.record ${shown} --original ${shownLog}`,
-      'Ledger keeps the log itself as each record’s original, and the CSV as the reading of it.',
+      `Then: pnpm ledger records check flight.record ${shown}${original}`,
+      `  and: pnpm ledger records import flight.record ${shown}${original}`,
+      kept
+        ? 'Ledger keeps the log itself as each record’s original, and the CSV as the reading of it.'
+        : `${name} is larger than the ${KEPT_ORIGINAL_MAX_BYTES / 1024 / 1024} MB Ledger keeps as an original, so it is not given as one: Ledger keeps the CSV, and you keep ${name} yourself.`,
     ],
   };
 }

@@ -5,7 +5,10 @@
  * that records a flight by its events and samples builds the same entries itself and says its own rule.
  */
 
-export type LogFormat = 'ulog' | 'dataflash' | 'tlog' | 'gutma';
+export type LogFormat = 'ulog' | 'dataflash' | 'tlog' | 'gutma' | 'dji' | 'dji-frames-csv';
+
+/** The largest file Ledger keeps as the original of the records read from it. */
+export const KEPT_ORIGINAL_MAX_BYTES = 10 * 1024 * 1024;
 
 export interface Place {
   /** Decimal degrees, WGS84. */
@@ -29,6 +32,7 @@ export interface ReadFlight {
    * arming_to_disarming: the log has no land detector, so the flight runs from arming to disarming.
    * The other four are for a log that records a flight by events: each end is the log's take-off or landing event
    * or, where the log records none, the start of logging or the last sample, as that format's description says.
+   * first_in_air_to_last_on_ground: the file is one flight and each of its samples says in the air or on the ground.
    */
   rule:
     | 'takeoff_to_landing'
@@ -36,7 +40,8 @@ export interface ReadFlight {
     | 'takeoff_event_to_landing_event'
     | 'takeoff_event_to_last_sample'
     | 'logging_start_to_landing_event'
-    | 'logging_start_to_last_sample';
+    | 'logging_start_to_last_sample'
+    | 'first_in_air_to_last_on_ground';
   /** UTC, only when the log holds an absolute time. */
   takeoffAt?: string;
   landingAt?: string;
@@ -89,6 +94,8 @@ export const flightRuleWords: Record<ReadFlight['rule'], string> = {
     'from the start of logging to the log’s landing event: the log records no take-off event',
   logging_start_to_last_sample:
     'from the start of logging to the last sample: the log records no take-off or landing event',
+  first_in_air_to_last_on_ground:
+    'from the first sample that says the aircraft is in the air to the last time a sample says it is back on the ground; the file is one flight',
 };
 
 interface Position extends Place {

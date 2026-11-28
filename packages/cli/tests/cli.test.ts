@@ -16,7 +16,18 @@ import {
 import { listOperatorRecordTypes } from '../../domain/src/operator-record-import.js';
 import * as words from '../src/words.js';
 import type { RulePackVersion } from '@ledger/contracts';
-import { gutmaMessage, px4, px4Definitions, RIDGE, UlogWriter } from '../../flight-logs/tests/encoders.js';
+import {
+  DJI_FRAME_COLUMNS,
+  DJI_FRAMES,
+  djiFile,
+  djiFlight,
+  djiFramesCsv,
+  gutmaMessage,
+  px4,
+  px4Definitions,
+  RIDGE,
+  UlogWriter,
+} from '../../flight-logs/tests/encoders.js';
 
 const folder = mkdtempSync(join(tmpdir(), 'ledger-cli-'));
 afterAll(() => rmSync(folder, { recursive: true, force: true }));
@@ -529,10 +540,10 @@ describe('Reading an aircraft’s log from the command line', () => {
     const other = await cli(['records', 'read-log', 'notes.txt'], noApi, {});
     expect(other.code).toBe(2);
     expect(other.err).toBe(
-      'notes.txt does not begin as a PX4 ULog (.ulg), an ArduPilot DataFlash log (.bin), a MAVLink telemetry log (.tlog) or a GUTMA flight log (JSON) does, so it was not read. Give --format if you know which it is.',
+      'notes.txt does not begin as a PX4 ULog (.ulg), an ArduPilot DataFlash log (.bin), a MAVLink telemetry log (.tlog), a GUTMA flight log (JSON), a DJI flight record (.txt) or the CSV of frames the open-source dji-log tool writes from a DJI flight record does, so it was not read. Give --format if you know which it is.',
     );
     const format = await cli(['records', 'read-log', 'cut.ulg', '--format', 'kml'], noApi, {});
-    expect(format.err).toBe('--format is one of ulog, dataflash, tlog, gutma: kml');
+    expect(format.err).toBe('--format is one of ulog, dataflash, tlog, gutma, dji, dji-frames-csv: kml');
   });
 
   it('reads a GUTMA flight log, told from its content, into the same columns as an autopilot’s log', async () => {
@@ -588,6 +599,106 @@ describe('Reading an aircraft’s log from the command line', () => {
     expect(cut.code).toBe(1);
     expect(cut.out).toContain('The file is not valid JSON, so it was not read.');
     expect(existsSync(join(folder, 'cut.flight.record.csv'))).toBe(false);
+  });
+
+  it('reads a DJI flight record that needs no key, and says each time that the reader is unchecked', async () => {
+    const name = 'DJIFlightRecord_2026-11-10_[09-05-12].txt';
+    writeFileSync(join(folder, name), djiFile(8, djiFlight(8)));
+    const read = await cli(['records', 'read-log', name, '--out', 'ridge.csv'], noApi, {});
+    expect(read.code, read.err).toBe(0);
+    expect(read.out).toContain(`${name}: DJI flight record`);
+    expect(read.out).toContain(
+      'Flight 1, from the first sample that says the aircraft is in the air to the last time a sample says it is back on the ground; the file is one flight:',
+    );
+    expect(read.out).toContain('2026-11-10T16:05:12Z to 2026-11-10T16:06:58Z, 1 min 46 s.');
+    expect(read.out).toContain('Greatest height 44.8 m above the takeoff point');
+    expect(read.out).toContain('maxHeightFlownAboveGroundMeters (the log does not state a height above the ground');
+    expect(read.out).toContain(
+      'has been run against no real flight record. Test it against your own before you rely on it',
+    );
+    expect(read.out).toContain(`Then: pnpm ledger records check flight.record ridge.csv --original ${name}`);
+    const csv = readFileSync(join(folder, 'ridge.csv'), 'utf8');
+    expect(csv).toContain(
+      `,,2026-11-10T16:05:12Z,2026-11-10T16:06:58Z,"39.5012345, -105.2034567","39.5141000, -105.1873000",,`,
+    );
+    // The aircraft's serial number is printed, never written as the organization's id for the aircraft.
+    expect(read.out).toContain('The log names the vehicle EXAMPLE001');
+    expect(csv).not.toContain('EXAMPLE001');
+  });
+
+  it('refuses a DJI flight record that needs the maker’s key with the version, the reason and the other way in', async () => {
+    writeFileSync(join(folder, 'keyed.txt'), djiFile(13, [new Uint8Array(200).fill(0x5c)]));
+    const keyed = await cli(['records', 'read-log', 'keyed.txt'], noApi, {});
+    expect(keyed.code).toBe(1);
+    expect(keyed.out).toContain('keyed.txt: DJI flight record');
+    expect(keyed.out).toContain(
+      'This file is version 13 of the DJI flight record format. From version 13 on its records are encrypted, and reading them needs a key from the maker’s service, which Ledger does not call; only the header was read.',
+    );
+    expect(keyed.out).toContain(
+      'The open-source tool dji-log-parser fetches that key with a developer key of your own and writes the flight as a CSV, which records read-log reads by the same rule; examples/dji-flight-record shows the steps.',
+    );
+    expect(keyed.out).toContain('The file’s header gives the aircraft’s name “Ridge survey one”');
+    expect(keyed.out).toContain('has been run against no real flight record');
+    expect(keyed.out).toContain('No whole flight was read, so no file was written.');
+    expect(existsSync(join(folder, 'keyed.flight.record.csv'))).toBe(false);
+    writeFileSync(join(folder, 'notes.txt'), 'Flight notes for the ridge survey, 10 November 2026');
+    const forced = await cli(['records', 'read-log', 'notes.txt', '--format', 'dji'], noApi, {});
+    expect(forced.code).toBe(1);
+    expect(forced.out).toContain('The file does not begin as a DJI flight record does');
+  });
+
+  it('reads the CSV of frames an open tool writes from a DJI flight record, told from its header row', async () => {
+    writeFileSync(join(folder, 'frames.csv'), djiFramesCsv(DJI_FRAMES));
+    const read = await cli(['records', 'read-log', 'frames.csv'], noApi, {});
+    expect(read.code, read.err).toBe(0);
+    expect(read.out).toContain('frames.csv: CSV of frames written by the dji-log tool from a DJI flight record');
+    expect(read.out).toContain('Times are UTC, from CUSTOM.dateTime, the column the dji-log tool gives');
+    expect(read.out).toContain('2026-11-10T16:05:12Z to 2026-11-10T16:06:58Z, 1 min 46 s.');
+    expect(read.out).toContain('Greatest height 44.8 m above the takeoff point');
+    expect(read.out).toContain('maxHeightFlownAboveGroundMeters (the log does not state a height above the ground');
+    expect(read.out).toContain('has been run against no CSV the tool wrote. Test it against your own');
+    expect(read.out).toContain(
+      'Then: pnpm ledger records check flight.record frames.flight.record.csv --original frames.csv',
+    );
+    const csv = readFileSync(join(folder, 'frames.flight.record.csv'), 'utf8');
+    expect(csv).toContain(
+      `,,2026-11-10T16:05:12Z,2026-11-10T16:06:58Z,"39.5012345, -105.2034567","39.5141000, -105.1873000",,`,
+    );
+    expect(read.out).toContain('The log names the vehicle EXAMPLE001');
+    expect(csv).not.toContain('EXAMPLE001');
+
+    const columns = DJI_FRAME_COLUMNS.filter((column) => column !== 'OSD.isOnGround');
+    writeFileSync(join(folder, 'other.csv'), djiFramesCsv(DJI_FRAMES, { columns }));
+    const refused = await cli(['records', 'read-log', 'other.csv'], noApi, {});
+    expect(refused.code).toBe(1);
+    expect(refused.out).toContain(
+      'The file’s header row does not name OSD.isOnGround. This reader looks for CUSTOM.dateTime, OSD.latitude, OSD.longitude, OSD.height and OSD.isOnGround',
+    );
+    expect(refused.out).toContain('No whole flight was read, so no file was written.');
+    writeFileSync(join(folder, 'flights.csv'), 'subjectId,takeoffAt\nFLT-1,2026-11-10T16:05:12Z\n');
+    expect((await cli(['records', 'read-log', 'flights.csv'], noApi, {})).code).toBe(2);
+    const forced = await cli(['records', 'read-log', 'flights.csv', '--format', 'dji-frames-csv'], noApi, {});
+    expect(forced.code).toBe(1);
+    expect(forced.out).toContain('The file’s header row does not name CUSTOM.dateTime');
+  });
+
+  it('reads a CSV of frames larger than Ledger keeps, and does not offer it as the original', async () => {
+    const header = `${DJI_FRAME_COLUMNS.join(',')}\n`;
+    const row = (index: number) => djiFramesCsv([DJI_FRAMES[index]!]).slice(header.length);
+    const air = row(3).repeat(Math.ceil((10 * 1024 * 1024) / row(3).length) + 1);
+    writeFileSync(join(folder, 'long.csv'), `${header}${row(1)}${air}${row(5)}`);
+    const read = await cli(['records', 'read-log', 'long.csv'], noApi, {});
+    expect(read.code, read.err).toBe(0);
+    expect(read.out).toContain(
+      'Ledger keeps a file of at most 10 MB as the original of the records read from it, so this one cannot be given as their original: the rows written from it can still be checked and imported without it',
+    );
+    expect(read.out).toContain('Then: pnpm ledger records check flight.record long.flight.record.csv\n');
+    expect(read.out).toContain('  and: pnpm ledger records import flight.record long.flight.record.csv\n');
+    expect(read.out).toContain(
+      'long.csv is larger than the 10 MB Ledger keeps as an original, so it is not given as one: Ledger keeps the CSV, and you keep long.csv yourself.',
+    );
+    expect(read.out).not.toContain('--original');
+    expect(readFileSync(join(folder, 'long.flight.record.csv'), 'utf8')).toContain('2026-11-10T16:05:40Z');
   });
 
   it('takes --original on check and import, not with --mapping, and never a file larger than Ledger keeps', async () => {

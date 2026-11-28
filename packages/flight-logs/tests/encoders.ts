@@ -514,3 +514,270 @@ export function gutmaMessage(logging: Record<string, unknown> = {}, rest: Record
     },
   };
 }
+
+// DJI flight record ---------------------------------------------------------------------------------------------------
+
+type DjiPlace = { latitude: number; longitude: number };
+
+/**
+ * The key a record's content is scrambled with from version 7, computed bit by bit from the layout's description
+ * and not with the reader's own table, so that the two check each other.
+ */
+function djiKey(seed: number, type: number): Uint8Array {
+  const data = new Bytes().u64((0x123456789abcdef0n * BigInt(seed)) & ((1n << 64n) - 1n)).done();
+  let crc = BigInt((seed + type) & 0xff);
+  for (const byte of data) {
+    crc ^= BigInt(byte);
+    for (let bit = 0; bit < 8; bit += 1) crc = crc & 1n ? (crc >> 1n) ^ 0x95ac9329ac4bc9b5n : crc >> 1n;
+  }
+  return new Bytes().u64(crc).done();
+}
+
+/** One record as a file of `version` stores it: plainly up to version 6, scrambled from version 7. */
+export function djiRecord(version: number, type: number, data: Uint8Array, seed = 0x5a): Uint8Array {
+  if (version < 7) return new Bytes().u8(type).u8(data.byteLength).raw(data).u8(0xff).done();
+  const key = djiKey(seed, type);
+  const length = data.byteLength + 2;
+  const out = new Bytes().u8(type).u8(length).u8(seed);
+  data.forEach((byte, index) => out.u8(byte ^ key[index % 8]!));
+  out.u8(((seed + type) & 0xff) ^ key[(length - 2) % 8]!);
+  // A content of 256 bytes or more wraps its length byte and is followed by an arbitrary byte, not the end byte.
+  return out.u8(length > 255 ? 0x00 : 0xff).done();
+}
+
+/** The content of a type 1 record: the position in radians, the height in tenths of a metre, the state bits. */
+export function djiState(
+  place: DjiPlace,
+  height: number,
+  state: { inAir: boolean; motorsOn?: boolean; bits?: number },
+): Uint8Array {
+  const radians = (degrees: number) => (degrees * Math.PI) / 180;
+  const out = new Bytes()
+    .f64(radians(place.longitude))
+    .f64(radians(place.latitude))
+    .i16(Math.round(height * 10));
+  while (out.length < 32) out.u8(0);
+  out.u8(state.bits ?? (state.inAir ? 0x04 : 0x00) | ((state.motorsOn ?? true) ? 0x08 : 0x00) | 0x01);
+  while (out.length < 53) out.u8(0);
+  return out.done();
+}
+
+/** The content of a type 5 record: the app's time, in seconds up to version 2 and milliseconds after. */
+export const djiTime = (utcMilliseconds: number, version: number) =>
+  new Bytes()
+    .u8(0)
+    .u8(0)
+    .f32(3.2)
+    .f32(120)
+    .u64(version <= 2 ? Math.round(utcMilliseconds / 1000) : utcMilliseconds)
+    .done();
+
+export const DJI_START = Date.UTC(2026, 10, 10, 16, 5, 0);
+
+/** One sample: a state record, a record of a type no reader here reads, and the app's time. */
+export const djiFrame = (
+  version: number,
+  seconds: number,
+  place: DjiPlace,
+  height: number,
+  state: { inAir: boolean; motorsOn?: boolean; bits?: number },
+) => [
+  djiRecord(version, 1, djiState(place, height, state), 0x5a + (seconds & 0x3f)),
+  djiRecord(version, 3, new Uint8Array(24).fill(7), 0x11),
+  djiRecord(version, 5, djiTime(DJI_START + seconds * 1000, version), 0xc3),
+];
+
+/** One flight from the ridge pad to the quarry gate, which lies lower. */
+export const djiFlight = (version: number) => [
+  ...djiFrame(version, 0, RIDGE, 0, { inAir: false, motorsOn: false }),
+  ...djiFrame(version, 5, RIDGE, 0, { inAir: false }),
+  ...djiFrame(version, 12, RIDGE, 1.2, { inAir: true }),
+  ...djiFrame(version, 40, RIDGE, 44.8, { inAir: true }),
+  ...djiFrame(version, 90, QUARRY, 21, { inAir: true }),
+  ...djiFrame(version, 118, QUARRY, -19.6, { inAir: false }),
+  ...djiFrame(version, 125, QUARRY, -19.6, { inAir: false, motorsOn: false }),
+];
+
+export interface DjiHeader {
+  name: string;
+  serial: string;
+  startUtc: number;
+  place: DjiPlace;
+  totalSeconds: number;
+  greatestHeight: number;
+}
+
+const DJI_HEADER: DjiHeader = {
+  name: 'Ridge survey one',
+  serial: 'EXAMPLE001',
+  startUtc: DJI_START - 2000,
+  place: RIDGE,
+  totalSeconds: 125,
+  greatestHeight: 44.8,
+};
+
+/** The header as the layout places its fields: the aircraft's name and serial number move after version 5. */
+export function djiHeader(version: number, header: Partial<DjiHeader> = {}): Uint8Array {
+  const stated = { ...DJI_HEADER, ...header };
+  const out = new Bytes().text('', 20).text('Ridge road', 20).text('Example Ridge', 20).text('', 20);
+  out.u8(0).u8(1).u8(0).i32(1250).i32(0).u64(stated.startUtc);
+  out.f64(stated.place.longitude).f64(stated.place.latitude);
+  out
+    .f32(1480)
+    .i32(Math.round(stated.totalSeconds * 1000))
+    .f32(stated.greatestHeight)
+    .f32(8.1)
+    .f32(3)
+    .i32(4);
+  while (out.length < 267) out.u8(0);
+  if (version <= 5) out.text(stated.serial, 10).u8(13).text(stated.name, 24);
+  else {
+    out.f32(18500).u8(13).u64(0).text(stated.name, 32).text(stated.serial, 16);
+    out.text('EXAMPLECAM01', 16).text('EXAMPLERC01', 16).text('EXAMPLEBAT01', 16).u8(2).u8(1).u8(4).u8(0);
+  }
+  while (out.length < (version === 12 ? 436 : 400)) out.u8(0);
+  return out.done();
+}
+
+/**
+ * A whole file of `version` as the layout's documentation lays one out: the first bytes, then the records and the
+ * header in the order that version keeps them. From version 13 the header is in a scrambled block and `records`
+ * stands for content this project cannot read.
+ */
+export function djiFile(version: number, records: Uint8Array[], header: Partial<DjiHeader> = {}): Uint8Array {
+  const body = concat(...records);
+  const details = djiHeader(version, header);
+  const prefix = (offset: number) => {
+    const out = new Bytes().u64(offset).u16(details.byteLength).u8(version).u8(0);
+    while (version >= 6 && out.length < 100) out.u8(0);
+    return out.done();
+  };
+  if (version < 12) return concat(prefix((version < 6 ? 12 : 100) + body.byteLength), body, details);
+  if (version === 12) return concat(prefix(536 + body.byteLength), details, body);
+  const inner = new Bytes().u8(1).u16(details.byteLength).raw(details).u16(0).done();
+  const seed = 0x31;
+  const key = djiKey(seed, 0);
+  const block = new Bytes()
+    .u8(0)
+    .u16(inner.byteLength + 1)
+    .u8(seed);
+  inner.forEach((byte, index) => block.u8(byte ^ key[index % 8]!));
+  const versionBlock = new Bytes().u8(1).u16(3).u16(2).u8(3).done();
+  return concat(prefix(100 + block.length + versionBlock.byteLength), block.done(), versionBlock, body);
+}
+
+// The CSV of frames the dji-log tool writes from a DJI flight record ------------------------------------------------
+
+/** Some of the tool's columns, under its own names and in its own order; a real export has more than two hundred. */
+export const DJI_FRAME_COLUMNS = [
+  'CUSTOM.dateTime',
+  'OSD.flyTime',
+  'OSD.latitude',
+  'OSD.longitude',
+  'OSD.height',
+  'OSD.heightMax',
+  'OSD.altitude',
+  'OSD.isOnGround',
+  'OSD.isMotorOn',
+  'HOME.latitude',
+  'HOME.longitude',
+  'HOME.altitude',
+  'DETAILS.totalTime',
+  'DETAILS.maxHeight',
+  'DETAILS.aircraftName',
+  'DETAILS.aircraftSerial',
+  'DETAILS.startTime',
+];
+
+export interface DjiCsvFrame {
+  seconds: number;
+  place: DjiPlace;
+  height: number;
+  inAir: boolean;
+  motorsOn?: boolean;
+}
+
+/** The flight of `djiFlight`, frame for frame. */
+export const DJI_FRAMES: DjiCsvFrame[] = [
+  { seconds: 0, place: RIDGE, height: 0, inAir: false, motorsOn: false },
+  { seconds: 5, place: RIDGE, height: 0, inAir: false },
+  { seconds: 12, place: RIDGE, height: 1.2, inAir: true },
+  { seconds: 40, place: RIDGE, height: 44.8, inAir: true },
+  { seconds: 90, place: QUARRY, height: 21, inAir: true },
+  { seconds: 118, place: QUARRY, height: -19.6, inAir: false },
+  { seconds: 125, place: QUARRY, height: -19.6, inAir: false, motorsOn: false },
+];
+
+/** A short flight a second at a time: on the ground at the ridge pad, up, along to the quarry gate, down. */
+export function djiExampleFrames(): DjiCsvFrame[] {
+  const between = (from: number, to: number, part: number) => Math.round((from + (to - from) * part) * 1e7) / 1e7;
+  const tenth = (value: number) => Math.round(value * 10) / 10;
+  return Array.from({ length: 40 }, (_, seconds): DjiCsvFrame => {
+    if (seconds < 6) return { seconds, place: RIDGE, height: 0, inAir: false, motorsOn: seconds >= 2 };
+    if (seconds <= 15) return { seconds, place: RIDGE, height: tenth((seconds - 5) * 4.48), inAir: true };
+    if (seconds <= 30) {
+      const part = (seconds - 15) / 15;
+      const place = {
+        latitude: between(RIDGE.latitude, QUARRY.latitude, part),
+        longitude: between(RIDGE.longitude, QUARRY.longitude, part),
+      };
+      return { seconds, place, height: tenth(44.8 - 23.8 * part), inAir: true };
+    }
+    if (seconds <= 36) return { seconds, place: QUARRY, height: tenth(21 - (40.6 * (seconds - 30)) / 7), inAir: true };
+    return { seconds, place: QUARRY, height: -19.6, inAir: false, motorsOn: seconds === 37 };
+  });
+}
+
+const csvText = (cell: string) => (/[",\r\n]/.test(cell) ? `"${cell.replaceAll('"', '""')}"` : cell);
+
+/**
+ * The tool's CSV for these frames: one row a frame, the summary repeated on every row. `columns` chooses and orders
+ * the columns; `cell` replaces what a column holds.
+ */
+export function djiFramesCsv(
+  frames: DjiCsvFrame[],
+  options: {
+    columns?: string[];
+    cell?: (column: string, frame: DjiCsvFrame, value: string) => string;
+    name?: string;
+    lineEnd?: string;
+  } = {},
+): string {
+  const columns = options.columns ?? DJI_FRAME_COLUMNS;
+  const time = (seconds: number) => new Date(DJI_START + seconds * 1000).toISOString();
+  const greatest = Math.max(...frames.map((frame) => frame.height));
+  let greatestSoFar = -Infinity;
+  const rows = frames.map((frame) => {
+    greatestSoFar = Math.max(greatestSoFar, frame.height);
+    const values: Record<string, string> = {
+      'CUSTOM.dateTime': time(frame.seconds),
+      'OSD.flyTime': String(frame.seconds),
+      'OSD.latitude': String(frame.place.latitude),
+      'OSD.longitude': String(frame.place.longitude),
+      'OSD.height': String(frame.height),
+      'OSD.heightMax': String(greatestSoFar),
+      'OSD.altitude': String(Math.round((1850 + frame.height) * 10) / 10),
+      'OSD.isOnGround': String(!frame.inAir),
+      'OSD.isMotorOn': String(frame.motorsOn ?? true),
+      'HOME.latitude': String(RIDGE.latitude),
+      'HOME.longitude': String(RIDGE.longitude),
+      'HOME.altitude': '1850',
+      'DETAILS.totalTime': String(frames.at(-1)!.seconds),
+      'DETAILS.maxHeight': String(greatest),
+      'DETAILS.aircraftName': options.name ?? DJI_HEADER.name,
+      'DETAILS.aircraftSerial': DJI_HEADER.serial,
+      'DETAILS.startTime': time(-2),
+    };
+    return columns
+      .map((column) => csvText(options.cell?.(column, frame, values[column] ?? '') ?? values[column] ?? ''))
+      .join(',');
+  });
+  const lineEnd = options.lineEnd ?? '\n';
+  return [columns.map(csvText).join(','), ...rows].map((line) => `${line}${lineEnd}`).join('');
+}
+
+/** The file the example's page tells a person to make: the tool's header row and last row, with two ids in front. */
+export function djiLastRowWithIds(frames: string, flightId: string, aircraftId: string): string {
+  const lines = frames.trimEnd().split('\n');
+  return `Flight id,Aircraft id,${lines[0]}\n${flightId},${aircraftId},${lines.at(-1)}\n`;
+}

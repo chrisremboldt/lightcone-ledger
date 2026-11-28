@@ -1,3 +1,4 @@
+import { wholeFile } from './byte-reader.js';
 import { validPlace, type LogReading, type Place, type ReadFlight, type StatedHeight } from './flights.js';
 
 /**
@@ -139,24 +140,6 @@ function listed(names: string[]): string {
 export function isGutma(head: Uint8Array): boolean {
   const text = new TextDecoder('utf-8').decode(head);
   return /^\s*\{\s*"exchange"\s*:/.test(text);
-}
-
-/** The whole file, or undefined once it is larger than the bound. */
-async function wholeFile(source: AsyncIterable<Uint8Array> | Iterable<Uint8Array>): Promise<Uint8Array | undefined> {
-  const chunks: Uint8Array[] = [];
-  let total = 0;
-  for await (const chunk of source) {
-    total += chunk.byteLength;
-    if (total > GUTMA_MAX_BYTES) return undefined;
-    chunks.push(chunk);
-  }
-  const bytes = new Uint8Array(total);
-  let offset = 0;
-  for (const chunk of chunks) {
-    bytes.set(chunk, offset);
-    offset += chunk.byteLength;
-  }
-  return bytes;
 }
 
 function parsed(bytes: Uint8Array): { document: unknown } | undefined {
@@ -502,7 +485,7 @@ export async function readGutma(source: AsyncIterable<Uint8Array> | Iterable<Uin
     notes: [],
   });
   const megabytes = GUTMA_MAX_BYTES / 1024 / 1024;
-  const bytes = await wholeFile(source);
+  const bytes = await wholeFile(source, GUTMA_MAX_BYTES);
   if (!bytes)
     return refused(
       `The file is larger than ${megabytes} MB, the most this reader reads at once and the most Ledger keeps as an original, so it was not read.`,

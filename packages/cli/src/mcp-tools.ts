@@ -185,14 +185,24 @@ export const tools: LedgerTool[] = [
     name: 'read_flight_log',
     title: 'Read an aircraft’s own log',
     description:
-      'Reads a PX4 ULog (.ulg), ArduPilot DataFlash (.bin) or MAVLink telemetry log (.tlog), or a GUTMA flight log a fleet product exported (JSON), into a flight.record CSV beside it, one row per whole flight with only what the log holds, and says what it could not read. Works on this computer and sends nothing to Ledger; then check_records and import_records with the log as the original.',
+      'Reads a PX4 ULog (.ulg), ArduPilot DataFlash (.bin) or MAVLink telemetry log (.tlog), a GUTMA flight log a fleet product exported (JSON), a DJI flight record (.txt, versions up to 12; a later version needs a key from its maker’s service and is refused with a sentence saying so), or the CSV of frames the open-source dji-log tool writes from a DJI flight record of any version, into a flight.record CSV beside it, one row per whole flight with only what the log holds, and says what it could not read. The two DJI readers were built from an open-source project’s documentation and source and have been run against no real file: the result says so, and a person compares it with what their app shows before relying on it. Works on this computer and sends nothing to Ledger or anyone else; then check_records and import_records with the log as the original.',
     input: Type.Object(
       {
         log: File('The log file'),
         format: Type.Optional(
-          Type.Union([Type.Literal('ulog'), Type.Literal('dataflash'), Type.Literal('tlog'), Type.Literal('gutma')], {
-            description: 'Only when the log does not begin as its format does.',
-          }),
+          Type.Union(
+            [
+              Type.Literal('ulog'),
+              Type.Literal('dataflash'),
+              Type.Literal('tlog'),
+              Type.Literal('gutma'),
+              Type.Literal('dji'),
+              Type.Literal('dji-frames-csv'),
+            ],
+            {
+              description: 'Only when the log does not begin as its format does.',
+            },
+          ),
         ),
         out: Type.Optional(
           File('Where to write the CSV; by default beside the log. An existing file is never replaced'),

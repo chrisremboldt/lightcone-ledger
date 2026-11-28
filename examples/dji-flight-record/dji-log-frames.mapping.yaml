@@ -1,0 +1,51 @@
+# Column mapping: the second way in for the CSV that the open-source tool dji-log (github.com/lvauvillier/
+# dji-log-parser) writes from a DJI flight record. The first way is `pnpm ledger records read-log` on that CSV, which
+# reads every frame and gives the takeoff and landing times, the places and the height; use this mapping only when
+# you want the start and end of the log instead, or cannot use the reader. The tool writes one row for every frame,
+# and a mapping reads one row as one record, so this mapping reads a file of two rows: the tool's header row and its
+# last row, with two columns of your own put in front. The README beside this file says how that file is made. The
+# column names below are the tool's own, from its source.
+# This mapping has been tried against no CSV the tool wrote: check the first flight you read through it against what
+# your app shows.
+# docs/design/operator-record-import.md, "Column mappings", describes every key.
+recordType: flight.record
+recordVersion: 1
+
+# The tool writes its times in UTC with a Z, which is read whatever the style; the zone is stated all the same.
+times:
+  zone: utc
+
+# The two columns you add. The tool's CSV holds no id of yours: DETAILS.aircraftSerial is the maker's serial number.
+subject:
+  column: Flight id
+relatedSubject:
+  column: Aircraft id
+
+columns:
+  'Flight id': ~ # the subject, above
+  'Aircraft id': ~ # the related subject, above
+  # The start of the log and the time of its last frame. They are when the app began and ended the flight record,
+  # with the motors running on the ground before the takeoff and after the landing; the CSV has no column that is
+  # the moment of takeoff or of landing. If your records keep those moments, write them by hand instead.
+  'DETAILS.startTime': takeoffAt
+  'CUSTOM.dateTime': landingAt
+  # Not read, and why. A person writes these fields from the columns named, or the record is kept incomplete.
+  'OSD.heightMax': ~ # the greatest height above the takeoff point, in metres: not a height above the ground
+  'DETAILS.maxHeight': ~ # the same figure, from the app's summary
+  'OSD.height': ~ # the last frame's height above the takeoff point
+  'OSD.altitude': ~ # the last frame's height plus the home point's barometric altitude
+  'HOME.latitude': ~ # the home point, usually where it took off; a mapping cannot join it with HOME.longitude
+  'HOME.longitude': ~
+  'HOME.altitude': ~
+  'OSD.latitude': ~ # the last frame's position, with OSD.longitude: where it landed, if the log ends on the ground
+  'OSD.longitude': ~
+  'OSD.flyTime': ~
+  'OSD.isOnGround': ~ # what the reader cuts the flight by; a mapping cannot
+  'OSD.isMotorOn': ~
+  'DETAILS.totalTime': ~
+  'DETAILS.aircraftName': ~ # the name the app has for the aircraft
+  'DETAILS.aircraftSerial': ~ # the maker's serial number; your own id for the aircraft is the column you added
+
+constants: {}
+
+leaveOut: []

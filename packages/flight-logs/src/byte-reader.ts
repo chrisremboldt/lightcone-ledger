@@ -74,6 +74,27 @@ async function* toAsync(iterator: Iterator<Uint8Array>): AsyncGenerator<Uint8Arr
   for (let next = iterator.next(); !next.done; next = iterator.next()) yield next.value;
 }
 
+/** The whole file in one piece, for a format that cannot be read as a stream; undefined once it is larger than `maxBytes`. */
+export async function wholeFile(
+  source: AsyncIterable<Uint8Array> | Iterable<Uint8Array>,
+  maxBytes: number,
+): Promise<Uint8Array | undefined> {
+  const chunks: Uint8Array[] = [];
+  let total = 0;
+  for await (const chunk of source) {
+    total += chunk.byteLength;
+    if (total > maxBytes) return undefined;
+    chunks.push(chunk);
+  }
+  const bytes = new Uint8Array(total);
+  let offset = 0;
+  for (const chunk of chunks) {
+    bytes.set(chunk, offset);
+    offset += chunk.byteLength;
+  }
+  return bytes;
+}
+
 /** A little-endian view over a message's bytes. */
 export function view(bytes: Uint8Array): DataView {
   return new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
