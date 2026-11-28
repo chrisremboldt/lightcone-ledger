@@ -3,8 +3,9 @@ import { flightRuleWords, type LogReading, type Place, type ReadFlight } from '.
 
 /**
  * A reading as rows of Ledger's own flight record (flight.record version 1), in the columns of its import template.
- * Only what the log holds is written. The flight's own id, the aircraft's id, the height above the ground and
- * everything else a log does not hold are left empty for a person to write.
+ * Only what the log holds is written. The flight's own id, the aircraft's id and everything else a log does not hold
+ * are left empty for a person to write. So is the height above the ground, unless the log itself says that the height
+ * it states is above the ground.
  */
 
 const placeWords = (place: Place) => `${place.latitude.toFixed(7)}, ${place.longitude.toFixed(7)}`;
@@ -18,7 +19,9 @@ function heightNotes(flight: ReadFlight): string {
     flight.greatestAltitude
       ? `Greatest altitude ${flight.greatestAltitude.meters} m ${flight.greatestAltitude.reference}.`
       : '',
-    flight.greatestHeight || flight.greatestAltitude ? 'The log does not hold the height above the ground.' : '',
+    (flight.greatestHeight || flight.greatestAltitude) && !flight.greatestHeight?.aboveGround
+      ? 'The log does not hold the height above the ground.'
+      : '',
   ]
     .filter(Boolean)
     .join(' ');
@@ -33,6 +36,7 @@ export function flightRecordRow(flight: ReadFlight, log: { name: string; sha256:
       landingAt: flight.landingAt ?? '',
       takeoffLocation: flight.takeoffPlace ? placeWords(flight.takeoffPlace) : '',
       landingLocations: flight.landingPlaces.map(placeWords).join('; '),
+      maxHeightFlownAboveGroundMeters: flight.greatestHeight?.aboveGround ? String(flight.greatestHeight.meters) : '',
       heightNotes: heightNotes(flight),
       flightPathReference: `${log.name} (sha256 ${log.sha256}), flight ${flight.number}, bytes ${flight.bytes.offset} to ${flight.bytes.offset + flight.bytes.length}${last > 1 ? `; touched down ${last} times, the last place is where it landed` : ''}`,
     }).filter(([, value]) => value !== ''),

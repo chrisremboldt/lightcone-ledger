@@ -1,13 +1,37 @@
 import { createHash } from 'node:crypto';
 import { closeSync, createReadStream, existsSync, openSync, readSync, writeFileSync } from 'node:fs';
 import { basename, extname, relative } from 'node:path';
-import { flightRecordCsv, formatOf, logFormats, readingLines, readLog, type LogFormat } from '@ledger/flight-logs';
+import {
+  flightRecordCsv,
+  formatOf,
+  LOG_HEAD_BYTES,
+  logFormats,
+  logFormatWords,
+  readingLines,
+  readLog,
+  type LogFormat,
+  type LogReading,
+} from '@ledger/flight-logs';
 import { UsageError, type Output } from './commands.js';
 
 /**
- * Reads an aircraft's own log into rows of Ledger's flight record, offline: nothing is sent to Ledger. The rows go
- * through `records check` and `records import` like any other file, with the log itself kept as their original.
+ * Reads an aircraft's own log, or a flight log a fleet product exported, into rows of Ledger's flight record,
+ * offline: nothing is sent to Ledger. The rows go through `records check` and `records import` like any other file,
+ * with the log itself kept as their original.
  */
+
+/** "a, b, c or d": every format a reader exists for, as a person names them. */
+function formatsInWords(): string {
+  const words = logFormats.map((format) => logFormatWords[format]);
+  return `${words.slice(0, -1).join(', ')} or ${words.at(-1)}`;
+}
+
+/** What a person still writes about the height above the ground, which only some logs state. */
+function heightAboveGroundWords(reading: LogReading): string {
+  return reading.flights.every((flight) => flight.greatestHeight?.aboveGround)
+    ? ''
+    : 'maxHeightFlownAboveGroundMeters (the log does not state a height above the ground; heightNotes has the heights it does state and what each is measured from), ';
+}
 
 function head(path: string): Uint8Array {
   let descriptor: number;
@@ -17,7 +41,7 @@ function head(path: string): Uint8Array {
     throw new UsageError(`Cannot read ${path}.`);
   }
   try {
-    const bytes = new Uint8Array(64);
+    const bytes = new Uint8Array(LOG_HEAD_BYTES);
     const count = readSync(descriptor, bytes, 0, bytes.byteLength, 0);
     return bytes.subarray(0, count);
   } finally {
@@ -44,7 +68,7 @@ export async function readFlightLog(
   const format = (options.format as LogFormat | undefined) ?? formatOf(start);
   if (!format)
     throw new UsageError(
-      `${basename(logPath)} does not begin as a PX4 ULog (.ulg), an ArduPilot DataFlash log (.bin) or a MAVLink telemetry log (.tlog) does, so it was not read. Give --format if you know which it is.`,
+      `${basename(logPath)} does not begin as ${formatsInWords()} does, so it was not read. Give --format if you know which it is.`,
     );
   const sha256 = await sha256Of(logPath);
   const reading = await readLog(format, chunksOf(logPath));
@@ -65,7 +89,12 @@ export async function readFlightLog(
       ...lines,
       '',
       `Wrote ${shown}: one flight.record row for each whole flight, with only what the log holds.`,
-      'Before importing, write in each row what the log does not hold: subjectId (your own id for the flight), secondarySubjectId (your own id for the aircraft), maxHeightFlownAboveGroundMeters (the log states heights from home or the takeoff point, not above the ground), and anything else your records keep for a flight.',
+      `Before importing, write in each row what the log does not hold: subjectId (your own id for the flight), secondarySubjectId (your own id for the aircraft), ${heightAboveGroundWords(reading)}and anything else your records keep for a flight.`,
+      ...(heightAboveGroundWords(reading)
+        ? []
+        : [
+            'maxHeightFlownAboveGroundMeters is the greatest altitude in the log, which the log itself states as above ground level; check it before importing.',
+          ]),
       `Then: pnpm ledger records check flight.record ${shown} --original ${shownLog}`,
       `  and: pnpm ledger records import flight.record ${shown} --original ${shownLog}`,
       'Ledger keeps the log itself as each record’s original, and the CSV as the reading of it.',

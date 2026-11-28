@@ -445,3 +445,72 @@ export class TlogWriter {
     return this.out.done();
   }
 }
+
+const GUTMA_KEYS = ['timestamp', 'gps_lon', 'gps_lat', 'gps_altitude', 'speed', 'battery_voltage'];
+/** One sample row in the order of the keys above. */
+export const gutmaSample = (seconds: number, place: { latitude: number; longitude: number }, altitude: number) => [
+  seconds,
+  place.longitude,
+  place.latitude,
+  altitude,
+  4,
+  15.2,
+];
+export const gutmaEvent = (info: string, seconds: number | string) => ({
+  event_type: 'CONTROLER_EVENT',
+  event_info: info,
+  event_timestamp: seconds,
+});
+
+/**
+ * A GUTMA flight logging message as its published description lays one out: one flight from the ridge pad to the
+ * quarry gate. `logging` replaces keys of its flight_logging section and `rest` keys of the message.
+ */
+export function gutmaMessage(logging: Record<string, unknown> = {}, rest: Record<string, unknown> = {}) {
+  return {
+    exchange: {
+      exchange_type: 'flight_logging',
+      message: {
+        flight_data: {
+          aircraft: {
+            manufacturer: 'Example Aero',
+            model: 'EX-4',
+            name: 'Ridge survey one',
+            serial_number: 'EXAMPLE-RIDGE-0001',
+            firmware_version: '2.01b',
+            hardware_version: '1.00B',
+          },
+          gcs: { manufacturer: 'Example Aero', model: 'Ground', version: '1.1' },
+          payload: [{ model: 'Example camera', serial_number: 'EXAMPLE-CAM-7' }],
+          project: 'Ridge survey',
+        },
+        flight_logging: {
+          flight_logging_items: [
+            gutmaSample(0.5, RIDGE, 1850),
+            gutmaSample(12, RIDGE, 1850.2),
+            gutmaSample(40, RIDGE, 1890.44),
+            gutmaSample(90, QUARRY, 1871),
+            gutmaSample(118, QUARRY, 1830),
+            gutmaSample(125, QUARRY, 1830),
+          ],
+          flight_logging_keys: GUTMA_KEYS,
+          event: [gutmaEvent('TAKE_OFF', '12'), gutmaEvent('GPS_LOST', '50'), gutmaEvent('LANDING', 118)],
+          altitude_system: 'MSL',
+          logging_start_dtg: '2026-11-10T16:05:00.250Z',
+          tick_increment_modulo: '1',
+          tick_increment_seconds: '1',
+          uom_system: 'Metric',
+          ...logging,
+        },
+        file: {
+          logging_type: 'GUTMA_DX_JSON',
+          filename: 'EXAMPLE-RIDGE-0001_0069',
+          creation_dtg: '2026-11-10T17:00:00.000Z',
+          version: '1.0.0',
+        },
+        message_type: 'flight_logging_submission',
+        ...rest,
+      },
+    },
+  };
+}

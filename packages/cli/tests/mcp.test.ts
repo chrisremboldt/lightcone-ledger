@@ -1,4 +1,4 @@
-import { mkdtempSync, rmSync } from 'node:fs';
+import { existsSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import type { TSchema } from '@sinclair/typebox';
@@ -8,6 +8,7 @@ import { InMemoryTransport } from '@modelcontextprotocol/sdk/inMemory.js';
 import { afterAll, describe, expect, it } from 'vitest';
 import { createMcpServer } from '../src/mcp.js';
 import { tools } from '../src/mcp-tools.js';
+import { gutmaMessage } from '../../flight-logs/tests/encoders.js';
 
 // The MCP server offers the client's own commands as tools. A tool takes no credential and no reason, and a tool for
 // a person's decision prepares it, sends nothing and gives the command the person runs.
@@ -145,6 +146,33 @@ describe('The MCP server', () => {
       ['who_am_i', { credential: 'ledger-dev-other' }],
     ] as const)
       await expect(client.callTool({ name, arguments: extra }), name).rejects.toThrow(/does not take these arguments/);
+    expect(quiet.sent).toEqual([]);
+    await client.close();
+  });
+
+  it('reads a GUTMA flight log as the command line does, writes the CSV beside it and sends nothing', async () => {
+    const quiet = fakeApi({});
+    const client = await connected(quiet.fetcher);
+    writeFileSync(join(folder, 'ridge-export.json'), JSON.stringify(gutmaMessage()));
+    const read = await client.callTool({ name: 'read_flight_log', arguments: { log: 'ridge-export.json' } });
+    expect(read.isError, JSON.stringify(read.content)).toBeFalsy();
+    const shown = read.structuredContent as { lines: string[]; data: { reading: { format: string } } };
+    expect(shown.data.reading.format).toBe('gutma');
+    expect(shown.lines.join('\n')).toContain('ridge-export.json: GUTMA flight log');
+    expect(readFileSync(join(folder, 'ridge-export.flight.record.csv'), 'utf8')).toContain('2026-11-10T16:05:12Z');
+    writeFileSync(
+      join(folder, 'forced.json'),
+      JSON.stringify({ exchange: { message: gutmaMessage().exchange.message } }),
+    );
+    const forced = await client.callTool({
+      name: 'read_flight_log',
+      arguments: { log: 'forced.json', format: 'gutma', out: 'forced.csv' },
+    });
+    expect(forced.isError, JSON.stringify(forced.content)).toBeFalsy();
+    expect(existsSync(join(folder, 'forced.csv'))).toBe(true);
+    await expect(
+      client.callTool({ name: 'read_flight_log', arguments: { log: 'ridge-export.json', format: 'kml' } }),
+    ).rejects.toThrow();
     expect(quiet.sent).toEqual([]);
     await client.close();
   });

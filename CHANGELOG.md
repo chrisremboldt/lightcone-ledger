@@ -8,6 +8,10 @@ Each release has a section here. Its **Upgrading** part says what a deployment d
 
 Nothing to do: main has gained no change to Ledger itself since v0.2.0.
 
+### Added
+
+- `records read-log` and the `read_flight_log` tool read a GUTMA flight log (the Global UTM Association's Flight Logging Protocol, a JSON file a fleet or dock product exports), recognised from its content or with `--format gutma`: built from the published description and checked against logs the tests built, not against a product's real export.
+
 ### Fixed
 
 - The Ledger Lite check (`infra/verify-deployment/check-lite.mjs`) gives Ledger the pack folder the Lite file names; without it Ledger refused to start, so the check could never pass. The guides now say what was run from the published image.

@@ -50,10 +50,11 @@ export const usage = `Usage: pnpm ledger <noun> <verb> [options]
                                          import a CSV or JSON file, or an export through its column mapping; Ledger
                                          keeps the export as received and the mapping with the records, or the
                                          original the file was read from
-  records read-log <log> [--format ulog|dataflash|tlog] [--out <file.csv>]
-                                         read an aircraft's own log (PX4 .ulg, ArduPilot .bin, MAVLink .tlog) into a
-                                         flight.record CSV: one row per whole flight, only what the log holds, and
-                                         what it could not read; works offline and sends nothing
+  records read-log <log> [--format ulog|dataflash|tlog|gutma] [--out <file.csv>]
+                                         read an aircraft's own log (PX4 .ulg, ArduPilot .bin, MAVLink .tlog) or a
+                                         GUTMA flight log a fleet product exported (JSON) into a flight.record CSV:
+                                         one row per whole flight, only what the log holds, and what it could not
+                                         read; works offline and sends nothing
   records mapping <type> <export.csv> [--out <file>]
                                          start a column mapping from an export: every column listed, none assigned,
                                          and the record type's fields as comments; nothing is guessed

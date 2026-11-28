@@ -171,12 +171,12 @@ export const tools: LedgerTool[] = [
     name: 'read_flight_log',
     title: 'Read an aircraft’s own log',
     description:
-      'Reads a PX4 ULog (.ulg), ArduPilot DataFlash (.bin) or MAVLink telemetry log (.tlog) into a flight.record CSV beside it, one row per whole flight with only what the log holds, and says what it could not read. Works on this computer and sends nothing to Ledger; then check_records and import_records with the log as the original.',
+      'Reads a PX4 ULog (.ulg), ArduPilot DataFlash (.bin) or MAVLink telemetry log (.tlog), or a GUTMA flight log a fleet product exported (JSON), into a flight.record CSV beside it, one row per whole flight with only what the log holds, and says what it could not read. Works on this computer and sends nothing to Ledger; then check_records and import_records with the log as the original.',
     input: Type.Object(
       {
         log: File('The log file'),
         format: Type.Optional(
-          Type.Union([Type.Literal('ulog'), Type.Literal('dataflash'), Type.Literal('tlog')], {
+          Type.Union([Type.Literal('ulog'), Type.Literal('dataflash'), Type.Literal('tlog'), Type.Literal('gutma')], {
             description: 'Only when the log does not begin as its format does.',
           }),
         ),

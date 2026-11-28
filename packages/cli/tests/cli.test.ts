@@ -16,7 +16,7 @@ import {
 import { listOperatorRecordTypes } from '../../domain/src/operator-record-import.js';
 import * as words from '../src/words.js';
 import type { RulePackVersion } from '@ledger/contracts';
-import { px4, px4Definitions, RIDGE, UlogWriter } from '../../flight-logs/tests/encoders.js';
+import { gutmaMessage, px4, px4Definitions, RIDGE, UlogWriter } from '../../flight-logs/tests/encoders.js';
 
 const folder = mkdtempSync(join(tmpdir(), 'ledger-cli-'));
 afterAll(() => rmSync(folder, { recursive: true, force: true }));
@@ -528,9 +528,66 @@ describe('Reading an aircraft’s log from the command line', () => {
     writeFileSync(join(folder, 'notes.txt'), 'not a log');
     const other = await cli(['records', 'read-log', 'notes.txt'], noApi, {});
     expect(other.code).toBe(2);
-    expect(other.err).toContain('does not begin as a PX4 ULog');
+    expect(other.err).toBe(
+      'notes.txt does not begin as a PX4 ULog (.ulg), an ArduPilot DataFlash log (.bin), a MAVLink telemetry log (.tlog) or a GUTMA flight log (JSON) does, so it was not read. Give --format if you know which it is.',
+    );
     const format = await cli(['records', 'read-log', 'cut.ulg', '--format', 'kml'], noApi, {});
-    expect(format.err).toBe('--format is one of ulog, dataflash, tlog: kml');
+    expect(format.err).toBe('--format is one of ulog, dataflash, tlog, gutma: kml');
+  });
+
+  it('reads a GUTMA flight log, told from its content, into the same columns as an autopilot’s log', async () => {
+    writeFileSync(join(folder, 'ridge-export.json'), JSON.stringify(gutmaMessage(), null, 2));
+    const read = await cli(['records', 'read-log', 'ridge-export.json'], noApi, {});
+    expect(read.code, read.err).toBe(0);
+    expect(read.out).toContain('ridge-export.json: GUTMA flight log');
+    expect(read.out).toContain('Flight 1, from the log’s take-off event to its landing event:');
+    expect(read.out).toContain('2026-11-10T16:05:12Z to 2026-11-10T16:06:58Z, 1 min 46 s.');
+    expect(read.out).toContain('The log describes the aircraft (flight_data.aircraft): manufacturer Example Aero');
+    expect(read.out).toContain('Sample keys not read: speed, battery_voltage.');
+    expect(read.out).toContain('maxHeightFlownAboveGroundMeters (the log does not state a height above the ground');
+    expect(read.out).toContain(
+      'Then: pnpm ledger records check flight.record ridge-export.flight.record.csv --original ridge-export.json',
+    );
+    const gutmaCsv = readFileSync(join(folder, 'ridge-export.flight.record.csv'), 'utf8');
+    writeLog('columns.ulg');
+    expect((await cli(['records', 'read-log', 'columns.ulg'], noApi, {})).code).toBe(0);
+    const ulogCsv = readFileSync(join(folder, 'columns.flight.record.csv'), 'utf8');
+    expect(gutmaCsv.split('\r\n')[0]).toBe(ulogCsv.split('\r\n')[0]);
+    expect(gutmaCsv).toContain(
+      `,,2026-11-10T16:05:12Z,2026-11-10T16:06:58Z,"39.5012345, -105.2034567","39.5141000, -105.1873000",,`,
+    );
+    // The aircraft's serial number is printed, never written as the organization's id for the aircraft.
+    expect(gutmaCsv).not.toContain('EXAMPLE-RIDGE-0001');
+
+    const aboveGround = gutmaMessage({ altitude_system: 'AGL' });
+    writeFileSync(join(folder, 'above-ground.json'), JSON.stringify(aboveGround));
+    const stated = await cli(['records', 'read-log', 'above-ground.json', '--format', 'gutma'], noApi, {});
+    expect(stated.code, stated.err).toBe(0);
+    expect(stated.out).toContain('which the log itself states as above ground level; check it before importing.');
+    expect(stated.out).not.toContain('maxHeightFlownAboveGroundMeters (the log does not state');
+  });
+
+  it('refuses JSON that is no flight log, and a GUTMA file it cannot read, with a sentence saying which', async () => {
+    writeFileSync(join(folder, 'area.json'), JSON.stringify({ type: 'FeatureCollection', features: [] }));
+    const other = await cli(['records', 'read-log', 'area.json'], noApi, {});
+    expect(other.code).toBe(2);
+    expect(other.err).toContain('area.json does not begin as a PX4 ULog (.ulg)');
+    const forced = await cli(['records', 'read-log', 'area.json', '--format', 'gutma'], noApi, {});
+    expect(forced.code).toBe(1);
+    expect(forced.out).toContain('The file is JSON but not a flight logging message');
+    expect(forced.out).toContain('No whole flight was read, so no file was written.');
+    writeFileSync(
+      join(folder, 'declaration.json'),
+      JSON.stringify({ exchange: { exchange_type: 'flight_declaration' } }),
+    );
+    const declaration = await cli(['records', 'read-log', 'declaration.json'], noApi, {});
+    expect(declaration.code).toBe(1);
+    expect(declaration.out).toContain('its exchange_type is “flight_declaration”, not “flight_logging”');
+    writeFileSync(join(folder, 'cut.json'), JSON.stringify(gutmaMessage()).slice(0, 400));
+    const cut = await cli(['records', 'read-log', 'cut.json'], noApi, {});
+    expect(cut.code).toBe(1);
+    expect(cut.out).toContain('The file is not valid JSON, so it was not read.');
+    expect(existsSync(join(folder, 'cut.flight.record.csv'))).toBe(false);
   });
 
   it('takes --original on check and import, not with --mapping, and never a file larger than Ledger keeps', async () => {

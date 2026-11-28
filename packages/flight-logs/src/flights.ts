@@ -1,10 +1,11 @@
 /**
  * What a reader found in a log, in the same shape whatever the format: one entry per flight, with only what the log
- * holds. A reader feeds the tracker the moments it reads (arming, the land detector, positions, heights, the clock)
- * and the tracker cuts them into flights by one rule, said with each flight.
+ * holds. A reader of an autopilot's log feeds the tracker the moments it reads (arming, the land detector, positions,
+ * heights, the clock) and the tracker cuts them into flights by one rule, said with each flight. A reader of a log
+ * that records a flight by its events and samples builds the same entries itself and says its own rule.
  */
 
-export type LogFormat = 'ulog' | 'dataflash' | 'tlog';
+export type LogFormat = 'ulog' | 'dataflash' | 'tlog' | 'gutma';
 
 export interface Place {
   /** Decimal degrees, WGS84. */
@@ -16,6 +17,8 @@ export interface StatedHeight {
   meters: number;
   /** What the height is measured from, in the log's own terms. */
   reference: string;
+  /** True only when the log itself says the height is above the ground under the aircraft. */
+  aboveGround?: boolean;
 }
 
 export interface ReadFlight {
@@ -24,8 +27,16 @@ export interface ReadFlight {
   /**
    * takeoff_to_landing: the log's land detector said when the aircraft left the ground and touched down again.
    * arming_to_disarming: the log has no land detector, so the flight runs from arming to disarming.
+   * The other four are for a log that records a flight by events: each end is the log's take-off or landing event
+   * or, where the log records none, the start of logging or the last sample, as that format's description says.
    */
-  rule: 'takeoff_to_landing' | 'arming_to_disarming';
+  rule:
+    | 'takeoff_to_landing'
+    | 'arming_to_disarming'
+    | 'takeoff_event_to_landing_event'
+    | 'takeoff_event_to_last_sample'
+    | 'logging_start_to_landing_event'
+    | 'logging_start_to_last_sample';
   /** UTC, only when the log holds an absolute time. */
   takeoffAt?: string;
   landingAt?: string;
@@ -36,9 +47,12 @@ export interface ReadFlight {
   landingPlaces: Place[];
   /** The greatest height, from a reference the log states, such as home. */
   greatestHeight?: StatedHeight;
-  /** The greatest altitude above mean sea level the log states. */
+  /** The greatest altitude the log states, above mean sea level or by the datum its reference names. */
   greatestAltitude?: StatedHeight;
-  /** Where in the log the flight's messages are, from the one that armed it to the one that ended it. */
+  /**
+   * Where in the log the flight's messages are, from the one that armed it to the one that ended it; the whole file
+   * for a log that is one document.
+   */
   bytes: { offset: number; length: number };
   /** What the reader could not read for this flight. */
   notRead: string[];
@@ -69,6 +83,12 @@ export const flightRuleWords: Record<ReadFlight['rule'], string> = {
   takeoff_to_landing:
     'from the first moment the land detector said the aircraft was in the air after arming, to the last moment it said it was on the ground again before disarming',
   arming_to_disarming: 'from arming to disarming: the log holds no land detector',
+  takeoff_event_to_landing_event: 'from the log’s take-off event to its landing event',
+  takeoff_event_to_last_sample: 'from the log’s take-off event to its last sample: the log records no landing event',
+  logging_start_to_landing_event:
+    'from the start of logging to the log’s landing event: the log records no take-off event',
+  logging_start_to_last_sample:
+    'from the start of logging to the last sample: the log records no take-off or landing event',
 };
 
 interface Position extends Place {
@@ -335,7 +355,8 @@ export class FlightTracker {
   vehicle?: { identifier: string; from: string };
 }
 
-function validPlace(place: Place): boolean {
+/** A latitude and longitude in range, and not the 0, 0 a receiver without a fix reports. */
+export function validPlace(place: Place): boolean {
   const { latitude, longitude } = place;
   return (
     Number.isFinite(latitude) &&
